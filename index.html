@@ -132,7 +132,6 @@
         .modal-overlay.open { opacity: 1; pointer-events: auto; }
         .modal { background: white; border-radius: var(--radius); width: 100%; max-width: 420px; padding: 2rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
 
-        /* PAGE PRODUIT */
         .product-page { display: none; flex-direction: column; background: white; min-height: 100vh; }
         .product-page.open { display: flex; }
         .carousel-container-full {
@@ -312,7 +311,6 @@
         </div>
     </header>
 
-    <!-- Vue catalogue -->
     <div id="catalogueView">
         <div class="filter-bar" id="filterBar">
             <button class="filter-btn active" data-category="all">Tout voir</button>
@@ -455,7 +453,7 @@
             }
 
             let products = [];
-            let cart = JSON.parse(localStorage.getItem('nrj_cart_v15') || '[]');
+            let cart = JSON.parse(localStorage.getItem('nrj_cart_v16') || '[]');
             let currentFilter = 'all';
             let currentProductId = null;
 
@@ -506,9 +504,8 @@
                 document.getElementById('filterBar').innerHTML = html;
             }
 
-            function saveCart() { localStorage.setItem('nrj_cart_v15', JSON.stringify(cart)); }
+            function saveCart() { localStorage.setItem('nrj_cart_v16', JSON.stringify(cart)); }
 
-            // ----- Panier avec gestion MOQ -----
             function addToCart(productId, taille = '', couleur = '') {
                 const p = products.find(pr => pr.id === productId);
                 if (!p) return;
@@ -532,7 +529,7 @@
                 if (newQty >= moq) {
                     item.quantity = newQty;
                 } else {
-                    item.quantity = moq; // bloque au minimum
+                    item.quantity = moq;
                 }
                 saveCart();
                 refreshCartDisplay();
@@ -591,7 +588,7 @@
                     const p = products.find(pr => pr.id === i.productId);
                     if (!p) return '';
                     total += p.price * i.quantity;
-                    let desc = `${escapeHtml(p.name)} [Réf: #${p.id}]`;
+                    let desc = `${escapeHtml(p.name)} [ID: ${p.id}]`;
                     if (i.couleur || i.taille) desc += ` (${[i.couleur, i.taille].filter(Boolean).join(', ')})`;
                     return `• ${desc} x${i.quantity}`;
                 }).filter(Boolean).join('<br>');
@@ -609,7 +606,7 @@
                 cart.forEach(i => {
                     const p = products.find(pr => pr.id === i.productId);
                     if (p) {
-                        let desc = `${encodeURIComponent(p.name)} [Réf: #${p.id}]`;
+                        let desc = `${encodeURIComponent(p.name)} [ID: ${p.id}]`;
                         if (i.couleur || i.taille) desc += ` (${[i.couleur, i.taille].filter(Boolean).join(', ')})`;
                         const productLink = BASE_URL + '?id=' + p.id;
                         msg += `- ${desc} x${i.quantity} = ${formatPrice(p.price * i.quantity)}%0A  🔗 ${encodeURIComponent(productLink)}%0A`;
@@ -623,7 +620,7 @@
                 showToast('📤 Commande envoyée');
             }
 
-            // ========== PAGE PRODUIT (carrousel infini + MOQ) ==========
+            // ========== PAGE PRODUIT (carrousel infini corrigé) ==========
             function showProductPage(productId, initialTaille = null, initialCouleur = null) {
                 const p = products.find(pr => pr.id === productId);
                 if (!p) return;
@@ -649,7 +646,7 @@
                 document.getElementById('catalogueView').style.display = 'none';
                 document.getElementById('productPage').classList.add('open');
 
-                // --- Carrousel infini ---
+                // --- Carrousel infini avec clones et scrollend ---
                 const images = [p.image, p.image2, p.image3].filter(url => url && url.trim() !== '');
                 const scrollContainer = document.getElementById('carouselScroll');
                 const dotsContainer = document.getElementById('carouselDotsFull');
@@ -682,9 +679,8 @@
                     realSlides.forEach(s => scrollContainer.appendChild(s));
                     scrollContainer.appendChild(firstClone);
 
-                    // Positionner sur le premier vrai slide (index 1)
                     const slideWidth = scrollContainer.clientWidth;
-                    scrollContainer.scrollLeft = slideWidth;
+                    scrollContainer.scrollLeft = slideWidth; // position sur le premier vrai slide
 
                     // Création des dots (une par image réelle)
                     for (let i = 0; i < images.length; i++) {
@@ -695,30 +691,42 @@
                     }
                     if (dotsContainer.firstChild) dotsContainer.firstChild.classList.add('active');
 
+                    let ignoreScroll = false;
                     function handleLoopScroll() {
+                        if (ignoreScroll) return;
                         const w = scrollContainer.clientWidth;
                         const maxScroll = scrollContainer.scrollWidth - w;
                         const scrolled = scrollContainer.scrollLeft;
 
                         if (scrolled >= maxScroll - 1) {
-                            // On est sur le clone du début -> sauter au vrai début (index 1)
+                            ignoreScroll = true;
                             scrollContainer.scrollLeft = w;
+                            ignoreScroll = false;
                         } else if (scrolled <= 0) {
-                            // On est sur le clone de la fin -> sauter au vrai dernier (index avant lastClone)
+                            ignoreScroll = true;
                             scrollContainer.scrollLeft = maxScroll - w;
+                            ignoreScroll = false;
                         }
 
-                        // Calcul de l'index réel à partir de la position
+                        // Mise à jour dots
                         const rawIndex = Math.round(scrollContainer.scrollLeft / w);
-                        let realIndex = rawIndex - 1; // car premier élément = clone de fin
+                        let realIndex = rawIndex - 1;
                         if (realIndex < 0) realIndex = images.length - 1;
                         if (realIndex >= images.length) realIndex = 0;
-
                         const dots = dotsContainer.querySelectorAll('.carousel-dot');
                         dots.forEach((d, i) => d.classList.toggle('active', i === realIndex));
                     }
 
-                    scrollContainer.addEventListener('scroll', handleLoopScroll, { passive: true });
+                    // Utiliser scrollend pour les navigateurs modernes, scroll avec debounce sinon
+                    if ('onscrollend' in window) {
+                        scrollContainer.addEventListener('scrollend', handleLoopScroll);
+                    } else {
+                        let scrollTimer;
+                        scrollContainer.addEventListener('scroll', () => {
+                            clearTimeout(scrollTimer);
+                            scrollTimer = setTimeout(handleLoopScroll, 100);
+                        }, { passive: true });
+                    }
 
                     dotsContainer.addEventListener('click', (e) => {
                         if (e.target.classList.contains('carousel-dot')) {
@@ -729,14 +737,12 @@
                     });
                 }
 
-                // --- Informations produit ---
-                document.getElementById('productPageRef').textContent = `[Réf: #${p.id}]`;
+                document.getElementById('productPageRef').textContent = `[ID: ${p.id}]`;
                 document.getElementById('productPagePrice').textContent = formatPrice(p.price);
                 const moq = p.moq || 1;
                 document.getElementById('productPageMoq').textContent = `Minimum d'achat : ${moq} pièce(s)`;
                 document.getElementById('productPageDesc').textContent = p.description || '';
 
-                // Bouton de partage
                 document.getElementById('shareProductBtn').onclick = function() {
                     const shareUrl = BASE_URL + '?id=' + p.id + (selectedTaille ? '&taille=' + encodeURIComponent(selectedTaille) : '') + (selectedCouleur ? '&couleur=' + encodeURIComponent(selectedCouleur) : '');
                     if (navigator.share) {
@@ -754,7 +760,6 @@
                     }
                 };
 
-                // Options taille/couleur
                 function renderOptions(container, options, selected, type) {
                     container.innerHTML = '';
                     options.forEach(opt => {
@@ -794,7 +799,6 @@
                     addToCart(p.id, selectedTaille, selectedCouleur);
                 };
 
-                // Recommandations
                 let recProducts = products.filter(pr => pr.category === p.category && pr.id !== p.id);
                 if (recProducts.length < 6) {
                     const others = products.filter(pr => pr.id !== p.id && !recProducts.includes(pr));
@@ -829,7 +833,6 @@
 
             document.getElementById('backToCatalogue').addEventListener('click', hideProductPage);
 
-            // Clics sur produits (catalogue + recommandations)
             document.addEventListener('click', e => {
                 const productCard = e.target.closest('.product-card');
                 if (productCard && !e.target.closest('.add-btn')) {
@@ -957,12 +960,11 @@
             function renderAdminList() {
                 document.getElementById('adminProductsList').innerHTML = products.map(p => `
                     <li>
-                        <span>${escapeHtml(p.name)} <span class="admin-ref">[Réf: #${p.id}]</span> (${formatPrice(p.price)})</span>
+                        <span>${escapeHtml(p.name)} <span class="admin-ref">[ID: ${p.id}]</span> (${formatPrice(p.price)})</span>
                         <button class="btn-sm" data-action="admin-remove" data-id="${p.id}">Supprimer</button>
                     </li>`).join('');
             }
 
-            // Event delegation pour actions panier, etc.
             document.addEventListener('click', e => {
                 const t = e.target;
                 if (t.matches('[data-action="add-to-cart"]')) {
@@ -1025,4 +1027,4 @@
         })();
     </script>
 </body>
-    </html>
+                </html>
