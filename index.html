@@ -120,6 +120,7 @@
         .cart-item-price { font-weight: 700; color: var(--primary); font-size: 0.85rem; }
         .cart-item-qty { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.2rem; font-size: 0.8rem; }
         .qty-btn { background: #cbd5e1; border: none; width: 24px; height: 24px; border-radius: 50%; font-weight: 700; cursor: pointer; }
+        .qty-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .remove-item-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #94a3b8; padding: 0.2rem; transition: color 0.2s; }
         .remove-item-btn:hover { color: #ef4444; }
         .cart-footer { padding: 1rem; border-top: 1px solid var(--border); }
@@ -131,7 +132,7 @@
         .modal-overlay.open { opacity: 1; pointer-events: auto; }
         .modal { background: white; border-radius: var(--radius); width: 100%; max-width: 420px; padding: 2rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
 
-        /* ===== PAGE PRODUIT PLEIN ÉCRAN ===== */
+        /* PAGE PRODUIT */
         .product-page { display: none; flex-direction: column; background: white; min-height: 100vh; }
         .product-page.open { display: flex; }
         .carousel-container-full {
@@ -217,8 +218,25 @@
             background: var(--primary);
         }
         .product-details { padding: 1rem; }
-        .product-detail-ref { font-size: 0.8rem; color: var(--gray); margin-bottom: 0.5rem; }
-        .product-detail-price { font-size: 1.4rem; font-weight: 800; color: var(--primary); margin-bottom: 1rem; }
+        .product-detail-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .product-detail-ref { font-size: 0.8rem; color: var(--gray); margin-bottom: 0.3rem; }
+        .product-detail-price { font-size: 1.4rem; font-weight: 800; color: var(--primary); margin-bottom: 0.3rem; }
+        .product-detail-moq { font-size: 0.8rem; color: #475569; margin-bottom: 1rem; font-weight: 500; }
+        .share-btn {
+            background: #f1f5f9;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #475569;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+        .share-btn:hover { background: #e2e8f0; }
         .product-detail-desc { color: #475569; font-size: 0.9rem; margin-bottom: 1rem; }
         .option-group { margin-bottom: 1rem; }
         .option-group label { font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.3rem; }
@@ -312,8 +330,16 @@
             <div class="carousel-dots" id="carouselDotsFull"></div>
         </div>
         <div class="product-details">
-            <div class="product-detail-ref" id="productPageRef"></div>
-            <div class="product-detail-price" id="productPagePrice"></div>
+            <div class="product-detail-header">
+                <div>
+                    <div class="product-detail-ref" id="productPageRef"></div>
+                    <div class="product-detail-price" id="productPagePrice"></div>
+                    <div class="product-detail-moq" id="productPageMoq"></div>
+                </div>
+                <button class="share-btn" id="shareProductBtn" title="Partager ce produit">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                </button>
+            </div>
             <div class="product-detail-desc" id="productPageDesc"></div>
             <div class="option-group" id="tailleGroupFull" style="display:none;">
                 <label>Taille</label>
@@ -398,6 +424,7 @@
         <div class="form-group"><label>URL Image 3</label><input type="url" id="adminImage3" placeholder="https://..."></div>
         <div class="form-group"><label>Tailles (séparées par des virgules)</label><input type="text" id="adminTailles" placeholder="M, L, XL"></div>
         <div class="form-group"><label>Couleurs (séparées par des virgules)</label><input type="text" id="adminCouleurs" placeholder="Noir, Blanc, Kaki"></div>
+        <div class="form-group"><label>Quantité minimale (MOQ)</label><input type="number" id="adminMoq" placeholder="1" min="1" value="1"></div>
         <div class="form-group"><label>Description</label><input type="text" id="adminDesc" placeholder="Description courte"></div>
         <button class="btn btn-primary" id="addProductBtn">Ajouter au catalogue</button>
         <h3 style="margin-top:2rem; font-size:1rem;">Produits en ligne</h3>
@@ -428,7 +455,7 @@
             }
 
             let products = [];
-            let cart = JSON.parse(localStorage.getItem('nrj_cart_v13') || '[]');
+            let cart = JSON.parse(localStorage.getItem('nrj_cart_v15') || '[]');
             let currentFilter = 'all';
             let currentProductId = null;
 
@@ -479,7 +506,40 @@
                 document.getElementById('filterBar').innerHTML = html;
             }
 
-            function saveCart() { localStorage.setItem('nrj_cart_v13', JSON.stringify(cart)); }
+            function saveCart() { localStorage.setItem('nrj_cart_v15', JSON.stringify(cart)); }
+
+            // ----- Panier avec gestion MOQ -----
+            function addToCart(productId, taille = '', couleur = '') {
+                const p = products.find(pr => pr.id === productId);
+                if (!p) return;
+                const moq = p.moq || 1;
+                const exist = cart.find(i => i.productId === productId && i.taille === taille && i.couleur === couleur);
+                if (exist) {
+                    exist.quantity += moq;
+                } else {
+                    cart.push({ productId, quantity: moq, taille, couleur, moq });
+                }
+                saveCart();
+                refreshCartDisplay();
+                showToast('🛒 Ajouté au panier');
+            }
+
+            function changeQty(idx, delta) {
+                const item = cart[idx];
+                if (!item) return;
+                const moq = item.moq || 1;
+                const newQty = item.quantity + delta;
+                if (newQty >= moq) {
+                    item.quantity = newQty;
+                } else {
+                    item.quantity = moq; // bloque au minimum
+                }
+                saveCart();
+                refreshCartDisplay();
+            }
+
+            function removeCartItem(idx) { cart.splice(idx, 1); saveCart(); refreshCartDisplay(); }
+
             function refreshCartDisplay() {
                 const count = cart.reduce((s, i) => s + i.quantity, 0);
                 const total = cart.reduce((s, i) => {
@@ -504,6 +564,7 @@
                         if (item.couleur) variants.push(`Couleur: ${item.couleur}`);
                         if (item.taille) variants.push(`Taille: ${item.taille}`);
                         const variantText = variants.length ? variants.join(', ') : '';
+                        const isMinusDisabled = item.quantity <= (item.moq || 1);
                         return `
                         <div class="cart-item">
                             <div class="cart-item-img">${imgContent}${cartEmoji}</div>
@@ -512,7 +573,7 @@
                                 ${variantText ? `<div class="cart-item-variants">${escapeHtml(variantText)}</div>` : ''}
                                 <span class="cart-item-price">${formatPrice(p.price)}</span>
                                 <div class="cart-item-qty">
-                                    <button class="qty-btn" data-action="cart-decrease" data-index="${idx}">−</button>
+                                    <button class="qty-btn" data-action="cart-decrease" data-index="${idx}" ${isMinusDisabled ? 'disabled' : ''}>−</button>
                                     <span>${item.quantity}</span>
                                     <button class="qty-btn" data-action="cart-increase" data-index="${idx}">+</button>
                                 </div>
@@ -522,20 +583,6 @@
                     }).join('');
                 }
             }
-
-            function addToCart(productId, taille = '', couleur = '') {
-                const exist = cart.find(i => i.productId === productId && i.taille === taille && i.couleur === couleur);
-                if (exist) exist.quantity++;
-                else cart.push({ productId, quantity: 1, taille, couleur });
-                saveCart(); refreshCartDisplay(); showToast('🛒 Ajouté au panier');
-            }
-
-            function changeQty(idx, delta) {
-                cart[idx].quantity += delta;
-                if (cart[idx].quantity <= 0) cart.splice(idx, 1);
-                saveCart(); refreshCartDisplay();
-            }
-            function removeCartItem(idx) { cart.splice(idx, 1); saveCart(); refreshCartDisplay(); }
 
             function openOrderModal() {
                 if (cart.length === 0) return;
@@ -576,19 +623,33 @@
                 showToast('📤 Commande envoyée');
             }
 
-            // ========== PAGE PRODUIT PLEIN ÉCRAN (NOUVEAU DESIGN) ==========
-            function showProductPage(productId) {
+            // ========== PAGE PRODUIT (carrousel infini + MOQ) ==========
+            function showProductPage(productId, initialTaille = null, initialCouleur = null) {
                 const p = products.find(pr => pr.id === productId);
                 if (!p) return;
                 currentProductId = productId;
-                const newUrl = BASE_URL + '?id=' + p.id;
-                if (window.location.href !== newUrl) {
-                    history.pushState({ productId: p.id }, '', newUrl);
+
+                const tailles = (p.tailles || '').split(',').map(s => s.trim()).filter(Boolean);
+                const couleurs = (p.couleurs || '').split(',').map(s => s.trim()).filter(Boolean);
+                let selectedTaille = tailles.length ? (initialTaille && tailles.includes(initialTaille) ? initialTaille : tailles[0]) : '';
+                let selectedCouleur = couleurs.length ? (initialCouleur && couleurs.includes(initialCouleur) ? initialCouleur : couleurs[0]) : '';
+
+                function updateUrl() {
+                    const params = new URLSearchParams();
+                    params.set('id', p.id);
+                    if (selectedTaille) params.set('taille', selectedTaille);
+                    if (selectedCouleur) params.set('couleur', selectedCouleur);
+                    const newUrl = BASE_URL + '?' + params.toString();
+                    if (window.location.href !== newUrl) {
+                        history.pushState({ productId: p.id, taille: selectedTaille, couleur: selectedCouleur }, '', newUrl);
+                    }
                 }
+                updateUrl();
+
                 document.getElementById('catalogueView').style.display = 'none';
                 document.getElementById('productPage').classList.add('open');
 
-                // Carrousel tactile
+                // --- Carrousel infini ---
                 const images = [p.image, p.image2, p.image3].filter(url => url && url.trim() !== '');
                 const scrollContainer = document.getElementById('carouselScroll');
                 const dotsContainer = document.getElementById('carouselDotsFull');
@@ -604,42 +665,96 @@
                     dot.className = 'carousel-dot active';
                     dotsContainer.appendChild(dot);
                 } else {
-                    images.forEach((url, idx) => {
+                    const realSlides = images.map((url, idx) => {
                         const slide = document.createElement('div');
                         slide.className = 'carousel-slide';
+                        slide.dataset.realIndex = idx;
                         slide.innerHTML = `<img src="${escapeHtml(url)}" alt="${escapeHtml(p.name)}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><span style="display:none; width:100%; height:100%; align-items:center; justify-content:center; font-size:2.5rem;">📷</span>`;
-                        scrollContainer.appendChild(slide);
+                        return slide;
+                    });
+
+                    const firstClone = realSlides[0].cloneNode(true);
+                    firstClone.dataset.realIndex = 0;
+                    const lastClone = realSlides[realSlides.length - 1].cloneNode(true);
+                    lastClone.dataset.realIndex = realSlides.length - 1;
+
+                    scrollContainer.appendChild(lastClone);
+                    realSlides.forEach(s => scrollContainer.appendChild(s));
+                    scrollContainer.appendChild(firstClone);
+
+                    // Positionner sur le premier vrai slide (index 1)
+                    const slideWidth = scrollContainer.clientWidth;
+                    scrollContainer.scrollLeft = slideWidth;
+
+                    // Création des dots (une par image réelle)
+                    for (let i = 0; i < images.length; i++) {
                         const dot = document.createElement('button');
-                        dot.className = 'carousel-dot' + (idx === 0 ? ' active' : '');
-                        dot.dataset.index = idx;
+                        dot.className = 'carousel-dot';
+                        dot.dataset.index = i;
                         dotsContainer.appendChild(dot);
+                    }
+                    if (dotsContainer.firstChild) dotsContainer.firstChild.classList.add('active');
+
+                    function handleLoopScroll() {
+                        const w = scrollContainer.clientWidth;
+                        const maxScroll = scrollContainer.scrollWidth - w;
+                        const scrolled = scrollContainer.scrollLeft;
+
+                        if (scrolled >= maxScroll - 1) {
+                            // On est sur le clone du début -> sauter au vrai début (index 1)
+                            scrollContainer.scrollLeft = w;
+                        } else if (scrolled <= 0) {
+                            // On est sur le clone de la fin -> sauter au vrai dernier (index avant lastClone)
+                            scrollContainer.scrollLeft = maxScroll - w;
+                        }
+
+                        // Calcul de l'index réel à partir de la position
+                        const rawIndex = Math.round(scrollContainer.scrollLeft / w);
+                        let realIndex = rawIndex - 1; // car premier élément = clone de fin
+                        if (realIndex < 0) realIndex = images.length - 1;
+                        if (realIndex >= images.length) realIndex = 0;
+
+                        const dots = dotsContainer.querySelectorAll('.carousel-dot');
+                        dots.forEach((d, i) => d.classList.toggle('active', i === realIndex));
+                    }
+
+                    scrollContainer.addEventListener('scroll', handleLoopScroll, { passive: true });
+
+                    dotsContainer.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('carousel-dot')) {
+                            const idx = parseInt(e.target.dataset.index);
+                            const w = scrollContainer.clientWidth;
+                            scrollContainer.scrollTo({ left: (idx + 1) * w, behavior: 'smooth' });
+                        }
                     });
                 }
 
-                function updateDots() {
-                    const index = Math.round(scrollContainer.scrollLeft / scrollContainer.clientWidth);
-                    const dots = dotsContainer.querySelectorAll('.carousel-dot');
-                    dots.forEach((d, i) => d.classList.toggle('active', i === index));
-                }
-                scrollContainer.addEventListener('scroll', updateDots, { passive: true });
-
-                dotsContainer.addEventListener('click', (e) => {
-                    if (e.target.classList.contains('carousel-dot')) {
-                        const idx = parseInt(e.target.dataset.index);
-                        scrollContainer.scrollTo({ left: idx * scrollContainer.clientWidth, behavior: 'smooth' });
-                    }
-                });
-
+                // --- Informations produit ---
                 document.getElementById('productPageRef').textContent = `[Réf: #${p.id}]`;
                 document.getElementById('productPagePrice').textContent = formatPrice(p.price);
+                const moq = p.moq || 1;
+                document.getElementById('productPageMoq').textContent = `Minimum d'achat : ${moq} pièce(s)`;
                 document.getElementById('productPageDesc').textContent = p.description || '';
 
-                // Tailles / Couleurs
-                const tailles = (p.tailles || '').split(',').map(s => s.trim()).filter(Boolean);
-                const couleurs = (p.couleurs || '').split(',').map(s => s.trim()).filter(Boolean);
-                let selectedTaille = tailles.length ? tailles[0] : '';
-                let selectedCouleur = couleurs.length ? couleurs[0] : '';
+                // Bouton de partage
+                document.getElementById('shareProductBtn').onclick = function() {
+                    const shareUrl = BASE_URL + '?id=' + p.id + (selectedTaille ? '&taille=' + encodeURIComponent(selectedTaille) : '') + (selectedCouleur ? '&couleur=' + encodeURIComponent(selectedCouleur) : '');
+                    if (navigator.share) {
+                        navigator.share({
+                            title: p.name,
+                            text: `Découvre "${p.name}" sur NRJ Marketplace International`,
+                            url: shareUrl
+                        }).catch(() => {});
+                    } else {
+                        navigator.clipboard.writeText(shareUrl).then(() => {
+                            showToast('🔗 Lien copié !');
+                        }).catch(() => {
+                            showToast('❌ Copie impossible');
+                        });
+                    }
+                };
 
+                // Options taille/couleur
                 function renderOptions(container, options, selected, type) {
                     container.innerHTML = '';
                     options.forEach(opt => {
@@ -649,8 +764,12 @@
                         btn.addEventListener('click', () => {
                             container.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
                             btn.classList.add('selected');
-                            if (type === 'taille') selectedTaille = opt;
-                            else selectedCouleur = opt;
+                            if (type === 'taille') {
+                                selectedTaille = opt;
+                            } else {
+                                selectedCouleur = opt;
+                            }
+                            updateUrl();
                         });
                         container.appendChild(btn);
                     });
@@ -710,7 +829,7 @@
 
             document.getElementById('backToCatalogue').addEventListener('click', hideProductPage);
 
-            // Clics sur les produits
+            // Clics sur produits (catalogue + recommandations)
             document.addEventListener('click', e => {
                 const productCard = e.target.closest('.product-card');
                 if (productCard && !e.target.closest('.add-btn')) {
@@ -731,7 +850,9 @@
                     const id = parseInt(productId);
                     const product = products.find(p => p.id === id);
                     if (product) {
-                        showProductPage(id);
+                        const taille = urlParams.get('taille');
+                        const couleur = urlParams.get('couleur');
+                        showProductPage(id, taille, couleur);
                     }
                 }
             }
@@ -739,7 +860,9 @@
             window.addEventListener('popstate', (e) => {
                 if (e.state && e.state.productId) {
                     const product = products.find(p => p.id === e.state.productId);
-                    if (product) showProductPage(e.state.productId);
+                    if (product) {
+                        showProductPage(e.state.productId, e.state.taille, e.state.couleur);
+                    }
                 } else {
                     hideProductPage();
                 }
@@ -802,15 +925,17 @@
                 const image3 = document.getElementById('adminImage3').value.trim();
                 const tailles = document.getElementById('adminTailles').value.trim();
                 const couleurs = document.getElementById('adminCouleurs').value.trim();
+                const moq = parseInt(document.getElementById('adminMoq').value) || 1;
                 const description = document.getElementById('adminDesc').value.trim();
 
                 if (!name || !category || isNaN(price)) return alert('Remplis nom, catégorie et prix.');
 
-                const product = { name, price, category, emoji: emoji || '📦', image, image2, image3, tailles, couleurs, description };
+                const product = { name, price, category, emoji: emoji || '📦', image, image2, image3, tailles, couleurs, moq, description };
                 try {
                     await insertProduct(product);
                     alert('✅ Produit ajouté dans Supabase !');
-                    ['adminName','adminCategory','adminPrice','adminEmoji','adminImage','adminImage2','adminImage3','adminTailles','adminCouleurs','adminDesc'].forEach(id => document.getElementById(id).value = '');
+                    ['adminName','adminCategory','adminPrice','adminEmoji','adminImage','adminImage2','adminImage3','adminTailles','adminCouleurs','adminMoq','adminDesc'].forEach(id => document.getElementById(id).value = '');
+                    document.getElementById('adminMoq').value = '1';
                     await fetchProducts(); renderProducts(); renderFilters(); renderAdminList();
                     showToast('✅ Catalogue mis à jour');
                 } catch (err) {
@@ -837,7 +962,7 @@
                     </li>`).join('');
             }
 
-            // Event delegation pour les actions panier, etc.
+            // Event delegation pour actions panier, etc.
             document.addEventListener('click', e => {
                 const t = e.target;
                 if (t.matches('[data-action="add-to-cart"]')) {
@@ -900,4 +1025,4 @@
         })();
     </script>
 </body>
-</html>
+    </html>
