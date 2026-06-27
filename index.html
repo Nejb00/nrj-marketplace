@@ -132,6 +132,7 @@
         .modal-overlay.open { opacity: 1; pointer-events: auto; }
         .modal { background: white; border-radius: var(--radius); width: 100%; max-width: 420px; padding: 2rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
 
+        /* PAGE PRODUIT */
         .product-page { display: none; flex-direction: column; background: white; min-height: 100vh; }
         .product-page.open { display: flex; }
         .carousel-container-full {
@@ -414,7 +415,7 @@
         <h2 style="margin-bottom:1rem; font-size:1.2rem; color:var(--primary)">Ajouter un nouveau produit</h2>
         <p style="font-size:0.75rem; margin-bottom:1.5rem; color:#64748b;">ℹ️ Les produits sont stockés dans Supabase et visibles par tous.</p>
         <div class="form-group"><label>Nom</label><input type="text" id="adminName" placeholder="Ex: Écouteurs Pro"></div>
-        <div class="form-group"><label>Catégorie</label><input type="text" id="adminCategory" placeholder="Électronique, Mode..."></div>
+        <div class="form-group"><label>Catégorie (texte uniquement, sans émoji)</label><input type="text" id="adminCategory" placeholder="Électronique, Mode..."></div>
         <div class="form-group"><label>Prix (FCFA)</label><input type="number" id="adminPrice" placeholder="8500"></div>
         <div class="form-group"><label>Emoji</label><input type="text" id="adminEmoji" placeholder="🎧" maxlength="3"></div>
         <div class="form-group"><label>URL Image 1</label><input type="url" id="adminImage" placeholder="https://..."></div>
@@ -451,9 +452,13 @@
             function formatPrice(amount) {
                 return 'XAF ' + amount.toLocaleString('fr-FR');
             }
+            // Retirer les emojis d'une chaîne (caractères Unicode emoji)
+            function removeEmojis(str) {
+                return str.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{2300}-\u{23FF}\u{2B50}\u{2B55}\u{2934}\u{2935}\u{25AA}\u{25AB}\u{25FE}\u{25FD}\u{25FB}\u{25FC}\u{25B6}\u{25C0}\u{3030}\u{303D}\u{3297}\u{3299}\u{FE0F}\u{200D}]/gu, '').trim();
+            }
 
             let products = [];
-            let cart = JSON.parse(localStorage.getItem('nrj_cart_v16') || '[]');
+            let cart = JSON.parse(localStorage.getItem('nrj_cart_v17') || '[]');
             let currentFilter = 'all';
             let currentProductId = null;
 
@@ -498,13 +503,14 @@
             }
 
             function renderFilters() {
-                const categories = [...new Set(products.map(p => p.category))];
+                // Nettoyer les catégories de tout émoji
+                const categories = [...new Set(products.map(p => removeEmojis(p.category)))];
                 let html = '<button class="filter-btn active" data-category="all">Tout voir</button>';
                 categories.forEach(cat => html += `<button class="filter-btn" data-category="${escapeHtml(cat)}">${escapeHtml(cat)}</button>`);
                 document.getElementById('filterBar').innerHTML = html;
             }
 
-            function saveCart() { localStorage.setItem('nrj_cart_v16', JSON.stringify(cart)); }
+            function saveCart() { localStorage.setItem('nrj_cart_v17', JSON.stringify(cart)); }
 
             function addToCart(productId, taille = '', couleur = '') {
                 const p = products.find(pr => pr.id === productId);
@@ -620,7 +626,7 @@
                 showToast('📤 Commande envoyée');
             }
 
-            // ========== PAGE PRODUIT (carrousel infini corrigé) ==========
+            // ========== PAGE PRODUIT (carrousel standard sans boucle) ==========
             function showProductPage(productId, initialTaille = null, initialCouleur = null) {
                 const p = products.find(pr => pr.id === productId);
                 if (!p) return;
@@ -646,7 +652,7 @@
                 document.getElementById('catalogueView').style.display = 'none';
                 document.getElementById('productPage').classList.add('open');
 
-                // --- Carrousel infini avec clones et scrollend ---
+                // --- Carrousel standard ---
                 const images = [p.image, p.image2, p.image3].filter(url => url && url.trim() !== '');
                 const scrollContainer = document.getElementById('carouselScroll');
                 const dotsContainer = document.getElementById('carouselDotsFull');
@@ -662,80 +668,34 @@
                     dot.className = 'carousel-dot active';
                     dotsContainer.appendChild(dot);
                 } else {
-                    const realSlides = images.map((url, idx) => {
+                    images.forEach((url, idx) => {
                         const slide = document.createElement('div');
                         slide.className = 'carousel-slide';
-                        slide.dataset.realIndex = idx;
                         slide.innerHTML = `<img src="${escapeHtml(url)}" alt="${escapeHtml(p.name)}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><span style="display:none; width:100%; height:100%; align-items:center; justify-content:center; font-size:2.5rem;">📷</span>`;
-                        return slide;
-                    });
-
-                    const firstClone = realSlides[0].cloneNode(true);
-                    firstClone.dataset.realIndex = 0;
-                    const lastClone = realSlides[realSlides.length - 1].cloneNode(true);
-                    lastClone.dataset.realIndex = realSlides.length - 1;
-
-                    scrollContainer.appendChild(lastClone);
-                    realSlides.forEach(s => scrollContainer.appendChild(s));
-                    scrollContainer.appendChild(firstClone);
-
-                    const slideWidth = scrollContainer.clientWidth;
-                    scrollContainer.scrollLeft = slideWidth; // position sur le premier vrai slide
-
-                    // Création des dots (une par image réelle)
-                    for (let i = 0; i < images.length; i++) {
+                        scrollContainer.appendChild(slide);
                         const dot = document.createElement('button');
-                        dot.className = 'carousel-dot';
-                        dot.dataset.index = i;
+                        dot.className = 'carousel-dot' + (idx === 0 ? ' active' : '');
+                        dot.dataset.index = idx;
                         dotsContainer.appendChild(dot);
-                    }
-                    if (dotsContainer.firstChild) dotsContainer.firstChild.classList.add('active');
-
-                    let ignoreScroll = false;
-                    function handleLoopScroll() {
-                        if (ignoreScroll) return;
-                        const w = scrollContainer.clientWidth;
-                        const maxScroll = scrollContainer.scrollWidth - w;
-                        const scrolled = scrollContainer.scrollLeft;
-
-                        if (scrolled >= maxScroll - 1) {
-                            ignoreScroll = true;
-                            scrollContainer.scrollLeft = w;
-                            ignoreScroll = false;
-                        } else if (scrolled <= 0) {
-                            ignoreScroll = true;
-                            scrollContainer.scrollLeft = maxScroll - w;
-                            ignoreScroll = false;
-                        }
-
-                        // Mise à jour dots
-                        const rawIndex = Math.round(scrollContainer.scrollLeft / w);
-                        let realIndex = rawIndex - 1;
-                        if (realIndex < 0) realIndex = images.length - 1;
-                        if (realIndex >= images.length) realIndex = 0;
-                        const dots = dotsContainer.querySelectorAll('.carousel-dot');
-                        dots.forEach((d, i) => d.classList.toggle('active', i === realIndex));
-                    }
-
-                    // Utiliser scrollend pour les navigateurs modernes, scroll avec debounce sinon
-                    if ('onscrollend' in window) {
-                        scrollContainer.addEventListener('scrollend', handleLoopScroll);
-                    } else {
-                        let scrollTimer;
-                        scrollContainer.addEventListener('scroll', () => {
-                            clearTimeout(scrollTimer);
-                            scrollTimer = setTimeout(handleLoopScroll, 100);
-                        }, { passive: true });
-                    }
-
-                    dotsContainer.addEventListener('click', (e) => {
-                        if (e.target.classList.contains('carousel-dot')) {
-                            const idx = parseInt(e.target.dataset.index);
-                            const w = scrollContainer.clientWidth;
-                            scrollContainer.scrollTo({ left: (idx + 1) * w, behavior: 'smooth' });
-                        }
                     });
                 }
+
+                function updateDots() {
+                    const w = scrollContainer.clientWidth;
+                    if (w === 0) return;
+                    const idx = Math.round(scrollContainer.scrollLeft / w);
+                    const dots = dotsContainer.querySelectorAll('.carousel-dot');
+                    dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+                }
+                scrollContainer.addEventListener('scroll', updateDots, { passive: true });
+
+                dotsContainer.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('carousel-dot')) {
+                        const idx = parseInt(e.target.dataset.index);
+                        const w = scrollContainer.clientWidth;
+                        scrollContainer.scrollTo({ left: idx * w, behavior: 'smooth' });
+                    }
+                });
 
                 document.getElementById('productPageRef').textContent = `[ID: ${p.id}]`;
                 document.getElementById('productPagePrice').textContent = formatPrice(p.price);
@@ -933,7 +893,8 @@
 
                 if (!name || !category || isNaN(price)) return alert('Remplis nom, catégorie et prix.');
 
-                const product = { name, price, category, emoji: emoji || '📦', image, image2, image3, tailles, couleurs, moq, description };
+                // Nettoyer la catégorie des emojis avant envoi
+                const product = { name, price, category: removeEmojis(category), emoji: emoji || '📦', image, image2, image3, tailles, couleurs, moq, description };
                 try {
                     await insertProduct(product);
                     alert('✅ Produit ajouté dans Supabase !');
@@ -1027,4 +988,4 @@
         })();
     </script>
 </body>
-                </html>
+    </html>
