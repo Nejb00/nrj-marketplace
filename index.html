@@ -63,6 +63,11 @@
         .cart-count { background: var(--primary); color: white; border-radius: 40px; padding: 0.1rem 0.5rem; font-size: 0.75rem; font-weight: 700; }
         .admin-icon-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #64748b; transition: 0.2s; }
         .admin-icon-btn:hover { color: var(--primary); transform: rotate(20deg); }
+        .logout-btn {
+            background: #fee2e2; color: #ef4444; border: none; border-radius: 50px; padding: 0.5rem 0.9rem;
+            cursor: pointer; font-size: 0.8rem; font-weight: 600; display: none; align-items: center; gap: 0.3rem;
+        }
+        .logout-btn.visible { display: flex; }
 
         .filter-bar { display: flex; gap: 0.5rem; padding: 0.8rem 1rem; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
         .filter-bar::-webkit-scrollbar { display: none; }
@@ -139,8 +144,10 @@
         .carousel-prev { left: 0.5rem; }
         .carousel-next { right: 0.5rem; }
         .product-detail-name { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.3rem; }
+        .product-detail-ref { font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem; }
         .product-detail-price { font-size: 1.3rem; font-weight: 800; color: var(--primary); margin-bottom: 0.8rem; }
         .product-detail-desc { color: #475569; font-size: 0.9rem; margin-bottom: 1rem; }
+        .product-detail-link { font-size: 0.8rem; color: #3b82f6; margin-bottom: 1rem; word-break: break-all; }
         .option-group { margin-bottom: 0.8rem; }
         .option-group label { font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.3rem; }
         .option-buttons { display: flex; flex-wrap: wrap; gap: 0.4rem; }
@@ -175,6 +182,7 @@
         .admin-panel.active { display: block; }
         .admin-products-list { list-style: none; margin-top: 1rem; }
         .admin-products-list li { display: flex; justify-content: space-between; align-items: center; padding: 0.7rem; background: #f8fafc; border-radius: 12px; margin-bottom: 0.5rem; font-size: 0.85rem; border: 1px solid var(--border); }
+        .admin-ref { font-size: 0.7rem; color: #94a3b8; }
         .btn-sm { background: #ef4444; color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 20px; cursor: pointer; font-weight: 600; transition: 0.2s; }
         .btn-sm:hover { background: #dc2626; }
 
@@ -187,7 +195,7 @@
 </head>
 <body>
     <header>
-        <div class="logo-wrapper" onclick="location.reload()">
+        <div class="logo-wrapper" onclick="location.href='/'">
             <span class="logo-icon">⚡</span>
             <div>
                 <div class="logo-text">NRJ</div>
@@ -196,6 +204,7 @@
         </div>
         <div class="header-actions">
             <button class="admin-icon-btn" id="adminTrigger" title="Administration">⚙️</button>
+            <button class="logout-btn" id="logoutBtn" title="Se déconnecter">🚪 Déconnexion</button>
             <button class="icon-btn" id="cartToggleBtn">
                 🛒 <span class="cart-count" id="cartCount">0</span>
             </button>
@@ -219,8 +228,10 @@
             </div>
             <div class="carousel-nav" id="carouselDots"></div>
             <div class="product-detail-name" id="productDetailName"></div>
+            <div class="product-detail-ref" id="productDetailRef"></div>
             <div class="product-detail-price" id="productDetailPrice"></div>
             <div class="product-detail-desc" id="productDetailDesc"></div>
+            <div class="product-detail-link" id="productDetailLink"></div>
             <div class="option-group" id="tailleGroup" style="display:none;">
                 <label>Taille</label>
                 <div class="option-buttons" id="tailleOptions"></div>
@@ -319,6 +330,8 @@
             const SUPABASE_URL = 'https://peojyqliwrtghomyukwn.supabase.co';
             const SUPABASE_ANON_KEY = 'sb_publishable_Fy-Q_BAginf2p6UdUtxDMA_V1hP8Slt';
             const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            // URL de base pour les liens de partage (à adapter selon ton dépôt GitHub Pages)
+            const BASE_URL = 'https://nejb00.github.io/nrj-marketplace/';
 
             function escapeHtml(str) {
                 const div = document.createElement('div');
@@ -330,7 +343,7 @@
             }
 
             let products = [];
-            let cart = JSON.parse(localStorage.getItem('nrj_cart_v9') || '[]');
+            let cart = JSON.parse(localStorage.getItem('nrj_cart_v11') || '[]');
             let currentFilter = 'all';
 
             async function fetchProducts() {
@@ -380,7 +393,7 @@
                 document.getElementById('filterBar').innerHTML = html;
             }
 
-            function saveCart() { localStorage.setItem('nrj_cart_v9', JSON.stringify(cart)); }
+            function saveCart() { localStorage.setItem('nrj_cart_v11', JSON.stringify(cart)); }
             function refreshCartDisplay() {
                 const count = cart.reduce((s, i) => s + i.quantity, 0);
                 const total = cart.reduce((s, i) => {
@@ -445,7 +458,7 @@
                     const p = products.find(pr => pr.id === i.productId);
                     if (!p) return '';
                     total += p.price * i.quantity;
-                    let desc = `${escapeHtml(p.name)}`;
+                    let desc = `${escapeHtml(p.name)} [Réf: #${p.id}]`;
                     if (i.couleur || i.taille) desc += ` (${[i.couleur, i.taille].filter(Boolean).join(', ')})`;
                     return `• ${desc} x${i.quantity}`;
                 }).filter(Boolean).join('<br>');
@@ -463,9 +476,10 @@
                 cart.forEach(i => {
                     const p = products.find(pr => pr.id === i.productId);
                     if (p) {
-                        let desc = `${encodeURIComponent(p.name)}`;
+                        let desc = `${encodeURIComponent(p.name)} [Réf: #${p.id}]`;
                         if (i.couleur || i.taille) desc += ` (${[i.couleur, i.taille].filter(Boolean).join(', ')})`;
-                        msg += `- ${desc} x${i.quantity} = ${formatPrice(p.price * i.quantity)}%0A`;
+                        const productLink = BASE_URL + '?id=' + p.id;
+                        msg += `- ${desc} x${i.quantity} = ${formatPrice(p.price * i.quantity)}%0A  🔗 ${encodeURIComponent(productLink)}%0A`;
                         total += p.price * i.quantity;
                     }
                 });
@@ -479,6 +493,11 @@
             function openProductModal(productId) {
                 const p = products.find(pr => pr.id === productId);
                 if (!p) return;
+                // Mise à jour de l'URL sans rechargement
+                const newUrl = BASE_URL + '?id=' + p.id;
+                if (window.location.href !== newUrl) {
+                    history.pushState({ productId: p.id }, '', newUrl);
+                }
                 const images = [p.image, p.image2, p.image3].filter(url => url && url.trim() !== '');
                 const container = document.getElementById('carouselContainer');
                 const dotsEl = document.getElementById('carouselDots');
@@ -505,8 +524,11 @@
                     dotsEl.appendChild(dot);
                 }
                 document.getElementById('productDetailName').textContent = p.name;
+                document.getElementById('productDetailRef').innerHTML = `[Réf: #${p.id}]`;
                 document.getElementById('productDetailPrice').textContent = formatPrice(p.price);
                 document.getElementById('productDetailDesc').textContent = p.description || '';
+                const productLink = BASE_URL + '?id=' + p.id;
+                document.getElementById('productDetailLink').innerHTML = `🔗 <a href="${productLink}" target="_blank">Lien direct vers ce produit</a>`;
 
                 const tailleGroup = document.getElementById('tailleGroup');
                 const couleurGroup = document.getElementById('couleurGroup');
@@ -572,6 +594,31 @@
                 });
             }
 
+            // Gestion de l'ID dans l'URL au chargement
+            function checkUrlAndOpenProduct() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const productId = urlParams.get('id');
+                if (productId) {
+                    const id = parseInt(productId);
+                    const product = products.find(p => p.id === id);
+                    if (product) {
+                        openProductModal(id);
+                    }
+                }
+            }
+
+            // Gestion du bouton retour/avant du navigateur
+            window.addEventListener('popstate', (e) => {
+                if (e.state && e.state.productId) {
+                    const product = products.find(p => p.id === e.state.productId);
+                    if (product) {
+                        openProductModal(e.state.productId);
+                    }
+                } else {
+                    document.getElementById('productModalOverlay').classList.remove('open');
+                }
+            });
+
             // ========== AUTHENTIFICATION SUPABASE ==========
             async function handleAdminLogin() {
                 const email = document.getElementById('adminEmail').value.trim();
@@ -592,9 +639,9 @@
 
                     if (error) throw error;
 
-                    // Connexion réussie
                     document.getElementById('adminPanel').classList.add('active');
                     document.getElementById('adminModalOverlay').classList.remove('open');
+                    document.getElementById('logoutBtn').classList.add('visible');
                     renderAdminList();
                     document.getElementById('adminPanel').scrollIntoView({ behavior: 'smooth' });
                     showToast('🔓 Connecté en tant qu\'admin');
@@ -603,11 +650,18 @@
                 }
             }
 
-            // Vérifier si déjà connecté au chargement
+            async function handleLogout() {
+                await supabaseClient.auth.signOut();
+                document.getElementById('adminPanel').classList.remove('active');
+                document.getElementById('logoutBtn').classList.remove('visible');
+                showToast('👋 Déconnecté');
+            }
+
             async function checkSession() {
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 if (session) {
                     document.getElementById('adminPanel').classList.add('active');
+                    document.getElementById('logoutBtn').classList.add('visible');
                     renderAdminList();
                 }
             }
@@ -651,8 +705,10 @@
 
             function renderAdminList() {
                 document.getElementById('adminProductsList').innerHTML = products.map(p => `
-                    <li><span>${escapeHtml(p.name)} (${formatPrice(p.price)})</span>
-                    <button class="btn-sm" data-action="admin-remove" data-id="${p.id}">Supprimer</button></li>`).join('');
+                    <li>
+                        <span>${escapeHtml(p.name)} <span class="admin-ref">[Réf: #${p.id}]</span> (${formatPrice(p.price)})</span>
+                        <button class="btn-sm" data-action="admin-remove" data-id="${p.id}">Supprimer</button>
+                    </li>`).join('');
             }
 
             // Event delegation
@@ -709,10 +765,20 @@
             document.getElementById('adminTrigger').addEventListener('click', () => document.getElementById('adminModalOverlay').classList.add('open'));
             document.getElementById('cancelAdminBtn').addEventListener('click', () => document.getElementById('adminModalOverlay').classList.remove('open'));
             document.getElementById('adminLoginBtn').addEventListener('click', handleAdminLogin);
+            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
             document.getElementById('addProductBtn').addEventListener('click', addProduct);
 
-            document.getElementById('closeProductModalBtn').addEventListener('click', () => document.getElementById('productModalOverlay').classList.remove('open'));
-            document.getElementById('productModalOverlay').addEventListener('click', function(e) { if (e.target === this) this.classList.remove('open'); });
+            document.getElementById('closeProductModalBtn').addEventListener('click', () => {
+                document.getElementById('productModalOverlay').classList.remove('open');
+                // Supprimer le paramètre id de l'URL
+                history.pushState(null, '', BASE_URL);
+            });
+            document.getElementById('productModalOverlay').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('open');
+                    history.pushState(null, '', BASE_URL);
+                }
+            });
 
             async function init() {
                 await fetchProducts();
@@ -720,6 +786,8 @@
                 renderProducts();
                 refreshCartDisplay();
                 await checkSession();
+                // Vérifier si un id est présent dans l'URL
+                checkUrlAndOpenProduct();
             }
             init();
         })();
