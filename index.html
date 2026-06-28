@@ -99,8 +99,8 @@
         }
         .filter-btn.active { background: var(--dark); color: white; border-color: var(--dark); }
         .filter-btn:hover:not(.active) { border-color: #94a3b8; }
-        .fav-btn.filter-btn { background: white; color: #475569; } /* par défaut */
-        .fav-btn.filter-btn.active { background: #ef4444; color: white; border-color: #ef4444; } /* quand actif, rouge */
+        .fav-btn.filter-btn { background: white; color: #475569; }
+        .fav-btn.filter-btn.active { background: #ef4444; color: white; border-color: #ef4444; }
 
         .products-section { padding: 0.5rem 0.8rem 3rem; max-width: 1200px; margin: 0 auto; width: 100%; }
         .products-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
@@ -655,13 +655,11 @@
                 showToast('📤 Commande envoyée');
             }
 
-            // Toggle favori
             function toggleFavorite(productId) {
                 const index = favorites.indexOf(productId);
                 if (index > -1) favorites.splice(index, 1);
                 else favorites.push(productId);
                 saveFavorites();
-                // Re-render la grille et la page produit si nécessaire
                 renderProducts();
                 if (currentProductId === productId && document.getElementById('productPage').classList.contains('open')) {
                     updatePageFavButton(productId);
@@ -731,7 +729,6 @@
                 document.getElementById('productPageMoq').textContent = `Minimum d'achat : ${p.moq || 1} pièce(s)`;
                 document.getElementById('productPageDesc').textContent = p.description || '';
 
-                // Favori bouton page produit
                 document.getElementById('productPageFavBtn').textContent = favorites.includes(p.id) ? '❤️' : '🤍';
                 document.getElementById('productPageFavBtn').onclick = () => toggleFavorite(p.id);
 
@@ -786,7 +783,6 @@
                 const recCard = e.target.closest('.rec-card');
                 if (recCard) showProductPage(parseInt(recCard.dataset.productId));
                 
-                // Gestion des clics sur favori
                 if (e.target.closest('[data-action="toggle-favorite"]')) {
                     e.stopPropagation();
                     const id = parseInt(e.target.closest('[data-action="toggle-favorite"]').dataset.id);
@@ -809,7 +805,7 @@
                 renderProducts();
             });
 
-            // Sourcing
+            // Sourcing (correction bucket name)
             function initSourcing() {
                 const sourcingBtn = document.getElementById('sourcingBtn');
                 const fileInput = document.getElementById('sourcingFileInput');
@@ -820,7 +816,7 @@
                     statusEl.textContent = 'Téléchargement de la photo...';
                     try {
                         const fileName = `sourcing_${Date.now()}_${file.name}`;
-                        const bucketName = 'sourcing';
+                        const bucketName = 'sourcing-photos'; // Nom corrigé du bucket
                         const { data: uploadData, error: uploadError } = await supabaseClient.storage.from(bucketName).upload(fileName, file, { cacheControl: '3600', upsert: false });
                         if (uploadError) throw uploadError;
                         const { data: { publicUrl } } = supabaseClient.storage.from(bucketName).getPublicUrl(fileName);
@@ -920,7 +916,6 @@
                     <button class="btn-sm" data-action="admin-remove" data-id="${p.id}">Supprimer</button></li>`).join('');
             }
 
-            // Event delegation pour actions panier, filtres, etc.
             document.addEventListener('click', e => {
                 const t = e.target;
                 if (t.matches('[data-action="add-to-cart"]')) { e.stopPropagation(); return addToCart(parseInt(t.dataset.id)); }
@@ -968,4 +963,4 @@
         })();
     </script>
 </body>
-                                    </html>
+            </html>
