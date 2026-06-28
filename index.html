@@ -436,7 +436,7 @@
         </div>
     </div>
 
-    <!-- Admin panel -->
+    <!-- Admin panel (maintenant jusqu'à 6 images) -->
     <div class="admin-panel" id="adminPanel">
         <h2 style="margin-bottom:1rem; font-size:1.2rem; color:var(--primary)">Ajouter un nouveau produit</h2>
         <p style="font-size:0.75rem; margin-bottom:1.5rem; color:#64748b;">ℹ️ Les produits sont stockés dans Supabase et visibles par tous.</p>
@@ -446,6 +446,9 @@
         <div class="form-group"><label>URL Image 1</label><input type="url" id="adminImage" placeholder="https://..."></div>
         <div class="form-group"><label>URL Image 2</label><input type="url" id="adminImage2" placeholder="https://..."></div>
         <div class="form-group"><label>URL Image 3</label><input type="url" id="adminImage3" placeholder="https://..."></div>
+        <div class="form-group"><label>URL Image 4</label><input type="url" id="adminImage4" placeholder="https://..."></div>
+        <div class="form-group"><label>URL Image 5</label><input type="url" id="adminImage5" placeholder="https://..."></div>
+        <div class="form-group"><label>URL Image 6</label><input type="url" id="adminImage6" placeholder="https://..."></div>
         <div class="form-group"><label>Tailles (séparées par des virgules)</label><input type="text" id="adminTailles" placeholder="M, L, XL"></div>
         <div class="form-group"><label>Couleurs (séparées par des virgules)</label><input type="text" id="adminCouleurs" placeholder="Noir, Blanc, Kaki"></div>
         <div class="form-group"><label>Quantité minimale (MOQ)</label><input type="number" id="adminMoq" placeholder="1" min="1" value="1"></div>
@@ -475,7 +478,7 @@
             function removeEmojis(str) { return str.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{2300}-\u{23FF}\u{2B50}\u{2B55}\u{2934}\u{2935}\u{25AA}\u{25AB}\u{25FE}\u{25FD}\u{25FB}\u{25FC}\u{25B6}\u{25C0}\u{3030}\u{303D}\u{3297}\u{3299}\u{FE0F}\u{200D}]/gu, '').trim(); }
 
             let products = [];
-            let cart = JSON.parse(localStorage.getItem('nrj_cart_v21') || '[]');
+            let cart = JSON.parse(localStorage.getItem('nrj_cart_v22') || '[]');
             let favorites = JSON.parse(localStorage.getItem('nrj_favorites') || '[]');
             let currentFilter = 'all';
             let searchQuery = '';
@@ -500,7 +503,6 @@
 
             function renderProducts() {
                 let filtered = products;
-
                 if (currentFilter === 'favorites') {
                     filtered = products.filter(p => favorites.includes(p.id));
                     if (filtered.length === 0) {
@@ -510,12 +512,10 @@
                 } else if (currentFilter !== 'all') {
                     filtered = products.filter(p => p.category === currentFilter);
                 }
-
                 if (searchQuery && !(/^\d+$/.test(searchQuery) && products.some(p => p.id === parseInt(searchQuery)))) {
                     const query = searchQuery.toLowerCase();
                     filtered = filtered.filter(p => p.name.toLowerCase().includes(query) || (p.category && p.category.toLowerCase().includes(query)));
                 }
-
                 document.getElementById('productsGrid').innerHTML = filtered.map(p => {
                     const safeName = escapeHtml(p.name);
                     const firstImage = p.image || '';
@@ -548,7 +548,7 @@
                 document.getElementById('filterBar').innerHTML = html;
             }
 
-            function saveCart() { localStorage.setItem('nrj_cart_v21', JSON.stringify(cart)); }
+            function saveCart() { localStorage.setItem('nrj_cart_v22', JSON.stringify(cart)); }
 
             function addToCart(productId, taille = '', couleur = '') {
                 const p = products.find(pr => pr.id === productId);
@@ -623,7 +623,6 @@
                     return `• ${desc} x${i.quantity}`;
                 }).filter(Boolean).join('<br>');
                 document.getElementById('orderSummary').innerHTML = `${items}<br><br><strong>Total : ${formatPrice(total)}</strong>`;
-                // Pré-remplir le nom client depuis localStorage
                 const savedName = localStorage.getItem('nrj_customer_name') || '';
                 document.getElementById('customerName').value = savedName;
                 document.getElementById('orderModalOverlay').classList.add('open');
@@ -634,7 +633,6 @@
             function sendWhatsAppOrder() {
                 const name = document.getElementById('customerName').value.trim();
                 if (!name) return alert('Entre ton nom');
-                // Sauvegarde du nom
                 localStorage.setItem('nrj_customer_name', name);
                 let msg = `Bonjour NRJ Marketplace International, je suis ${encodeURIComponent(name)}. Ma commande :%0A`;
                 let total = 0;
@@ -668,12 +666,10 @@
 
             function updatePageFavButton(productId) {
                 const favBtn = document.getElementById('productPageFavBtn');
-                if (favBtn) {
-                    favBtn.textContent = favorites.includes(productId) ? '❤️' : '🤍';
-                }
+                if (favBtn) favBtn.textContent = favorites.includes(productId) ? '❤️' : '🤍';
             }
 
-            // Page produit
+            // Page produit (6 images)
             function showProductPage(productId, initialTaille = null, initialCouleur = null) {
                 const p = products.find(pr => pr.id === productId);
                 if (!p) return;
@@ -694,7 +690,8 @@
                 document.getElementById('catalogueView').style.display = 'none';
                 document.getElementById('productPage').classList.add('open');
 
-                const images = [p.image, p.image2, p.image3].filter(url => url && url.trim() !== '');
+                // Jusqu'à 6 images
+                const images = [p.image, p.image2, p.image3, p.image4, p.image5, p.image6].filter(url => url && url.trim() !== '');
                 const scrollContainer = document.getElementById('carouselScroll');
                 const dotsContainer = document.getElementById('carouselDotsFull');
                 scrollContainer.innerHTML = ''; dotsContainer.innerHTML = '';
@@ -805,7 +802,7 @@
                 renderProducts();
             });
 
-            // Sourcing (correction bucket name)
+            // Sourcing (bucket corrigé)
             function initSourcing() {
                 const sourcingBtn = document.getElementById('sourcingBtn');
                 const fileInput = document.getElementById('sourcingFileInput');
@@ -816,7 +813,7 @@
                     statusEl.textContent = 'Téléchargement de la photo...';
                     try {
                         const fileName = `sourcing_${Date.now()}_${file.name}`;
-                        const bucketName = 'sourcing-photos'; // Nom corrigé du bucket
+                        const bucketName = 'sourcing-photos';
                         const { data: uploadData, error: uploadError } = await supabaseClient.storage.from(bucketName).upload(fileName, file, { cacheControl: '3600', upsert: false });
                         if (uploadError) throw uploadError;
                         const { data: { publicUrl } } = supabaseClient.storage.from(bucketName).getPublicUrl(fileName);
@@ -883,16 +880,19 @@
                 const image = document.getElementById('adminImage').value.trim();
                 const image2 = document.getElementById('adminImage2').value.trim();
                 const image3 = document.getElementById('adminImage3').value.trim();
+                const image4 = document.getElementById('adminImage4').value.trim();
+                const image5 = document.getElementById('adminImage5').value.trim();
+                const image6 = document.getElementById('adminImage6').value.trim();
                 const tailles = document.getElementById('adminTailles').value.trim();
                 const couleurs = document.getElementById('adminCouleurs').value.trim();
                 const moq = parseInt(document.getElementById('adminMoq').value) || 1;
                 const description = document.getElementById('adminDesc').value.trim();
                 if (!name || !category || isNaN(price)) return alert('Remplis nom, catégorie et prix.');
-                const product = { name, price, category: removeEmojis(category), emoji: '', image, image2, image3, tailles, couleurs, moq, description };
+                const product = { name, price, category: removeEmojis(category), emoji: '', image, image2, image3, image4, image5, image6, tailles, couleurs, moq, description };
                 try {
                     await insertProduct(product);
                     alert('✅ Produit ajouté dans Supabase !');
-                    ['adminName','adminCategory','adminPrice','adminImage','adminImage2','adminImage3','adminTailles','adminCouleurs','adminMoq','adminDesc'].forEach(id => document.getElementById(id).value = '');
+                    ['adminName','adminCategory','adminPrice','adminImage','adminImage2','adminImage3','adminImage4','adminImage5','adminImage6','adminTailles','adminCouleurs','adminMoq','adminDesc'].forEach(id => document.getElementById(id).value = '');
                     document.getElementById('adminMoq').value = '1';
                     await fetchProducts(); renderProducts(); renderFilters(); renderAdminList();
                     showToast('✅ Catalogue mis à jour');
@@ -963,4 +963,4 @@
         })();
     </script>
 </body>
-            </html>
+                </html>
