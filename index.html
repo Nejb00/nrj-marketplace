@@ -102,28 +102,34 @@
         .fav-btn.filter-btn { background: var(--surface); color: var(--text-secondary); }
         .fav-btn.filter-btn.active { background: #ef4444; color: white; border-color: #ef4444; }
 
-        /* ===== GRILLE PRODUITS ===== */
+        /* ===== GRILLE PRODUITS (cartes immersives) ===== */
         .products-section { padding: 0.5rem 0.8rem 1rem; max-width: 1200px; margin: 0 auto; width: 100%; }
         .products-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
         @media (min-width: 768px) { .products-grid { grid-template-columns: repeat(4, 1fr); } }
+
         .product-card {
             position: relative;
             border-radius: var(--radius);
             overflow: hidden;
-            aspect-ratio: 1/1;
+            aspect-ratio: 3 / 4; /* format vertical immersif */
             cursor: pointer;
             transition: var(--transition);
             background: #1a1a1a;
         }
         .product-card:hover { transform: scale(1.02); }
         .product-card img {
-            width: 100%; height: 100%; object-fit: cover; display: block;
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            display: block;
         }
         .product-card-overlay {
             position: absolute;
             inset: 0;
             background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 40%, transparent 100%);
             display: flex; align-items: flex-end; padding: 0.7rem;
+            pointer-events: none; /* laisser passer les clics vers les boutons */
         }
         .product-card-info { flex: 1; min-width: 0; }
         .product-card-name {
@@ -132,11 +138,14 @@
         }
         .product-card-price { font-size: 0.95rem; font-weight: 800; color: #fff; }
         .product-card-add {
+            position: absolute;
+            bottom: 0.7rem; right: 0.7rem;
             background: var(--primary); color: white; border: none; width: 34px; height: 34px;
             border-radius: 50%; font-size: 1.1rem; cursor: pointer; display: flex;
             align-items: center; justify-content: center; flex-shrink: 0;
             transition: var(--transition); box-shadow: 0 2px 8px rgba(249,115,22,0.4);
             background: linear-gradient(135deg, #ff7b2c, #f97316);
+            z-index: 2;
         }
         .product-card-add:hover { transform: scale(1.1); }
 
@@ -184,7 +193,7 @@
         }
         .action-circle:hover { background: rgba(0,0,0,0.7); }
         .product-id-badge {
-            position: absolute; top: 16px; left: 64px; /* à droite de la flèche retour */
+            position: absolute; top: 16px; left: 64px;
             background: rgba(255,255,255,0.15); backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px); border-radius: 20px;
             padding: 0.2rem 0.8rem; font-size: 0.7rem; color: #ddd; z-index: 10;
@@ -210,14 +219,13 @@
         }
         .option-btn.selected { border-color: var(--primary); background: #2a1a0a; color: var(--primary); font-weight: 700; }
 
-        /* Barre sticky en bas pour les boutons d'action */
+        /* Barre sticky en bas */
         .sticky-bottom-bar {
             position: fixed; bottom: var(--nav-height); left: 0; right: 0;
             height: var(--bottom-bar-height); background: rgba(10,10,10,0.9);
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border-top: 1px solid var(--border); display: flex; align-items: center;
             padding: 0.5rem 1rem; z-index: 50; gap: 0.8rem;
-            /* n'apparaît que lorsque la page produit est ouverte */
             transform: translateY(100%); transition: transform 0.3s ease;
         }
         .sticky-bottom-bar.visible { transform: translateY(0); }
@@ -408,7 +416,7 @@
         </div>
     </div>
 
-    <!-- Sticky Bottom Bar (visible uniquement sur la page produit) -->
+    <!-- Sticky Bottom Bar -->
     <div class="sticky-bottom-bar" id="stickyBottomBar">
         <button class="btn-direct-sticky" id="directOrderStickyBtn">⚡ Commander directement</button>
         <button class="btn-cart-sticky" id="addToCartStickyBtn">🛒</button>
@@ -490,7 +498,7 @@
             function formatPrice(a){return 'XAF '+a.toLocaleString('fr-FR');}
             function removeEmojis(s){return s.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{2300}-\u{23FF}\u{2B50}\u{2B55}\u{2934}\u{2935}\u{25AA}\u{25AB}\u{25FE}\u{25FD}\u{25FB}\u{25FC}\u{25B6}\u{25C0}\u{3030}\u{303D}\u{3297}\u{3299}\u{FE0F}\u{200D}]/gu,'').trim();}
 
-            let products=[],cart=JSON.parse(localStorage.getItem('nrj_cart_v28')||'[]'),favorites=JSON.parse(localStorage.getItem('nrj_favorites')||'[]'),currentFilter='all',searchQuery='',searchTimeout=null,currentProductId=null;
+            let products=[],cart=JSON.parse(localStorage.getItem('nrj_cart_v29')||'[]'),favorites=JSON.parse(localStorage.getItem('nrj_favorites')||'[]'),currentFilter='all',searchQuery='',searchTimeout=null,currentProductId=null;
 
             function saveFavorites(){localStorage.setItem('nrj_favorites',JSON.stringify(favorites));}
             async function fetchProducts(){const{data,error}=await supabaseClient.from('products').select('*').order('id',{ascending:true});if(error){products=[];}else{products=data;}}
@@ -516,8 +524,8 @@
                                 <div class="product-card-name">${escapeHtml(p.name)}</div>
                                 <div class="product-card-price">${formatPrice(p.price)}</div>
                             </div>
-                            <button class="product-card-add" data-action="add-to-cart" data-id="${p.id}">+</button>
                         </div>
+                        <button class="product-card-add" data-action="add-to-cart" data-id="${p.id}">+</button>
                         <button class="fav-icon" data-action="toggle-favorite" data-id="${p.id}">${isFav?'❤️':'🤍'}</button>
                     </div>`;
                 }).join('');
@@ -531,7 +539,7 @@
                 document.getElementById('filterBar').innerHTML=h;
             }
 
-            function saveCart(){localStorage.setItem('nrj_cart_v28',JSON.stringify(cart));}
+            function saveCart(){localStorage.setItem('nrj_cart_v29',JSON.stringify(cart));}
             function addToCart(pid,t='',c=''){
                 const p=products.find(pr=>pr.id===pid);if(!p)return;
                 const moq=Number(p.moq)||1;
@@ -587,7 +595,6 @@
 
             function toggleFavorite(pid){const idx=favorites.indexOf(pid);if(idx>-1)favorites.splice(idx,1);else favorites.push(pid);saveFavorites();renderProducts();}
 
-            // Gestion de la barre sticky
             function showStickyBar(){document.getElementById('stickyBottomBar').classList.add('visible');}
             function hideStickyBar(){document.getElementById('stickyBottomBar').classList.remove('visible');}
 
@@ -620,14 +627,12 @@
                 if(tailles.length){document.getElementById('tailleGroupFull').style.display='block';ro(document.getElementById('tailleOptionsFull'),tailles,sT,'taille');}else document.getElementById('tailleGroupFull').style.display='none';
                 if(couleurs.length){document.getElementById('couleurGroupFull').style.display='block';ro(document.getElementById('couleurOptionsFull'),couleurs,sC,'couleur');}else document.getElementById('couleurGroupFull').style.display='none';
 
-                // Boutons sticky
                 document.getElementById('addToCartStickyBtn').onclick=()=>addToCart(p.id,sT,sC);
                 document.getElementById('directOrderStickyBtn').onclick=()=>{
                     if(tailles.length&&!sT)return showToast('⚠️ Sélectionnez une taille');
                     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour NRJ Marketplace, je souhaite commander directement ce produit : ${p.name} (ID: ${p.id}), Taille: ${sT||'N/A'}, Quantité: ${moq}, Total minimum: ${formatPrice(tMin)}. Voici le lien : ${BASE_URL}?id=${p.id}`)}`,'_blank');
                 };
 
-                // Recommandations en carrousel horizontal
                 let rec=products.filter(pr=>pr.category===p.category&&pr.id!==p.id);
                 if(rec.length<6)rec=[...rec,...products.filter(pr=>pr.id!==p.id&&!rec.includes(pr))].slice(0,6);
                 document.getElementById('recCarousel').innerHTML=rec.map(r=>`<div class="rec-card" data-product-id="${r.id}"><img src="${escapeHtml(r.image||'')}" onerror="this.style.display='none';"><div class="rec-card-overlay"><div><div class="rec-card-name">${escapeHtml(r.name)}</div><div class="rec-card-price">${formatPrice(r.price)}</div></div></div></div>`).join('');
@@ -662,7 +667,6 @@
                 else renderProducts();
             });
 
-            // Sourcing
             document.getElementById('sourcingBtn').addEventListener('click',()=>document.getElementById('sourcingFileInput').click());
             document.getElementById('sourcingFileInput').addEventListener('change',async(e)=>{
                 const f=e.target.files[0];if(!f)return;
@@ -682,7 +686,6 @@
                 window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Bonjour NRJ Marketplace International, je recherche un produit spécifique mais je n'ai pas de photo sous la main. J'aimerais vous décrire ce que je cherche pour que vous puissiez vérifier auprès de vos fournisseurs !")}`,'_blank');
             });
 
-            // Admin uploads
             function buildImageUploads(){const c=document.getElementById('imageUploads');c.innerHTML='';for(let i=1;i<=6;i++){c.innerHTML+=`<div class="file-upload-row"><input type="file" id="adminFile${i}" accept="image/*"><label for="adminFile${i}" class="file-upload-label">📷 Image ${i}</label><span id="uploadStatus${i}" style="font-size:0.75rem;color:var(--primary);"></span></div>`;}
             for(let i=1;i<=6;i++){document.getElementById(`adminFile${i}`).addEventListener('change',async function(e){const f=e.target.files[0];if(!f)return;document.getElementById(`uploadStatus${i}`).textContent='⏳';try{const fd=new FormData();fd.append('upload',f);const r=await fetch('https://postimages.org/json',{method:'POST',body:fd});const d=await r.json();uploadedImageUrls[i]=d.url||d.direct_link;document.getElementById(`uploadStatus${i}`).textContent='✅';}catch(er){document.getElementById(`uploadStatus${i}`).textContent='❌';}});}}
             buildImageUploads();
@@ -699,7 +702,6 @@
             document.addEventListener('click',e=>{if(e.target.matches('[data-action="admin-remove"]'))deleteProduct(parseInt(e.target.dataset.id));});
             document.getElementById('addProductBtn').addEventListener('click',addProduct);
 
-            // Auth
             async function handleAdminLogin(){
                 const em=document.getElementById('adminEmail').value.trim(),pw=document.getElementById('adminPassword').value;
                 try{const{error}=await supabaseClient.auth.signInWithPassword({email:em,password:pw});if(error)throw error;
@@ -711,7 +713,6 @@
             document.getElementById('adminTrigger').addEventListener('click',()=>document.getElementById('adminModalOverlay').classList.add('open'));
             document.getElementById('cancelAdminBtn').addEventListener('click',()=>document.getElementById('adminModalOverlay').classList.remove('open'));
 
-            // Cart toggles
             document.getElementById('cartToggleBtn').addEventListener('click',()=>{document.getElementById('cartPanel').classList.add('open');document.getElementById('cartOverlay').classList.add('open');refreshCartDisplay();});
             document.getElementById('cartCloseBtn').addEventListener('click',()=>{document.getElementById('cartPanel').classList.remove('open');document.getElementById('cartOverlay').classList.remove('open');});
             document.getElementById('cartOverlay').addEventListener('click',()=>{document.getElementById('cartPanel').classList.remove('open');document.getElementById('cartOverlay').classList.remove('open');});
@@ -719,7 +720,6 @@
             document.getElementById('sendWhatsAppBtn').addEventListener('click',sendWhatsAppOrder);
             document.getElementById('cancelOrderBtn').addEventListener('click',()=>document.getElementById('orderModalOverlay').classList.remove('open'));
 
-            // Bottom nav
             document.querySelectorAll('.nav-item').forEach(btn=>{btn.addEventListener('click',function(){document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));this.classList.add('active');
                 const nav=this.dataset.nav;
                 if(nav==='home'){hideProductPage();window.scrollTo(0,0);}
@@ -742,4 +742,4 @@
         })();
     </script>
 </body>
-</html>
+    </html>
