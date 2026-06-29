@@ -144,22 +144,47 @@
         refreshCatalogue();
     });
 
+    // Gestion des clics (correction avec closest)
     document.addEventListener('click', e => {
         const fb = e.target.closest('.filter-btn');
         if (fb) {
             applyFilter(fb.dataset.category);
             return;
         }
-        if (e.target.matches('[data-action="add-to-cart"]')) {
+
+        const addBtn = e.target.closest('[data-action="add-to-cart"]');
+        if (addBtn) {
             e.stopPropagation();
-            addToCart(parseInt(e.target.dataset.id));
+            addToCart(parseInt(addBtn.dataset.id));
             return;
         }
-        if (e.target.matches('[data-action="toggle-favorite"]')) {
+
+        const favBtn = e.target.closest('[data-action="toggle-favorite"]');
+        if (favBtn) {
             e.stopPropagation();
-            toggleFavorite(parseInt(e.target.dataset.id));
+            toggleFavorite(parseInt(favBtn.dataset.id));
             return;
         }
+
+        const removeBtn = e.target.closest('[data-action="cart-remove"]');
+        if (removeBtn) {
+            e.stopPropagation();
+            removeCartItem(parseInt(removeBtn.dataset.index));
+            return;
+        }
+
+        const increaseBtn = e.target.closest('[data-action="cart-increase"]');
+        if (increaseBtn) {
+            changeQty(parseInt(increaseBtn.dataset.index), 1);
+            return;
+        }
+
+        const decreaseBtn = e.target.closest('[data-action="cart-decrease"]');
+        if (decreaseBtn) {
+            changeQty(parseInt(decreaseBtn.dataset.index), -1);
+            return;
+        }
+
         const card = e.target.closest('.product-card');
         if (card && !e.target.closest('.product-card-add') && !e.target.closest('.fav-icon')) {
             openProductModal(parseInt(card.dataset.productId));
