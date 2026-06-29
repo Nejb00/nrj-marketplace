@@ -111,7 +111,7 @@
             position: relative;
             border-radius: var(--radius);
             overflow: hidden;
-            aspect-ratio: 3 / 4; /* format vertical immersif */
+            aspect-ratio: 3 / 4;
             cursor: pointer;
             transition: var(--transition);
             background: #1a1a1a;
@@ -129,7 +129,7 @@
             inset: 0;
             background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 40%, transparent 100%);
             display: flex; align-items: flex-end; padding: 0.7rem;
-            pointer-events: none; /* laisser passer les clics vers les boutons */
+            pointer-events: none;
         }
         .product-card-info { flex: 1; min-width: 0; }
         .product-card-name {
@@ -335,14 +335,12 @@
         }
         .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); }
 
+        /* Admin panel : liste et boutons */
         .admin-panel { display: none; padding: 1.5rem; max-width: 600px; margin: 1.5rem auto; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); }
         .admin-panel.active { display: block; }
         .admin-products-list { list-style: none; margin-top: 1rem; }
         .admin-products-list li { display: flex; justify-content: space-between; align-items: center; padding: 0.7rem; background: var(--surface-light); border-radius: 12px; margin-bottom: 0.5rem; font-size: 0.85rem; border: 1px solid var(--border); }
         .btn-sm { background: #ef4444; color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 20px; cursor: pointer; font-weight: 600; }
-        .file-upload-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
-        .file-upload-row input[type="file"] { display: none; }
-        .file-upload-label { background: var(--surface-light); border: 1px solid var(--border); border-radius: 40px; padding: 0.5rem 1rem; font-size: 0.8rem; font-weight: 600; color: var(--text); cursor: pointer; }
 
         .toast { position: fixed; bottom: 5rem; left: 50%; transform: translateX(-50%) translateY(100px); background: #fff; color: #000; padding: 0.6rem 1.5rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600; z-index: 999; transition: transform 0.2s ease-out; }
         .toast.show { transform: translateX(-50%) translateY(0); }
@@ -456,19 +454,24 @@
         </div>
     </div>
 
-    <!-- Admin panel -->
+    <!-- Admin panel avec champs URL (retour à l'ancien système) -->
     <div class="admin-panel" id="adminPanel">
         <h2 style="margin-bottom:1rem;color:var(--primary);">Ajouter un nouveau produit</h2>
-        <div class="form-group"><label>Nom</label><input type="text" id="adminName"></div>
-        <div class="form-group"><label>Catégorie</label><input type="text" id="adminCategory"></div>
-        <div class="form-group"><label>Prix (FCFA)</label><input type="number" id="adminPrice"></div>
-        <div class="form-group"><label>Images</label><div id="imageUploads"></div></div>
-        <div class="form-group"><label>Tailles</label><input type="text" id="adminTailles" placeholder="M, L, XL"></div>
-        <div class="form-group"><label>Couleurs</label><input type="text" id="adminCouleurs" placeholder="Noir, Blanc"></div>
-        <div class="form-group"><label>Quantité minimale</label><input type="number" id="adminMoq" value="1"></div>
-        <div class="form-group"><label>Description</label><input type="text" id="adminDesc"></div>
+        <div class="form-group"><label>Nom</label><input type="text" id="adminName" placeholder="Ex: Écouteurs Pro"></div>
+        <div class="form-group"><label>Catégorie</label><input type="text" id="adminCategory" placeholder="Électronique, Mode..."></div>
+        <div class="form-group"><label>Prix (FCFA)</label><input type="number" id="adminPrice" placeholder="8500"></div>
+        <div class="form-group"><label>Image 1 (URL)</label><input type="url" id="adminImage" placeholder="Lien de l'image 1 (URL)"></div>
+        <div class="form-group"><label>Image 2 (URL)</label><input type="url" id="adminImage2" placeholder="Lien de l'image 2 (URL)"></div>
+        <div class="form-group"><label>Image 3 (URL)</label><input type="url" id="adminImage3" placeholder="Lien de l'image 3 (URL)"></div>
+        <div class="form-group"><label>Image 4 (URL)</label><input type="url" id="adminImage4" placeholder="Lien de l'image 4 (URL)"></div>
+        <div class="form-group"><label>Image 5 (URL)</label><input type="url" id="adminImage5" placeholder="Lien de l'image 5 (URL)"></div>
+        <div class="form-group"><label>Image 6 (URL)</label><input type="url" id="adminImage6" placeholder="Lien de l'image 6 (URL)"></div>
+        <div class="form-group"><label>Tailles (séparées par des virgules)</label><input type="text" id="adminTailles" placeholder="M, L, XL"></div>
+        <div class="form-group"><label>Couleurs (séparées par des virgules)</label><input type="text" id="adminCouleurs" placeholder="Noir, Blanc, Kaki"></div>
+        <div class="form-group"><label>Quantité minimale (MOQ)</label><input type="number" id="adminMoq" placeholder="1" min="1" value="1"></div>
+        <div class="form-group"><label>Description</label><input type="text" id="adminDesc" placeholder="Description courte"></div>
         <button class="btn btn-primary" id="addProductBtn">Ajouter au catalogue</button>
-        <h3 style="margin-top:2rem;">Produits en ligne</h3>
+        <h3 style="margin-top:2rem; font-size:1rem;">Produits en ligne</h3>
         <ul class="admin-products-list" id="adminProductsList"></ul>
     </div>
 
@@ -492,13 +495,12 @@
             const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             const BASE_URL = 'https://nejb00.github.io/nrj-marketplace/';
             const WHATSAPP_NUMBER = '242066271882';
-            const uploadedImageUrls = {1:'',2:'',3:'',4:'',5:'',6:''};
 
             function escapeHtml(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
             function formatPrice(a){return 'XAF '+a.toLocaleString('fr-FR');}
             function removeEmojis(s){return s.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{2300}-\u{23FF}\u{2B50}\u{2B55}\u{2934}\u{2935}\u{25AA}\u{25AB}\u{25FE}\u{25FD}\u{25FB}\u{25FC}\u{25B6}\u{25C0}\u{3030}\u{303D}\u{3297}\u{3299}\u{FE0F}\u{200D}]/gu,'').trim();}
 
-            let products=[],cart=JSON.parse(localStorage.getItem('nrj_cart_v29')||'[]'),favorites=JSON.parse(localStorage.getItem('nrj_favorites')||'[]'),currentFilter='all',searchQuery='',searchTimeout=null,currentProductId=null;
+            let products=[],cart=JSON.parse(localStorage.getItem('nrj_cart_v30')||'[]'),favorites=JSON.parse(localStorage.getItem('nrj_favorites')||'[]'),currentFilter='all',searchQuery='',searchTimeout=null,currentProductId=null;
 
             function saveFavorites(){localStorage.setItem('nrj_favorites',JSON.stringify(favorites));}
             async function fetchProducts(){const{data,error}=await supabaseClient.from('products').select('*').order('id',{ascending:true});if(error){products=[];}else{products=data;}}
@@ -539,7 +541,7 @@
                 document.getElementById('filterBar').innerHTML=h;
             }
 
-            function saveCart(){localStorage.setItem('nrj_cart_v29',JSON.stringify(cart));}
+            function saveCart(){localStorage.setItem('nrj_cart_v30',JSON.stringify(cart));}
             function addToCart(pid,t='',c=''){
                 const p=products.find(pr=>pr.id===pid);if(!p)return;
                 const moq=Number(p.moq)||1;
@@ -667,6 +669,7 @@
                 else renderProducts();
             });
 
+            // Sourcing (upload photo vers Postimages conservé)
             document.getElementById('sourcingBtn').addEventListener('click',()=>document.getElementById('sourcingFileInput').click());
             document.getElementById('sourcingFileInput').addEventListener('change',async(e)=>{
                 const f=e.target.files[0];if(!f)return;
@@ -686,15 +689,31 @@
                 window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Bonjour NRJ Marketplace International, je recherche un produit spécifique mais je n'ai pas de photo sous la main. J'aimerais vous décrire ce que je cherche pour que vous puissiez vérifier auprès de vos fournisseurs !")}`,'_blank');
             });
 
-            function buildImageUploads(){const c=document.getElementById('imageUploads');c.innerHTML='';for(let i=1;i<=6;i++){c.innerHTML+=`<div class="file-upload-row"><input type="file" id="adminFile${i}" accept="image/*"><label for="adminFile${i}" class="file-upload-label">📷 Image ${i}</label><span id="uploadStatus${i}" style="font-size:0.75rem;color:var(--primary);"></span></div>`;}
-            for(let i=1;i<=6;i++){document.getElementById(`adminFile${i}`).addEventListener('change',async function(e){const f=e.target.files[0];if(!f)return;document.getElementById(`uploadStatus${i}`).textContent='⏳';try{const fd=new FormData();fd.append('upload',f);const r=await fetch('https://postimages.org/json',{method:'POST',body:fd});const d=await r.json();uploadedImageUrls[i]=d.url||d.direct_link;document.getElementById(`uploadStatus${i}`).textContent='✅';}catch(er){document.getElementById(`uploadStatus${i}`).textContent='❌';}});}}
-            buildImageUploads();
-
+            // Admin : ajout produit avec URLs
             async function addProduct(){
-                const name=document.getElementById('adminName').value.trim(),category=document.getElementById('adminCategory').value.trim(),price=parseInt(document.getElementById('adminPrice').value),tailles=document.getElementById('adminTailles').value.trim(),couleurs=document.getElementById('adminCouleurs').value.trim(),moq=parseInt(document.getElementById('adminMoq').value)||1,desc=document.getElementById('adminDesc').value.trim();
+                const name=document.getElementById('adminName').value.trim(),
+                      category=document.getElementById('adminCategory').value.trim(),
+                      price=parseInt(document.getElementById('adminPrice').value),
+                      image=document.getElementById('adminImage').value.trim(),
+                      image2=document.getElementById('adminImage2').value.trim(),
+                      image3=document.getElementById('adminImage3').value.trim(),
+                      image4=document.getElementById('adminImage4').value.trim(),
+                      image5=document.getElementById('adminImage5').value.trim(),
+                      image6=document.getElementById('adminImage6').value.trim(),
+                      tailles=document.getElementById('adminTailles').value.trim(),
+                      couleurs=document.getElementById('adminCouleurs').value.trim(),
+                      moq=parseInt(document.getElementById('adminMoq').value)||1,
+                      desc=document.getElementById('adminDesc').value.trim();
                 if(!name||!category||isNaN(price))return alert('Remplis nom, catégorie et prix.');
-                const prod={name,price,category:removeEmojis(category),emoji:'',image:uploadedImageUrls[1]||'',image2:uploadedImageUrls[2]||'',image3:uploadedImageUrls[3]||'',image4:uploadedImageUrls[4]||'',image5:uploadedImageUrls[5]||'',image6:uploadedImageUrls[6]||'',tailles,couleurs,moq,description:desc};
-                try{await insertProduct(prod);alert('✅ Ajouté !');['adminName','adminCategory','adminPrice','adminTailles','adminCouleurs','adminMoq','adminDesc'].forEach(id=>document.getElementById(id).value='');document.getElementById('adminMoq').value='1';for(let i=1;i<=6;i++){uploadedImageUrls[i]='';document.getElementById(`uploadStatus${i}`).textContent='';document.getElementById(`adminFile${i}`).value='';}await fetchProducts();renderProducts();renderFilters();renderAdminList();showToast('✅ Catalogue mis à jour');}catch(err){alert('❌ '+err.message);}
+                const prod={name,price,category:removeEmojis(category),emoji:'',image,image2,image3,image4,image5,image6,tailles,couleurs,moq,description:desc};
+                try{
+                    await insertProduct(prod);
+                    alert('✅ Produit ajouté dans Supabase !');
+                    ['adminName','adminCategory','adminPrice','adminImage','adminImage2','adminImage3','adminImage4','adminImage5','adminImage6','adminTailles','adminCouleurs','adminMoq','adminDesc'].forEach(id=>document.getElementById(id).value='');
+                    document.getElementById('adminMoq').value='1';
+                    await fetchProducts();renderProducts();renderFilters();renderAdminList();
+                    showToast('✅ Catalogue mis à jour');
+                }catch(err){alert('❌ Erreur : '+err.message);}
             }
             async function deleteProduct(id){if(!confirm('Supprimer ?'))return;await deleteProductFromSupabase(id);await fetchProducts();cart=cart.filter(i=>products.some(p=>p.id===i.productId));saveCart();renderProducts();renderFilters();renderAdminList();refreshCartDisplay();}
             function renderAdminList(){document.getElementById('adminProductsList').innerHTML=products.map(p=>`<li><span>${escapeHtml(p.name)} [ID: ${p.id}] (${formatPrice(p.price)})</span><button class="btn-sm" data-action="admin-remove" data-id="${p.id}">🗑️</button></li>`).join('');}
@@ -702,6 +721,7 @@
             document.addEventListener('click',e=>{if(e.target.matches('[data-action="admin-remove"]'))deleteProduct(parseInt(e.target.dataset.id));});
             document.getElementById('addProductBtn').addEventListener('click',addProduct);
 
+            // Auth
             async function handleAdminLogin(){
                 const em=document.getElementById('adminEmail').value.trim(),pw=document.getElementById('adminPassword').value;
                 try{const{error}=await supabaseClient.auth.signInWithPassword({email:em,password:pw});if(error)throw error;
@@ -713,6 +733,7 @@
             document.getElementById('adminTrigger').addEventListener('click',()=>document.getElementById('adminModalOverlay').classList.add('open'));
             document.getElementById('cancelAdminBtn').addEventListener('click',()=>document.getElementById('adminModalOverlay').classList.remove('open'));
 
+            // Cart toggles
             document.getElementById('cartToggleBtn').addEventListener('click',()=>{document.getElementById('cartPanel').classList.add('open');document.getElementById('cartOverlay').classList.add('open');refreshCartDisplay();});
             document.getElementById('cartCloseBtn').addEventListener('click',()=>{document.getElementById('cartPanel').classList.remove('open');document.getElementById('cartOverlay').classList.remove('open');});
             document.getElementById('cartOverlay').addEventListener('click',()=>{document.getElementById('cartPanel').classList.remove('open');document.getElementById('cartOverlay').classList.remove('open');});
@@ -720,6 +741,7 @@
             document.getElementById('sendWhatsAppBtn').addEventListener('click',sendWhatsAppOrder);
             document.getElementById('cancelOrderBtn').addEventListener('click',()=>document.getElementById('orderModalOverlay').classList.remove('open'));
 
+            // Bottom nav
             document.querySelectorAll('.nav-item').forEach(btn=>{btn.addEventListener('click',function(){document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));this.classList.add('active');
                 const nav=this.dataset.nav;
                 if(nav==='home'){hideProductPage();window.scrollTo(0,0);}
