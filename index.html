@@ -153,6 +153,7 @@
             height: 350px; /* Hauteur fixe sur mobile */
             background: #1a1a1a;
             overflow: hidden;
+            flex-shrink: 0; /* 🔥 CRITIQUE : Empêche l'image de se faire écraser ou de disparaître */
         }
         .carousel-scroll {
             display: flex; overflow-x: auto; scroll-snap-type: x mandatory;
@@ -212,14 +213,30 @@
 
         /* Barre sticky (visible UNIQUEMENT quand la modale est ouverte) */
         .sticky-bottom-bar {
-            position: fixed; bottom: var(--nav-height); left: 0; right: 0;
-            height: var(--bottom-bar-height); background: rgba(10,10,10,0.9);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border-top: 1px solid var(--border); display: flex; align-items: center;
-            padding: 0.5rem 1rem; z-index: 450; gap: 0.8rem;
-            transform: translateY(100%); transition: transform 0.3s ease;
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            right: 0;
+            height: var(--bottom-bar-height); 
+            background: rgba(10,10,10,0.95);
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border); 
+            display: flex; 
+            align-items: center;
+            padding: 0.5rem 1rem; 
+            z-index: 450; 
+            gap: 0.8rem;
+            opacity: 0; 
+            pointer-events: none; 
+            transform: translateY(100px); 
+            transition: opacity 0.3s ease, transform 0.3s ease;
         }
-        .sticky-bottom-bar.visible { transform: translateY(0); }
+        .sticky-bottom-bar.visible { 
+            opacity: 1; 
+            pointer-events: auto; 
+            transform: translateY(0); 
+        }
         .btn-direct-sticky {
             flex: 3; background: linear-gradient(135deg, #25D366, #1da851);
             box-shadow: 0 8px 24px rgba(37,211,102,0.25);
@@ -343,7 +360,6 @@
         </div>
     </header>
 
-    <!-- Catalogue principal -->
     <div id="catalogueView">
         <div class="search-bar-container">
             <div class="search-bar">
@@ -362,7 +378,6 @@
         <p id="loadingMessage" style="text-align:center;color:var(--text-secondary);display:none;">⏳ Chargement des produits...</p>
     </div>
 
-    <!-- Modale produit -->
     <div class="product-modal" id="productModal">
         <div class="modal-image-section">
             <div class="carousel-scroll" id="modalCarouselScroll"></div>
@@ -396,14 +411,10 @@
         </div>
     </div>
 
-    <!-- Barre sticky (visible seulement quand la modale est ouverte) -->
     <div class="sticky-bottom-bar" id="stickyBottomBar">
         <button class="btn-direct-sticky" id="directOrderStickyBtn">⚡ Commander directement</button>
         <button class="btn-cart-sticky" id="addToCartStickyBtn">🛒</button>
     </div>
-
-    <!-- Cart offcanvas, modals, admin panel (identiques) -->
-    <!-- ... (inchangé) ... -->
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
@@ -715,4 +726,4 @@
         })();
     </script>
 </body>
-    </html>
+</html>
