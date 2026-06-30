@@ -268,23 +268,29 @@
         document.getElementById('cartOverlay').classList.remove('open');
     }
 
+    // CORRIGÉ : on construit le message en texte brut (avec de vrais retours à la ligne \n),
+    // puis on encode l'ensemble UNE SEULE FOIS à la fin avec encodeURIComponent.
+    // Avant : le texte "Bonjour NRJ..." n'était pas encodé alors que le nom l'était,
+    // ce qui pouvait casser ou tronquer le message sur certains navigateurs.
     function sendWhatsAppOrder() {
         const name = document.getElementById('customerName').value.trim();
         if (!name) return alert('Entre ton nom');
         localStorage.setItem('nrj_customer_name', name);
-        let msg = `Bonjour NRJ Marketplace International, je suis ${encodeURIComponent(name)}. Ma commande :%0A`;
+
+        let msg = `Bonjour NRJ Marketplace International, je suis ${name}. Ma commande :\n`;
         let tot = 0;
         cart.forEach(i => {
             const p = products.find(pr => pr.id === i.productId);
             if (p) {
-                let d = `${encodeURIComponent(p.name)} [ID: ${p.id}]`;
+                let d = `${p.name} [ID: ${p.id}]`;
                 if (i.couleur || i.taille) d += ` (${[i.couleur, i.taille].filter(Boolean).join(', ')})`;
-                msg += `- ${d} x${Number(i.quantity)} = ${formatPrice(p.price * Number(i.quantity))}%0A  🔗 ${encodeURIComponent(BASE_URL + '?id=' + p.id)}%0A`;
+                msg += `- ${d} x${Number(i.quantity)} = ${formatPrice(p.price * Number(i.quantity))}\n  🔗 ${BASE_URL}?id=${p.id}\n`;
                 tot += p.price * Number(i.quantity);
             }
         });
-        msg += `%0ATotal : ${formatPrice(tot)}%0AMerci !`;
-        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, '_blank');
+        msg += `\nTotal : ${formatPrice(tot)}\nMerci !`;
+
+        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
         cart = [];
         saveCart();
         refreshCartDisplay();
@@ -400,22 +406,10 @@
         }
     });
 
-    // Sourcing modal
-    document.getElementById('modalSourcingBtn').addEventListener('click', () => document.getElementById('modalSourcingFileInput').click());
-    document.getElementById('modalSourcingFileInput').addEventListener('change', async (e) => {
-        const f = e.target.files[0];
-        if (!f) return;
-        document.getElementById('modalSourcingStatus').textContent = '⏳ Téléversement...';
-        try {
-            const fd = new FormData(); fd.append('upload', f);
-            const r = await fetch('https://postimages.org/json', { method: 'POST', body: fd });
-            const d = await r.json();
-            const url = d.url || d.direct_link;
-            document.getElementById('modalSourcingStatus').textContent = '✅ Redirection WhatsApp...';
-            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour NRJ Marketplace, je recherche un produit similaire à cette photo : ${url}`)}`, '_blank');
-            document.getElementById('modalSourcingStatus').textContent = '';
-        } catch (er) { document.getElementById('modalSourcingStatus').textContent = '❌ Échec'; }
-        e.target.value = '';
+    // CORRIGÉ : Sourcing photo — fini l'upload externe vers postimages.org (peu fiable).
+    // Le bouton ouvre directement WhatsApp ; le client joint sa photo lui-même dans l'appli.
+    document.getElementById('modalSourcingBtn').addEventListener('click', () => {
+        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Bonjour NRJ Marketplace, je recherche un produit. Je vous envoie une photo juste après 📸")}`, '_blank');
     });
     document.getElementById('modalDescSourcingBtn').addEventListener('click', () => {
         window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Bonjour NRJ Marketplace International, je recherche un produit spécifique mais je n'ai pas de photo sous la main. J'aimerais vous décrire ce que je cherche pour que vous puissiez vérifier auprès de vos fournisseurs !")}`, '_blank');
