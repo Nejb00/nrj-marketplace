@@ -144,7 +144,7 @@
         refreshCatalogue();
     });
 
-    // Gestion des clics (correction avec closest)
+    // 🟢 Gestion des clics (corrigée avec closest + recommandations)
     document.addEventListener('click', e => {
         const fb = e.target.closest('.filter-btn');
         if (fb) {
@@ -185,6 +185,15 @@
             return;
         }
 
+        // ⭐ Recommandations (modale produit)
+        const recCard = e.target.closest('.rec-card');
+        if (recCard) {
+            const id = parseInt(recCard.dataset.productId);
+            openProductModal(id);
+            return;
+        }
+
+        // Carte produit normale (catalogue)
         const card = e.target.closest('.product-card');
         if (card && !e.target.closest('.product-card-add') && !e.target.closest('.fav-icon')) {
             openProductModal(parseInt(card.dataset.productId));
@@ -268,10 +277,6 @@
         document.getElementById('cartOverlay').classList.remove('open');
     }
 
-    // CORRIGÉ : on construit le message en texte brut (avec de vrais retours à la ligne \n),
-    // puis on encode l'ensemble UNE SEULE FOIS à la fin avec encodeURIComponent.
-    // Avant : le texte "Bonjour NRJ..." n'était pas encodé alors que le nom l'était,
-    // ce qui pouvait casser ou tronquer le message sur certains navigateurs.
     function sendWhatsAppOrder() {
         const name = document.getElementById('customerName').value.trim();
         if (!name) return alert('Entre ton nom');
@@ -406,8 +411,6 @@
         }
     });
 
-    // CORRIGÉ : Sourcing photo — fini l'upload externe vers postimages.org (peu fiable).
-    // Le bouton ouvre directement WhatsApp ; le client joint sa photo lui-même dans l'appli.
     document.getElementById('modalSourcingBtn').addEventListener('click', () => {
         window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Bonjour NRJ Marketplace, je recherche un produit. Je vous envoie une photo juste après 📸")}`, '_blank');
     });
@@ -415,7 +418,6 @@
         window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Bonjour NRJ Marketplace International, je recherche un produit spécifique mais je n'ai pas de photo sous la main. J'aimerais vous décrire ce que je cherche pour que vous puissiez vérifier auprès de vos fournisseurs !")}`, '_blank');
     });
 
-    // Auth
     async function handleAdminLogin() {
         const em = document.getElementById('adminEmail').value.trim(),
               pw = document.getElementById('adminPassword').value;
@@ -483,7 +485,6 @@
     document.addEventListener('click', e => { if (e.target.matches('[data-action="admin-remove"]')) deleteProduct(parseInt(e.target.dataset.id)); });
     document.getElementById('addProductBtn').addEventListener('click', addProduct);
 
-    // Cart toggles
     document.getElementById('cartToggleBtn').addEventListener('click', () => { document.getElementById('cartPanel').classList.add('open'); document.getElementById('cartOverlay').classList.add('open'); refreshCartDisplay(); });
     document.getElementById('cartCloseBtn').addEventListener('click', () => { document.getElementById('cartPanel').classList.remove('open'); document.getElementById('cartOverlay').classList.remove('open'); });
     document.getElementById('cartOverlay').addEventListener('click', () => { document.getElementById('cartPanel').classList.remove('open'); document.getElementById('cartOverlay').classList.remove('open'); });
@@ -491,7 +492,6 @@
     document.getElementById('sendWhatsAppBtn').addEventListener('click', sendWhatsAppOrder);
     document.getElementById('cancelOrderBtn').addEventListener('click', () => document.getElementById('orderModalOverlay').classList.remove('open'));
 
-    // Bottom nav
     document.querySelectorAll('.nav-item').forEach(btn => { btn.addEventListener('click', function() {
         document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
         this.classList.add('active');
