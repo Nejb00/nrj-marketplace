@@ -775,8 +775,8 @@ header {
     gap: 0.5rem;
 }
 
-/* ===== BOTTOM NAV ===== */
-.bottom-nav {
+/* ===== NOUVELLE BARRE DE NAVIGATION ===== */
+.main-nav {
     position: fixed;
     bottom: 0;
     left: 0;
@@ -792,9 +792,7 @@ header {
     padding: 0 0.5rem;
 }
 
-.nav-item {
-    background: none;
-    border: none;
+.main-nav .nav-item {
     color: #fff;
     width: 44px;
     height: 44px;
@@ -803,27 +801,35 @@ header {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: var(--transition);
+    transition: background 0.2s;
 }
 
-.nav-item-icon {
-    font-size: 1.4rem;
+.main-nav .nav-item svg {
+    fill: currentColor;
+    width: 24px;
+    height: 24px;
 }
 
-.nav-item-accent {
-    background: var(--whatsapp);
+.badge-green .circle-icon {
+    background: #25D366;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.nav-item-cart {
-    width: 56px;
-    height: 56px;
-    background: linear-gradient(135deg, #ff7b2c, var(--primary));
+.cart-accent {
+    background: linear-gradient(135deg, #ff7b2c, #f97316);
     box-shadow: 0 8px 20px rgba(249, 115, 22, 0.5);
     transform: translateY(-12px);
+    width: 56px;
+    height: 56px;
 }
 
-.nav-item-cart .nav-item-icon {
-    font-size: 1.6rem;
+.cart-accent svg {
+    fill: white;
 }
 
 /* ===== MODALS GÉNÉRIQUES ===== */
