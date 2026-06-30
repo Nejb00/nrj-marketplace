@@ -782,10 +782,9 @@ header {
     left: 0;
     right: 0;
     height: var(--nav-height);
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(10, 10, 10, 0.85);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border-top: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: space-around;
@@ -794,26 +793,37 @@ header {
 }
 
 .nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.2rem;
-    cursor: pointer;
-    color: var(--text-secondary);
-    font-size: 0.65rem;
-    font-weight: 500;
-    transition: color 0.2s;
     background: none;
     border: none;
-    padding: 0.3rem 0.5rem;
-}
-
-.nav-item.active {
-    color: var(--primary);
+    color: #fff;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
 }
 
 .nav-item-icon {
-    font-size: 1.3rem;
+    font-size: 1.4rem;
+}
+
+.nav-item-accent {
+    background: var(--whatsapp);
+}
+
+.nav-item-cart {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #ff7b2c, var(--primary));
+    box-shadow: 0 8px 20px rgba(249, 115, 22, 0.5);
+    transform: translateY(-12px);
+}
+
+.nav-item-cart .nav-item-icon {
+    font-size: 1.6rem;
 }
 
 /* ===== MODALS GÉNÉRIQUES ===== */
@@ -1125,4 +1135,4 @@ footer {
     padding: 1.5rem 1rem 5rem;
     color: var(--text-secondary);
     font-size: 0.75rem;
-    }
+                      }
