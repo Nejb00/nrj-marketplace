@@ -23,15 +23,36 @@
     let observer = null;
 
     function saveFavorites() { localStorage.setItem('nrj_favorites', JSON.stringify(favorites)); }
+    
     async function fetchProducts() {
-        const { data, error } = await supabaseClient.from('products').select('*').order('id', { ascending: true });
-        if (error) { products = []; } else { products = data; }
+        try {
+            const { data, error } = await supabaseClient.from('products').select('*').order('id', { ascending: true });
+            if (error) throw error;
+            products = data;
+        } catch (err) {
+            console.error('Erreur fetch products:', err);
+            products = [];
+            showToast('❌ Erreur de connexion. Vérifie ta connexion internet.');
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = `
+                <div style="grid-column: 1/-1; text-align:center; padding:3rem;">
+                    <div style="font-size:3rem; margin-bottom:1rem;">⚠️</div>
+                    <h3 style="color:var(--text); margin-bottom:0.5rem;">Impossible de charger les produits</h3>
+                    <p style="color:var(--text-secondary); margin-bottom:1rem;">Vérifie ta connexion internet et réessaie</p>
+                    <button onclick="location.reload()" style="background:var(--primary); color:white; border:none; padding:0.8rem 2rem; border-radius:50px; font-weight:700; cursor:pointer;">
+                        🔄 Réessayer
+                    </button>
+                </div>
+            `;
+        }
     }
+    
     async function insertProduct(p) {
         const { data, error } = await supabaseClient.from('products').insert([p]).select();
         if (error) throw error;
         return data;
     }
+    
     async function deleteProductFromSupabase(id) {
         const { error } = await supabaseClient.from('products').delete().eq('id', id);
         if (error) throw error;
@@ -65,14 +86,20 @@
 
     function appendProducts(start, count) {
         const grid = document.getElementById('productsGrid');
+        const fragment = document.createDocumentFragment();
         const slice = currentFilteredProducts.slice(start, start + count);
+        
         slice.forEach(p => {
             const firstImage = p.image || '';
-            const imgContent = firstImage ? `<img src="${escapeHtml(firstImage)}" alt="" loading="lazy" onerror="this.style.display='none';">` : '';
+            const imgContent = firstImage 
+                ? `<img src="${escapeHtml(firstImage)}" alt="${escapeHtml(p.name)}" loading="lazy" onload="this.classList.add('loaded')" onerror="this.style.display='none';">` 
+                : '';
             const isFav = favorites.includes(p.id);
+            
             const card = document.createElement('div');
             card.className = 'product-card';
             card.dataset.productId = p.id;
+            card.setAttribute('role', 'listitem');
             card.innerHTML = `
                 ${imgContent}
                 <div class="product-card-info">
@@ -81,11 +108,13 @@
                         <div class="product-card-price">${formatPrice(p.price)}</div>
                     </div>
                 </div>
-                <button class="product-card-add" data-action="add-to-cart" data-id="${p.id}">+</button>
-                <button class="fav-icon" data-action="toggle-favorite" data-id="${p.id}">${isFav ? '❤️' : '🤍'}</button>
+                <button class="product-card-add" data-action="add-to-cart" data-id="${p.id}" aria-label="Ajouter ${escapeHtml(p.name)} au panier">+</button>
+                <button class="fav-icon" data-action="toggle-favorite" data-id="${p.id}" aria-label="${isFav ? 'Retirer' : 'Ajouter'} aux favoris">${isFav ? '❤️' : '🤍'}</button>
             `;
-            grid.appendChild(card);
+            fragment.appendChild(card);
         });
+        
+        grid.appendChild(fragment);
         displayedCount += slice.length;
         document.getElementById('loadingMessage').style.display = 'none';
         updateSentinelVisibility();
@@ -144,48 +173,25 @@
         refreshCatalogue();
     });
 
-    // 🟢 Gestion des clics (corrigée avec closest + recommandations)
     document.addEventListener('click', e => {
         const fb = e.target.closest('.filter-btn');
-        if (fb) {
-            applyFilter(fb.dataset.category);
-            return;
-        }
+        if (fb) { applyFilter(fb.dataset.category); return; }
 
         const addBtn = e.target.closest('[data-action="add-to-cart"]');
-        if (addBtn) {
-            e.stopPropagation();
-            addToCart(parseInt(addBtn.dataset.id));
-            return;
-        }
+        if (addBtn) { e.stopPropagation(); addToCart(parseInt(addBtn.dataset.id)); return; }
 
         const favBtn = e.target.closest('[data-action="toggle-favorite"]');
-        if (favBtn) {
-            e.stopPropagation();
-            toggleFavorite(parseInt(favBtn.dataset.id));
-            return;
-        }
+        if (favBtn) { e.stopPropagation(); toggleFavorite(parseInt(favBtn.dataset.id)); return; }
 
         const removeBtn = e.target.closest('[data-action="cart-remove"]');
-        if (removeBtn) {
-            e.stopPropagation();
-            removeCartItem(parseInt(removeBtn.dataset.index));
-            return;
-        }
+        if (removeBtn) { e.stopPropagation(); removeCartItem(parseInt(removeBtn.dataset.index)); return; }
 
         const increaseBtn = e.target.closest('[data-action="cart-increase"]');
-        if (increaseBtn) {
-            changeQty(parseInt(increaseBtn.dataset.index), 1);
-            return;
-        }
+        if (increaseBtn) { changeQty(parseInt(increaseBtn.dataset.index), 1); return; }
 
         const decreaseBtn = e.target.closest('[data-action="cart-decrease"]');
-        if (decreaseBtn) {
-            changeQty(parseInt(decreaseBtn.dataset.index), -1);
-            return;
-        }
+        if (decreaseBtn) { changeQty(parseInt(decreaseBtn.dataset.index), -1); return; }
 
-        // ⭐ Recommandations (modale produit)
         const recCard = e.target.closest('.rec-card');
         if (recCard) {
             const id = parseInt(recCard.dataset.productId);
@@ -193,7 +199,6 @@
             return;
         }
 
-        // Carte produit normale (catalogue)
         const card = e.target.closest('.product-card');
         if (card && !e.target.closest('.product-card-add') && !e.target.closest('.fav-icon')) {
             openProductModal(parseInt(card.dataset.productId));
@@ -225,6 +230,19 @@
     function removeCartItem(idx) { cart.splice(idx, 1); saveCart(); refreshCartDisplay(); }
     function saveCart() { localStorage.setItem('nrj_cart_v32', JSON.stringify(cart)); }
 
+    function updateNavCartBadge() {
+        const cnt = cart.reduce((s, i) => s + Number(i.quantity), 0);
+        const badge = document.getElementById('navCartBadge');
+        if (badge) {
+            if (cnt > 0) {
+                badge.textContent = cnt > 99 ? '99+' : cnt;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    }
+
     function refreshCartDisplay() {
         const cnt = cart.reduce((s, i) => s + Number(i.quantity), 0);
         const tot = cart.reduce((s, i) => {
@@ -235,11 +253,12 @@
         document.getElementById('cartTotal').textContent = formatPrice(tot);
         document.getElementById('checkoutBtn').disabled = cart.length === 0;
         const ctr = document.getElementById('cartItems');
-        if (cart.length === 0) { ctr.innerHTML = '<div class="cart-empty">Panier vide</div>'; return; }
+        if (cart.length === 0) { ctr.innerHTML = '<div class="cart-empty">Panier vide</div>'; updateNavCartBadge(); return; }
+        
         ctr.innerHTML = cart.map((it, idx) => {
             const p = products.find(pr => pr.id === it.productId);
             if (!p) return '';
-            const img = p.image ? `<img src="${escapeHtml(p.image)}">` : '📦';
+            const img = p.image ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}">` : '📦';
             let vars = [];
             if (it.couleur) vars.push(`Couleur: ${it.couleur}`);
             if (it.taille) vars.push(`Taille: ${it.taille}`);
@@ -256,9 +275,10 @@
                         <button class="qty-btn" data-action="cart-increase" data-index="${idx}">+</button>
                     </div>
                 </div>
-                <button class="remove-item-btn" data-action="cart-remove" data-index="${idx}">🗑️</button>
+                <button class="remove-item-btn" data-action="cart-remove" data-index="${idx}">️</button>
             </div>`;
         }).join('');
+        updateNavCartBadge();
     }
 
     function openOrderModal() {
@@ -313,6 +333,16 @@
         if (currentFilter === 'favorites') refreshCatalogue();
     }
 
+    // ✅ Nouvelle fonction pour mettre à jour les dots du carrousel
+    function updateCarouselDots(scrollContainer, dotsContainer, index) {
+        const dots = dotsContainer.querySelectorAll('.carousel-dot');
+        dots.forEach((dot, i) => {
+            if (i === index) dot.classList.add('active');
+            else dot.classList.remove('active');
+        });
+    }
+
+    // ✅ Nouvelle version de openProductModal avec les dots interactifs
     function openProductModal(pid, t = null, c = null) {
         const p = products.find(pr => pr.id === pid);
         if (!p) return;
@@ -342,15 +372,38 @@
         const imgs = [p.image, p.image2, p.image3, p.image4, p.image5, p.image6].filter(u => u && u.trim());
         const sc = document.getElementById('modalCarouselScroll'), dc = document.getElementById('modalCarouselDots');
         sc.innerHTML = ''; dc.innerHTML = '';
+        
         if (imgs.length === 0) {
             sc.innerHTML = '<div class="carousel-slide"><div class="carousel-emoji-slide">📦</div></div>';
             dc.innerHTML = '<button class="carousel-dot active"></button>';
         } else {
             imgs.forEach((u, i) => {
-                sc.innerHTML += `<div class="carousel-slide"><img src="${escapeHtml(u)}" onerror="this.style.display='none';"></div>`;
+                sc.innerHTML += `<div class="carousel-slide"><img src="${escapeHtml(u)}" onload="this.classList.add('loaded')" onerror="this.style.display='none';"></div>`;
                 dc.innerHTML += `<button class="carousel-dot${i === 0 ? ' active' : ''}" data-index="${i}"></button>`;
             });
+            
+            // Met à jour les dots lors du scroll
+            setTimeout(() => {
+                sc.addEventListener('scroll', () => {
+                    const scrollLeft = sc.scrollLeft;
+                    const slideWidth = sc.offsetWidth;
+                    const currentIndex = Math.round(scrollLeft / slideWidth);
+                    updateCarouselDots(sc, dc, currentIndex);
+                });
+            }, 100);
         }
+
+        // Clic sur un dot -> défilement vers la slide correspondante
+        dc.addEventListener('click', (e) => {
+            if (e.target.classList.contains('carousel-dot')) {
+                const index = parseInt(e.target.dataset.index);
+                const slideWidth = sc.offsetWidth;
+                sc.scrollTo({
+                    left: slideWidth * index,
+                    behavior: 'smooth'
+                });
+            }
+        });
 
         function ro(ct, opts, sel, ty) {
             ct.innerHTML = '';
@@ -377,7 +430,10 @@
             ro(document.getElementById('modalCouleurOptions'), couleurs, sC, 'couleur');
         } else document.getElementById('modalCouleurGroup').style.display = 'none';
 
-        document.getElementById('addToCartStickyBtn').onclick = () => addToCart(p.id, sT, sC);
+        document.getElementById('addToCartStickyBtn').onclick = () => {
+            addToCart(p.id, sT, sC);
+            showToast('🛒 Ajouté au panier');
+        };
         document.getElementById('directOrderStickyBtn').onclick = () => {
             if (tailles.length && !sT) return showToast('⚠️ Sélectionnez une taille');
             window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour NRJ Marketplace, je souhaite commander directement ce produit : ${p.name} (ID: ${p.id}), Taille: ${sT || 'N/A'}, Quantité: ${moq}, Total minimum: ${formatPrice(tMin)}. Voici le lien : ${BASE_URL}?id=${p.id}`)}`, '_blank');
@@ -385,7 +441,17 @@
 
         let rec = products.filter(pr => pr.category === p.category && pr.id !== p.id);
         if (rec.length < 6) rec = [...rec, ...products.filter(pr => pr.id !== p.id && !rec.includes(pr))].slice(0, 6);
-        document.getElementById('modalRecCarousel').innerHTML = rec.map(r => `<div class="rec-card" data-product-id="${r.id}"><img src="${escapeHtml(r.image || '')}" onerror="this.style.display='none';"><div class="rec-card-overlay"><div><div class="rec-card-name">${escapeHtml(r.name)}</div><div class="rec-card-price">${formatPrice(r.price)}</div></div></div></div>`).join('');
+        document.getElementById('modalRecCarousel').innerHTML = rec.map(r => `
+            <div class="rec-card" data-product-id="${r.id}">
+                <img src="${escapeHtml(r.image || '')}" onload="this.classList.add('loaded')" onerror="this.style.display='none';">
+                <div class="rec-card-overlay">
+                    <div>
+                        <div class="rec-card-name">${escapeHtml(r.name)}</div>
+                        <div class="rec-card-price">${formatPrice(r.price)}</div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
 
         document.getElementById('productModal').classList.add('open');
         document.getElementById('stickyBottomBar').classList.add('visible');
@@ -406,9 +472,7 @@
     });
 
     window.addEventListener('popstate', function(e) {
-        if (modalOpen) {
-            closeProductModal();
-        }
+        if (modalOpen) { closeProductModal(); }
     });
 
     document.getElementById('modalSourcingBtn').addEventListener('click', () => {
@@ -431,12 +495,14 @@
             showToast('🔓 Connecté');
         } catch (err) { document.getElementById('adminError').textContent = err.message; }
     }
+    
     async function handleLogout() {
         await supabaseClient.auth.signOut();
         document.getElementById('adminPanel').classList.remove('active');
         document.getElementById('logoutBtn').classList.remove('visible');
         showToast('👋 Déconnecté');
     }
+    
     document.getElementById('adminLoginBtn').addEventListener('click', handleAdminLogin);
     document.getElementById('logoutBtn').addEventListener('click', handleLogout);
     document.getElementById('adminTrigger').addEventListener('click', () => document.getElementById('adminModalOverlay').classList.add('open'));
@@ -467,8 +533,16 @@
             refreshCatalogue();
             renderAdminList();
             showToast('✅ Catalogue mis à jour');
-        } catch (err) { alert('❌ Erreur : ' + err.message); }
+        } catch (err) {
+            console.error('Erreur ajout produit:', err);
+            if (err.message.includes('network') || err.message.includes('fetch')) {
+                alert('❌ Erreur de connexion. Vérifie ta connexion internet.');
+            } else {
+                alert('❌ Erreur : ' + err.message);
+            }
+        }
     }
+    
     async function deleteProduct(id) {
         if (!confirm('Supprimer ?')) return;
         await deleteProductFromSupabase(id);
@@ -479,9 +553,11 @@
         renderAdminList();
         refreshCartDisplay();
     }
+    
     function renderAdminList() {
         document.getElementById('adminProductsList').innerHTML = products.map(p => `<li><span>${escapeHtml(p.name)} [ID: ${p.id}] (${formatPrice(p.price)})</span><button class="btn-sm" data-action="admin-remove" data-id="${p.id}">🗑️</button></li>`).join('');
     }
+    
     document.addEventListener('click', e => { if (e.target.matches('[data-action="admin-remove"]')) deleteProduct(parseInt(e.target.dataset.id)); });
     document.getElementById('addProductBtn').addEventListener('click', addProduct);
 
