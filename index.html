@@ -21,9 +21,9 @@
             </div>
         </div>
         <div class="header-actions">
-            <button class="admin-icon-btn" id="adminTrigger" title="Administration">⚙️</button>
-            <button class="logout-btn" id="logoutBtn" title="Se déconnecter">🚪</button>
-            <button class="icon-btn" id="cartToggleBtn">
+            <button class="admin-icon-btn" id="adminTrigger" aria-label="Administration" title="Administration">️</button>
+            <button class="logout-btn" id="logoutBtn" aria-label="Se déconnecter" title="Se déconnecter"></button>
+            <button class="icon-btn" id="cartToggleBtn" aria-label="Ouvrir le panier">
                 🛒 <span class="cart-count" id="cartCount">0</span>
             </button>
         </div>
@@ -34,29 +34,29 @@
         <div class="search-bar-container">
             <div class="search-bar">
                 <span class="search-icon">🔍</span>
-                <input type="text" id="searchInput" placeholder="Rechercher un produit ou un ID..." autocomplete="off">
+                <input type="text" id="searchInput" placeholder="Rechercher un produit ou un ID..." autocomplete="off" aria-label="Rechercher un produit">
             </div>
         </div>
         <div class="filter-bar" id="filterBar">
             <button class="filter-btn active" data-category="all">Tout voir</button>
             <button class="filter-btn fav-btn" data-category="favorites">❤️ Favoris</button>
         </div>
-        <section class="products-section">
-            <div class="products-grid" id="productsGrid"></div>
+        <section class="products-section" aria-live="polite">
+            <div class="products-grid" id="productsGrid" role="list"></div>
         </section>
         <div id="loadMoreSentinel" style="height: 20px;"></div>
-        <p id="loadingMessage" style="text-align:center;color:var(--text-secondary);display:none;">⏳ Chargement des produits...</p>
+        <p id="loadingMessage" style="text-align:center;color:var(--text-secondary);display:none;"> Chargement des produits...</p>
     </div>
 
     <!-- Modale produit -->
     <div class="product-modal" id="productModal">
         <div class="modal-image-section">
             <div class="carousel-scroll" id="modalCarouselScroll"></div>
-            <button class="back-arrow-btn" id="modalCloseBtn">←</button>
+            <button class="back-arrow-btn" id="modalCloseBtn" aria-label="Retour">←</button>
             <div class="product-id-badge" id="modalProductIdBadge">[ID: ...]</div>
             <div class="product-actions-overlay">
-                <button class="action-circle" id="modalFavBtn">🤍</button>
-                <button class="action-circle" id="modalShareBtn">↗</button>
+                <button class="action-circle" id="modalFavBtn" aria-label="Ajouter aux favoris">🤍</button>
+                <button class="action-circle" id="modalShareBtn" aria-label="Partager">↗</button>
             </div>
             <div class="carousel-dots" id="modalCarouselDots"></div>
         </div>
@@ -85,17 +85,17 @@
     <!-- Barre sticky (visible seulement quand la modale est ouverte) -->
     <div class="sticky-bottom-bar" id="stickyBottomBar">
         <button class="btn-direct-sticky" id="directOrderStickyBtn">⚡ Commander directement</button>
-        <button class="btn-cart-sticky" id="addToCartStickyBtn">🛒</button>
+        <button class="btn-cart-sticky" id="addToCartStickyBtn" aria-label="Ajouter au panier">🛒</button>
     </div>
 
     <!-- Cart offcanvas -->
     <div class="cart-overlay" id="cartOverlay"></div>
     <div class="cart-panel" id="cartPanel">
-        <div class="cart-header">Mon Panier <button class="cart-close" id="cartCloseBtn">&times;</button></div>
+        <div class="cart-header">Mon Panier <button class="cart-close" id="cartCloseBtn" aria-label="Fermer le panier">&times;</button></div>
         <div class="cart-items" id="cartItems"></div>
         <div class="cart-footer">
             <div class="cart-total"><span>Total</span><span id="cartTotal">XAF 0</span></div>
-            <button class="checkout-btn" id="checkoutBtn" disabled>Commander via WhatsApp</button>
+            <button class="checkout-btn" id="checkoutBtn" disabled aria-label="Commander via WhatsApp">Commander via WhatsApp</button>
         </div>
     </div>
 
@@ -113,7 +113,7 @@
     <div class="modal-overlay" id="adminModalOverlay">
         <div class="modal">
             <h2 style="text-align:center;margin-bottom:1rem;">🔐 Connexion admin</h2>
-            <div class="form-group"><label>📧 Email</label><input type="email" id="adminEmail" required></div>
+            <div class="form-group"><label> Email</label><input type="email" id="adminEmail" required></div>
             <div class="form-group"><label>🔑 Mot de passe</label><input type="password" id="adminPassword" required></div>
             <button class="btn btn-primary" id="adminLoginBtn">Se connecter</button>
             <button class="btn btn-outline" id="cancelAdminBtn" style="margin-top:0.5rem;background:transparent;border:1px solid var(--border);color:var(--text);">Annuler</button>
@@ -145,37 +145,38 @@
     <!-- Navigation moderne avec icônes SVG -->
     <nav class="main-nav">
         <!-- Accueil -->
-        <a href="#" class="nav-item active" data-nav="home">
+        <a href="#" class="nav-item active" data-nav="home" aria-label="Accueil">
             <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
         </a>
 
         <!-- Éclair / Promos -->
-        <a href="#" class="nav-item badge-green" data-nav="categories">
+        <a href="#" class="nav-item badge-green" data-nav="categories" aria-label="Catégories">
             <div class="circle-icon">
                 <svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
             </div>
         </a>
 
         <!-- Panier -->
-        <a href="#" class="nav-item cart-accent" data-nav="cart">
+        <a href="#" class="nav-item cart-accent" data-nav="cart" aria-label="Panier">
             <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+            <span class="cart-badge" id="navCartBadge" style="display:none;">0</span>
         </a>
 
         <!-- Paramètres -->
-        <a href="#" class="nav-item" data-nav="admin">
+        <a href="#" class="nav-item" data-nav="admin" aria-label="Administration">
             <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
         </a>
 
         <!-- Profil -->
-        <a href="#" class="nav-item" data-nav="profile">
+        <a href="#" class="nav-item" data-nav="profile" aria-label="Profil">
             <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
         </a>
     </nav>
 
-    <div class="toast" id="toast"></div>
+    <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
     <footer><p>© 2026 NRJ Marketplace International — Chine • France • Turquie → Congo Brazzaville ⚡</p></footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="app.js"></script>
 </body>
-</html>
+    </html>
