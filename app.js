@@ -275,7 +275,7 @@
                         <button class="qty-btn" data-action="cart-increase" data-index="${idx}">+</button>
                     </div>
                 </div>
-                <button class="remove-item-btn" data-action="cart-remove" data-index="${idx}">️</button>
+                <button class="remove-item-btn" data-action="cart-remove" data-index="${idx}">🗑️</button>
             </div>`;
         }).join('');
         updateNavCartBadge();
@@ -333,7 +333,6 @@
         if (currentFilter === 'favorites') refreshCatalogue();
     }
 
-    // ✅ Nouvelle fonction pour mettre à jour les dots du carrousel
     function updateCarouselDots(scrollContainer, dotsContainer, index) {
         const dots = dotsContainer.querySelectorAll('.carousel-dot');
         dots.forEach((dot, i) => {
@@ -342,7 +341,6 @@
         });
     }
 
-    // ✅ Nouvelle version de openProductModal avec les dots interactifs
     function openProductModal(pid, t = null, c = null) {
         const p = products.find(pr => pr.id === pid);
         if (!p) return;
@@ -382,7 +380,6 @@
                 dc.innerHTML += `<button class="carousel-dot${i === 0 ? ' active' : ''}" data-index="${i}"></button>`;
             });
             
-            // Met à jour les dots lors du scroll
             setTimeout(() => {
                 sc.addEventListener('scroll', () => {
                     const scrollLeft = sc.scrollLeft;
@@ -393,7 +390,6 @@
             }, 100);
         }
 
-        // Clic sur un dot -> défilement vers la slide correspondante
         dc.addEventListener('click', (e) => {
             if (e.target.classList.contains('carousel-dot')) {
                 const index = parseInt(e.target.dataset.index);
@@ -568,12 +564,90 @@
     document.getElementById('sendWhatsAppBtn').addEventListener('click', sendWhatsAppOrder);
     document.getElementById('cancelOrderBtn').addEventListener('click', () => document.getElementById('orderModalOverlay').classList.remove('open'));
 
+    // ===== NOUVELLES FONCTIONS POUR CATÉGORIES =====
+    
+    // Devine automatiquement l'emoji selon le nom de la catégorie
+    function getCategoryIcon(category) {
+        const cat = category.toLowerCase();
+        if (cat.includes('homme') || cat.includes('men')) return '👔';
+        if (cat.includes('femme') || cat.includes('women') || cat.includes('lady')) return '👗';
+        if (cat.includes('bijou') || cat.includes('jewel')) return '💎';
+        if (cat.includes('chaussure') || cat.includes('shoe') || cat.includes('basket') || cat.includes('sandal')) return '👟';
+        if (cat.includes('electro') || cat.includes('phone') || cat.includes('tech') || cat.includes('audio')) return '📱';
+        if (cat.includes('sac') || cat.includes('bag') || cat.includes('maroquinerie')) return '👜';
+        if (cat.includes('maison') || cat.includes('home') || cat.includes('deco') || cat.includes('cuisine')) return '🏠';
+        if (cat.includes('enfant') || cat.includes('kid') || cat.includes('baby') || cat.includes('jouet')) return '🧸';
+        if (cat.includes('sport') || cat.includes('fitness') || cat.includes('gym')) return '⚽';
+        if (cat.includes('beauté') || cat.includes('beaute') || cat.includes('cosmetic') || cat.includes('parfum')) return '💄';
+        if (cat.includes('montre') || cat.includes('watch')) return '⌚';
+        return '🛍️';
+    }
+
+    // Affiche dynamiquement toutes les catégories
+    function renderCategories() {
+        const grid = document.getElementById('categoriesGrid');
+        if (!grid) return;
+
+        const uniqueCats = [...new Set(products.map(p => p.category).filter(Boolean))];
+        
+        if (uniqueCats.length === 0) {
+            grid.innerHTML = '<p style="text-align:center; color:var(--text-secondary); grid-column: 1/-1; padding: 2rem;">Aucune catégorie disponible pour le moment.</p>';
+            return;
+        }
+
+        grid.innerHTML = uniqueCats.map(cat => {
+            const count = products.filter(p => p.category === cat).length;
+            const icon = getCategoryIcon(cat);
+            return `
+                <div class="category-card" data-category="${escapeHtml(cat)}">
+                    <div class="category-icon">${icon}</div>
+                    <div class="category-name">${escapeHtml(cat)}</div>
+                    <div class="category-count">${count} produit${count > 1 ? 's' : ''}</div>
+                </div>
+            `;
+        }).join('');
+
+        grid.querySelectorAll('.category-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const cat = card.dataset.category;
+                applyFilter(cat);
+                switchView('home');
+            });
+        });
+    }
+
+    // Bascule entre la vue catalogue et la vue catégories
+    function switchView(viewName) {
+        const catView = document.getElementById('categoriesView');
+        const homeView = document.getElementById('catalogueView');
+        
+        if (viewName === 'categories') {
+            renderCategories();
+            catView.style.display = 'block';
+            homeView.style.display = 'none';
+        } else {
+            catView.style.display = 'none';
+            homeView.style.display = 'block';
+        }
+    }
+
+    // Bouton retour de la page catégories
+    document.getElementById('backToHomeBtn').addEventListener('click', () => switchView('home'));
+    // ===== FIN NOUVELLES FONCTIONS =====
+
     document.querySelectorAll('.nav-item').forEach(btn => { btn.addEventListener('click', function() {
         document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
         this.classList.add('active');
         const nav = this.dataset.nav;
-        if (nav === 'home') { if (modalOpen) history.back(); window.scrollTo(0, 0); }
-        if (nav === 'categories') { document.querySelector('.filter-bar').scrollIntoView({ behavior: 'smooth' }); }
+        if (nav === 'home') { 
+            if (modalOpen) history.back(); 
+            switchView('home');
+            window.scrollTo(0, 0); 
+        }
+        if (nav === 'categories') { 
+            switchView('categories'); 
+            window.scrollTo(0, 0); 
+        }
         if (nav === 'cart') { document.getElementById('cartPanel').classList.add('open'); document.getElementById('cartOverlay').classList.add('open'); refreshCartDisplay(); }
         if (nav === 'admin') { document.getElementById('adminModalOverlay').classList.add('open'); }
         if (nav === 'profile') { showToast('👤 Profil - Connectez-vous en admin'); }
