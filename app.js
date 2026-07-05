@@ -46,21 +46,6 @@
             `;
         }
     }
-
-    async function fetchCategories() {
-        try {
-            const { data, error } = await supabaseClient
-                .from('categories')
-                .select('*')
-                .order('name', { ascending: true });
-            
-            if (error) throw error;
-            return data || [];
-        } catch (err) {
-            console.error('Erreur fetch categories:', err);
-            return [];
-        }
-    }
     
     async function insertProduct(p) {
         const { data, error } = await supabaseClient.from('products').insert([p]).select();
@@ -579,63 +564,40 @@
     document.getElementById('sendWhatsAppBtn').addEventListener('click', sendWhatsAppOrder);
     document.getElementById('cancelOrderBtn').addEventListener('click', () => document.getElementById('orderModalOverlay').classList.remove('open'));
 
-    // ===== CATÉGORIES AVEC IMAGES AUTOMATIQUES =====
+    // ===== CATÉGORIES DYNAMIQUES (AVEC DERNIER PRODUIT) =====
     
-    function getCategoryIcon(category) {
-        const cat = category.toLowerCase();
-        if (cat.includes('homme') || cat.includes('men')) return '👔';
-        if (cat.includes('femme') || cat.includes('women') || cat.includes('lady')) return '👗';
-        if (cat.includes('bijou') || cat.includes('jewel')) return '💎';
-        if (cat.includes('chaussure') || cat.includes('shoe') || cat.includes('basket') || cat.includes('sandal')) return '👟';
-        if (cat.includes('electro') || cat.includes('phone') || cat.includes('tech') || cat.includes('audio')) return '📱';
-        if (cat.includes('sac') || cat.includes('bag') || cat.includes('maroquinerie')) return '👜';
-        if (cat.includes('maison') || cat.includes('home') || cat.includes('deco') || cat.includes('cuisine')) return '🏠';
-        if (cat.includes('enfant') || cat.includes('kid') || cat.includes('baby') || cat.includes('jouet')) return '🧸';
-        if (cat.includes('sport') || cat.includes('fitness') || cat.includes('gym')) return '⚽';
-        if (cat.includes('beauté') || cat.includes('beaute') || cat.includes('cosmetic') || cat.includes('parfum')) return '💄';
-        if (cat.includes('montre') || cat.includes('watch')) return '⌚';
-        return '🛍️';
-    }
-
-    // Affiche les catégories avec l'image du PREMIER PRODUIT de chaque catégorie
-    async function renderCategories() {
+    // Affiche les catégories avec l'image du DERNIER produit (le plus récent)
+    function renderCategories() {
         const grid = document.getElementById('categoriesGrid');
         if (!grid) return;
 
-        const categories = await fetchCategories();
+        const uniqueCats = [...new Set(products.map(p => p.category).filter(Boolean))];
         
-        if (categories.length === 0) {
+        if (uniqueCats.length === 0) {
             grid.innerHTML = '<p style="text-align:center; color:var(--text-secondary); grid-column: 1/-1; padding: 2rem;">Aucune catégorie disponible pour le moment.</p>';
             return;
         }
 
-        grid.innerHTML = categories.map(cat => {
-            // Récupère le premier produit de cette catégorie
-            const firstProduct = products.find(p => p.category === cat.name);
-            const imageUrl = firstProduct?.image || ''; // Image du 1er produit
-            
-            const count = products.filter(p => p.category === cat.name).length;
-            const icon = cat.icon || getCategoryIcon(cat.name);
+        grid.innerHTML = uniqueCats.map(cat => {
+            // On cherche le DERNIER produit de cette catégorie qui a une image
+            // [...products].reverse() inverse l'ordre pour avoir le plus récent en premier
+            const latestProduct = [...products].reverse().find(p => p.category === cat && p.image);
+            const imageUrl = latestProduct ? latestProduct.image : '';
+            const count = products.filter(p => p.category === cat).length;
             
             return `
-                <div class="category-card" data-category="${escapeHtml(cat.name)}" style="padding: 0; overflow: hidden; position: relative; min-height: 200px;">
-                    ${imageUrl ? `
-                        <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.7));">
-                            <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(cat.name)}" 
-                                 style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;"
-                                 onerror="this.style.display='none'">
-                        </div>
-                    ` : ''}
-                    <div style="position: relative; z-index: 1; padding: 1.5rem 1rem; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; min-height: 200px;">
-                        <div class="category-icon" style="font-size: 3rem; margin-bottom: 0.5rem; text-shadow: 0 2px 8px rgba(0,0,0,0.5);">${icon}</div>
-                        <div class="category-name" style="font-size: 1.1rem; font-weight: 700; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); margin-bottom: 0.3rem;">${escapeHtml(cat.name)}</div>
-                        ${cat.description ? `<div style="font-size: 0.75rem; color: rgba(255,255,255,0.8); text-align: center; margin-bottom: 0.5rem; line-height: 1.3;">${escapeHtml(cat.description.substring(0, 60))}${cat.description.length > 60 ? '...' : ''}</div>` : ''}
-                        <div class="category-count" style="background: rgba(255,255,255,0.2); backdrop-filter: blur(8px); color: #fff; border: 1px solid rgba(255,255,255,0.3);">${count} produit${count > 1 ? 's' : ''}</div>
+                <div class="category-card" data-category="${escapeHtml(cat)}">
+                    ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" class="category-card-bg" alt="${escapeHtml(cat)}" loading="lazy" onload="this.classList.add('loaded')">` : ''}
+                    <div class="category-card-overlay"></div>
+                    <div class="category-card-content">
+                        <div class="category-name">${escapeHtml(cat)}</div>
+                        <div class="category-count">${count} article${count > 1 ? 's' : ''}</div>
                     </div>
                 </div>
             `;
         }).join('');
 
+        // On attache les clics sur chaque carte
         grid.querySelectorAll('.category-card').forEach(card => {
             card.addEventListener('click', () => {
                 const cat = card.dataset.category;
@@ -645,6 +607,7 @@
         });
     }
 
+    // Bascule entre les vues catalogue et catégories
     function switchView(viewName) {
         const catView = document.getElementById('categoriesView');
         const homeView = document.getElementById('catalogueView');
@@ -660,6 +623,7 @@
     }
 
     document.getElementById('backToHomeBtn').addEventListener('click', () => switchView('home'));
+    // ===== FIN CATÉGORIES =====
 
     document.querySelectorAll('.nav-item').forEach(btn => { btn.addEventListener('click', function() {
         document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
