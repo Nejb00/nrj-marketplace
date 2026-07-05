@@ -46,6 +46,21 @@
             `;
         }
     }
+
+    async function fetchCategories() {
+        try {
+            const { data, error } = await supabaseClient
+                .from('categories')
+                .select('*')
+                .order('name', { ascending: true });
+            
+            if (error) throw error;
+            return data || [];
+        } catch (err) {
+            console.error('Erreur fetch categories:', err);
+            return [];
+        }
+    }
     
     async function insertProduct(p) {
         const { data, error } = await supabaseClient.from('products').insert([p]).select();
@@ -564,9 +579,8 @@
     document.getElementById('sendWhatsAppBtn').addEventListener('click', sendWhatsAppOrder);
     document.getElementById('cancelOrderBtn').addEventListener('click', () => document.getElementById('orderModalOverlay').classList.remove('open'));
 
-    // ===== NOUVELLES FONCTIONS POUR CATÉGORIES =====
+    // ===== CATÉGORIES AVEC IMAGES AUTOMATIQUES =====
     
-    // Devine automatiquement l'emoji selon le nom de la catégorie
     function getCategoryIcon(category) {
         const cat = category.toLowerCase();
         if (cat.includes('homme') || cat.includes('men')) return '👔';
@@ -583,26 +597,41 @@
         return '🛍️';
     }
 
-    // Affiche dynamiquement toutes les catégories
-    function renderCategories() {
+    // Affiche les catégories avec l'image du PREMIER PRODUIT de chaque catégorie
+    async function renderCategories() {
         const grid = document.getElementById('categoriesGrid');
         if (!grid) return;
 
-        const uniqueCats = [...new Set(products.map(p => p.category).filter(Boolean))];
+        const categories = await fetchCategories();
         
-        if (uniqueCats.length === 0) {
+        if (categories.length === 0) {
             grid.innerHTML = '<p style="text-align:center; color:var(--text-secondary); grid-column: 1/-1; padding: 2rem;">Aucune catégorie disponible pour le moment.</p>';
             return;
         }
 
-        grid.innerHTML = uniqueCats.map(cat => {
-            const count = products.filter(p => p.category === cat).length;
-            const icon = getCategoryIcon(cat);
+        grid.innerHTML = categories.map(cat => {
+            // Récupère le premier produit de cette catégorie
+            const firstProduct = products.find(p => p.category === cat.name);
+            const imageUrl = firstProduct?.image || ''; // Image du 1er produit
+            
+            const count = products.filter(p => p.category === cat.name).length;
+            const icon = cat.icon || getCategoryIcon(cat.name);
+            
             return `
-                <div class="category-card" data-category="${escapeHtml(cat)}">
-                    <div class="category-icon">${icon}</div>
-                    <div class="category-name">${escapeHtml(cat)}</div>
-                    <div class="category-count">${count} produit${count > 1 ? 's' : ''}</div>
+                <div class="category-card" data-category="${escapeHtml(cat.name)}" style="padding: 0; overflow: hidden; position: relative; min-height: 200px;">
+                    ${imageUrl ? `
+                        <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.7));">
+                            <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(cat.name)}" 
+                                 style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;"
+                                 onerror="this.style.display='none'">
+                        </div>
+                    ` : ''}
+                    <div style="position: relative; z-index: 1; padding: 1.5rem 1rem; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; min-height: 200px;">
+                        <div class="category-icon" style="font-size: 3rem; margin-bottom: 0.5rem; text-shadow: 0 2px 8px rgba(0,0,0,0.5);">${icon}</div>
+                        <div class="category-name" style="font-size: 1.1rem; font-weight: 700; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); margin-bottom: 0.3rem;">${escapeHtml(cat.name)}</div>
+                        ${cat.description ? `<div style="font-size: 0.75rem; color: rgba(255,255,255,0.8); text-align: center; margin-bottom: 0.5rem; line-height: 1.3;">${escapeHtml(cat.description.substring(0, 60))}${cat.description.length > 60 ? '...' : ''}</div>` : ''}
+                        <div class="category-count" style="background: rgba(255,255,255,0.2); backdrop-filter: blur(8px); color: #fff; border: 1px solid rgba(255,255,255,0.3);">${count} produit${count > 1 ? 's' : ''}</div>
+                    </div>
                 </div>
             `;
         }).join('');
@@ -616,7 +645,6 @@
         });
     }
 
-    // Bascule entre la vue catalogue et la vue catégories
     function switchView(viewName) {
         const catView = document.getElementById('categoriesView');
         const homeView = document.getElementById('catalogueView');
@@ -631,9 +659,7 @@
         }
     }
 
-    // Bouton retour de la page catégories
     document.getElementById('backToHomeBtn').addEventListener('click', () => switchView('home'));
-    // ===== FIN NOUVELLES FONCTIONS =====
 
     document.querySelectorAll('.nav-item').forEach(btn => { btn.addEventListener('click', function() {
         document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
