@@ -21,8 +21,8 @@
             </div>
         </div>
         <div class="header-actions">
-            <button class="admin-icon-btn" id="adminTrigger" aria-label="Administration" title="Administration">️</button>
-            <button class="logout-btn" id="logoutBtn" aria-label="Se déconnecter" title="Se déconnecter"></button>
+            <button class="admin-icon-btn" id="adminTrigger" aria-label="Administration" title="Administration">⚙️</button>
+            <button class="logout-btn" id="logoutBtn" aria-label="Se déconnecter" title="Se déconnecter">🚪</button>
             <button class="icon-btn" id="cartToggleBtn" aria-label="Ouvrir le panier">
                 🛒 <span class="cart-count" id="cartCount">0</span>
             </button>
@@ -45,7 +45,16 @@
             <div class="products-grid" id="productsGrid" role="list"></div>
         </section>
         <div id="loadMoreSentinel" style="height: 20px;"></div>
-        <p id="loadingMessage" style="text-align:center;color:var(--text-secondary);display:none;"> Chargement des produits...</p>
+        <p id="loadingMessage" style="text-align:center;color:var(--text-secondary);display:none;">⏳ Chargement des produits...</p>
+    </div>
+
+    <!-- Page Catégories -->
+    <div id="categoriesView" style="display: none; padding: 1rem 1rem 2rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 800;">Nos Catégories</h2>
+            <button id="backToHomeBtn" style="background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 1rem; border-radius: 50px; cursor: pointer; font-weight: 600; font-size: 0.9rem;">← Retour</button>
+        </div>
+        <div class="categories-grid" id="categoriesGrid"></div>
     </div>
 
     <!-- Modale produit -->
@@ -113,7 +122,7 @@
     <div class="modal-overlay" id="adminModalOverlay">
         <div class="modal">
             <h2 style="text-align:center;margin-bottom:1rem;">🔐 Connexion admin</h2>
-            <div class="form-group"><label> Email</label><input type="email" id="adminEmail" required></div>
+            <div class="form-group"><label>📧 Email</label><input type="email" id="adminEmail" required></div>
             <div class="form-group"><label>🔑 Mot de passe</label><input type="password" id="adminPassword" required></div>
             <button class="btn btn-primary" id="adminLoginBtn">Se connecter</button>
             <button class="btn btn-outline" id="cancelAdminBtn" style="margin-top:0.5rem;background:transparent;border:1px solid var(--border);color:var(--text);">Annuler</button>
@@ -179,4 +188,4 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="app.js"></script>
 </body>
-    </html>
+                </html>
