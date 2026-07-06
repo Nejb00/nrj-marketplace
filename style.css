@@ -6,6 +6,10 @@
     --primary-dark: #ff7b2c;
     --whatsapp: #25D366;
     --whatsapp-dark: #1da851;
+    --favorites: #ef4444;
+    --favorites-dark: #dc2626;
+    --categories: #a855f7;
+    --categories-dark: #9333ea;
     --text: #ffffff;
     --text-secondary: #a0a0a0;
     --border: #333333;
@@ -48,11 +52,6 @@ header {
 .logo-text { font-weight: 800; font-size: 1.3rem; letter-spacing: -0.5px; color: var(--text); }
 .logo-sub { font-size: 0.6rem; font-weight: 600; color: var(--text-secondary); letter-spacing: 1px; text-transform: uppercase; }
 .header-actions { display: flex; align-items: center; gap: 0.6rem; }
-.icon-btn { background: var(--surface-light); border: 1px solid var(--border); border-radius: 50px; padding: 0.5rem 0.9rem; cursor: pointer; font-size: 0.9rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 0.3rem; transition: var(--transition); }
-.icon-btn:hover { background: #333; }
-.cart-count { background: var(--primary); color: white; border-radius: 40px; padding: 0.1rem 0.5rem; font-size: 0.7rem; font-weight: 700; }
-.admin-icon-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-secondary); transition: 0.2s; }
-.admin-icon-btn:hover { color: var(--primary); }
 .logout-btn { background: #451a1a; color: #fca5a5; border: 1px solid #7f1d1d; border-radius: 50px; padding: 0.4rem 0.9rem; cursor: pointer; font-size: 0.75rem; font-weight: 600; display: none; align-items: center; gap: 0.3rem; }
 .logout-btn.visible { display: flex; }
 
@@ -68,7 +67,6 @@ header {
 .filter-btn { background: var(--surface); border: 1px solid var(--border); padding: 0.4rem 1rem; border-radius: 50px; font-weight: 500; font-size: 0.8rem; cursor: pointer; color: var(--text); transition: var(--transition); }
 .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 .filter-btn:hover:not(.active) { border-color: #555; }
-.fav-btn.filter-btn.active { background: #ef4444; color: white; border-color: #ef4444; }
 
 .products-section { padding: 0.5rem 0.8rem 1rem; max-width: 1200px; margin: 0 auto; width: 100%; }
 .products-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
@@ -160,18 +158,29 @@ header {
 
 /* ===== BARRE DE NAVIGATION MODERNE ===== */
 .main-nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-height); background: rgba(10, 10, 10, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: space-evenly; z-index: 150; padding: 0 0.5rem; border-top: 1px solid rgba(51, 51, 51, 0.5); }
-.main-nav .nav-item svg { fill: currentColor; width: 24px; height: 24px; }
+.main-nav .nav-item svg { fill: currentColor; width: 22px; height: 22px; }
 .main-nav .nav-item { color: rgba(255, 255, 255, 0.4); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: color 0.2s, transform 0.1s; position: relative; -webkit-tap-highlight-color: transparent; }
 .main-nav .nav-item:active { transform: scale(0.9); }
 .main-nav .nav-item::after { content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background: var(--primary); opacity: 0; transition: opacity 0.2s; }
 .main-nav .nav-item.active { color: #ffffff; }
 .main-nav .nav-item.active::after { opacity: 1; }
-.badge-green .circle-icon { background: #25D366; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
-.badge-green .circle-icon svg { fill: white; width: 22px; height: 22px; }
-.cart-accent { position: relative; background: var(--primary); color: white !important; width: 44px; height: 44px; transform: none; box-shadow: 0 4px 12px rgba(255, 140, 66, 0.3); }
-.cart-accent svg { fill: white; width: 22px; height: 22px; }
+
+/* Catégories - Violet */
+.categories-accent { background: linear-gradient(135deg, var(--categories), var(--categories-dark)); color: white !important; box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3); }
+.categories-accent svg { fill: white; }
+.categories-accent.active::after { opacity: 0; }
+
+/* Panier - Orange */
+.cart-accent { position: relative; background: linear-gradient(135deg, #ff8c42, #f97316); color: white !important; box-shadow: 0 4px 12px rgba(255, 140, 66, 0.3); }
+.cart-accent svg { fill: white; }
 .cart-accent.active::after { opacity: 0; }
-.cart-badge { position: absolute; top: 2px; right: 2px; background: #ef4444; color: white; font-size: 0.6rem; font-weight: 700; min-width: 16px; height: 16px; border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid rgba(10, 10, 10, 0.95); z-index: 2; }
+
+/* Favoris - Rouge/Rose */
+.favorites-accent { position: relative; background: linear-gradient(135deg, #ef4444, #ec4899); color: white !important; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }
+.favorites-accent svg { fill: white; }
+.favorites-accent.active::after { opacity: 0; }
+
+.cart-badge, .favorites-badge { position: absolute; top: -2px; right: -2px; background: #ffffff; color: #000; font-size: 0.6rem; font-weight: 800; min-width: 18px; height: 18px; border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 0 5px; border: 2px solid rgba(10, 10, 10, 0.95); z-index: 2; }
 
 .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); z-index: 300; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; padding: 1rem; }
 .modal-overlay.open { opacity: 1; pointer-events: auto; }
@@ -253,13 +262,9 @@ footer { text-align: center; padding: 1.5rem 1rem 5rem; color: var(--text-second
     opacity: 0;
 }
 
-.category-card-bg.loaded {
-    opacity: 1;
-}
+.category-card-bg.loaded { opacity: 1; }
 
-.category-card:hover .category-card-bg {
-    transform: scale(1.08);
-}
+.category-card:hover .category-card-bg { transform: scale(1.08); }
 
 .category-card-overlay {
     position: absolute;
@@ -297,4 +302,4 @@ footer { text-align: center; padding: 1.5rem 1rem 5rem; color: var(--text-second
     font-weight: 600;
     display: inline-block;
     width: fit-content;
-    }
+                                                                                 }
