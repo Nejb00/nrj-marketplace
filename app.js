@@ -5,10 +5,46 @@
     const BASE_URL = 'https://nejb00.github.io/nrj-marketplace/';
     const WHATSAPP_NUMBER = '242066271882';
     const PRODUCTS_PER_PAGE = 20;
+    
+    // Seuils pour les badges
+    const NEW_PRODUCT_DAYS = 7;
+    const BEST_SELLER_THRESHOLD = 5;
 
     function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
     function formatPrice(a) { return 'XAF ' + a.toLocaleString('fr-FR'); }
     function removeEmojis(s) { return s.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{2300}-\u{23FF}\u{2B50}\u{2B55}\u{2934}\u{2935}\u{25AA}\u{25AB}\u{25FE}\u{25FD}\u{25FB}\u{25FC}\u{25B6}\u{25C0}\u{3030}\u{303D}\u{3297}\u{3299}\u{FE0F}\u{200D}]/gu, '').trim(); }
+
+    // ===== FONCTIONS BADGES =====
+    function isNewProduct(p) {
+        if (!p.created_at) return false;
+        const createdDate = new Date(p.created_at).getTime();
+        const now = Date.now();
+        const diffDays = (now - createdDate) / (1000 * 60 * 60 * 24);
+        return diffDays <= NEW_PRODUCT_DAYS;
+    }
+
+    function isBestSeller(p) {
+        const count = Number(p.orders_count) || 0;
+        return count >= BEST_SELLER_THRESHOLD;
+    }
+
+    function generateBadgesHTML(p, isModal = false) {
+        let html = '';
+        const isNew = isNewProduct(p);
+        const isBest = isBestSeller(p);
+        
+        if (isModal) {
+            if (isNew) html += `<span class="badge badge-new">✨ Nouveau</span>`;
+            if (isBest) html += `<span class="badge badge-best-seller">🔥 Best-seller</span>`;
+            return html;
+        } else {
+            html = '<div class="badge-container">';
+            if (isNew) html += `<span class="badge badge-new">✨ Nouveau</span>`;
+            if (isBest) html += `<span class="badge badge-best-seller">🔥 Best-seller</span>`;
+            html += '</div>';
+            return (isNew || isBest) ? html : '';
+        }
+    }
 
     let products = [];
     let cart = JSON.parse(localStorage.getItem('nrj_cart_v32') || '[]');
@@ -21,6 +57,7 @@
     let displayedCount = 0;
     let currentFilteredProducts = [];
     let observer = null;
+    let scrollObserver = null;
 
     function saveFavorites() { 
         localStorage.setItem('nrj_favorites', JSON.stringify(favorites)); 
@@ -87,7 +124,20 @@
         updateSentinelVisibility();
     }
 
+    function setupScrollObserver() {
+        if (scrollObserver) scrollObserver.disconnect();
+        scrollObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    scrollObserver.unobserve(entry.target);
+                }
+            });
+        }, { rootMargin: '50px' });
+    }
+
     function appendProducts(start, count) {
+        if (!scrollObserver) setupScrollObserver();
         const grid = document.getElementById('productsGrid');
         const fragment = document.createDocumentFragment();
         const slice = currentFilteredProducts.slice(start, start + count);
@@ -99,22 +149,38 @@
                 : '';
             const isFav = favorites.includes(p.id);
             
+            // Détails supplémentaires
+            const tailles = (p.tailles || '').split(',').map(s => s.trim()).filter(Boolean);
+            const couleurs = (p.couleurs || '').split(',').map(s => s.trim()).filter(Boolean);
+            let details = [];
+            if (tailles.length > 0) details.push(`${tailles.length} taille${tailles.length > 1 ? 's' : ''}`);
+            if (couleurs.length > 0) details.push(`${couleurs.length} couleur${couleurs.length > 1 ? 's' : ''}`);
+            if (details.length > 0) {
+                details.push('En stock');
+            }
+            const detailsHTML = details.length > 0 
+                ? `<div class="product-card-details">${details.map(d => `<span class="product-card-detail-item">${escapeHtml(d)}</span>`).join('')}</div>` 
+                : '';
+            
             const card = document.createElement('div');
             card.className = 'product-card';
             card.dataset.productId = p.id;
             card.setAttribute('role', 'listitem');
             card.innerHTML = `
                 ${imgContent}
+                ${generateBadgesHTML(p, false)}
                 <div class="product-card-info">
                     <div class="product-card-text">
                         <div class="product-card-name">${escapeHtml(p.name)}</div>
                         <div class="product-card-price">${formatPrice(p.price)}</div>
+                        ${detailsHTML}
                     </div>
                 </div>
                 <button class="product-card-add" data-action="add-to-cart" data-id="${p.id}" aria-label="Ajouter ${escapeHtml(p.name)} au panier">+</button>
                 <button class="fav-icon" data-action="toggle-favorite" data-id="${p.id}" aria-label="${isFav ? 'Retirer' : 'Ajouter'} aux favoris">${isFav ? '❤️' : '🤍'}</button>
             `;
             fragment.appendChild(card);
+            scrollObserver.observe(card);
         });
         
         grid.appendChild(fragment);
@@ -208,7 +274,7 @@
         }
     });
 
-    function addToCart(pid, t = '', c = '') {
+    async function addToCart(pid, t = '', c = '') {
         const p = products.find(pr => pr.id === pid);
         if (!p) return;
         const moq = Number(p.moq) || 1;
@@ -374,6 +440,7 @@
         document.getElementById('modalTotal').textContent = `Total minimum : ${formatPrice(tMin)}`;
         document.getElementById('modalDesc').textContent = p.description || '';
         document.getElementById('modalProductIdBadge').textContent = `[ID: ${p.id}]`;
+        document.getElementById('modalBadges').innerHTML = generateBadgesHTML(p, true);
         document.getElementById('modalFavBtn').textContent = favorites.includes(p.id) ? '❤️' : '🤍';
         document.getElementById('modalFavBtn').onclick = () => toggleFavorite(p.id);
         document.getElementById('modalShareBtn').onclick = () => {
@@ -534,7 +601,12 @@
               moq = parseInt(document.getElementById('adminMoq').value) || 1,
               desc = document.getElementById('adminDesc').value.trim();
         if (!name || !category || isNaN(price)) return alert('Remplis nom, catégorie et prix.');
-        const prod = { name, price, category: removeEmojis(category), emoji: '', image, image2, image3, image4, image5, image6, tailles, couleurs, moq, description: desc };
+        const prod = { 
+            name, price, category: removeEmojis(category), emoji: '', 
+            image, image2, image3, image4, image5, image6, 
+            tailles, couleurs, moq, description: desc,
+            orders_count: 0
+        };
         try {
             await insertProduct(prod);
             alert('✅ Produit ajouté dans Supabase !');
@@ -632,7 +704,6 @@
     }
 
     document.getElementById('backToHomeBtn').addEventListener('click', () => switchView('home'));
-    // ===== FIN CATÉGORIES =====
 
     document.querySelectorAll('.nav-item').forEach(btn => { btn.addEventListener('click', function() {
         document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
@@ -671,8 +742,11 @@
     async function init() {
         await fetchProducts();
         const cats = [...new Set(products.map(p => removeEmojis(p.category)))];
-        let filterHTML = '<button class="filter-btn active" data-category="all">Tout voir</button>';
-        cats.forEach(c => filterHTML += `<button class="filter-btn" data-category="${escapeHtml(c)}">${escapeHtml(c)}</button>`);
+        let filterHTML = '<button class="filter-btn active" data-category="all">Tout voir <span class="filter-count">(' + products.length + ')</span></button>';
+        cats.forEach(c => {
+            const count = products.filter(p => p.category === c).length;
+            filterHTML += `<button class="filter-btn" data-category="${escapeHtml(c)}">${escapeHtml(c)} <span class="filter-count">(${count})</span></button>`;
+        });
         document.getElementById('filterBar').innerHTML = filterHTML;
         refreshCatalogue();
         refreshCartDisplay();
