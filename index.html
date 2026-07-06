@@ -16,8 +16,7 @@
         <div class="logo-wrapper" onclick="location.href='/'">
             <span class="logo-icon">⚡</span>
             <div>
-                <div class="logo-text">NRJ</div>
-                <div class="logo-sub">Marketplace International</div>
+                <div class="logo-text">NRJ Marketplace</div>
             </div>
         </div>
         <div class="header-actions">
@@ -58,6 +57,7 @@
             <div class="carousel-scroll" id="modalCarouselScroll"></div>
             <button class="back-arrow-btn" id="modalCloseBtn" aria-label="Retour">←</button>
             <div class="product-id-badge" id="modalProductIdBadge">[ID: ...]</div>
+            <div class="modal-badges" id="modalBadges"></div>
             <div class="product-actions-overlay">
                 <button class="action-circle" id="modalFavBtn" aria-label="Ajouter aux favoris">🤍</button>
                 <button class="action-circle" id="modalShareBtn" aria-label="Partager">↗</button>
@@ -86,7 +86,7 @@
         </div>
     </div>
 
-    <!-- Barre sticky (visible seulement quand la modale est ouverte) -->
+    <!-- Barre sticky -->
     <div class="sticky-bottom-bar" id="stickyBottomBar">
         <button class="btn-direct-sticky" id="directOrderStickyBtn">⚡ Commander directement</button>
         <button class="btn-cart-sticky" id="addToCartStickyBtn" aria-label="Ajouter au panier">🛒</button>
@@ -146,31 +146,22 @@
         <ul class="admin-products-list" id="adminProductsList"></ul>
     </div>
 
-    <!-- Navigation moderne avec icônes SVG -->
+    <!-- Navigation moderne -->
     <nav class="main-nav">
-        <!-- Accueil -->
         <a href="#" class="nav-item active" data-nav="home" aria-label="Accueil">
             <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
         </a>
-
-        <!-- Catégories -->
         <a href="#" class="nav-item categories-accent" data-nav="categories" aria-label="Catégories">
             <svg viewBox="0 0 24 24"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/></svg>
         </a>
-
-        <!-- Panier -->
         <a href="#" class="nav-item cart-accent" data-nav="cart" aria-label="Panier">
             <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
             <span class="cart-badge" id="navCartBadge" style="display:none;">0</span>
         </a>
-
-        <!-- Favoris -->
         <a href="#" class="nav-item favorites-accent" data-nav="favorites" aria-label="Favoris">
             <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
             <span class="favorites-badge" id="navFavBadge" style="display:none;">0</span>
         </a>
-
-        <!-- Profil -->
         <a href="#" class="nav-item" data-nav="profile" aria-label="Profil">
             <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
         </a>
@@ -182,4 +173,4 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="app.js"></script>
 </body>
-                </html>
+                                                </html>
