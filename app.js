@@ -6,7 +6,6 @@
     const WHATSAPP_NUMBER = '242066271882';
     const PRODUCTS_PER_PAGE = 20;
     
-    // Seuils pour les badges
     const NEW_PRODUCT_DAYS = 7;
     const BEST_SELLER_THRESHOLD = 5;
 
@@ -50,6 +49,7 @@
     let cart = JSON.parse(localStorage.getItem('nrj_cart_v32') || '[]');
     let favorites = JSON.parse(localStorage.getItem('nrj_favorites') || '[]');
     let currentFilter = 'all';
+    let currentQuickFilter = 'all';
     let searchQuery = '';
     let searchTimeout = null;
     let currentProductId = null;
@@ -58,6 +58,21 @@
     let currentFilteredProducts = [];
     let observer = null;
     let scrollObserver = null;
+    let isAdminLoggedIn = false;
+
+    // Bouton retour en haut (pas de mémorisation de position : on ne restaure jamais
+    // le scroll entre deux visites, pour ne jamais faire rater de nouveaux produits
+    // ajoutés en haut de la grille entre-temps)
+    window.addEventListener('scroll', () => {
+        const scrollBtn = document.getElementById('scrollToTopBtn');
+        if (scrollBtn) {
+            if (window.scrollY > 300) {
+                scrollBtn.classList.add('visible');
+            } else {
+                scrollBtn.classList.remove('visible');
+            }
+        }
+    });
 
     function saveFavorites() { 
         localStorage.setItem('nrj_favorites', JSON.stringify(favorites)); 
@@ -66,7 +81,12 @@
     
     async function fetchProducts() {
         try {
-            const { data, error } = await supabaseClient.from('products').select('*').order('id', { ascending: true });
+            // Tri par date décroissante (nouveautés en premier)
+            const { data, error } = await supabaseClient
+                .from('products')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
             if (error) throw error;
             products = data;
         } catch (err) {
@@ -102,6 +122,15 @@
         let filtered = currentFilter === 'favorites'
             ? products.filter(p => favorites.includes(p.id))
             : (currentFilter === 'all' ? products : products.filter(p => p.category === currentFilter));
+
+        // Filtres rapides
+        if (currentQuickFilter === 'new') {
+            filtered = filtered.filter(p => isNewProduct(p));
+        } else if (currentQuickFilter === 'bestseller') {
+            filtered = filtered.filter(p => isBestSeller(p));
+        }
+
+        // Recherche
         if (searchQuery && !(/^\d+$/.test(searchQuery) && products.some(p => p.id === parseInt(searchQuery)))) {
             const q = searchQuery.toLowerCase();
             filtered = filtered.filter(p => p.name.toLowerCase().includes(q) || (p.category && p.category.toLowerCase().includes(q)));
@@ -149,7 +178,6 @@
                 : '';
             const isFav = favorites.includes(p.id);
             
-            // Détails supplémentaires
             const tailles = (p.tailles || '').split(',').map(s => s.trim()).filter(Boolean);
             const couleurs = (p.couleurs || '').split(',').map(s => s.trim()).filter(Boolean);
             let details = [];
@@ -224,6 +252,16 @@
         if (activeBtn) activeBtn.classList.add('active');
         refreshCatalogue();
     }
+
+    // Gestion des filtres rapides
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+        chip.addEventListener('click', function() {
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            currentQuickFilter = this.dataset.filter;
+            refreshCatalogue();
+        });
+    });
 
     document.getElementById('searchInput').addEventListener('input', function(e) {
         const v = e.target.value.trim();
@@ -462,27 +500,35 @@
                 sc.innerHTML += `<div class="carousel-slide"><img src="${escapeHtml(u)}" onload="this.classList.add('loaded')" onerror="this.style.display='none';"></div>`;
                 dc.innerHTML += `<button class="carousel-dot${i === 0 ? ' active' : ''}" data-index="${i}"></button>`;
             });
-            
-            setTimeout(() => {
-                sc.addEventListener('scroll', () => {
-                    const scrollLeft = sc.scrollLeft;
-                    const slideWidth = sc.offsetWidth;
-                    const currentIndex = Math.round(scrollLeft / slideWidth);
-                    updateCarouselDots(sc, dc, currentIndex);
-                });
-            }, 100);
         }
 
-        dc.addEventListener('click', (e) => {
-            if (e.target.classList.contains('carousel-dot')) {
-                const index = parseInt(e.target.dataset.index);
+        // CORRIGÉ : sc et dc sont les MÊMES éléments HTML à chaque ouverture de modale
+        // (jamais recréés). On attache donc les listeners une seule fois, la première
+        // fois qu'on les rencontre, via un flag sur l'élément lui-même — sinon chaque
+        // ouverture de produit empilait un nouveau listener par-dessus les précédents.
+        if (!sc.dataset.scrollListenerAttached) {
+            sc.addEventListener('scroll', () => {
+                const scrollLeft = sc.scrollLeft;
                 const slideWidth = sc.offsetWidth;
-                sc.scrollTo({
-                    left: slideWidth * index,
-                    behavior: 'smooth'
-                });
-            }
-        });
+                const currentIndex = Math.round(scrollLeft / slideWidth);
+                updateCarouselDots(sc, dc, currentIndex);
+            });
+            sc.dataset.scrollListenerAttached = 'true';
+        }
+
+        if (!dc.dataset.clickListenerAttached) {
+            dc.addEventListener('click', (e) => {
+                if (e.target.classList.contains('carousel-dot')) {
+                    const index = parseInt(e.target.dataset.index);
+                    const slideWidth = sc.offsetWidth;
+                    sc.scrollTo({
+                        left: slideWidth * index,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+            dc.dataset.clickListenerAttached = 'true';
+        }
 
         function ro(ct, opts, sel, ty) {
             ct.innerHTML = '';
@@ -567,6 +613,7 @@
         try {
             const { error } = await supabaseClient.auth.signInWithPassword({ email: em, password: pw });
             if (error) throw error;
+            isAdminLoggedIn = true;
             document.getElementById('adminPanel').classList.add('active');
             document.getElementById('adminModalOverlay').classList.remove('open');
             document.getElementById('logoutBtn').classList.add('visible');
@@ -577,6 +624,7 @@
     
     async function handleLogout() {
         await supabaseClient.auth.signOut();
+        isAdminLoggedIn = false;
         document.getElementById('adminPanel').classList.remove('active');
         document.getElementById('logoutBtn').classList.remove('visible');
         showToast('👋 Déconnecté');
@@ -650,8 +698,12 @@
     document.getElementById('sendWhatsAppBtn').addEventListener('click', sendWhatsAppOrder);
     document.getElementById('cancelOrderBtn').addEventListener('click', () => document.getElementById('orderModalOverlay').classList.remove('open'));
 
+    // Bouton retour en haut
+    document.getElementById('scrollToTopBtn').addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
     // ===== CATÉGORIES DYNAMIQUES =====
-    
     function renderCategories() {
         const grid = document.getElementById('categoriesGrid');
         if (!grid) return;
@@ -732,8 +784,14 @@
             refreshCatalogue();
             window.scrollTo(0, 0);
         }
-        if (nav === 'profile') { 
-            document.getElementById('adminModalOverlay').classList.add('open'); 
+        if (nav === 'profile') {
+            // CORRIGÉ : si déjà connecté en admin, on ouvre directement le panel admin
+            // au lieu de redemander un login qui n'a plus lieu d'être
+            if (isAdminLoggedIn) {
+                document.getElementById('adminPanel').scrollIntoView({ behavior: 'smooth' });
+            } else {
+                document.getElementById('adminModalOverlay').classList.add('open');
+            }
         }
     });});
 
@@ -752,7 +810,12 @@
         refreshCartDisplay();
         updateNavFavBadge();
         const { data: { session } } = await supabaseClient.auth.getSession();
-        if (session) { document.getElementById('adminPanel').classList.add('active'); document.getElementById('logoutBtn').classList.add('visible'); renderAdminList(); }
+        if (session) {
+            isAdminLoggedIn = true;
+            document.getElementById('adminPanel').classList.add('active');
+            document.getElementById('logoutBtn').classList.add('visible');
+            renderAdminList();
+        }
         const urlP = new URLSearchParams(window.location.search).get('id');
         if (urlP) { const p = products.find(pr => pr.id === parseInt(urlP)); if (p) openProductModal(parseInt(urlP)); }
     }
