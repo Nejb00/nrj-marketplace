@@ -60,9 +60,6 @@
     let scrollObserver = null;
     let isAdminLoggedIn = false;
 
-    // Bouton retour en haut (pas de mémorisation de position : on ne restaure jamais
-    // le scroll entre deux visites, pour ne jamais faire rater de nouveaux produits
-    // ajoutés en haut de la grille entre-temps)
     window.addEventListener('scroll', () => {
         const scrollBtn = document.getElementById('scrollToTopBtn');
         if (scrollBtn) {
@@ -81,7 +78,6 @@
     
     async function fetchProducts() {
         try {
-            // Tri par date décroissante (nouveautés en premier)
             const { data, error } = await supabaseClient
                 .from('products')
                 .select('*')
@@ -123,14 +119,12 @@
             ? products.filter(p => favorites.includes(p.id))
             : (currentFilter === 'all' ? products : products.filter(p => p.category === currentFilter));
 
-        // Filtres rapides
         if (currentQuickFilter === 'new') {
             filtered = filtered.filter(p => isNewProduct(p));
         } else if (currentQuickFilter === 'bestseller') {
             filtered = filtered.filter(p => isBestSeller(p));
         }
 
-        // Recherche
         if (searchQuery && !(/^\d+$/.test(searchQuery) && products.some(p => p.id === parseInt(searchQuery)))) {
             const q = searchQuery.toLowerCase();
             filtered = filtered.filter(p => p.name.toLowerCase().includes(q) || (p.category && p.category.toLowerCase().includes(q)));
@@ -253,7 +247,6 @@
         refreshCatalogue();
     }
 
-    // Gestion des filtres rapides
     document.querySelectorAll('.filter-chip').forEach(chip => {
         chip.addEventListener('click', function() {
             document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
@@ -502,10 +495,6 @@
             });
         }
 
-        // CORRIGÉ : sc et dc sont les MÊMES éléments HTML à chaque ouverture de modale
-        // (jamais recréés). On attache donc les listeners une seule fois, la première
-        // fois qu'on les rencontre, via un flag sur l'élément lui-même — sinon chaque
-        // ouverture de produit empilait un nouveau listener par-dessus les précédents.
         if (!sc.dataset.scrollListenerAttached) {
             sc.addEventListener('scroll', () => {
                 const scrollLeft = sc.scrollLeft;
@@ -698,7 +687,6 @@
     document.getElementById('sendWhatsAppBtn').addEventListener('click', sendWhatsAppOrder);
     document.getElementById('cancelOrderBtn').addEventListener('click', () => document.getElementById('orderModalOverlay').classList.remove('open'));
 
-    // Bouton retour en haut
     document.getElementById('scrollToTopBtn').addEventListener('click', () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
@@ -757,6 +745,7 @@
 
     document.getElementById('backToHomeBtn').addEventListener('click', () => switchView('home'));
 
+    // ===== GESTIONNAIRE NAVIGATION (CORRIGÉ POUR REINITIALISATION UNIQUE) =====
     document.querySelectorAll('.nav-item').forEach(btn => { btn.addEventListener('click', function() {
         document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
         this.classList.add('active');
@@ -765,9 +754,21 @@
         if (nav === 'home') { 
             if (modalOpen) history.back(); 
             switchView('home');
+            
+            // Correction UX : Réinitialisation propre des variables de filtrage et recherche
             currentFilter = 'all';
+            currentQuickFilter = 'all';
+            searchQuery = '';
+            
+            // Nettoyage visuel de l'interface
+            document.getElementById('searchInput').value = ''; 
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            const allChip = document.querySelector('.filter-chip[data-filter="all"]');
+            if (allChip) allChip.classList.add('active');
+            
+            // Re-render complet et scroll en haut fluide
             refreshCatalogue();
-            window.scrollTo(0, 0); 
+            window.scrollTo({ top: 0, behavior: 'smooth' }); 
         }
         if (nav === 'categories') { 
             switchView('categories'); 
@@ -785,8 +786,6 @@
             window.scrollTo(0, 0);
         }
         if (nav === 'profile') {
-            // CORRIGÉ : si déjà connecté en admin, on ouvre directement le panel admin
-            // au lieu de redemander un login qui n'a plus lieu d'être
             if (isAdminLoggedIn) {
                 document.getElementById('adminPanel').scrollIntoView({ behavior: 'smooth' });
             } else {
