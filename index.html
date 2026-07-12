@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="NRJ Marketplace International - Importation de produits depuis la Chine, la France et la Turquie vers le Congo Brazzaville.">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
-    <title>NRJ Marketplace International • Import Chine, France, Turquie → Congo</title>
+    <title>NRJ Marketplace • Import Chine, France, Turquie → Congo</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -24,8 +24,21 @@
         </div>
     </header>
 
+    <!-- Bandeau grossiste -->
+    <div class="wholesale-banner">
+        📦 Vente en gros — quantité minimum par produit
+    </div>
+
     <!-- Catalogue principal -->
     <div id="catalogueView">
+        <!-- Filtres rapides -->
+        <div class="quick-filters">
+            <button class="filter-chip active" data-filter="all">Tout</button>
+            <button class="filter-chip" data-filter="new">✨ Nouveautés</button>
+            <button class="filter-chip" data-filter="bestseller">🔥 Populaires</button>
+        </div>
+
+        <!-- Filtres par catégorie -->
         <div class="search-bar-container">
             <div class="search-bar">
                 <span class="search-icon">🔍</span>
@@ -91,6 +104,9 @@
         <button class="btn-direct-sticky" id="directOrderStickyBtn">⚡ Commander directement</button>
         <button class="btn-cart-sticky" id="addToCartStickyBtn" aria-label="Ajouter au panier">🛒</button>
     </div>
+
+    <!-- Bouton retour en haut -->
+    <button class="scroll-to-top" id="scrollToTopBtn" aria-label="Retour en haut">⬆️</button>
 
     <!-- Cart offcanvas -->
     <div class="cart-overlay" id="cartOverlay"></div>
@@ -173,4 +189,4 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="app.js"></script>
 </body>
-                                                </html>
+</html>
