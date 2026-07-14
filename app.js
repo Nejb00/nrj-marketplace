@@ -7,7 +7,7 @@
     const PRODUCTS_PER_PAGE = 20;
     
     const NEW_PRODUCT_DAYS = 7;
-    const POPULAR_THRESHOLD = 20; // Score minimum pour être "Populaire"
+    const POPULAR_THRESHOLD = 20;
 
     // ===== GESTION DES PLACEHOLDERS DYNAMIQUES =====
     const basePlaceholders = ["Rechercher un produit...", "Tendances de Chine 🇨🇳", "Arrivages de Turquie 🇹🇷", "Sélection France 🇫🇷", "Grossiste direct..."];
@@ -153,7 +153,6 @@
         if (currentQuickFilter === 'new') {
             filtered = filtered.filter(p => isNewProduct(p));
         } else if (currentQuickFilter === 'bestseller') {
-            // Trie par score de popularité décroissant
             filtered = filtered.filter(p => (p.popularity_score || 0) > 0)
                                 .sort((a, b) => (b.popularity_score || 0) - (a.popularity_score || 0));
         }
@@ -341,7 +340,7 @@
         if (exist) exist.quantity = Number(exist.quantity) + moq;
         else cart.push({ productId: pid, quantity: moq, taille: t, couleur: c, moq });
         
-        trackPopularity(pid, 5); // +5 points pour ajout au panier
+        trackPopularity(pid, 5);
         
         saveCart();
         refreshCartDisplay();
@@ -489,7 +488,7 @@
         if (!p) return;
         currentProductId = pid;
 
-        trackPopularity(pid, 1); // +1 point pour la vue
+        trackPopularity(pid, 1);
 
         trackViewedItem(p.name);
 
@@ -579,7 +578,7 @@
         document.getElementById('directOrderStickyBtn').onclick = () => {
             if (tailles.length && !sT) return showToast('⚠️ Sélectionnez une taille');
             
-            trackPopularity(p.id, 10); // +10 points pour intention d'achat maximale
+            trackPopularity(p.id, 10);
             
             window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour NRJ Marketplace, je souhaite commander : ${p.name} (ID: ${p.id}), Taille: ${sT || 'N/A'}, Quantité: ${moq}. Lien : ${BASE_URL}?id=${p.id}`)}`, '_blank');
         };
@@ -778,6 +777,9 @@
             document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
             const allChip = document.querySelector('.filter-chip[data-filter="all"]');
             if (allChip) allChip.classList.add('active');
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            const allBtn = document.querySelector('.filter-btn[data-category="all"]');
+            if (allBtn) allBtn.classList.add('active');
             refreshCatalogue();
             window.scrollTo({ top: 0, behavior: 'smooth' }); 
         }
