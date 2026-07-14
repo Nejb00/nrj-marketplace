@@ -7,13 +7,47 @@
     const PRODUCTS_PER_PAGE = 20;
     
     const NEW_PRODUCT_DAYS = 7;
-    const BEST_SELLER_THRESHOLD = 5;
+    const POPULAR_THRESHOLD = 20; // Score minimum pour être "Populaire"
+
+    // ===== GESTION DES PLACEHOLDERS DYNAMIQUES =====
+    const basePlaceholders = ["Rechercher un produit...", "Tendances de Chine 🇨🇳", "Arrivages de Turquie 🇹🇷", "Sélection France 🇫🇷", "Grossiste direct..."];
+    let rotationList = [...basePlaceholders];
+    let currentPlaceholderIndex = 0;
+
+    function trackViewedItem(name) {
+        if (!name) return;
+        const formattedName = name.length > 22 ? name.substring(0, 22) + "..." : name;
+        rotationList = rotationList.filter(item => item !== formattedName);
+        rotationList.unshift(formattedName);
+        if (rotationList.length > 8) rotationList.pop();
+    }
+
+    function initPlaceholderRotation() {
+        const input = document.getElementById('searchInput');
+        if (!input) return;
+        
+        setInterval(() => {
+            if (document.activeElement !== input && input.value === '') {
+                currentPlaceholderIndex = (currentPlaceholderIndex + 1) % rotationList.length;
+                input.placeholder = rotationList[currentPlaceholderIndex];
+            }
+        }, 3500);
+    }
 
     function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
     function formatPrice(a) { return 'XAF ' + a.toLocaleString('fr-FR'); }
     function removeEmojis(s) { return s.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{2300}-\u{23FF}\u{2B50}\u{2B55}\u{2934}\u{2935}\u{25AA}\u{25AB}\u{25FE}\u{25FD}\u{25FB}\u{25FC}\u{25B6}\u{25C0}\u{3030}\u{303D}\u{3297}\u{3299}\u{FE0F}\u{200D}]/gu, '').trim(); }
 
-    // ===== FONCTIONS BADGES =====
+    // ===== SYSTÈME DE POPULARITÉ =====
+    function trackPopularity(productId, points) {
+        supabaseClient.rpc('increment_popularity', { 
+            product_id: productId, 
+            amount: points 
+        }).then(({ error }) => {
+            if (error) console.warn('Erreur tracking popularité:', error);
+        });
+    }
+
     function isNewProduct(p) {
         if (!p.created_at) return false;
         const createdDate = new Date(p.created_at).getTime();
@@ -23,8 +57,8 @@
     }
 
     function isBestSeller(p) {
-        const count = Number(p.orders_count) || 0;
-        return count >= BEST_SELLER_THRESHOLD;
+        const score = Number(p.popularity_score) || 0;
+        return score >= POPULAR_THRESHOLD;
     }
 
     function generateBadgesHTML(p, isModal = false) {
@@ -34,12 +68,12 @@
         
         if (isModal) {
             if (isNew) html += `<span class="badge badge-new">✨ Nouveau</span>`;
-            if (isBest) html += `<span class="badge badge-best-seller">🔥 Best-seller</span>`;
+            if (isBest) html += `<span class="badge badge-best-seller">🔥 Populaire</span>`;
             return html;
         } else {
             html = '<div class="badge-container">';
             if (isNew) html += `<span class="badge badge-new">✨ Nouveau</span>`;
-            if (isBest) html += `<span class="badge badge-best-seller">🔥 Best-seller</span>`;
+            if (isBest) html += `<span class="badge badge-best-seller">🔥 Populaire</span>`;
             html += '</div>';
             return (isNew || isBest) ? html : '';
         }
@@ -88,16 +122,13 @@
         } catch (err) {
             console.error('Erreur fetch products:', err);
             products = [];
-            showToast('❌ Erreur de connexion. Vérifie ta connexion internet.');
+            showToast('❌ Erreur de connexion.');
             const grid = document.getElementById('productsGrid');
             grid.innerHTML = `
                 <div style="grid-column: 1/-1; text-align:center; padding:3rem;">
                     <div style="font-size:3rem; margin-bottom:1rem;">⚠️</div>
                     <h3 style="color:var(--text); margin-bottom:0.5rem;">Impossible de charger les produits</h3>
-                    <p style="color:var(--text-secondary); margin-bottom:1rem;">Vérifie ta connexion internet et réessaie</p>
-                    <button onclick="location.reload()" style="background:var(--primary); color:white; border:none; padding:0.8rem 2rem; border-radius:50px; font-weight:700; cursor:pointer;">
-                        🔄 Réessayer
-                    </button>
+                    <button onclick="location.reload()" style="background:var(--primary); color:white; border:none; padding:0.8rem 2rem; border-radius:50px; font-weight:700; cursor:pointer;">🔄 Réessayer</button>
                 </div>
             `;
         }
@@ -122,7 +153,9 @@
         if (currentQuickFilter === 'new') {
             filtered = filtered.filter(p => isNewProduct(p));
         } else if (currentQuickFilter === 'bestseller') {
-            filtered = filtered.filter(p => isBestSeller(p));
+            // Trie par score de popularité décroissant
+            filtered = filtered.filter(p => (p.popularity_score || 0) > 0)
+                                .sort((a, b) => (b.popularity_score || 0) - (a.popularity_score || 0));
         }
 
         if (searchQuery && !(/^\d+$/.test(searchQuery) && products.some(p => p.id === parseInt(searchQuery)))) {
@@ -177,9 +210,8 @@
             let details = [];
             if (tailles.length > 0) details.push(`${tailles.length} taille${tailles.length > 1 ? 's' : ''}`);
             if (couleurs.length > 0) details.push(`${couleurs.length} couleur${couleurs.length > 1 ? 's' : ''}`);
-            if (details.length > 0) {
-                details.push('En stock');
-            }
+            if (details.length > 0) details.push('En stock');
+            
             const detailsHTML = details.length > 0 
                 ? `<div class="product-card-details">${details.map(d => `<span class="product-card-detail-item">${escapeHtml(d)}</span>`).join('')}</div>` 
                 : '';
@@ -198,8 +230,8 @@
                         ${detailsHTML}
                     </div>
                 </div>
-                <button class="product-card-add" data-action="add-to-cart" data-id="${p.id}" aria-label="Ajouter ${escapeHtml(p.name)} au panier">+</button>
-                <button class="fav-icon" data-action="toggle-favorite" data-id="${p.id}" aria-label="${isFav ? 'Retirer' : 'Ajouter'} aux favoris">${isFav ? '❤️' : '🤍'}</button>
+                <button class="product-card-add" data-action="add-to-cart" data-id="${p.id}" aria-label="Ajouter">+</button>
+                <button class="fav-icon" data-action="toggle-favorite" data-id="${p.id}">${isFav ? '❤️' : '🤍'}</button>
             `;
             fragment.appendChild(card);
             scrollObserver.observe(card);
@@ -293,11 +325,7 @@
         if (decreaseBtn) { changeQty(parseInt(decreaseBtn.dataset.index), -1); return; }
 
         const recCard = e.target.closest('.rec-card');
-        if (recCard) {
-            const id = parseInt(recCard.dataset.productId);
-            openProductModal(id);
-            return;
-        }
+        if (recCard) { openProductModal(parseInt(recCard.dataset.productId)); return; }
 
         const card = e.target.closest('.product-card');
         if (card && !e.target.closest('.product-card-add') && !e.target.closest('.fav-icon')) {
@@ -312,6 +340,9 @@
         const exist = cart.find(i => i.productId === pid && i.taille === t && i.couleur === c);
         if (exist) exist.quantity = Number(exist.quantity) + moq;
         else cart.push({ productId: pid, quantity: moq, taille: t, couleur: c, moq });
+        
+        trackPopularity(pid, 5); // +5 points pour ajout au panier
+        
         saveCart();
         refreshCartDisplay();
         showToast('🛒 Ajouté au panier');
@@ -362,7 +393,6 @@
             const p = products.find(pr => pr.id === i.productId);
             return s + (p ? p.price * Number(i.quantity) : 0);
         }, 0);
-        document.getElementById('cartCount') && (document.getElementById('cartCount').textContent = cnt);
         document.getElementById('cartTotal').textContent = formatPrice(tot);
         document.getElementById('checkoutBtn').disabled = cart.length === 0;
         const ctr = document.getElementById('cartItems');
@@ -458,6 +488,11 @@
         const p = products.find(pr => pr.id === pid);
         if (!p) return;
         currentProductId = pid;
+
+        trackPopularity(pid, 1); // +1 point pour la vue
+
+        trackViewedItem(p.name);
+
         const tailles = (p.tailles || '').split(',').map(s => s.trim()).filter(Boolean),
               couleurs = (p.couleurs || '').split(',').map(s => s.trim()).filter(Boolean);
         let sT = tailles.length ? (t && tailles.includes(t) ? t : tailles[0]) : '',
@@ -476,7 +511,7 @@
         document.getElementById('modalFavBtn').onclick = () => toggleFavorite(p.id);
         document.getElementById('modalShareBtn').onclick = () => {
             const url = BASE_URL + '?id=' + p.id;
-            const txt = `${formatPrice(uPrice)}\nMinimum d'achat : ${moq} pièce(s)\nTotal minimum : ${formatPrice(tMin)}\nDécouvre "${p.name}" sur NRJ Marketplace International ${url}`;
+            const txt = `${formatPrice(uPrice)}\nMinimum d'achat : ${moq} pièce(s)\nDécouvre "${p.name}" sur NRJ Marketplace ${url}`;
             if (navigator.share) navigator.share({ title: p.name, text: txt, url }).catch(() => {});
             else navigator.clipboard.writeText(txt).then(() => showToast('🔗 Copié !'));
         };
@@ -497,9 +532,7 @@
 
         if (!sc.dataset.scrollListenerAttached) {
             sc.addEventListener('scroll', () => {
-                const scrollLeft = sc.scrollLeft;
-                const slideWidth = sc.offsetWidth;
-                const currentIndex = Math.round(scrollLeft / slideWidth);
+                const currentIndex = Math.round(sc.scrollLeft / sc.offsetWidth);
                 updateCarouselDots(sc, dc, currentIndex);
             });
             sc.dataset.scrollListenerAttached = 'true';
@@ -509,11 +542,7 @@
             dc.addEventListener('click', (e) => {
                 if (e.target.classList.contains('carousel-dot')) {
                     const index = parseInt(e.target.dataset.index);
-                    const slideWidth = sc.offsetWidth;
-                    sc.scrollTo({
-                        left: slideWidth * index,
-                        behavior: 'smooth'
-                    });
+                    sc.scrollTo({ left: sc.offsetWidth * index, behavior: 'smooth' });
                 }
             });
             dc.dataset.clickListenerAttached = 'true';
@@ -546,11 +575,13 @@
 
         document.getElementById('addToCartStickyBtn').onclick = () => {
             addToCart(p.id, sT, sC);
-            showToast('🛒 Ajouté au panier');
         };
         document.getElementById('directOrderStickyBtn').onclick = () => {
             if (tailles.length && !sT) return showToast('⚠️ Sélectionnez une taille');
-            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour NRJ Marketplace, je souhaite commander directement ce produit : ${p.name} (ID: ${p.id}), Taille: ${sT || 'N/A'}, Quantité: ${moq}, Total minimum: ${formatPrice(tMin)}. Voici le lien : ${BASE_URL}?id=${p.id}`)}`, '_blank');
+            
+            trackPopularity(p.id, 10); // +10 points pour intention d'achat maximale
+            
+            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour NRJ Marketplace, je souhaite commander : ${p.name} (ID: ${p.id}), Taille: ${sT || 'N/A'}, Quantité: ${moq}. Lien : ${BASE_URL}?id=${p.id}`)}`, '_blank');
         };
 
         let rec = products.filter(pr => pr.category === p.category && pr.id !== p.id);
@@ -593,7 +624,7 @@
         window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Bonjour NRJ Marketplace, je recherche un produit. Je vous envoie une photo juste après 📸")}`, '_blank');
     });
     document.getElementById('modalDescSourcingBtn').addEventListener('click', () => {
-        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Bonjour NRJ Marketplace International, je recherche un produit spécifique mais je n'ai pas de photo sous la main. J'aimerais vous décrire ce que je cherche pour que vous puissiez vérifier auprès de vos fournisseurs !")}`, '_blank');
+        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Bonjour NRJ Marketplace International, je recherche un produit spécifique...")}`, '_blank');
     });
 
     async function handleAdminLogin() {
@@ -642,25 +673,17 @@
             name, price, category: removeEmojis(category), emoji: '', 
             image, image2, image3, image4, image5, image6, 
             tailles, couleurs, moq, description: desc,
-            orders_count: 0
+            popularity_score: 0
         };
         try {
             await insertProduct(prod);
-            alert('✅ Produit ajouté dans Supabase !');
+            alert('✅ Produit ajouté !');
             ['adminName','adminCategory','adminPrice','adminImage','adminImage2','adminImage3','adminImage4','adminImage5','adminImage6','adminTailles','adminCouleurs','adminMoq','adminDesc'].forEach(id => document.getElementById(id).value = '');
             document.getElementById('adminMoq').value = '1';
             await fetchProducts();
             refreshCatalogue();
             renderAdminList();
-            showToast('✅ Catalogue mis à jour');
-        } catch (err) {
-            console.error('Erreur ajout produit:', err);
-            if (err.message.includes('network') || err.message.includes('fetch')) {
-                alert('❌ Erreur de connexion. Vérifie ta connexion internet.');
-            } else {
-                alert('❌ Erreur : ' + err.message);
-            }
-        }
+        } catch (err) { alert('❌ Erreur : ' + err.message); }
     }
     
     async function deleteProduct(id) {
@@ -675,7 +698,7 @@
     }
     
     function renderAdminList() {
-        document.getElementById('adminProductsList').innerHTML = products.map(p => `<li><span>${escapeHtml(p.name)} [ID: ${p.id}] (${formatPrice(p.price)})</span><button class="btn-sm" data-action="admin-remove" data-id="${p.id}">🗑️</button></li>`).join('');
+        document.getElementById('adminProductsList').innerHTML = products.map(p => `<li><span>${escapeHtml(p.name)} [ID: ${p.id}]</span><button class="btn-sm" data-action="admin-remove" data-id="${p.id}">🗑️</button></li>`).join('');
     }
     
     document.addEventListener('click', e => { if (e.target.matches('[data-action="admin-remove"]')) deleteProduct(parseInt(e.target.dataset.id)); });
@@ -691,23 +714,18 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
-    // ===== CATÉGORIES DYNAMIQUES =====
     function renderCategories() {
         const grid = document.getElementById('categoriesGrid');
         if (!grid) return;
-
         const uniqueCats = [...new Set(products.map(p => p.category).filter(Boolean))];
-        
         if (uniqueCats.length === 0) {
-            grid.innerHTML = '<p style="text-align:center; color:var(--text-secondary); grid-column: 1/-1; padding: 2rem;">Aucune catégorie disponible pour le moment.</p>';
+            grid.innerHTML = '<p style="text-align:center; color:var(--text-secondary);">Aucune catégorie disponible.</p>';
             return;
         }
-
         grid.innerHTML = uniqueCats.map(cat => {
             const latestProduct = [...products].reverse().find(p => p.category === cat && p.image);
             const imageUrl = latestProduct ? latestProduct.image : '';
             const count = products.filter(p => p.category === cat).length;
-            
             return `
                 <div class="category-card" data-category="${escapeHtml(cat)}">
                     ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" class="category-card-bg" alt="${escapeHtml(cat)}" loading="lazy" onload="this.classList.add('loaded')">` : ''}
@@ -722,8 +740,8 @@
 
         grid.querySelectorAll('.category-card').forEach(card => {
             card.addEventListener('click', () => {
-                const cat = card.dataset.category;
-                applyFilter(cat);
+                trackViewedItem(card.dataset.category);
+                applyFilter(card.dataset.category);
                 switchView('home');
             });
         });
@@ -732,7 +750,6 @@
     function switchView(viewName) {
         const catView = document.getElementById('categoriesView');
         const homeView = document.getElementById('catalogueView');
-        
         if (viewName === 'categories') {
             renderCategories();
             catView.style.display = 'block';
@@ -745,7 +762,6 @@
 
     document.getElementById('backToHomeBtn').addEventListener('click', () => switchView('home'));
 
-    // ===== GESTIONNAIRE NAVIGATION (CORRIGÉ POUR REINITIALISATION UNIQUE) =====
     document.querySelectorAll('.nav-item').forEach(btn => { btn.addEventListener('click', function() {
         document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
         this.classList.add('active');
@@ -754,43 +770,23 @@
         if (nav === 'home') { 
             if (modalOpen) history.back(); 
             switchView('home');
-            
-            // Correction UX : Réinitialisation propre des variables de filtrage et recherche
             currentFilter = 'all';
             currentQuickFilter = 'all';
             searchQuery = '';
-            
-            // Nettoyage visuel de l'interface
-            document.getElementById('searchInput').value = ''; 
+            const input = document.getElementById('searchInput');
+            if (input) { input.value = ''; input.placeholder = rotationList[0]; }
             document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
             const allChip = document.querySelector('.filter-chip[data-filter="all"]');
             if (allChip) allChip.classList.add('active');
-            
-            // Re-render complet et scroll en haut fluide
             refreshCatalogue();
             window.scrollTo({ top: 0, behavior: 'smooth' }); 
         }
-        if (nav === 'categories') { 
-            switchView('categories'); 
-            window.scrollTo(0, 0); 
-        }
-        if (nav === 'cart') { 
-            document.getElementById('cartPanel').classList.add('open'); 
-            document.getElementById('cartOverlay').classList.add('open'); 
-            refreshCartDisplay(); 
-        }
-        if (nav === 'favorites') { 
-            switchView('home');
-            currentFilter = 'favorites';
-            refreshCatalogue();
-            window.scrollTo(0, 0);
-        }
+        if (nav === 'categories') { switchView('categories'); window.scrollTo(0, 0); }
+        if (nav === 'cart') { document.getElementById('cartPanel').classList.add('open'); document.getElementById('cartOverlay').classList.add('open'); refreshCartDisplay(); }
+        if (nav === 'favorites') { switchView('home'); currentFilter = 'favorites'; refreshCatalogue(); window.scrollTo(0, 0); }
         if (nav === 'profile') {
-            if (isAdminLoggedIn) {
-                document.getElementById('adminPanel').scrollIntoView({ behavior: 'smooth' });
-            } else {
-                document.getElementById('adminModalOverlay').classList.add('open');
-            }
+            if (isAdminLoggedIn) document.getElementById('adminPanel').scrollIntoView({ behavior: 'smooth' });
+            else document.getElementById('adminModalOverlay').classList.add('open');
         }
     });});
 
@@ -808,6 +804,8 @@
         refreshCatalogue();
         refreshCartDisplay();
         updateNavFavBadge();
+        initPlaceholderRotation();
+
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (session) {
             isAdminLoggedIn = true;
