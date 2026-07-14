@@ -15,36 +15,31 @@
     <header>
         <div class="logo-wrapper" onclick="location.href='/'">
             <span class="logo-icon">⚡</span>
-            <div>
+            <div class="logo-brand">
                 <div class="logo-text">NRJ Marketplace</div>
+                <div class="logo-subtext">📦 Grossiste — Min. par produit</div>
             </div>
         </div>
+
+        <div class="search-bar-header">
+            <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="Rechercher un produit..." autocomplete="off" aria-label="Rechercher un produit">
+            </div>
+        </div>
+
         <div class="header-actions">
             <button class="logout-btn" id="logoutBtn" aria-label="Se déconnecter" title="Se déconnecter">🚪</button>
         </div>
     </header>
 
-    <!-- Bandeau grossiste -->
-    <div class="wholesale-banner">
-        📦 Vente en gros — quantité minimum par produit
-    </div>
-
-    <!-- Catalogue principal -->
     <div id="catalogueView">
-        <!-- Filtres rapides -->
         <div class="quick-filters">
             <button class="filter-chip active" data-filter="all">Tout</button>
             <button class="filter-chip" data-filter="new">✨ Nouveautés</button>
             <button class="filter-chip" data-filter="bestseller">🔥 Populaires</button>
         </div>
 
-        <!-- Filtres par catégorie -->
-        <div class="search-bar-container">
-            <div class="search-bar">
-                <span class="search-icon">🔍</span>
-                <input type="text" id="searchInput" placeholder="Rechercher un produit ou un ID..." autocomplete="off" aria-label="Rechercher un produit">
-            </div>
-        </div>
         <div class="filter-bar" id="filterBar">
             <button class="filter-btn active" data-category="all">Tout voir</button>
         </div>
@@ -55,7 +50,6 @@
         <p id="loadingMessage" style="text-align:center;color:var(--text-secondary);display:none;">⏳ Chargement des produits...</p>
     </div>
 
-    <!-- Page Catégories -->
     <div id="categoriesView" style="display: none; padding: 1rem 1rem 2rem;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
             <h2 style="font-size: 1.5rem; font-weight: 800;">Nos Catégories</h2>
@@ -64,7 +58,6 @@
         <div class="categories-grid" id="categoriesGrid"></div>
     </div>
 
-    <!-- Modale produit -->
     <div class="product-modal" id="productModal">
         <div class="modal-image-section">
             <div class="carousel-scroll" id="modalCarouselScroll"></div>
@@ -99,16 +92,13 @@
         </div>
     </div>
 
-    <!-- Barre sticky -->
     <div class="sticky-bottom-bar" id="stickyBottomBar">
         <button class="btn-direct-sticky" id="directOrderStickyBtn">⚡ Commander directement</button>
         <button class="btn-cart-sticky" id="addToCartStickyBtn" aria-label="Ajouter au panier">🛒</button>
     </div>
 
-    <!-- Bouton retour en haut -->
     <button class="scroll-to-top" id="scrollToTopBtn" aria-label="Retour en haut">⬆️</button>
 
-    <!-- Cart offcanvas -->
     <div class="cart-overlay" id="cartOverlay"></div>
     <div class="cart-panel" id="cartPanel">
         <div class="cart-header">Mon Panier <button class="cart-close" id="cartCloseBtn" aria-label="Fermer le panier">&times;</button></div>
@@ -119,7 +109,6 @@
         </div>
     </div>
 
-    <!-- Modals commande & admin -->
     <div class="modal-overlay" id="orderModalOverlay">
         <div class="modal">
             <h2 style="text-align:center;margin-bottom:1rem;">📋 Valider la commande</h2>
@@ -141,7 +130,6 @@
         </div>
     </div>
 
-    <!-- Admin panel -->
     <div class="admin-panel" id="adminPanel">
         <h2 style="margin-bottom:1rem;color:var(--primary);">Ajouter un nouveau produit</h2>
         <div class="form-group"><label>Nom</label><input type="text" id="adminName" placeholder="Ex: Écouteurs Pro"></div>
@@ -162,7 +150,6 @@
         <ul class="admin-products-list" id="adminProductsList"></ul>
     </div>
 
-    <!-- Navigation moderne -->
     <nav class="main-nav">
         <a href="#" class="nav-item active" data-nav="home" aria-label="Accueil">
             <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
