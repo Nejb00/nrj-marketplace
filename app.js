@@ -15,6 +15,7 @@
     let rotationList = [...basePlaceholders];
     let currentPlaceholderIndex = 0;
     let searchDebounceTimer = null;
+    let isVoiceListening = false;
 
     function trackViewedItem(name) {
         if (!name) return;
@@ -69,12 +70,27 @@
 
     function showToast(m) { const t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
 
-    // ===== RECHERCHE FUZZY =====
+    // ===== ICÔNES CONTEXTUELLES PAR CATÉGORIE =====
+    function getCategoryIcon(category) {
+        if (!category) return '📦';
+        const cat = category.toLowerCase();
+        if (cat.includes('chaussure') || cat.includes('basket') || cat.includes('sneaker') || cat.includes('sport')) return '👟';
+        if (cat.includes('électronique') || cat.includes('electronique') || cat.includes('tech') || cat.includes('phone') || cat.includes('mobile')) return '📱';
+        if (cat.includes('mode') || cat.includes('vêtement') || cat.includes('vetement') || cat.includes('fashion')) return '👕';
+        if (cat.includes('bijou') || cat.includes('accessoire')) return '💍';
+        if (cat.includes('maison') || cat.includes('déco') || cat.includes('deco')) return '🏠';
+        if (cat.includes('beauté') || cat.includes('beaute') || cat.includes('cosmétique')) return '💄';
+        if (cat.includes('enfant') || cat.includes('jouet')) return '🧸';
+        if (cat.includes('livre') || cat.includes('book')) return '📚';
+        return '📦';
+    }
+
+    // ===== RECHERCHE FUZZY MULTI-CRITÈRES =====
     function normalizeString(str) {
         return str.toLowerCase()
             .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '') // Retirer les accents
-            .replace(/[^a-z0-9\s]/g, ' ') // Garder seulement lettres, chiffres, espaces
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9\s]/g, ' ')
             .replace(/\s+/g, ' ')
             .trim();
     }
@@ -86,32 +102,50 @@
         const name = normalizeString(product.name || '');
         const category = normalizeString(product.category || '');
         const description = normalizeString(product.description || '');
-        const fullText = `${name} ${category} ${description}`;
+        const tailles = normalizeString(product.tailles || '');
+        const couleurs = normalizeString(product.couleurs || '');
+        const id = String(product.id);
+        
+        // Recherche multi-critères : tous les champs
+        const fullText = `${name} ${category} ${description} ${tailles} ${couleurs}`;
         
         let score = 0;
         
-        // Score exact sur le nom (priorité max)
+        // Match exact sur l'ID (priorité max pour recherche par ID)
+        if (id === query.trim()) score += 2000;
+        
+        // Score exact sur le nom
         if (name === normalizedQuery) score += 1000;
         else if (name.startsWith(normalizedQuery)) score += 500;
         else if (name.includes(normalizedQuery)) score += 200;
         
-        // Score par mot-clé
+        // Score par mot-clé dans tous les champs
         queryWords.forEach(word => {
             if (word.length < 2) return;
             
+            // Nom (priorité haute)
             if (name.includes(word)) score += 100;
+            
+            // Catégorie (priorité moyenne)
             if (category.includes(word)) score += 50;
+            
+            // Description (priorité basse)
             if (description.includes(word)) score += 20;
+            
+            // Tailles (bonus)
+            if (tailles.includes(word)) score += 30;
+            
+            // Couleurs (bonus)
+            if (couleurs.includes(word)) score += 30;
             
             // Bonus pour début de mot
             const wordRegex = new RegExp(`\\b${word}`, 'i');
             if (wordRegex.test(name)) score += 30;
         });
         
-        // Recherche fuzzy : tolérance aux fautes (distance de Levenshtein simplifiée)
+        // Recherche fuzzy pour les fautes de frappe
         if (score === 0 && queryWords.length === 1) {
             const queryWord = queryWords[0];
-            // Chercher dans les noms de produits
             const nameWords = name.split(' ');
             for (const nameWord of nameWords) {
                 if (nameWord.length < 3) continue;
@@ -170,10 +204,7 @@
 
     function highlightMatch(text, query) {
         if (!query || !text) return escapeHtml(text || '');
-        const normalizedQuery = normalizeString(query);
         const escapedText = escapeHtml(text);
-        
-        // Regex insensible à la casse et aux accents
         const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
         return escapedText.replace(regex, '<span class="highlight">$1</span>');
     }
@@ -206,13 +237,76 @@
         } catch (e) {}
     }
 
+    // ===== RECHERCHE VOCALE =====
+    function initVoiceSearch() {
+        const voiceBtn = document.getElementById('searchVoice');
+        const searchInput = document.getElementById('searchInput');
+        
+        if (!voiceBtn || !searchInput) return;
+        
+        // Vérifier si l'API Speech Recognition est disponible
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        
+        if (!SpeechRecognition) {
+            voiceBtn.style.display = 'none';
+            return;
+        }
+        
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'fr-FR';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        
+        recognition.onstart = () => {
+            isVoiceListening = true;
+            voiceBtn.classList.add('listening');
+            searchInput.placeholder = '🎤 Parlez maintenant...';
+        };
+        
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            searchInput.value = transcript;
+            searchInput.dispatchEvent(new Event('input'));
+            showToast(`🎤 "${transcript}"`);
+        };
+        
+        recognition.onerror = (event) => {
+            console.warn('Erreur reconnaissance vocale:', event.error);
+            if (event.error === 'no-speech') {
+                showToast('❌ Aucune parole détectée');
+            } else if (event.error === 'not-allowed') {
+                showToast('❌ Accès au microphone refusé');
+            } else {
+                showToast('❌ Erreur de reconnaissance vocale');
+            }
+        };
+        
+        recognition.onend = () => {
+            isVoiceListening = false;
+            voiceBtn.classList.remove('listening');
+            searchInput.placeholder = rotationList[currentPlaceholderIndex];
+        };
+        
+        voiceBtn.addEventListener('click', () => {
+            if (isVoiceListening) {
+                recognition.stop();
+            } else {
+                try {
+                    recognition.start();
+                } catch (e) {
+                    console.warn('Impossible de démarrer la reconnaissance vocale:', e);
+                }
+            }
+        });
+    }
+
     // ===== DROPDOWN DE RECHERCHE =====
     function showSearchDropdown(query) {
         const dropdown = document.getElementById('searchDropdown');
         const clearBtn = document.getElementById('searchClear');
+        const loader = document.getElementById('searchLoader');
         
         if (!query || query.trim().length === 0) {
-            // Afficher l'historique si disponible
             const history = getSearchHistory();
             if (history.length > 0) {
                 let html = `<div class="dropdown-header">
@@ -228,7 +322,6 @@
                 dropdown.innerHTML = html;
                 dropdown.style.display = 'block';
                 
-                // Attacher les clics sur l'historique
                 dropdown.querySelectorAll('.dropdown-history-item').forEach(item => {
                     item.addEventListener('click', () => {
                         const q = item.dataset.query;
@@ -241,50 +334,59 @@
                 hideSearchDropdown();
             }
             if (clearBtn) clearBtn.style.display = 'none';
+            if (loader) loader.style.display = 'none';
             return;
         }
         
         if (clearBtn) clearBtn.style.display = 'block';
         
-        const results = fuzzySearch(query, products);
+        // Afficher le loader
+        if (loader) loader.style.display = 'block';
         
-        if (results.length === 0) {
-            dropdown.innerHTML = `<div class="dropdown-no-results">
-                <div class="dropdown-no-results-icon">🔍</div>
-                <div>Aucun produit trouvé pour "${escapeHtml(query)}"</div>
+        // Simuler un délai pour montrer le loader (optionnel)
+        setTimeout(() => {
+            const results = fuzzySearch(query, products);
+            
+            if (loader) loader.style.display = 'none';
+            
+            if (results.length === 0) {
+                dropdown.innerHTML = `<div class="dropdown-no-results">
+                    <div class="dropdown-no-results-icon">🔍</div>
+                    <div>Aucun produit trouvé pour "${escapeHtml(query)}"</div>
+                </div>`;
+                dropdown.style.display = 'block';
+                return;
+            }
+            
+            let html = `<div class="dropdown-header">
+                <span>${results.length} résultat${results.length > 1 ? 's' : ''}</span>
             </div>`;
-            dropdown.style.display = 'block';
-            return;
-        }
-        
-        let html = `<div class="dropdown-header">
-            <span>${results.length} résultat${results.length > 1 ? 's' : ''}</span>
-        </div>`;
-        
-        results.forEach(p => {
-            const img = p.image ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}">` : '';
-            html += `<div class="dropdown-item" data-product-id="${p.id}">
-                <div class="dropdown-item-img">${img}</div>
-                <div class="dropdown-item-info">
-                    <div class="dropdown-item-name">${highlightMatch(p.name, query)}</div>
-                    <div class="dropdown-item-category">${escapeHtml(p.category || 'Sans catégorie')}</div>
-                </div>
-                <div class="dropdown-item-price">${formatPrice(p.price)}</div>
-            </div>`;
-        });
-        
-        dropdown.innerHTML = html;
-        dropdown.style.display = 'block';
-        
-        // Attacher les clics sur les résultats
-        dropdown.querySelectorAll('.dropdown-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const id = parseInt(item.dataset.productId);
-                openProductModal(id);
-                hideSearchDropdown();
-                document.getElementById('searchInput').blur();
+            
+            results.forEach(p => {
+                const img = p.image ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}">` : `<span>${getCategoryIcon(p.category)}</span>`;
+                const categoryIcon = getCategoryIcon(p.category);
+                html += `<div class="dropdown-item" data-product-id="${p.id}">
+                    <div class="dropdown-item-img">${img}</div>
+                    <div class="dropdown-item-info">
+                        <div class="dropdown-item-name">${highlightMatch(p.name, query)}</div>
+                        <div class="dropdown-item-category">${categoryIcon} ${escapeHtml(p.category || 'Sans catégorie')}</div>
+                    </div>
+                    <div class="dropdown-item-price">${formatPrice(p.price)}</div>
+                </div>`;
             });
-        });
+            
+            dropdown.innerHTML = html;
+            dropdown.style.display = 'block';
+            
+            dropdown.querySelectorAll('.dropdown-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const id = parseInt(item.dataset.productId);
+                    openProductModal(id);
+                    hideSearchDropdown();
+                    document.getElementById('searchInput').blur();
+                });
+            });
+        }, 150);
     }
 
     function hideSearchDropdown() {
@@ -298,7 +400,6 @@
         saveSearchToHistory(query);
     }
 
-    // Exposer pour le bouton "Effacer" de l'historique
     window.clearSearchHistory = function() {
         clearSearchHistory();
         showSearchDropdown('');
@@ -448,20 +549,17 @@
         });
     });
 
-    // ===== GESTION DE LA RECHERCHE AVEC AUTOCOMPLETE =====
     const searchInput = document.getElementById('searchInput');
     const searchClear = document.getElementById('searchClear');
 
     searchInput.addEventListener('input', function(e) {
         const v = e.target.value.trim();
         
-        // Debounce pour l'autocomplete (300ms)
         clearTimeout(searchDebounceTimer);
         searchDebounceTimer = setTimeout(() => {
             showSearchDropdown(v);
         }, 300);
         
-        // Recherche rapide par ID (instantanée)
         clearTimeout(searchTimeout);
         if (v && /^\d+$/.test(v) && products.some(p => p.id === parseInt(v))) {
             searchTimeout = setTimeout(() => { 
@@ -474,7 +572,6 @@
             return;
         }
         
-        // Recherche normale dans la grille
         searchQuery = v;
         refreshCatalogue();
     });
@@ -505,7 +602,6 @@
         searchInput.focus();
     });
 
-    // Fermer le dropdown quand on clique ailleurs
     document.addEventListener('click', function(e) {
         const dropdown = document.getElementById('searchDropdown');
         const searchBar = document.querySelector('.search-bar');
@@ -884,6 +980,7 @@
         document.getElementById('filterBar').innerHTML = html;
 
         initPlaceholderRotation();
+        initVoiceSearch();
         initAdminDedicatedView();
         renderAdminList();
         renderAdminListDedicated();
