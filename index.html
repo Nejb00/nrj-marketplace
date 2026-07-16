@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Wrapper catalogue (tout le contenu existant) -->
+    <!-- Wrapper catalogue -->
     <div id="catalogueWrapper">
         <header>
             <div class="logo-wrapper" onclick="location.href='/'">
@@ -27,12 +27,15 @@
             </div>
         </header>
 
-        <!-- Barre de recherche en pleine largeur -->
+        <!-- Barre de recherche avec dropdown -->
         <div class="search-bar-container">
             <div class="search-bar">
                 <span class="search-icon">🔍</span>
                 <input type="text" id="searchInput" placeholder="Rechercher un produit..." autocomplete="off" aria-label="Rechercher un produit">
+                <button class="search-clear" id="searchClear" style="display:none;" aria-label="Effacer">✕</button>
             </div>
+            <!-- Dropdown de recherche -->
+            <div class="search-dropdown" id="searchDropdown" style="display:none;"></div>
         </div>
 
         <div id="catalogueView">
@@ -140,7 +143,6 @@
             </div>
         </div>
 
-        <!-- Modal d'édition de produit -->
         <div class="modal-overlay" id="editProductModalOverlay">
             <div class="modal modal-edit">
                 <h2 style="text-align:center;margin-bottom:1rem;">✏️ Modifier le produit</h2>
@@ -217,7 +219,7 @@
                 <button id="backToCatalogueBtn" class="btn-back">← Retour au catalogue</button>
                 <h1>🛠️ Panneau Admin</h1>
             </div>
-            <div class="admin-panel" id="adminPanelDedicated">
+            <div class="admin-panel active" id="adminPanelDedicated">
                 <h2 style="margin-bottom:1rem;color:var(--primary);">Ajouter un nouveau produit</h2>
                 <div class="form-group"><label>Nom</label><input type="text" id="adminNameDedicated" placeholder="Ex: Écouteurs Pro"></div>
                 <div class="form-group"><label>Catégorie</label><input type="text" id="adminCategoryDedicated" placeholder="Électronique, Mode..."></div>
@@ -242,4 +244,4 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="app.js"></script>
 </body>
-                                            </html>
+</html>
