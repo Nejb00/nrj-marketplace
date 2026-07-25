@@ -1,0 +1,98 @@
+import { state } from './state.js';
+import { trackViewedItem } from './state.js';
+import { WHATSAPP_NUMBER, BASE_URL } from './config.js';
+import { escapeHtml, formatPrice, generateBadgesHTML, showToast } from './utils.js';
+import { trackPopularity } from './api.js';
+import { toggleFavorite, addToCart } from './cart.js';
+
+function updateCarouselDots(sc, dc, index) {
+    dc.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === index));
+}
+
+export function openProductModal(pid) {
+    const p = state.products.find(pr => pr.id === pid);
+    if (!p) return;
+    state.currentProductId = pid;
+    trackPopularity(pid, 1);
+    trackViewedItem(p.name);
+    const tailles = (p.tailles || '').split(',').map(s => s.trim()).filter(Boolean);
+    const couleurs = (p.couleurs || '').split(',').map(s => s.trim()).filter(Boolean);
+    let sT = tailles.length ? tailles[0] : '', sC = couleurs.length ? couleurs[0] : '';
+    const moq = Number(p.moq) || 1, uPrice = Number(p.price);
+
+    document.getElementById('modalPrice').textContent = formatPrice(uPrice);
+    document.getElementById('modalMoq').textContent = `Minimum d'achat : ${moq} pièce(s)`;
+    document.getElementById('modalTotal').textContent = `Total minimum : ${formatPrice(uPrice * moq)}`;
+    document.getElementById('modalDesc').textContent = p.description || '';
+    document.getElementById('modalProductIdBadge').textContent = `[ID: ${p.id}]`;
+    document.getElementById('modalBadges').innerHTML = generateBadgesHTML(p, true);
+    const favSvg = document.getElementById('modalFavBtn').querySelector('.fav-icon-svg');
+    if (favSvg) favSvg.style.fill = state.favorites.includes(p.id) ? 'var(--favorites)' : 'currentColor';
+    document.getElementById('modalFavBtn').onclick = () => toggleFavorite(p.id);
+    document.getElementById('modalShareBtn').onclick = () => {
+        const url = BASE_URL + '?id=' + p.id;
+        const txt = `${formatPrice(uPrice)}\nMinimum d'achat : ${moq} pièce(s)\nDécouvre "${p.name}" sur NRJ Marketplace ${url}`;
+        navigator.share ? navigator.share({ title: p.name, text: txt, url }).catch(() => {}) : navigator.clipboard.writeText(txt).then(() => showToast('🔗 Copié !'));
+    };
+
+    const imgs = [p.image, p.image2, p.image3, p.image4, p.image5, p.image6].filter(u => u && u.trim());
+    const sc = document.getElementById('modalCarouselScroll'), dc = document.getElementById('modalCarouselDots');
+    sc.innerHTML = ''; dc.innerHTML = '';
+    if (!imgs.length) {
+        sc.innerHTML = '<div class="carousel-slide"><div class="carousel-emoji-slide">📦</div></div>';
+        dc.innerHTML = '<button class="carousel-dot active"></button>';
+    } else {
+        imgs.forEach((u, i) => {
+            sc.innerHTML += `<div class="carousel-slide"><img src="${escapeHtml(u)}" onload="this.classList.add('loaded')" onerror="this.style.display='none'"></div>`;
+            dc.innerHTML += `<button class="carousel-dot${i === 0 ? ' active' : ''}" data-index="${i}"></button>`;
+        });
+    }
+
+    if (!sc.dataset.bound) { sc.addEventListener('scroll', () => updateCarouselDots(sc, dc, Math.round(sc.scrollLeft / sc.offsetWidth))); sc.dataset.bound = '1'; }
+    if (!dc.dataset.bound) { dc.addEventListener('click', e => { if (e.target.classList.contains('carousel-dot')) sc.scrollTo({ left: sc.offsetWidth * parseInt(e.target.dataset.index), behavior: 'smooth' }); }); dc.dataset.bound = '1'; }
+
+    function renderOptions(ct, opts, sel, ty) {
+        ct.innerHTML = '';
+        opts.forEach(o => {
+            const b = document.createElement('button');
+            b.className = 'option-btn' + (o === sel ? ' selected' : '');
+            b.textContent = o;
+            b.onclick = () => {
+                ct.querySelectorAll('.option-btn').forEach(x => x.classList.remove('selected'));
+                b.classList.add('selected');
+                if (ty === 'taille') sT = o; else sC = o;
+            };
+            ct.appendChild(b);
+        });
+    }
+
+    document.getElementById('modalTailleGroup').style.display = tailles.length ? 'block' : 'none';
+    if (tailles.length) renderOptions(document.getElementById('modalTailleOptions'), tailles, sT, 'taille');
+    document.getElementById('modalCouleurGroup').style.display = couleurs.length ? 'block' : 'none';
+    if (couleurs.length) renderOptions(document.getElementById('modalCouleurOptions'), couleurs, sC, 'couleur');
+
+    document.getElementById('addToCartStickyBtn').onclick = () => addToCart(p.id, sT, sC);
+    document.getElementById('directOrderStickyBtn').onclick = () => {
+        if (tailles.length && !sT) return showToast('⚠️ Sélectionnez une taille');
+        trackPopularity(p.id, 10);
+        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour NRJ Marketplace, je souhaite commander : ${p.name} (ID: ${p.id}), Taille: ${sT || 'N/A'}, Quantité: ${moq}. Lien : ${BASE_URL}?id=${p.id}`)}`, '_blank');
+    };
+
+    let rec = state.products.filter(pr => pr.category === p.category && pr.id !== p.id);
+    if (rec.length < 6) rec = [...rec, ...state.products.filter(pr => pr.id !== p.id && !rec.includes(pr))].slice(0, 6);
+    document.getElementById('modalRecCarousel').innerHTML = rec.map(r => `<div class="rec-card" data-product-id="${r.id}"><img src="${escapeHtml(r.image || '')}" onload="this.classList.add('loaded')" onerror="this.style.display='none'"><div class="rec-card-overlay"><div><div class="rec-card-name">${escapeHtml(r.name)}</div><div class="rec-card-price">${formatPrice(r.price)}</div></div></div></div>`).join('');
+
+    document.getElementById('productModal').classList.add('open');
+    document.getElementById('stickyBottomBar').classList.add('visible');
+    if (!state.modalOpen) {
+        history.replaceState({ modalOpen: true }, '', `?id=${p.id}`);
+        state.modalOpen = true;
+    }
+}
+
+export function closeProductModal() {
+    document.getElementById('productModal').classList.remove('open');
+    document.getElementById('stickyBottomBar').classList.remove('visible');
+    state.modalOpen = false;
+    history.replaceState({}, '', window.location.pathname);
+}
