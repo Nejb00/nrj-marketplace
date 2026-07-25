@@ -1,8 +1,7 @@
 import { state } from './state.js';
-import { escapeHtml, formatPrice, debounce, calculateSearchScore, generateBadgesHTML, getCategoryIcon } from './utils.js';
-import { openProductModal } from './product-modal.js';
-import { addToCart } from './cart.js';
+import { escapeHtml, formatPrice, debounce, calculateSearchScore, generateBadgesHTML, calculateProductDetails } from './utils.js';
 
+// ─── Bascule vers la page de recherche ───────────────────────────────────────
 export function switchToSearchView(query) {
     document.getElementById('catalogueWrapper').style.display = 'none';
     document.getElementById('searchView').style.display = 'flex';
@@ -24,45 +23,37 @@ export function switchFromSearchView() {
     window.history.replaceState({}, '', window.location.pathname);
 }
 
+// ─── Filtres ─────────────────────────────────────────────────────────────────
 function initializeSearchFilters() {
     const categories = [...new Set(state.products.map(p => p.category).filter(Boolean))].sort();
     const sizes = [...new Set(state.products.flatMap(p => (p.tailles || '').split(',').map(s => s.trim()).filter(Boolean)))].sort();
     const colors = [...new Set(state.products.flatMap(p => (p.couleurs || '').split(',').map(s => s.trim()).filter(Boolean)))].sort();
 
-    const categoryFiltersEl = document.getElementById('categoryFilters');
-    categoryFiltersEl.innerHTML = categories.map(cat => {
+    document.getElementById('categoryFilters').innerHTML = categories.map(cat => {
         const count = state.products.filter(p => p.category === cat).length;
-        return `
-            <label class="filter-checkbox">
-                <input type="checkbox" value="${escapeHtml(cat)}" data-filter="category">
-                <span>${escapeHtml(cat)}</span>
-                <span class="count">${count}</span>
-            </label>
-        `;
+        return `<label class="filter-checkbox">
+            <input type="checkbox" value="${escapeHtml(cat)}" data-filter="category">
+            <span>${escapeHtml(cat)}</span>
+            <span class="count">${count}</span>
+        </label>`;
     }).join('');
 
-    const sizeFiltersEl = document.getElementById('sizeFilters');
-    sizeFiltersEl.innerHTML = sizes.map(size => {
+    document.getElementById('sizeFilters').innerHTML = sizes.map(size => {
         const count = state.products.filter(p => (p.tailles || '').includes(size)).length;
-        return `
-            <label class="filter-checkbox">
-                <input type="checkbox" value="${escapeHtml(size)}" data-filter="size">
-                <span>${escapeHtml(size)}</span>
-                <span class="count">${count}</span>
-            </label>
-        `;
+        return `<label class="filter-checkbox">
+            <input type="checkbox" value="${escapeHtml(size)}" data-filter="size">
+            <span>${escapeHtml(size)}</span>
+            <span class="count">${count}</span>
+        </label>`;
     }).join('');
 
-    const colorFiltersEl = document.getElementById('colorFilters');
-    colorFiltersEl.innerHTML = colors.map(color => {
+    document.getElementById('colorFilters').innerHTML = colors.map(color => {
         const count = state.products.filter(p => (p.couleurs || '').includes(color)).length;
-        return `
-            <label class="filter-checkbox">
-                <input type="checkbox" value="${escapeHtml(color)}" data-filter="color">
-                <span>${escapeHtml(color)}</span>
-                <span class="count">${count}</span>
-            </label>
-        `;
+        return `<label class="filter-checkbox">
+            <input type="checkbox" value="${escapeHtml(color)}" data-filter="color">
+            <span>${escapeHtml(color)}</span>
+            <span class="count">${count}</span>
+        </label>`;
     }).join('');
 
     attachFilterListeners();
@@ -99,16 +90,17 @@ function attachFilterListeners() {
         checkbox.addEventListener('change', () => {
             const filterType = checkbox.dataset.filter;
             const value = checkbox.value;
+            const filters = state.searchViewState.filters;
 
             if (filterType === 'category') {
-                if (checkbox.checked) state.searchViewState.filters.categories.push(value);
-                else state.searchViewState.filters.categories = state.searchViewState.filters.categories.filter(c => c !== value);
+                if (checkbox.checked) filters.categories.push(value);
+                else filters.categories = filters.categories.filter(c => c !== value);
             } else if (filterType === 'size') {
-                if (checkbox.checked) state.searchViewState.filters.sizes.push(value);
-                else state.searchViewState.filters.sizes = state.searchViewState.filters.sizes.filter(s => s !== value);
+                if (checkbox.checked) filters.sizes.push(value);
+                else filters.sizes = filters.sizes.filter(s => s !== value);
             } else if (filterType === 'color') {
-                if (checkbox.checked) state.searchViewState.filters.colors.push(value);
-                else state.searchViewState.filters.colors = state.searchViewState.filters.colors.filter(c => c !== value);
+                if (checkbox.checked) filters.colors.push(value);
+                else filters.colors = filters.colors.filter(c => c !== value);
             }
 
             performAdvancedSearch();
@@ -118,18 +110,6 @@ function attachFilterListeners() {
     document.getElementById('sortBy').addEventListener('change', (e) => {
         state.searchViewState.sortBy = e.target.value;
         performAdvancedSearch();
-    });
-
-    document.querySelectorAll('.view-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            state.searchViewState.viewMode = btn.dataset.view;
-
-            const grid = document.getElementById('searchResultsGrid');
-            if (state.searchViewState.viewMode === 'list') grid.classList.add('list-view');
-            else grid.classList.remove('list-view');
-        });
     });
 
     document.getElementById('backFromSearchBtn').addEventListener('click', switchFromSearchView);
@@ -173,42 +153,42 @@ function attachFilterListeners() {
     });
 }
 
+// ─── Recherche + tri ─────────────────────────────────────────────────────────
 function performAdvancedSearch() {
     let results = [...state.products];
+    const sv = state.searchViewState;
 
-    if (state.searchViewState.query.trim()) {
-        const scored = results.map(p => ({ product: p, score: calculateSearchScore(state.searchViewState.query, p) })).filter(item => item.score > 0);
+    if (sv.query.trim()) {
+        const scored = results.map(p => ({ product: p, score: calculateSearchScore(sv.query, p) }))
+                              .filter(item => item.score > 0);
         scored.sort((a, b) => b.score - a.score);
         results = scored.map(item => item.product);
     }
 
-    if (state.searchViewState.filters.priceMin !== null) results = results.filter(p => p.price >= state.searchViewState.filters.priceMin);
-    if (state.searchViewState.filters.priceMax !== null) results = results.filter(p => p.price <= state.searchViewState.filters.priceMax);
-
-    if (state.searchViewState.filters.categories.length > 0) results = results.filter(p => state.searchViewState.filters.categories.includes(p.category));
-
-    if (state.searchViewState.filters.sizes.length > 0) {
+    if (sv.filters.priceMin !== null) results = results.filter(p => p.price >= sv.filters.priceMin);
+    if (sv.filters.priceMax !== null) results = results.filter(p => p.price <= sv.filters.priceMax);
+    if (sv.filters.categories.length > 0) results = results.filter(p => sv.filters.categories.includes(p.category));
+    if (sv.filters.sizes.length > 0) {
         results = results.filter(p => {
             const productSizes = (p.tailles || '').split(',').map(s => s.trim());
-            return state.searchViewState.filters.sizes.some(size => productSizes.includes(size));
+            return sv.filters.sizes.some(size => productSizes.includes(size));
         });
     }
-
-    if (state.searchViewState.filters.colors.length > 0) {
+    if (sv.filters.colors.length > 0) {
         results = results.filter(p => {
             const productColors = (p.couleurs || '').split(',').map(s => s.trim());
-            return state.searchViewState.filters.colors.some(color => productColors.includes(color));
+            return sv.filters.colors.some(color => productColors.includes(color));
         });
     }
 
-    results = sortResults(results, state.searchViewState.sortBy);
+    results = sortResults(results, sv.sortBy);
     displaySearchResults(results);
 }
 
 function sortResults(results, sortBy) {
     const sorted = [...results];
     switch (sortBy) {
-        case 'price-asc': sorted.sort((a, b) => a.price - b.price); break;
+        case 'price-asc':  sorted.sort((a, b) => a.price - b.price); break;
         case 'price-desc': sorted.sort((a, b) => b.price - a.price); break;
         case 'newest':
             sorted.sort((a, b) => {
@@ -218,12 +198,14 @@ function sortResults(results, sortBy) {
             });
             break;
         case 'popular': sorted.sort((a, b) => (b.popularity_score || 0) - (a.popularity_score || 0)); break;
-        case 'relevance':
-        default: break;
     }
     return sorted;
 }
 
+// ─── Affichage des résultats ─────────────────────────────────────────────────
+// Génère le MÊME markup qu'une carte du catalogue (classes .product-card).
+// Clic carte / bouton panier / bouton favori sont gérés par la délégation
+// globale de main.js — aucun listener attaché ici.
 function displaySearchResults(results) {
     const grid = document.getElementById('searchResultsGrid');
     const noResults = document.getElementById('searchNoResults');
@@ -241,45 +223,34 @@ function displaySearchResults(results) {
     noResults.style.display = 'none';
 
     grid.innerHTML = results.map(p => {
-        const img = p.image ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}">` : `<span>${getCategoryIcon(p.category)}</span>`;
-        const badges = generateBadgesHTML(p, false);
-        const tailles = (p.tailles || '').split(',').map(s => s.trim()).filter(Boolean);
-        const couleurs = (p.couleurs || '').split(',').map(s => s.trim()).filter(Boolean);
+        const img = p.image
+            ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" loading="lazy" onload="this.classList.add('loaded')" onerror="this.style.display='none'">`
+            : '';
+        const details = calculateProductDetails(p);
+        const detailsHTML = details.length
+            ? `<div class="product-card-details">${details.map(d => `<span class="product-card-detail-item">${escapeHtml(d)}</span>`).join('')}</div>`
+            : '';
 
+        // "visible" d'emblée : pas d'animation d'apparition côté recherche,
+        // et on évite le piège opacity:0 de .product-card.
         return `
-            <div class="search-result-card" data-product-id="${p.id}">
-                <div class="card-image">
-                    ${img}
-                    ${badges ? `<div class="card-badges">${badges}</div>` : ''}
-                </div>
-                <div class="card-content">
-                    <div class="card-info">
-                        <div class="card-name">${escapeHtml(p.name)}</div>
-                        <div class="card-category">${getCategoryIcon(p.category)} ${escapeHtml(p.category || 'Sans catégorie')}</div>
-                        <div class="card-price">${formatPrice(p.price)}</div>
-                        <div class="card-details">
-                            ${tailles.length > 0 ? `<span class="card-detail-item">${tailles.length} taille${tailles.length > 1 ? 's' : ''}</span>` : ''}
-                            ${couleurs.length > 0 ? `<span class="card-detail-item">${couleurs.length} couleur${couleurs.length > 1 ? 's' : ''}</span>` : ''}
-                        </div>
-                        <div class="card-actions">
-                            <button class="card-btn" data-action="view-product" data-id="${p.id}">Voir</button>
-                            <button class="card-btn secondary" data-action="add-to-cart-search" data-id="${p.id}">+ Panier</button>
-                        </div>
+            <div class="product-card visible" data-product-id="${p.id}">
+                ${img}
+                ${generateBadgesHTML(p, false)}
+                <div class="product-card-info">
+                    <div class="product-card-text">
+                        <div class="product-card-name">${escapeHtml(p.name)}</div>
+                        <div class="product-card-price">${formatPrice(p.price)}</div>
+                        ${detailsHTML}
                     </div>
                 </div>
+                <button class="product-card-add" data-action="add-to-cart" data-id="${p.id}" aria-label="Ajouter au panier">
+                    <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                </button>
+                <button class="fav-icon" data-action="toggle-favorite" data-id="${p.id}" aria-label="Ajouter aux favoris">
+                    <svg viewBox="0 0 24 24" class="fav-icon-svg"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                </button>
             </div>
         `;
     }).join('');
-
-    grid.querySelectorAll('[data-action="view-product"]').forEach(btn => {
-        btn.addEventListener('click', (e) => { e.stopPropagation(); openProductModal(parseInt(btn.dataset.id)); });
-    });
-
-    grid.querySelectorAll('[data-action="add-to-cart-search"]').forEach(btn => {
-        btn.addEventListener('click', (e) => { e.stopPropagation(); addToCart(parseInt(btn.dataset.id)); });
-    });
-
-    grid.querySelectorAll('.search-result-card').forEach(card => {
-        card.addEventListener('click', () => openProductModal(parseInt(card.dataset.productId)));
-    });
 }
