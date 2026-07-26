@@ -12,3 +12,4 @@ export const POPULAR_THRESHOLD = 20;
 export const MAX_SEARCH_RESULTS = 7;
 export const SEARCH_HISTORY_KEY = 'nrj_search_history';
 export const MAX_HISTORY_ITEMS = 5;
+export const MAX_PLACEHOLDER_SUGGESTIONS = 10;
