@@ -104,6 +104,7 @@ export function sendWhatsAppOrder() {
 
 export function toggleFavorite(pid) {
     const idx = state.favorites.indexOf(pid);
+    const added = idx === -1;
     if (idx > -1) state.favorites.splice(idx, 1); else state.favorites.push(pid);
     saveFavorites();
     updateNavFavBadge();
@@ -116,4 +117,22 @@ export function toggleFavorite(pid) {
         if (svg) svg.style.fill = state.favorites.includes(pid) ? 'var(--favorites)' : 'currentColor';
     }
     if (state.currentFilter === 'favorites') refreshCatalogue();
+    if (added) pulseFavoriteIcons(pid);
+}
+
+// ③ Fait battre tous les cœurs de ce produit (cartes + modale) à l'AJOUT uniquement.
+function pulseFavoriteIcons(pid) {
+    const svgs = [];
+    document.querySelectorAll(`.fav-icon[data-id="${pid}"] .fav-icon-svg`).forEach(s => svgs.push(s));
+    const mb = document.getElementById('modalFavBtn');
+    if (mb && state.currentProductId === pid) {
+        const s = mb.querySelector('.fav-icon-svg');
+        if (s) svgs.push(s);
+    }
+    svgs.forEach(svg => {
+        svg.classList.remove('fav-pop');
+        void svg.getBoundingClientRect(); // reflow → l'animation peut se rejouer
+        svg.classList.add('fav-pop');
+        svg.addEventListener('animationend', () => svg.classList.remove('fav-pop'), { once: true });
+    });
 }
