@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { escapeHtml, formatPrice, debounce, calculateSearchScore, generateBadgesHTML, calculateProductDetails } from './utils.js';
+import { escapeHtml, formatPrice, debounce, calculateSearchScore, generateBadgesHTML } from './utils.js';
 
 // ─── Bascule vers la page de recherche ───────────────────────────────────────
 export function switchToSearchView(query) {
@@ -198,14 +198,16 @@ function sortResults(results, sortBy) {
             });
             break;
         case 'popular': sorted.sort((a, b) => (b.popularity_score || 0) - (a.popularity_score || 0)); break;
+        case 'relevance':
+        default: break;
     }
     return sorted;
 }
 
 // ─── Affichage des résultats ─────────────────────────────────────────────────
-// Génère le MÊME markup qu'une carte du catalogue (classes .product-card).
-// Clic carte / bouton panier / bouton favori sont gérés par la délégation
-// globale de main.js — aucun listener attaché ici.
+// Markup IDENTIQUE à une carte du catalogue (classes .product-card + data-action).
+// Clic carte / panier / favori / crayon = gérés par la délégation globale de
+// main.js. Aucun listener attaché ici (sinon double-handler).
 function displaySearchResults(results) {
     const grid = document.getElementById('searchResultsGrid');
     const noResults = document.getElementById('searchNoResults');
@@ -226,15 +228,28 @@ function displaySearchResults(results) {
         const img = p.image
             ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" loading="lazy" onload="this.classList.add('loaded')" onerror="this.style.display='none'">`
             : '';
-        const details = calculateProductDetails(p);
+
+        // Logique inline identique à catalogue.js (pas de fonction utils pour ça)
+        const tailles = (p.tailles || '').split(',').map(s => s.trim()).filter(Boolean);
+        const couleurs = (p.couleurs || '').split(',').map(s => s.trim()).filter(Boolean);
+        let details = [];
+        if (tailles.length) details.push(`${tailles.length} taille${tailles.length > 1 ? 's' : ''}`);
+        if (couleurs.length) details.push(`${couleurs.length} couleur${couleurs.length > 1 ? 's' : ''}`);
+        if (details.length) details.push('En stock');
         const detailsHTML = details.length
             ? `<div class="product-card-details">${details.map(d => `<span class="product-card-detail-item">${escapeHtml(d)}</span>`).join('')}</div>`
             : '';
 
-        // "visible" d'emblée : pas d'animation d'apparition côté recherche,
-        // et on évite le piège opacity:0 de .product-card.
+        // Crayon admin (comme sur le catalogue). Retire cette ligne si tu ne veux
+        // pas du crayon sur la page de recherche.
+        const editBtnHTML = state.isAdminLoggedIn
+            ? `<button class="product-edit-btn" data-action="edit-product" data-id="${p.id}" aria-label="Modifier le produit">✏️</button>`
+            : '';
+
+        // "visible" d'emblée : apparition immédiate, on évite le piège opacity:0
+        // de .product-card (pas de scrollObserver côté recherche).
         return `
-            <div class="product-card visible" data-product-id="${p.id}">
+            <div class="product-card visible" data-product-id="${p.id}" role="listitem">
                 ${img}
                 ${generateBadgesHTML(p, false)}
                 <div class="product-card-info">
@@ -250,6 +265,7 @@ function displaySearchResults(results) {
                 <button class="fav-icon" data-action="toggle-favorite" data-id="${p.id}" aria-label="Ajouter aux favoris">
                     <svg viewBox="0 0 24 24" class="fav-icon-svg"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                 </button>
+                ${editBtnHTML}
             </div>
         `;
     }).join('');
