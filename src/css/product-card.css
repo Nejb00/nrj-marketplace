@@ -28,7 +28,7 @@
 .product-card-text { flex: 1; min-width: 0; }
 .product-card-name { font-size: 0.8rem; font-weight: 600; color: #fff; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 0.2rem; }
 .product-card-price { font-size: 1.1rem; font-weight: 800; color: var(--primary); margin-bottom: 0.3rem; }
-.product-card-details { display: none; /* design épuré : on garde nom + prix seulement */ }
+.product-card-details { display: none; }
 .product-card-detail-item { display: inline-flex; align-items: center; gap: 0.2rem; }
 
 .badge-container { position: absolute; top: 10px; left: 10px; z-index: 4; display: flex; flex-direction: column; gap: 0.3rem; }
@@ -42,6 +42,15 @@
 .fav-icon:hover { transform: scale(1.15); }
 .fav-icon-svg { width: 18px; height: 18px; fill: currentColor; transition: fill 0.2s ease; }
 .fav-icon:hover .fav-icon-svg { transform: scale(1.1); }
+
+/* ③ Le cœur qui bat (carte + modale, même classe .fav-icon-svg) */
+@keyframes fav-pop {
+ 0%   { transform: scale(1);    filter: drop-shadow(0 0 0 transparent); }
+ 30%  { transform: scale(1.4);  filter: drop-shadow(0 0 6px var(--favorites)); }
+ 55%  { transform: scale(0.85); filter: drop-shadow(0 0 3px var(--favorites)); }
+ 100% { transform: scale(1);    filter: drop-shadow(0 0 0 transparent); }
+}
+.fav-icon-svg.fav-pop { animation: fav-pop 0.45s ease; transform-origin: center; }
 
 .product-edit-btn {
  position: absolute;
@@ -71,3 +80,7 @@
 .product-card-add { position: absolute; bottom: 0.7rem; right: 0.7rem; background: rgba(255,140,66,0.7); color: white; border: none; width: 34px; height: 34px; border-radius: 50%; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); z-index: 3; }
 .product-card-add:hover { transform: scale(1.1); background: var(--primary); }
 .product-card-add svg { width: 18px; height: 18px; fill: currentColor; }
+
+@media (prefers-reduced-motion: reduce) {
+ .fav-icon-svg.fav-pop { animation: none !important; }
+                  }
