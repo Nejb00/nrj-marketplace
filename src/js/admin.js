@@ -1,86 +1,53 @@
 import { state } from './state.js';
 import { supabaseClient } from './config.js';
-import { escapeHtml, removeEmojis, showToast } from './utils.js';
-import { fetchProducts, insertProduct, deleteProductFromSupabase } from './api.js';
+import { escapeHtml, showToast } from './utils.js';
+import { insertProduct, deleteProductFromSupabase, fetchProducts } from './api.js';
 
 export async function handleAdminLogin() {
-    try {
-        const { error } = await supabaseClient.auth.signInWithPassword({
-            email: document.getElementById('adminEmail').value.trim(),
-            password: document.getElementById('adminPassword').value
-        });
-        if (error) throw error;
-        state.isAdminLoggedIn = true;
-        document.getElementById('adminPanel').classList.add('active');
-        document.getElementById('loginPanel').style.display = 'none';
-        document.getElementById('logoutBtn').classList.add('visible');
-        renderAdminList();
-        showToast('🔓 Connecté');
-    } catch (err) {
-        document.getElementById('adminError').textContent = err.message;
-    }
+  try {
+    const { error } = await supabaseClient.auth.signInWithPassword({
+      email: document.getElementById('adminEmail').value.trim(),
+      password: document.getElementById('adminPassword').value
+    });
+    if (error) throw error;
+    state.isAdminLoggedIn = true;
+    document.getElementById('adminPanel').classList.add('active');
+    document.getElementById('loginPanel').style.display = 'none';
+    document.getElementById('logoutBtn').classList.add('visible');
+    renderAdminList();
+    renderAdminStats();
+    showToast('🔓 Connecté');
+  } catch (err) {
+    document.getElementById('adminError').textContent = err.message;
+  }
 }
 
 export async function handleLogout() {
-    await supabaseClient.auth.signOut();
-    state.isAdminLoggedIn = false;
-    document.getElementById('adminPanel').classList.remove('active');
-    document.getElementById('loginPanel').style.display = 'block';
-    document.getElementById('logoutBtn').classList.remove('visible');
-    showToast('👋 Déconnecté');
+  await supabaseClient.auth.signOut();
+  state.isAdminLoggedIn = false;
+  document.getElementById('adminPanel').classList.remove('active');
+  document.getElementById('loginPanel').style.display = 'block';
+  document.getElementById('logoutBtn').classList.remove('visible');
+  showToast('👋 Déconnecté');
 }
 
 export async function checkAdminSession() {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (session) {
-        state.isAdminLoggedIn = true;
-        document.getElementById('adminPanel').classList.add('active');
-        document.getElementById('loginPanel').style.display = 'none';
-        document.getElementById('logoutBtn').classList.add('visible');
-        renderAdminList();
-    }
-    return state.isAdminLoggedIn;
-}
-
-export async function addProduct() {
-    const name = document.getElementById('adminName').value.trim();
-    const category = document.getElementById('adminCategory').value.trim();
-    const price = parseInt(document.getElementById('adminPrice').value);
-    if (!name || !category || isNaN(price)) return alert('Remplis nom, catégorie et prix.');
-    try {
-        await insertProduct({
-            name, price, category: removeEmojis(category),
-            image: document.getElementById('adminImage').value.trim(),
-            image2: document.getElementById('adminImage2').value.trim(),
-            image3: document.getElementById('adminImage3').value.trim(),
-            image4: document.getElementById('adminImage4').value.trim(),
-            image5: document.getElementById('adminImage5').value.trim(),
-            image6: document.getElementById('adminImage6').value.trim(),
-            tailles: document.getElementById('adminTailles').value.trim(),
-            couleurs: document.getElementById('adminCouleurs').value.trim(),
-            moq: parseInt(document.getElementById('adminMoq').value) || 1,
-            description: document.getElementById('adminDesc').value.trim(),
-            popularity_score: 0
-        });
-        showToast('✅ Produit ajouté !');
-        ['adminName', 'adminCategory', 'adminPrice', 'adminImage', 'adminImage2', 'adminImage3', 'adminImage4', 'adminImage5', 'adminImage6', 'adminTailles', 'adminCouleurs', 'adminDesc'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.value = '';
-        });
-        document.getElementById('adminMoq').value = '1';
-        await fetchProducts();
-        renderAdminList();
-    } catch (err) {
-        alert('❌ Erreur : ' + err.message);
-    }
-}
-
-export async function deleteProduct(id) {
-    if (!confirm('Supprimer ?')) return;
-    await deleteProductFromSupabase(id);
-    await fetchProducts();
-    state.cart = state.cart.filter(i => state.products.some(p => p.id === i.productId));
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session) {
+    state.isAdminLoggedIn = true;
+    document.getElementById('adminPanel').classList.add('active');
+    document.getElementById('loginPanel').style.display = 'none';
+    document.getElementById('logoutBtn').classList.add('visible');
     renderAdminList();
+    renderAdminStats();
+  }
+  return state.isAdminLoggedIn;
+}
+
+export function renderAdminList() {
+  const list = document.getElementById('adminProductsList');
+  if (!list) return;
+  list.innerHTML = state.products.map(p => `${escapeHtml(p.name)} [ID: ${p.id}]<button class="btn-sm" data-action="admin-remove" data-id="${p.id}">🗑️</button>`).join('');
 }
 
 export function renderAdminStats() {
@@ -174,8 +141,68 @@ export function renderAdminStats() {
   `;
 }
 
-export function renderAdminList() {
-    const list = document.getElementById('adminProductsList');
-    if (!list) return;
-    list.innerHTML = state.products.map(p => `<li><span>${escapeHtml(p.name)} [ID: ${p.id}]</span><button class="btn-sm" data-action="admin-remove" data-id="${p.id}">🗑️</button></li>`).join('');
+export async function addProduct() {
+  const name = document.getElementById('adminName').value.trim();
+  const category = document.getElementById('adminCategory').value.trim();
+  const price = parseInt(document.getElementById('adminPrice').value);
+
+  if (!name || !category || isNaN(price)) {
+    showToast('❌ Remplis nom, catégorie et prix');
+    return;
+  }
+
+  const product = {
+    name,
+    category,
+    price,
+    image: document.getElementById('adminImage').value.trim(),
+    image2: document.getElementById('adminImage2').value.trim(),
+    image3: document.getElementById('adminImage3').value.trim(),
+    image4: document.getElementById('adminImage4').value.trim(),
+    image5: document.getElementById('adminImage5').value.trim(),
+    image6: document.getElementById('adminImage6').value.trim(),
+    tailles: document.getElementById('adminTailles').value.trim(),
+    couleurs: document.getElementById('adminCouleurs').value.trim(),
+    moq: parseInt(document.getElementById('adminMoq').value) || 1,
+    description: document.getElementById('adminDesc').value.trim()
+  };
+
+  try {
+    await insertProduct(product);
+    await fetchProducts();
+    renderAdminList();
+    renderAdminStats();
+    
+    // Reset du formulaire
+    document.getElementById('adminName').value = '';
+    document.getElementById('adminCategory').value = '';
+    document.getElementById('adminPrice').value = '';
+    document.getElementById('adminImage').value = '';
+    document.getElementById('adminImage2').value = '';
+    document.getElementById('adminImage3').value = '';
+    document.getElementById('adminImage4').value = '';
+    document.getElementById('adminImage5').value = '';
+    document.getElementById('adminImage6').value = '';
+    document.getElementById('adminTailles').value = '';
+    document.getElementById('adminCouleurs').value = '';
+    document.getElementById('adminMoq').value = '1';
+    document.getElementById('adminDesc').value = '';
+    
+    showToast('✅ Produit ajouté');
+  } catch (err) {
+    showToast('❌ Erreur: ' + err.message);
+  }
+}
+
+export async function deleteProduct(id) {
+  if (!confirm('Supprimer ce produit ?')) return;
+  try {
+    await deleteProductFromSupabase(id);
+    await fetchProducts();
+    renderAdminList();
+    renderAdminStats();
+    showToast('🗑️ Produit supprimé');
+  } catch (err) {
+    showToast('❌ Erreur: ' + err.message);
+  }
 }
