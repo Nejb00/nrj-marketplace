@@ -6,12 +6,30 @@
     <meta name="description" content="NRJ Marketplace International - Importation de produits depuis la Chine, la France et la Turquie vers le Congo Brazzaville.">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
     <title>NRJ Marketplace • Import Chine, France, Turquie → Congo</title>
+
+    <!-- ── Carte de partage (WhatsApp, Facebook, X) ─────────────────── -->
+    <meta name="theme-color" content="#0f0f0f">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="NRJ Marketplace International">
+    <meta property="og:locale" content="fr_FR">
+    <meta property="og:title" content="NRJ Marketplace International">
+    <meta property="og:description" content="Grossiste en ligne — import direct de Chine 🇨🇳, France 🇫🇷 et Turquie 🇹🇷 vers le Congo Brazzaville 🇨🇬. Catalogue en ligne, commande facile via WhatsApp.">
+    <meta property="og:url" content="https://nejb00.github.io/nrj-marketplace/">
+    <meta property="og:image" content="https://nejb00.github.io/nrj-marketplace/nrj-og-banner.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="NRJ Marketplace International — Import Chine, France, Turquie vers le Congo Brazzaville">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="NRJ Marketplace International">
+    <meta name="twitter:description" content="Grossiste en ligne — import direct de Chine, France et Turquie vers le Congo Brazzaville. Commande via WhatsApp.">
+    <meta name="twitter:image" content="https://nejb00.github.io/nrj-marketplace/nrj-og-banner.png">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Wrapper catalogue -->
     <div id="catalogueWrapper">
         <div class="header-wrapper" id="headerWrapper">
             <header>
@@ -162,7 +180,6 @@
             </div>
         </div>
 
-        <!-- Modale de modification rapide (bouton crayon sur la carte produit, admin uniquement) -->
         <div class="modal-overlay" id="editProductModalOverlay">
             <div class="modal modal-edit">
                 <h2 style="text-align:center;margin-bottom:1rem;">✏️ Modifier le produit</h2>
@@ -191,7 +208,6 @@
         <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
 
 
-    <!-- PAGE DE RECHERCHE DÉDIÉE (HORS DU WRAPPER) -->
     <div id="searchView" style="display:none;">
         <div class="search-view-header">
             <button class="back-btn" id="backFromSearchBtn" aria-label="Retour">
@@ -279,21 +295,4 @@
                     </div>
                 </div>
 
-                <div class="search-results-container" id="searchResultsContainer">
-                    <div class="search-results-grid" id="searchResultsGrid"></div>
-                    <div class="search-no-results" id="searchNoResults" style="display:none;">
-                        <div class="no-results-icon">🔍</div>
-                        <h3>Aucun résultat trouvé</h3>
-                        <p>Essayez d'ajuster vos filtres ou votre recherche</p>
-                        <button class="reset-search-btn" id="resetSearchBtn">Réinitialiser la recherche</button>
-                    </div>
-                </div>
-            </main>
-        </div>
-
-        <div class="filters-overlay" id="filtersOverlay"></div>
-    </div>
-
-    <script type="module" src="/src/js/main.js"></script>
-</body>
-</html>
+                <div class="sear
