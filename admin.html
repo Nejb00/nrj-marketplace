@@ -23,13 +23,13 @@
             <h2 style="text-align:center;margin-bottom:1rem;">🔐 Connexion admin</h2>
             <div class="form-group"><label>📧 Email</label><input type="email" id="adminEmail" required></div>
             <div class="form-group"><label>🔑 Mot de passe</label><input type="password" id="adminPassword" required></div>
-            <button class="btn btn-primary" id="adminLoginBtn" style="width:100%;background:var(--primary);color:white;border:none;padding:0.8rem;border-radius:50px;font-weight:700;cursor:pointer;[...]
+            <button class="btn btn-primary" id="adminLoginBtn" style="width:100%;background:var(--primary);color:white;border:none;padding:0.8rem;border-radius:50px;font-weight:700;cursor:pointer;">Se connecter</button>
             <div id="adminError" style="color:#fca5a5;text-align:center;font-size:0.8rem;margin-top:0.5rem;"></div>
         </div>
 
         <!-- Panneau produits, affiché une fois connecté -->
         <div class="admin-panel" id="adminPanel">
-            <!-- Tableau de bord admin (rempli par renderAdminStats) -->
+            <!-- Tableau de bord (rempli par renderAdminStats) -->
             <section id="adminStats"></section>
 
             <h2 style="margin-bottom:1rem;color:var(--primary);">Ajouter un nouveau produit</h2>
@@ -46,7 +46,7 @@
             <div class="form-group"><label>Couleurs (séparées par des virgules)</label><input type="text" id="adminCouleurs" placeholder="Noir, Blanc, Kaki"></div>
             <div class="form-group"><label>Quantité minimale (MOQ)</label><input type="number" id="adminMoq" placeholder="1" min="1" value="1"></div>
             <div class="form-group"><label>Description</label><input type="text" id="adminDesc" placeholder="Description courte"></div>
-            <button class="btn btn-primary" id="addProductBtn" style="width:100%;background:var(--primary);color:white;border:none;padding:0.8rem;border-radius:50px;font-weight:700;cursor:pointer;[...]
+            <button class="btn btn-primary" id="addProductBtn" style="width:100%;background:var(--primary);color:white;border:none;padding:0.8rem;border-radius:50px;font-weight:700;cursor:pointer;">Ajouter au catalogue</button>
             <h3 style="margin-top:2rem; font-size:1rem;">Produits en ligne</h3>
             <ul class="admin-products-list" id="adminProductsList"></ul>
         </div>
