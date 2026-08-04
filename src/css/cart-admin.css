@@ -77,115 +77,127 @@
 }
 
 /* ── Tableau de bord admin ─────────────────────────────────────────────── */
-
-#adminStats {
-  margin-bottom: 2rem;
-}
+#adminStats { margin-bottom: 2rem; }
 
 .admin-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.8rem;
-  margin-bottom: 1.5rem;
+ display: grid;
+ grid-template-columns: repeat(2, 1fr);
+ gap: 0.8rem;
+ margin-bottom: 1.5rem;
 }
 
 .admin-stat-card {
-  background: var(--surface-light);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 1rem;
-  text-align: center;
+ background: var(--surface-light);
+ border: 1px solid var(--border);
+ border-radius: var(--radius-sm);
+ padding: 1rem;
+ text-align: center;
 }
 
 .admin-stat-label {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  margin-bottom: 0.3rem;
-  font-weight: 600;
+ font-size: 0.75rem;
+ color: var(--text-secondary);
+ margin-bottom: 0.3rem;
+ font-weight: 600;
 }
 
 .admin-stat-value {
-  font-size: 1.8rem;
-  font-weight: 800;
-  color: var(--primary);
+ font-size: 1.8rem;
+ font-weight: 800;
+ color: var(--primary);
 }
 
 .admin-stats-section {
-  background: var(--surface-light);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 1rem;
-  margin-bottom: 1rem;
+ background: var(--surface-light);
+ border: 1px solid var(--border);
+ border-radius: var(--radius-sm);
+ padding: 1rem;
+ margin-bottom: 1rem;
 }
 
 .admin-stats-title {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 0.8rem;
+ font-size: 0.9rem;
+ font-weight: 700;
+ color: var(--text);
+ margin-bottom: 0.8rem;
 }
 
 .admin-stats-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
+ display: flex;
+ flex-direction: column;
+ gap: 0.6rem;
 }
 
 .admin-stat-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
+ display: flex;
+ flex-direction: column;
+ gap: 0.3rem;
 }
 
 .admin-stat-row-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.8rem;
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ font-size: 0.8rem;
 }
 
 .admin-stat-row-name {
-  font-weight: 600;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex: 1;
-  min-width: 0;
+ font-weight: 600;
+ color: var(--text);
+ white-space: nowrap;
+ overflow: hidden;
+ text-overflow: ellipsis;
+ flex: 1;
+ min-width: 0;
 }
 
 .admin-stat-row-count {
-  font-weight: 400;
-  color: var(--text-secondary);
-  font-size: 0.75rem;
+ font-weight: 400;
+ color: var(--text-secondary);
+ font-size: 0.75rem;
 }
 
 .admin-stat-row-score {
-  font-weight: 700;
-  color: var(--primary);
-  font-size: 0.85rem;
-  margin-left: 0.5rem;
+ font-weight: 700;
+ color: var(--primary);
+ font-size: 0.85rem;
+ margin-left: 0.5rem;
 }
 
 .admin-stat-bar {
-  height: 6px;
-  background: var(--bg);
-  border-radius: 3px;
-  overflow: hidden;
+ height: 6px;
+ background: var(--bg);
+ border-radius: 3px;
+ overflow: hidden;
 }
 
 .admin-stat-bar-fill {
-  height: 100%;
-  background: var(--primary);
-  border-radius: 3px;
-  transition: width 0.3s ease;
+ height: 100%;
+ background: var(--primary);
+ border-radius: 3px;
+ transition: width 0.3s ease;
 }
 
 @media (max-width: 480px) {
-  .admin-stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .admin-stat-value {
-    font-size: 1.5rem;
-  }
-          }
+ .admin-stats-grid { grid-template-columns: repeat(2, 1fr); }
+ .admin-stat-value { font-size: 1.5rem; }
+}
+
+/* ── Panier volant : pulse du badge à l'arrivée ────────────────────────── */
+@keyframes badge-pop {
+ 0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgba(255, 140, 66, 0.6); }
+ 40%  { transform: scale(1.35); box-shadow: 0 0 0 10px rgba(255, 140, 66, 0); }
+ 100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(255, 140, 66, 0); }
+}
+
+.cart-badge.badge-pulse,
+.favorites-badge.badge-pulse {
+ animation: badge-pop 0.55s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+ .cart-badge.badge-pulse,
+ .favorites-badge.badge-pulse {
+  animation: none;
+ }
+}
