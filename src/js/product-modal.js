@@ -39,12 +39,12 @@ export function openProductModal(pid) {
     const sc = document.getElementById('modalCarouselScroll'), dc = document.getElementById('modalCarouselDots');
     sc.innerHTML = ''; dc.innerHTML = '';
     if (!imgs.length) {
-        sc.innerHTML = '<div class="carousel-slide"><div class="carousel-emoji-slide">📦</div></div>';
-        dc.innerHTML = '<button class="carousel-dot active"></button>';
+        sc.innerHTML = '<div class="modal-placeholder">📦</div>';
+        dc.innerHTML = '';
     } else {
         imgs.forEach((u, i) => {
-            sc.innerHTML += `<div class="carousel-slide"><img src="${escapeHtml(u)}" onload="this.classList.add('loaded')" onerror="this.style.display='none'"></div>`;
-            dc.innerHTML += `<button class="carousel-dot${i === 0 ? ' active' : ''}" data-index="${i}"></button>`;
+            sc.innerHTML += `<div class="carousel-item"><img src="${escapeHtml(u)}" alt="${escapeHtml(p.name)}" loading="lazy"></div>`;
+            dc.innerHTML += `<span class="carousel-dot ${i === 0 ? 'active' : ''}" data-index="${i}"></span>`;
         });
     }
 
@@ -71,7 +71,8 @@ export function openProductModal(pid) {
     document.getElementById('modalCouleurGroup').style.display = couleurs.length ? 'block' : 'none';
     if (couleurs.length) renderOptions(document.getElementById('modalCouleurOptions'), couleurs, sC, 'couleur');
 
-    document.getElementById('addToCartStickyBtn').onclick = () => addToCart(p.id, sT, sC);
+    // ✅ MODIF : ajout de `e.currentTarget` pour déclencher le vol depuis le bouton
+    document.getElementById('addToCartStickyBtn').onclick = (e) => addToCart(p.id, sT, sC, e.currentTarget);
     document.getElementById('directOrderStickyBtn').onclick = () => {
         if (tailles.length && !sT) return showToast('⚠️ Sélectionnez une taille');
         trackPopularity(p.id, 10);
@@ -80,7 +81,13 @@ export function openProductModal(pid) {
 
     let rec = state.products.filter(pr => pr.category === p.category && pr.id !== p.id);
     if (rec.length < 6) rec = [...rec, ...state.products.filter(pr => pr.id !== p.id && !rec.includes(pr))].slice(0, 6);
-    document.getElementById('modalRecCarousel').innerHTML = rec.map(r => `<div class="rec-card" data-product-id="${r.id}"><img src="${escapeHtml(r.image || '')}" onload="this.classList.add('loaded')" onerror="this.style.display='none'"><div class="rec-card-overlay"><div><div class="rec-card-name">${escapeHtml(r.name)}</div><div class="rec-card-price">${formatPrice(r.price)}</div></div></div></div>`).join('');
+    document.getElementById('modalRecCarousel').innerHTML = rec.map(r => `
+        <div class="rec-card" data-product-id="${r.id}">
+            <div class="rec-card-img">${r.image ? `<img src="${escapeHtml(r.image)}" alt="${escapeHtml(r.name)}" loading="lazy">` : '📦'}</div>
+            <div class="rec-card-name">${escapeHtml(r.name)}</div>
+            <div class="rec-card-price">${formatPrice(r.price)}</div>
+        </div>
+    `).join('');
 
     document.getElementById('productModal').classList.add('open');
     document.getElementById('stickyBottomBar').classList.add('visible');
@@ -95,4 +102,4 @@ export function closeProductModal() {
     document.getElementById('stickyBottomBar').classList.remove('visible');
     state.modalOpen = false;
     history.replaceState({}, '', window.location.pathname);
-}
+        }
