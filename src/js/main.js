@@ -181,9 +181,14 @@ document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('clic
 
 async function init() {
   await fetchProducts();
+
+  // ✅ CORRECTIF : les catégories redeviennent des pastilles cliquables
   const cats = [...new Set(state.products.map(p => removeEmojis(p.category)))];
-  let html = `Tout voir (${state.products.length})`;
-  cats.forEach(c => html += `${escapeHtml(c)} (${state.products.filter(p => p.category === c).length})`);
+  let html = `<button class="filter-btn active" data-category="all">Tout voir (${state.products.length})</button>`;
+  cats.forEach(c => {
+    const count = state.products.filter(p => p.category === c).length;
+    html += `<button class="filter-btn" data-category="${escapeHtml(c)}">${escapeHtml(c)} (${count})</button>`;
+  });
   document.getElementById('filterBar').innerHTML = html;
 
   initPlaceholderRotation();
