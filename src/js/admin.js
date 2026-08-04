@@ -47,7 +47,9 @@ export async function checkAdminSession() {
 export function renderAdminList() {
   const list = document.getElementById('adminProductsList');
   if (!list) return;
-  list.innerHTML = state.products.map(p => `${escapeHtml(p.name)} [ID: ${p.id}]<button class="btn-sm" data-action="admin-remove" data-id="${p.id}">🗑️</button>`).join('');
+  list.innerHTML = state.products.map(p =>
+    `<li><span>${escapeHtml(p.name)} [ID: ${p.id}]</span><button class="btn-sm" data-action="admin-remove" data-id="${p.id}">🗑️</button></li>`
+  ).join('');
 }
 
 export function renderAdminStats() {
