@@ -4,9 +4,58 @@ import { trackPopularity } from './api.js';
 import { WHATSAPP_NUMBER, BASE_URL } from './config.js';
 import { refreshCatalogue } from './catalogue.js';
 
-export async function addToCart(pid, t = '', c = '') {
+// ⚡ Fait voler un fantôme orange du bouton source vers le badge panier
+function flyToCart(sourceEl) {
+    const target = document.getElementById('navCartBadge');
+    if (!sourceEl || !target || target.style.display === 'none') return;
+
+    // Respecte les préférences de l'utilisateur
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const srcRect = sourceEl.getBoundingClientRect();
+    const tgtRect = target.getBoundingClientRect();
+
+    const ghost = document.createElement('div');
+    ghost.setAttribute('aria-hidden', 'true');
+    ghost.style.cssText = `
+        position: fixed;
+        top: ${srcRect.top + srcRect.height / 2 - 22}px;
+        left: ${srcRect.left + srcRect.width / 2 - 22}px;
+        width: 44px; height: 44px;
+        background: var(--primary);
+        border-radius: 50%;
+        z-index: 9999;
+        display: flex; align-items: center; justify-content: center;
+        pointer-events: none;
+        opacity: 1;
+        box-shadow: 0 4px 16px rgba(255, 140, 66, 0.5);
+        transition: transform 0.85s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.85s ease;
+    `;
+    ghost.innerHTML = `<svg viewBox="0 0 24 24" width="22" height="22"><path fill="white" d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>`;
+    document.body.appendChild(ghost);
+
+    const dx = (tgtRect.left + tgtRect.width / 2 - 22) - parseFloat(ghost.style.left);
+    const dy = (tgtRect.top + tgtRect.height / 2 - 22) - parseFloat(ghost.style.top);
+
+    requestAnimationFrame(() => {
+        ghost.style.transform = `translate(${dx}px, ${dy}px) scale(0.25)`;
+        ghost.style.opacity = '0.2';
+    });
+
+    setTimeout(() => {
+        ghost.remove();
+        target.classList.remove('badge-pulse');
+        void target.getBoundingClientRect();
+        target.classList.add('badge-pulse');
+    }, 850);
+}
+
+export async function addToCart(pid, t = '', c = '', sourceEl = null) {
     const p = state.products.find(pr => pr.id === pid);
     if (!p) return;
+
+    if (sourceEl) flyToCart(sourceEl);
+
     const moq = Number(p.moq) || 1;
     const exist = state.cart.find(i => i.productId === pid && i.taille === t && i.couleur === c);
     if (exist) exist.quantity = Number(exist.quantity) + moq;
@@ -120,7 +169,6 @@ export function toggleFavorite(pid) {
     if (added) pulseFavoriteIcons(pid);
 }
 
-// ③ Fait battre tous les cœurs de ce produit (cartes + modale) à l'AJOUT uniquement.
 function pulseFavoriteIcons(pid) {
     const svgs = [];
     document.querySelectorAll(`.fav-icon[data-id="${pid}"] .fav-icon-svg`).forEach(s => svgs.push(s));
@@ -131,8 +179,8 @@ function pulseFavoriteIcons(pid) {
     }
     svgs.forEach(svg => {
         svg.classList.remove('fav-pop');
-        void svg.getBoundingClientRect(); // reflow → l'animation peut se rejouer
+        void svg.getBoundingClientRect();
         svg.classList.add('fav-pop');
         svg.addEventListener('animationend', () => svg.classList.remove('fav-pop'), { once: true });
     });
-}
+    }
