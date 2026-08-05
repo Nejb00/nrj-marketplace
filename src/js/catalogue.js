@@ -1,6 +1,6 @@
 import { state } from './state.js';
 import { PRODUCTS_PER_PAGE } from './config.js';
-import { escapeHtml, formatPrice, generateBadgesHTML, isNewProduct } from './utils.js';
+import { escapeHtml, formatPrice, generateBadgesHTML, isNewProduct, thumbImg } from './utils.js';
 
 export function getFilteredProducts() {
     let filtered = state.currentFilter === 'favorites'
@@ -49,7 +49,8 @@ export function appendProducts(start, count) {
     const slice = state.currentFilteredProducts.slice(start, start + count);
 
     slice.forEach(p => {
-        const img = p.image ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" loading="lazy" onload="this.classList.add('loaded')" onerror="this.style.display='none'">` : '';
+        // ✅ Vignette légère (WebP ~300x400) au lieu de l'image pleine résolution
+        const img = p.image ? thumbImg(p.image, p.name, 300, 400) : '';
         const isFav = state.favorites.includes(p.id);
         const tailles = (p.tailles || '').split(',').map(s => s.trim()).filter(Boolean);
         const couleurs = (p.couleurs || '').split(',').map(s => s.trim()).filter(Boolean);
@@ -125,6 +126,6 @@ export function renderCategories() {
     if (!cats.length) { grid.innerHTML = '<p style="text-align:center;color:var(--text-secondary);">Aucune catégorie disponible.</p>'; return; }
     grid.innerHTML = cats.map(cat => {
         const lp = [...state.products].reverse().find(p => p.category === cat && p.image);
-        return `<div class="category-card" data-category="${escapeHtml(cat)}">${lp ? `<img src="${escapeHtml(lp.image)}" class="category-card-bg" alt="${escapeHtml(cat)}" loading="lazy" onload="this.classList.add('loaded')">` : ''}<div class="category-card-overlay"></div><div class="category-card-content"><div class="category-name">${escapeHtml(cat)}</div><div class="category-count">${state.products.filter(p => p.category === cat).length} article${state.products.filter(p => p.category === cat).length > 1 ? 's' : ''}</div></div></div>`;
+        return `<div class="category-card" data-category="${escapeHtml(cat)}">${lp ? thumbImg(lp.image, cat, 400, 300, 'category-card-bg') : ''}<div class="category-card-overlay"></div><div class="category-card-content"><div class="category-name">${escapeHtml(cat)}</div><div class="category-count">${state.products.filter(p => p.category === cat).length} article${state.products.filter(p => p.category === cat).length > 1 ? 's' : ''}</div></div></div>`;
     }).join('');
-}
+        }
