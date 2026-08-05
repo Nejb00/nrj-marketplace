@@ -177,3 +177,17 @@ export function thumbImg(url, alt = '', w = 300, h = 400) {
   const onerr = `this.onerror=function(){this.style.display='none'};if(this.dataset.full){this.src=this.dataset.full;this.removeAttribute('data-full');}`;
   return `<img src="${escapeHtml(thumb(url, w, h))}" data-full="${escapeHtml(url)}" alt="${escapeHtml(alt)}" loading="lazy" onload="this.classList.add('loaded')" onerror="${onerr}">`;
 }
+// ─── Optimisation images : vignettes légères pour économiser les forfaits ───
+export function thumb(url, w = 300, h = 400) {
+  if (!url) return '';
+  if (!/^https?:\/\//i.test(url)) return url;
+  const params = new URLSearchParams({ url, w: String(w), h: String(h), fit: 'cover', output: 'webp', q: '80' });
+  return `https://wsrv.nl/?${params.toString()}`;
+}
+
+export function thumbImg(url, alt = '', w = 300, h = 400, cls = '') {
+  if (!url) return '';
+  const onerr = `this.onerror=function(){this.style.display='none'};if(this.dataset.full){this.src=this.dataset.full;this.removeAttribute('data-full');}`;
+  const clsAttr = cls ? ` class="${escapeHtml(cls)}"` : '';
+  return `<img${clsAttr} src="${escapeHtml(thumb(url, w, h))}" data-full="${escapeHtml(url)}" alt="${escapeHtml(alt)}" loading="lazy" onload="this.classList.add('loaded')" onerror="${onerr}">`;
+}
