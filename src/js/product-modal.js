@@ -1,7 +1,7 @@
 import { state } from './state.js';
 import { trackViewedItem } from './state.js';
 import { WHATSAPP_NUMBER, BASE_URL } from './config.js';
-import { escapeHtml, formatPrice, generateBadgesHTML, showToast } from './utils.js';
+import { escapeHtml, formatPrice, generateBadgesHTML, showToast, thumbImg } from './utils.js';
 import { trackPopularity } from './api.js';
 import { toggleFavorite, addToCart } from './cart.js';
 
@@ -35,6 +35,7 @@ export function openProductModal(pid) {
         navigator.share ? navigator.share({ title: p.name, text: txt, url }).catch(() => {}) : navigator.clipboard.writeText(txt).then(() => showToast('🔗 Copié !'));
     };
 
+    // ✅ Modale = haute résolution (le client veut voir le détail)
     const imgs = [p.image, p.image2, p.image3, p.image4, p.image5, p.image6].filter(u => u && u.trim());
     const sc = document.getElementById('modalCarouselScroll'), dc = document.getElementById('modalCarouselDots');
     sc.innerHTML = ''; dc.innerHTML = '';
@@ -71,7 +72,6 @@ export function openProductModal(pid) {
     document.getElementById('modalCouleurGroup').style.display = couleurs.length ? 'block' : 'none';
     if (couleurs.length) renderOptions(document.getElementById('modalCouleurOptions'), couleurs, sC, 'couleur');
 
-    // ✅ MODIF : ajout de `e.currentTarget` pour déclencher le vol depuis le bouton
     document.getElementById('addToCartStickyBtn').onclick = (e) => addToCart(p.id, sT, sC, e.currentTarget);
     document.getElementById('directOrderStickyBtn').onclick = () => {
         if (tailles.length && !sT) return showToast('⚠️ Sélectionnez une taille');
@@ -83,7 +83,7 @@ export function openProductModal(pid) {
     if (rec.length < 6) rec = [...rec, ...state.products.filter(pr => pr.id !== p.id && !rec.includes(pr))].slice(0, 6);
     document.getElementById('modalRecCarousel').innerHTML = rec.map(r => `
         <div class="rec-card" data-product-id="${r.id}">
-            <div class="rec-card-img">${r.image ? `<img src="${escapeHtml(r.image)}" alt="${escapeHtml(r.name)}" loading="lazy">` : '📦'}</div>
+            <div class="rec-card-img">${r.image ? thumbImg(r.image, r.name, 200, 200) : '📦'}</div>
             <div class="rec-card-name">${escapeHtml(r.name)}</div>
             <div class="rec-card-price">${formatPrice(r.price)}</div>
         </div>
@@ -102,4 +102,4 @@ export function closeProductModal() {
     document.getElementById('stickyBottomBar').classList.remove('visible');
     state.modalOpen = false;
     history.replaceState({}, '', window.location.pathname);
-        }
+}
