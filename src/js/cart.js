@@ -1,21 +1,18 @@
 import { state, saveCart, saveFavorites } from './state.js';
-import { escapeHtml, formatPrice, showToast } from './utils.js';
+import { escapeHtml, formatPrice, showToast, thumbImg } from './utils.js';
 import { trackPopularity } from './api.js';
 import { WHATSAPP_NUMBER, BASE_URL } from './config.js';
 import { refreshCatalogue } from './catalogue.js';
 
-// ✅ NEW — Persistance des commandes envoyées
 const ORDERS_KEY = 'nrj_orders';
 export function loadOrders() {
-  try {
-    state.orders = JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]');
-  } catch { state.orders = []; }
+  try { state.orders = JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]'); }
+  catch { state.orders = []; }
 }
 function saveOrders() {
   try { localStorage.setItem(ORDERS_KEY, JSON.stringify(state.orders)); } catch {}
 }
 
-// ⚡ Fait voler un fantôme orange du bouton source vers le badge panier
 function flyToCart(sourceEl) {
     const target = document.getElementById('navCartBadge');
     if (!sourceEl || !target || target.style.display === 'none') return;
@@ -44,7 +41,7 @@ function flyToCart(sourceEl) {
     document.body.appendChild(ghost);
 
     const dx = (tgtRect.left + tgtRect.width / 2 - 22) - parseFloat(ghost.style.left);
-    const dy = (tgtRect.top  + tgtRect.height/2 - 22) - parseFloat(ghost.style.top);
+    const dy = (tgtRect.top + tgtRect.height / 2 - 22) - parseFloat(ghost.style.top);
 
     requestAnimationFrame(() => {
         ghost.style.transform = `translate(${dx}px, ${dy}px) scale(0.25)`;
@@ -62,7 +59,6 @@ function flyToCart(sourceEl) {
 export async function addToCart(pid, t = '', c = '', sourceEl = null) {
     const p = state.products.find(pr => pr.id === pid);
     if (!p) return;
-
     if (sourceEl) flyToCart(sourceEl);
 
     const moq = Number(p.moq) || 1;
@@ -111,7 +107,8 @@ export function refreshCartDisplay() {
     ctr.innerHTML = state.cart.map((it, idx) => {
         const p = state.products.find(pr => pr.id === it.productId);
         if (!p) return '';
-        const img = p.image ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}">` : '📦';
+        // ✅ Miniature légère
+        const img = p.image ? thumbImg(p.image, p.name, 100, 100) : '📦';
         let vars = [];
         if (it.couleur) vars.push(`Couleur: ${it.couleur}`);
         if (it.taille) vars.push(`Taille: ${it.taille}`);
@@ -143,18 +140,11 @@ export function sendWhatsAppOrder() {
     localStorage.setItem('nrj_customer_name', name);
     let msg = `Bonjour NRJ Marketplace International, je suis ${name}. Ma commande :\n`, tot = 0;
 
-    // ✅ NEW — capture pour l'historique
     const snapshotItems = state.cart.map(i => {
         const p = state.products.find(pr => pr.id === i.productId);
         if (!p) return null;
         const variant = [i.couleur, i.taille].filter(Boolean).join(', ');
-        return {
-            productId: p.id,
-            name: p.name,
-            price: p.price,
-            qty: Number(i.quantity),
-            variant: variant || null
-        };
+        return { productId: p.id, name: p.name, price: p.price, qty: Number(i.quantity), variant: variant || null };
     }).filter(Boolean);
 
     state.cart.forEach(i => {
@@ -169,15 +159,8 @@ export function sendWhatsAppOrder() {
     msg += `\nTotal : ${formatPrice(tot)}\nMerci !`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
 
-    // ✅ NEW — enregistrement dans l'historique des commandes
     state.orders = state.orders || [];
-    state.orders.unshift({
-        id: Date.now(),
-        date: new Date().toISOString(),
-        recipient: name,
-        total: tot,
-        items: snapshotItems
-    });
+    state.orders.unshift({ id: Date.now(), date: new Date().toISOString(), recipient: name, total: tot, items: snapshotItems });
     if (state.orders.length > 50) state.orders = state.orders.slice(0, 50);
     saveOrders();
 
@@ -187,11 +170,8 @@ export function sendWhatsAppOrder() {
     document.getElementById('orderModalOverlay').classList.remove('open');
     showToast('📤 Commande envoyée');
 
-    // rafraîchir le compte si ouvert
     const accountView = document.getElementById('accountView');
-    if (accountView && accountView.style.display === 'flex') {
-        renderAccount();
-    }
+    if (accountView && accountView.style.display === 'flex') renderAccount();
 }
 
 export function toggleFavorite(pid) {
