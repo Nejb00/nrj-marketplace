@@ -1,10 +1,19 @@
 import os
 import json
 import urllib.request
+import urllib.error
+import re
 
-NOTION_TOKEN = os.environ.get("NOTION_TOKEN")
-PAGE_ID = os.environ.get("NOTION_PAGE_ID")
+NOTION_TOKEN = (os.environ.get("NOTION_TOKEN") or "").strip()
+RAW_PAGE_ID = (os.environ.get("NOTION_PAGE_ID") or "").strip()
 REPO_NAME = os.environ.get("GITHUB_REPOSITORY", "Dépôt GitHub")
+
+# Nettoyage et formatage automatique de l'ID Notion au format UUID (8-4-4-4-12)
+hex_chars = re.sub(r'[^a-fA-F0-9]', '', RAW_PAGE_ID)
+if len(hex_chars) == 32:
+    PAGE_ID = f"{hex_chars[:8]}-{hex_chars[8:12]}-{hex_chars[12:16]}-{hex_chars[16:20]}-{hex_chars[20:]}"
+else:
+    PAGE_ID = RAW_PAGE_ID
 
 EXCLUDE_DIRS = {'.git', 'node_modules', 'dist', 'build', '.next', '.cache', '.github'}
 
@@ -81,8 +90,14 @@ def send_to_notion(tree_str, stats, react_components):
     }
 
     req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers, method='PATCH')
-    with urllib.request.urlopen(req) as response:
-        print("Synchronisation Notion réussie !")
+    try:
+        with urllib.request.urlopen(req) as response:
+            print("Synchronisation Notion réussie !")
+    except urllib.error.HTTPError as e:
+        error_details = e.read().decode('utf-8')
+        print(f"Erreur HTTP {e.code}: {e.reason}")
+        print(f"Détails de l'erreur Notion : {error_details}")
+        raise e
 
 if __name__ == "__main__":
     tree, stats, components = generate_tree_and_stats()
