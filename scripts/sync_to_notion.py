@@ -5,49 +5,73 @@ import urllib.error
 import re
 
 NOTION_TOKEN = (os.environ.get("NOTION_TOKEN") or "").strip()
-RAW_PAGE_ID = (os.environ.get("NOTION_PAGE_ID") or "").strip()
+RAW_PAGE_INPUT = (os.environ.get("NOTION_PAGE_ID") or "").strip()
 REPO_NAME = os.environ.get("GITHUB_REPOSITORY", "Dépôt GitHub")
 
-# Formatage automatique au format UUID (8-4-4-4-12)
-hex_chars = re.sub(r'[^a-fA-F0-9]', '', RAW_PAGE_ID)
-if len(hex_chars) == 32:
-    PAGE_ID = f"{hex_chars[:8]}-{hex_chars[8:12]}-{hex_chars[12:16]}-{hex_chars[16:20]}-{hex_chars[20:]}"
+# Extraction robuste de l'ID Notion (32 caractères HEX)
+all_hex = re.findall(r'[a-fA-F0-9]{32}', RAW_PAGE_INPUT)
+if all_hex:
+    raw_id = all_hex[-1]
 else:
-    PAGE_ID = RAW_PAGE_ID
+    raw_id = re.sub(r'[^a-fA-F0-9]', '', RAW_PAGE_INPUT)
 
-EXCLUDE_DIRS = {'.git', 'node_modules', 'dist', 'build', '.next', '.cache', '.github'}
+if len(raw_id) == 32:
+    PAGE_ID = f"{raw_id[:8]}-{raw_id[8:12]}-{raw_id[12:16]}-{raw_id[16:20]}-{raw_id[20:]}"
+else:
+    PAGE_ID = RAW_PAGE_INPUT
 
-def generate_tree_and_stats():
-    tree_lines = []
-    stats = {"total_files": 0, "total_dirs": 0, "extensions": {}}
-    react_components = []
+print(f"ID Notion ciblé : {PAGE_ID}")
 
-    for root, dirs, files in os.walk('.'):
-        dirs[:] = [d for d in dirs if d not in EXCLUDE_DIRS]
-        
-        level = root.replace('.', '').count(os.sep)
-        indent = '  ' * level
-        folder_name = os.path.basename(root)
-        
-        if folder_name and folder_name != '.':
-            tree_lines.append(f"{indent}📁 {folder_name}/")
-            stats["total_dirs"] += 1
-            
-        sub_indent = '  ' * (level + 1) if folder_name != '.' else ''
-        for f in sorted(files):
-            if f.startswith('.'): continue
-            tree_lines.append(f"{sub_indent}📄 {f}")
-            stats["total_files"] += 1
-            
-            ext = os.path.splitext(f)[1] or 'sans extension'
-            stats["extensions"][ext] = stats["extensions"].get(ext, 0) + 1
-            
-            if ext in ['.jsx', '.tsx'] or (ext in ['.js', '.ts'] and f[0].isupper() and 'config' not in f):
-                react_components.append(f)
+EXCLUDE_DIRS = {'.git', 'node_modules', 'dist', 'build', '.next', '.cache', '.github', 'public'}
+EXCLUDE_FILES = {'package-lock.json', 'yarn.lock'}
 
-    return "\n".join(tree_lines), stats, react_components
+LANG_MAP = {
+    '.js': 'javascript',
+    '.jsx': 'javascript',
+    '.ts': 'typescript',
+    '.tsx': 'typescript',
+    '.css': 'css',
+    '.html': 'html',
+    '.json': 'json',
+    '.py': 'python',
+    '.md': 'markdown',
+    '.yml': 'yaml',
+    '.yaml': 'yaml'
+}
 
-def send_to_notion(tree_str, stats, react_components):
+def get_language(filename):
+    ext = os.path.splitext(filename)[1].lower()
+    return LANG_MAP.get(ext, 'plain text')
+
+def chunk_text(text, max_len=1900):
+    if not text:
+        return ["// Fichier vide"]
+    return [text[i:i + max_len] for i in range(0, len(text), max_len)]
+
+def clear_existing_blocks():
+    """Supprime les anciens blocs de la page Notion pour repartir à zéro"""
+    url = f"https://api.notion.com/v1/blocks/{PAGE_ID}/children?page_size=100"
+    headers = {
+        "Authorization": f"Bearer {NOTION_TOKEN}",
+        "Notion-Version": "2022-06-28"
+    }
+    req = urllib.request.Request(url, headers=headers, method='GET')
+    try:
+        with urllib.request.urlopen(req) as resp:
+            data = json.loads(resp.read().decode('utf-8'))
+            blocks = data.get('results', [])
+            for block in blocks:
+                del_url = f"https://api.notion.com/v1/blocks/{block['id']}"
+                del_req = urllib.request.Request(del_url, headers=headers, method='DELETE')
+                try:
+                    urllib.request.urlopen(del_req)
+                except Exception:
+                    pass
+    except Exception as e:
+        print(f"Note lors du nettoyage : {e}")
+
+def push_blocks_in_batches(blocks):
+    """Envoie les blocs à Notion par paquets de 100 (limite API)"""
     url = f"https://api.notion.com/v1/blocks/{PAGE_ID}/children"
     headers = {
         "Authorization": f"Bearer {NOTION_TOKEN}",
@@ -55,62 +79,113 @@ def send_to_notion(tree_str, stats, react_components):
         "Notion-Version": "2022-06-28"
     }
 
-    ext_summary = ", ".join([f"{k}: {v}" for k, v in stats["extensions"].items()])
-    react_summary = ", ".join(react_components[:10]) if react_components else "Aucun détecté"
-    tree_text = tree_str[:1900] if tree_str else "Dépôt vide"
+    batch_size = 80  # Marge de sécurité
+    for i in range(0, len(blocks), batch_size):
+        batch = blocks[i:i + batch_size]
+        payload = {"children": batch}
+        data = json.dumps(payload).encode('utf-8')
+        req = urllib.request.Request(url, data=data, headers=headers, method='PATCH')
+        try:
+            with urllib.request.urlopen(req) as resp:
+                print(f"Séquence {i // batch_size + 1} envoyée ({len(batch)} blocs)")
+        except urllib.error.HTTPError as e:
+            print(f"Erreur HTTP {e.code}: {e.read().decode('utf-8')}")
+            raise e
 
-    payload = {
-        "children": [
-            {
-                "object": "block",
-                "type": "heading_2",
-                "heading_2": {
-                    "rich_text": [{"type": "text", "text": {"content": f"📊 Vue d'ensemble : {REPO_NAME}"}}]
-                }
-            },
-            {
-                "object": "block",
-                "type": "callout",
-                "callout": {
-                    "rich_text": [{
-                        "type": "text",
-                        "text": {"content": f"📁 Dossiers : {stats['total_dirs']} | 📄 Fichiers : {stats['total_files']}\n🧩 Types : {ext_summary}\n⚛️ Composants React/JS : {len(react_components)} ({react_summary})"}
-                    }],
-                    "icon": {
-                        "type": "emoji",
-                        "emoji": "🚀"
-                    }
-                }
-            },
-            {
-                "object": "block",
-                "type": "heading_3",
-                "heading_3": {
-                    "rich_text": [{"type": "text", "text": {"content": "🌳 Arborescence du dépôt"}}]
-                }
-            },
-            {
+def generate_notion_content():
+    all_blocks = []
+    
+    # 1. En-tête
+    all_blocks.append({
+        "object": "block",
+        "type": "heading_1",
+        "heading_1": {
+            "rich_text": [{"type": "text", "text": {"content": f"🚀 Code Source : {REPO_NAME}"}}]
+        }
+    })
+
+    file_list = []
+    total_chars = 0
+
+    for root, dirs, files in os.walk('.'):
+        dirs[:] = [d for d in dirs if d not in EXCLUDE_DIRS]
+        for f in sorted(files):
+            if f.startswith('.') or f in EXCLUDE_FILES:
+                continue
+            filepath = os.path.normpath(os.path.join(root, f))
+            file_list.append(filepath)
+
+    file_list.sort()
+
+    for filepath in file_list:
+        try:
+            with open(filepath, 'r', encoding='utf-8', errors='ignore') as file_obj:
+                content = file_obj.read()
+        except Exception as e:
+            content = f"// Erreur de lecture : {e}"
+
+        char_count = len(content)
+        total_chars += char_count
+        lang = get_language(filepath)
+        chunks = chunk_text(content)
+
+        # Création des blocs de code enfants pour le Toggle
+        children_code_blocks = []
+        for chunk in chunks:
+            children_code_blocks.append({
                 "object": "block",
                 "type": "code",
                 "code": {
-                    "rich_text": [{"type": "text", "text": {"content": tree_text}}],
-                    "language": "plain text"
+                    "rich_text": [{"type": "text", "text": {"content": chunk}}],
+                    "language": lang
                 }
-            }
-        ]
-    }
+            })
 
-    data = json.dumps(payload).encode('utf-8')
-    req = urllib.request.Request(url, data=data, headers=headers, method='PATCH')
-    
-    try:
-        with urllib.request.urlopen(req) as response:
-            print("Synchronisation Notion réussie !")
-    except urllib.error.HTTPError as e:
-        print(f"Erreur HTTP {e.code}: {e.reason}")
-        print(f"Détails API Notion : {e.read().decode('utf-8')}")
-        raise e
+        # Bloc Toggle pour le fichier
+        toggle_block = {
+            "object": "block",
+            "type": "toggle",
+            "toggle": {
+                "rich_text": [
+                    {
+                        "type": "text", 
+                        "text": {"content": f"📄 {filepath} "},
+                        "annotations": {"bold": True}
+                    },
+                    {
+                        "type": "text", 
+                        "text": {"content": f"({char_count:,} caractères)"},
+                        "annotations": {"italic": True, "color": "gray"}
+                    }
+                ],
+                "children": children_code_blocks[:100]  # Limite enfants par toggle
+            }
+        }
+        all_blocks.append(toggle_block)
+
+    # Résumé au début de la page (Callout)
+    summary_block = {
+        "object": "block",
+        "type": "callout",
+        "callout": {
+            "rich_text": [{
+                "type": "text",
+                "text": {"content": f"📊 Projet synchronisé : {len(file_list)} fichiers | {total_chars:,} caractères au total.\nCliquez sur un fichier pour dérouler son code ou laissez Claude lire la page."}
+            }],
+            "icon": {"type": "emoji", "emoji": "⚡"}
+        }
+    }
+    all_blocks.insert(1, summary_block)
+
+    return all_blocks
 
 if __name__ == "__main__":
-    tree, stats, components = generate_tree_and_stats()
-    send_to_notion(tree, stats, components)
+    print("Nettoyage de l'ancienne page Notion...")
+    clear_existing_blocks()
+    
+    print("Génération du code source pour Notion...")
+    blocks = generate_notion_content()
+    
+    print(f"Envoi de {len(blocks)} éléments vers Notion...")
+    push_blocks_in_batches(blocks)
+    print("Synchronisation terminée avec succès !")
