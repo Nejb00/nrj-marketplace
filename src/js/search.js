@@ -4,9 +4,9 @@ import { escapeHtml, formatPrice, fuzzySearch, highlightMatch, getCategoryIcon, 
 import { openProductModal } from './product-modal.js';
 import { switchToSearchView } from './search-view.js';
 
+const TRENDING_COUNT = 10;
+
 // ─── Suggestions intelligentes pour le placeholder ───────────────────────────
-// Réservoir de rotation : historique perso d'abord, puis best-sellers (noms),
-// puis catégories chaudes. 100 % côté client, aucun appel Supabase.
 export function buildSmartRotationList() {
   const max = MAX_PLACEHOLDER_SUGGESTIONS;
   const suggestions = [];
@@ -21,17 +21,14 @@ export function buildSmartRotationList() {
     suggestions.push(t);
   };
 
-  // 1) Historique perso d'abord (choix UX : fidéliser le visiteur récurrent)
   getSearchHistory().slice(0, max).forEach(push);
 
-  // 2) Best-sellers : produits au plus gros popularity_score
   if (state.products.length) {
     [...state.products]
       .sort((a, b) => (b.popularity_score || 0) - (a.popularity_score || 0))
       .forEach(p => { if (suggestions.length < max) push(p.name); });
   }
 
-  // 3) Catégories chaudes : somme des scores par catégorie
   if (state.products.length) {
     const catScores = {};
     state.products.forEach(p => {
@@ -43,17 +40,30 @@ export function buildSmartRotationList() {
       .forEach(([cat]) => { if (suggestions.length < max) push(cat); });
   }
 
-  // Garde-fou : on n'écrase jamais la liste par du vide
   if (suggestions.length > 0) {
     state.rotationList = suggestions;
     state.currentPlaceholderIndex = 0;
   }
 }
 
+let historyCaptureBound = false;
+
 export function initPlaceholderRotation() {
   buildSmartRotationList();
   const input = document.getElementById('searchInput');
   if (!input) return;
+
+  // Enregistre la recherche dans l'historique quand on valide avec Entrée
+  if (!historyCaptureBound) {
+    historyCaptureBound = true;
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const v = input.value.trim();
+        if (v) saveSearchToHistory(v);
+      }
+    });
+  }
+
   setInterval(() => {
     if (document.activeElement !== input && input.value === '') {
       state.currentPlaceholderIndex = (state.currentPlaceholderIndex + 1) % state.rotationList.length;
@@ -89,11 +99,90 @@ function clearSearchHistory() {
   } catch (e) {}
 }
 
-// Exposé pour le bouton "Effacer" généré en HTML brut dans le dropdown
 window.clearSearchHistory = function() {
   clearSearchHistory();
   showSearchDropdown('');
 };
+
+// ─── Panneau de découverte (historique + tendances) ─────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildTrendingPool() {
+  const pool = [];
+  const seen = new Set();
+  const push = (t) => {
+    t = (t || '').trim();
+    if (!t) return;
+    const k = t.toLowerCase();
+    if (seen.has(k)) return;
+    seen.add(k);
+    pool.push(t);
+  };
+
+  if (state.products.length) {
+    [...state.products]
+      .sort((a, b) => (b.popularity_score || 0) - (a.popularity_score || 0))
+      .slice(0, 20)
+      .forEach(p => push(p.name));
+
+    const catScores = {};
+    state.products.forEach(p => {
+      if (!p.category) return;
+      catScores[p.category] = (catScores[p.category] || 0) + (p.popularity_score || 0);
+    });
+    Object.entries(catScores)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .forEach(([c]) => push(c));
+  }
+  return pool;
+}
+
+function renderDiscovery(dropdown) {
+  const history = getSearchHistory();
+  const trending = shuffle(buildTrendingPool()).slice(0, TRENDING_COUNT);
+
+  let html = '<div class="discovery">';
+
+  if (history.length) {
+    html += `<div class="discovery-section">
+      <div class="dropdown-header"><span>🕐 Historique</span><button class="discovery-action" data-action="clear-history" aria-label="Effacer l'historique">🗑️</button></div>
+      <div class="discovery-chips">${history.map((h, i) => `<button class="discovery-chip" style="animation-delay:${i * 30}ms" data-query="${escapeHtml(h)}">${escapeHtml(h)}</button>`).join('')}</div>
+    </div>`;
+  }
+
+  html += `<div class="discovery-section">
+    <div class="dropdown-header"><span>🔥 Tendances pour vous</span><button class="discovery-action" data-action="refresh-trending" aria-label="Actualiser les tendances">⟳</button></div>
+    <div class="discovery-chips">${trending.map((t, i) => `<button class="discovery-chip" style="animation-delay:${i * 30}ms" data-query="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join('')}</div>
+  </div>`;
+
+  html += '</div>';
+  dropdown.innerHTML = html;
+  dropdown.style.display = 'block';
+
+  dropdown.querySelectorAll('.discovery-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const q = chip.dataset.query;
+      saveSearchToHistory(q);
+      document.getElementById('searchInput').value = q;
+      switchToSearchView(q);
+      hideSearchDropdown();
+    });
+  });
+
+  const clearBtn = dropdown.querySelector('[data-action="clear-history"]');
+  if (clearBtn) clearBtn.addEventListener('click', () => { clearSearchHistory(); showSearchDropdown(''); });
+
+  const refreshBtn = dropdown.querySelector('[data-action="refresh-trending"]');
+  if (refreshBtn) refreshBtn.addEventListener('click', () => showSearchDropdown(''));
+}
 
 export function initVoiceSearch() {
   const voiceBtn = document.getElementById('searchVoice');
@@ -162,26 +251,7 @@ export function showSearchDropdown(query) {
   const loader = document.getElementById('searchLoader');
 
   if (!query || query.trim().length === 0) {
-    const history = getSearchHistory();
-    if (history.length > 0) {
-      let html = `<div class="dropdown-header"><span>🕐 Recherches récentes</span><button onclick="window.clearSearchHistory()">Effacer</button></div>`;
-      history.forEach(h => {
-        html += `<div class="dropdown-history-item" data-query="${escapeHtml(h)}"><span class="dropdown-history-icon">🕐</span><span class="dropdown-history-text">${escapeHtml(h)}</span></div>`;
-      });
-      dropdown.innerHTML = html;
-      dropdown.style.display = 'block';
-
-      dropdown.querySelectorAll('.dropdown-history-item').forEach(item => {
-        item.addEventListener('click', () => {
-          const q = item.dataset.query;
-          document.getElementById('searchInput').value = q;
-          switchToSearchView(q);
-          hideSearchDropdown();
-        });
-      });
-    } else {
-      hideSearchDropdown();
-    }
+    renderDiscovery(dropdown);
     if (clearBtn) clearBtn.style.display = 'none';
     if (loader) loader.style.display = 'none';
     return;
