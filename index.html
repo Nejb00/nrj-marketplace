@@ -7,7 +7,6 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
     <title>NRJ Marketplace • Import Chine, France, Turquie → Congo</title>
 
-    <!-- ── Carte de partage (WhatsApp, Facebook, X) → site Vercel ─────── -->
     <meta name="theme-color" content="#0f0f0f">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="NRJ Marketplace International">
@@ -25,7 +24,6 @@
     <meta name="twitter:description" content="Grossiste en ligne — import direct de Chine, France et Turquie vers le Congo Brazzaville. Commande via WhatsApp.">
     <meta name="twitter:image" content="https://nrj-marketplace.vercel.app/nrj-og-banner.png">
 
-    <!-- ── PWA : installable, standalone, service worker ───────────────── -->
     <link rel="manifest" href="/manifest.webmanifest">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -97,7 +95,6 @@
             <div class="categories-grid" id="categoriesGrid"></div>
         </div>
 
-
         <nav class="main-nav">
             <a href="#" class="nav-item active" data-nav="home" aria-label="Accueil">
                 <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
@@ -113,7 +110,7 @@
                 <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                 <span class="favorites-badge" id="navFavBadge" style="display:none;">0</span>
             </a>
-            <a href="#" class="nav-item" data-nav="profile" aria-label="Profil / Admin">
+            <a href="#" class="nav-item" data-nav="profile" aria-label="Mon NRJ">
                 <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
             </a>
         </nav>
@@ -121,102 +118,101 @@
         <footer><p>© 2026 NRJ Marketplace International — Chine • France • Turquie → Congo Brazzaville ⚡</p></footer>
     </div>
 
-        <div class="product-modal" id="productModal">
-            <div class="modal-image-section">
-                <div class="carousel-scroll" id="modalCarouselScroll"></div>
-                <button class="back-arrow-btn" id="modalCloseBtn" aria-label="Retour">←</button>
-                <div class="product-id-badge" id="modalProductIdBadge">[ID: ...]</div>
-                <div class="modal-badges" id="modalBadges"></div>
-                <div class="product-actions-overlay">
-                    <button class="action-circle" id="modalFavBtn" aria-label="Ajouter aux favoris">
-                        <svg viewBox="0 0 24 24" class="fav-icon-svg">
-                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                        </svg>
-                    </button>
-                    <button class="action-circle" id="modalShareBtn" aria-label="Partager">↗</button>
-                </div>
-                <div class="carousel-dots" id="modalCarouselDots"></div>
+    <div class="product-modal" id="productModal">
+        <div class="modal-image-section">
+            <div class="carousel-scroll" id="modalCarouselScroll"></div>
+            <button class="back-arrow-btn" id="modalCloseBtn" aria-label="Retour">←</button>
+            <div class="product-id-badge" id="modalProductIdBadge">[ID: ...]</div>
+            <div class="modal-badges" id="modalBadges"></div>
+            <div class="product-actions-overlay">
+                <button class="action-circle" id="modalFavBtn" aria-label="Ajouter aux favoris">
+                    <svg viewBox="0 0 24 24" class="fav-icon-svg">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                </button>
+                <button class="action-circle" id="modalShareBtn" aria-label="Partager">↗</button>
             </div>
-            <div class="product-details">
-                <div class="product-detail-price" id="modalPrice"></div>
-                <div class="product-detail-moq" id="modalMoq"></div>
-                <div class="product-detail-total" id="modalTotal"></div>
-                <div class="product-detail-desc" id="modalDesc"></div>
-                <div class="option-group" id="modalTailleGroup" style="display:none;"><label>Taille</label><div class="option-buttons" id="modalTailleOptions"></div></div>
-                <div class="option-group" id="modalCouleurGroup" style="display:none;"><label>Couleur</label><div class="option-buttons" id="modalCouleurOptions"></div></div>
-            </div>
-            <div class="recommendations">
-                <h3>Vous aimerez aussi</h3>
-                <div class="rec-carousel" id="modalRecCarousel"></div>
-            </div>
-            <div class="sourcing-section">
-                <h3>🔍 Vous ne trouvez pas votre bonheur ?</h3>
-                <p>Envoyez-nous une photo ou décrivez votre recherche.</p>
-                <button class="sourcing-btn" id="modalSourcingBtn">📸 Photo</button>
-                <input type="file" id="modalSourcingFileInput" accept="image/*" style="display:none;">
-                <button class="whatsapp-btn" id="modalDescSourcingBtn" style="margin-left:0.5rem;">💬 Message</button>
-                <p id="modalSourcingStatus" style="margin-top:0.8rem;font-size:0.85rem;color:var(--text-secondary);"></p>
-            </div>
+            <div class="carousel-dots" id="modalCarouselDots"></div>
         </div>
-
-        <div class="sticky-bottom-bar" id="stickyBottomBar">
-            <button class="btn-direct-sticky" id="directOrderStickyBtn">⚡ Commander directement</button>
-            <button class="btn-cart-sticky" id="addToCartStickyBtn" aria-label="Ajouter au panier">
-                <svg viewBox="0 0 24 24">
-                    <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
-                </svg>
-            </button>
+        <div class="product-details">
+            <div class="product-detail-price" id="modalPrice"></div>
+            <div class="product-detail-moq" id="modalMoq"></div>
+            <div class="product-detail-total" id="modalTotal"></div>
+            <div class="product-detail-desc" id="modalDesc"></div>
+            <div class="option-group" id="modalTailleGroup" style="display:none;"><label>Taille</label><div class="option-buttons" id="modalTailleOptions"></div></div>
+            <div class="option-group" id="modalCouleurGroup" style="display:none;"><label>Couleur</label><div class="option-buttons" id="modalCouleurOptions"></div></div>
         </div>
+        <div class="recommendations">
+            <h3>Vous aimerez aussi</h3>
+            <div class="rec-carousel" id="modalRecCarousel"></div>
+        </div>
+        <div class="sourcing-section">
+            <h3>🔍 Vous ne trouvez pas votre bonheur ?</h3>
+            <p>Envoyez-nous une photo ou décrivez votre recherche.</p>
+            <button class="sourcing-btn" id="modalSourcingBtn">📸 Photo</button>
+            <input type="file" id="modalSourcingFileInput" accept="image/*" style="display:none;">
+            <button class="whatsapp-btn" id="modalDescSourcingBtn" style="margin-left:0.5rem;">💬 Message</button>
+            <p id="modalSourcingStatus" style="margin-top:0.8rem;font-size:0.85rem;color:var(--text-secondary);"></p>
+        </div>
+    </div>
 
-        <button class="scroll-to-top" id="scrollToTopBtn" aria-label="Retour en haut">⬆️</button>
+    <div class="sticky-bottom-bar" id="stickyBottomBar">
+        <button class="btn-direct-sticky" id="directOrderStickyBtn">⚡ Commander directement</button>
+        <button class="btn-cart-sticky" id="addToCartStickyBtn" aria-label="Ajouter au panier">
+            <svg viewBox="0 0 24 24">
+                <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+            </svg>
+        </button>
+    </div>
 
-        <div class="cart-overlay" id="cartOverlay"></div>
-        <div class="cart-panel" id="cartPanel">
-            <div class="cart-header">Mon Panier <button class="cart-close" id="cartCloseBtn" aria-label="Fermer le panier">&times;</button></div>
-            <div class="cart-items" id="cartItems"></div>
-            <div class="cart-footer">
-                <div class="cart-total"><span>Total</span><span id="cartTotal">XAF 0</span></div>
-                <button class="checkout-btn" id="checkoutBtn" disabled aria-label="Commander via WhatsApp">Commander via WhatsApp</button>
+    <button class="scroll-to-top" id="scrollToTopBtn" aria-label="Retour en haut">⬆️</button>
+
+    <div class="cart-overlay" id="cartOverlay"></div>
+    <div class="cart-panel" id="cartPanel">
+        <div class="cart-header">Mon Panier <button class="cart-close" id="cartCloseBtn" aria-label="Fermer le panier">&times;</button></div>
+        <div class="cart-items" id="cartItems"></div>
+        <div class="cart-footer">
+            <div class="cart-total"><span>Total</span><span id="cartTotal">XAF 0</span></div>
+            <button class="checkout-btn" id="checkoutBtn" disabled aria-label="Commander via WhatsApp">Commander via WhatsApp</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="orderModalOverlay">
+        <div class="modal">
+            <h2 style="text-align:center;margin-bottom:1rem;">📋 Valider la commande</h2>
+            <div id="orderSummary" style="background:var(--surface-light);border-radius:12px;padding:0.8rem;margin-bottom:1rem;font-size:0.85rem;"></div>
+            <div class="form-group"><label>👤 Votre nom complet</label><input type="text" id="customerName" placeholder="Ex: Jean Bosco" required></div>
+            <button class="btn btn-primary" id="sendWhatsAppBtn" style="background:var(--whatsapp);">Envoyer sur WhatsApp</button>
+            <button class="btn btn-outline" id="cancelOrderBtn" style="margin-top:0.5rem;background:transparent;border:1px solid var(--border);color:var(--text);">Annuler</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="editProductModalOverlay">
+        <div class="modal modal-edit">
+            <h2 style="text-align:center;margin-bottom:1rem;">✏️ Modifier le produit</h2>
+            <input type="hidden" id="editProductId">
+            <div class="form-group"><label>Nom</label><input type="text" id="editName"></div>
+            <div class="form-group"><label>Catégorie</label><input type="text" id="editCategory"></div>
+            <div class="form-group"><label>Prix (FCFA)</label><input type="number" id="editPrice"></div>
+            <div class="form-group"><label>Image 1 (URL)</label><input type="url" id="editImage"></div>
+            <div class="form-group"><label>Image 2 (URL)</label><input type="url" id="editImage2"></div>
+            <div class="form-group"><label>Image 3 (URL)</label><input type="url" id="editImage3"></div>
+            <div class="form-group"><label>Image 4 (URL)</label><input type="url" id="editImage4"></div>
+            <div class="form-group"><label>Image 5 (URL)</label><input type="url" id="editImage5"></div>
+            <div class="form-group"><label>Image 6 (URL)</label><input type="url" id="editImage6"></div>
+            <div class="form-group"><label>Tailles (séparées par virgules)</label><input type="text" id="editTailles"></div>
+            <div class="form-group"><label>Couleurs (séparées par virgules)</label><input type="text" id="editCouleurs"></div>
+            <div class="form-group"><label>Quantité minimale (MOQ)</label><input type="number" id="editMoq" min="1"></div>
+            <div class="form-group"><label>Description</label><input type="text" id="editDesc"></div>
+            <div style="display:flex;gap:0.5rem;margin-top:1rem;">
+                <button class="btn btn-primary" id="saveEditBtn" style="flex:1;background:var(--primary);">💾 Sauvegarder</button>
+                <button class="btn btn-outline" id="cancelEditBtn" style="flex:1;background:transparent;border:1px solid var(--border);color:var(--text);">Annuler</button>
             </div>
+            <div id="editError" style="color:#fca5a5;text-align:center;font-size:0.8rem;margin-top:0.5rem;"></div>
         </div>
+    </div>
 
-        <div class="modal-overlay" id="orderModalOverlay">
-            <div class="modal">
-                <h2 style="text-align:center;margin-bottom:1rem;">📋 Valider la commande</h2>
-                <div id="orderSummary" style="background:var(--surface-light);border-radius:12px;padding:0.8rem;margin-bottom:1rem;font-size:0.85rem;"></div>
-                <div class="form-group"><label>👤 Votre nom complet</label><input type="text" id="customerName" placeholder="Ex: Jean Bosco" required></div>
-                <button class="btn btn-primary" id="sendWhatsAppBtn" style="background:var(--whatsapp);">Envoyer sur WhatsApp</button>
-                <button class="btn btn-outline" id="cancelOrderBtn" style="margin-top:0.5rem;background:transparent;border:1px solid var(--border);color:var(--text);">Annuler</button>
-            </div>
-        </div>
-
-        <div class="modal-overlay" id="editProductModalOverlay">
-            <div class="modal modal-edit">
-                <h2 style="text-align:center;margin-bottom:1rem;">✏️ Modifier le produit</h2>
-                <input type="hidden" id="editProductId">
-                <div class="form-group"><label>Nom</label><input type="text" id="editName"></div>
-                <div class="form-group"><label>Catégorie</label><input type="text" id="editCategory"></div>
-                <div class="form-group"><label>Prix (FCFA)</label><input type="number" id="editPrice"></div>
-                <div class="form-group"><label>Image 1 (URL)</label><input type="url" id="editImage"></div>
-                <div class="form-group"><label>Image 2 (URL)</label><input type="url" id="editImage2"></div>
-                <div class="form-group"><label>Image 3 (URL)</label><input type="url" id="editImage3"></div>
-                <div class="form-group"><label>Image 4 (URL)</label><input type="url" id="editImage4"></div>
-                <div class="form-group"><label>Image 5 (URL)</label><input type="url" id="editImage5"></div>
-                <div class="form-group"><label>Image 6 (URL)</label><input type="url" id="editImage6"></div>
-                <div class="form-group"><label>Tailles (séparées par virgules)</label><input type="text" id="editTailles"></div>
-                <div class="form-group"><label>Couleurs (séparées par virgules)</label><input type="text" id="editCouleurs"></div>
-                <div class="form-group"><label>Quantité minimale (MOQ)</label><input type="number" id="editMoq" min="1"></div>
-                <div class="form-group"><label>Description</label><input type="text" id="editDesc"></div>
-                <div style="display:flex;gap:0.5rem;margin-top:1rem;">
-                    <button class="btn btn-primary" id="saveEditBtn" style="flex:1;background:var(--primary);">💾 Sauvegarder</button>
-                    <button class="btn btn-outline" id="cancelEditBtn" style="flex:1;background:transparent;border:1px solid var(--border);color:var(--text);">Annuler</button>
-                </div>
-                <div id="editError" style="color:#fca5a5;text-align:center;font-size:0.8rem;margin-top:0.5rem;"></div>
-            </div>
-        </div>
-
-        <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
-
+    <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
 
     <div id="searchView" style="display:none;">
         <div class="search-view-header">
@@ -239,7 +235,6 @@
                     <h3>🎯 Filtres</h3>
                     <button class="clear-all-filters" id="clearAllFilters">Tout effacer</button>
                 </div>
-
                 <div class="filter-section">
                     <h4>💰 Prix (XAF)</h4>
                     <div class="price-range-container">
@@ -256,17 +251,14 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="filter-section">
                     <h4>📂 Catégories</h4>
                     <div class="filter-checkboxes" id="categoryFilters"></div>
                 </div>
-
                 <div class="filter-section">
                     <h4>📏 Tailles</h4>
                     <div class="filter-checkboxes" id="sizeFilters"></div>
                 </div>
-
                 <div class="filter-section">
                     <h4>🎨 Couleurs</h4>
                     <div class="filter-checkboxes" id="colorFilters"></div>
@@ -304,7 +296,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="search-results-container" id="searchResultsContainer">
                     <div class="search-results-grid" id="searchResultsGrid"></div>
                     <div class="search-no-results" id="searchNoResults" style="display:none;">
@@ -316,10 +307,14 @@
                 </div>
             </main>
         </div>
-
         <div class="filters-overlay" id="filtersOverlay"></div>
+    </div>
+
+    <!-- ✅ NEW : vue compte « Mon NRJ » -->
+    <div id="accountView">
+        <div id="accountContent"></div>
     </div>
 
     <script type="module" src="/src/js/main.js"></script>
 </body>
-                                                                                                                                                                          </html>
+</html>
