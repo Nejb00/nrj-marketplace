@@ -228,4 +228,4 @@ function pulseFavoriteIcons(pid) {
     });
 }
 
-export { saveOrders, loadOrders };
+export { saveOrders };
