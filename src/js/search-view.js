@@ -214,12 +214,13 @@ function displaySearchResults(results) {
   noResults.style.display = 'none';
 
   grid.innerHTML = results.map((p, idx) => {
-    // ✅ Vignette légère au lieu de l'image pleine résolution
     const img = p.image ? thumbImg(p.image, p.name, 300, 400) : '';
     const isFav = state.favorites.includes(p.id);
     const editBtn = state.isAdminLoggedIn
       ? `<button class="product-edit-btn" data-action="edit-product" data-id="${p.id}" aria-label="Modifier le produit">✏️</button>`
       : '';
+    // ✅ PACK POLISH (1) : condition grossiste visible
+    const moqHTML = `<div class="product-card-moq">Min. ${Number(p.moq) || 1} pcs</div>`;
     const delay = Math.min(idx, 8) * 60;
 
     return `
@@ -231,6 +232,7 @@ function displaySearchResults(results) {
           <div class="product-card-text">
             <div class="product-card-name">${escapeHtml(p.name)}</div>
             <div class="product-card-price">${formatPrice(p.price)}</div>
+            ${moqHTML}
           </div>
         </div>
         <button class="product-card-add" data-action="add-to-cart" data-id="${p.id}" aria-label="Ajouter au panier">
