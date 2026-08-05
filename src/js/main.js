@@ -17,11 +17,13 @@ function initSmartHeader() {
   const wrapper = document.getElementById('headerWrapper');
   const spacer = document.getElementById('headerSpacer');
   if (!wrapper || !spacer) return;
+
   const headerHeight = wrapper.offsetHeight;
   spacer.style.height = headerHeight + 'px';
 
   let lastScrollY = window.scrollY;
   let ticking = false;
+
   function updateHeader() {
     const currentScrollY = window.scrollY;
     if (currentScrollY <= 0) wrapper.classList.remove('hidden');
@@ -30,9 +32,11 @@ function initSmartHeader() {
     lastScrollY = currentScrollY;
     ticking = false;
   }
+
   window.addEventListener('scroll', () => {
     if (!ticking) { requestAnimationFrame(updateHeader); ticking = true; }
   }, { passive: true });
+
   window.addEventListener('resize', () => { spacer.style.height = wrapper.offsetHeight + 'px'; });
 }
 
@@ -60,7 +64,9 @@ searchInput.addEventListener('input', function(e) {
   state.searchQuery = v;
   refreshCatalogue();
 });
+
 searchInput.addEventListener('focus', function() { showSearchDropdown(this.value.trim()); });
+
 searchInput.addEventListener('keydown', function(e) {
   if (e.key === 'Enter') {
     e.preventDefault();
@@ -71,6 +77,7 @@ searchInput.addEventListener('keydown', function(e) {
     this.blur();
   }
 });
+
 searchClear.addEventListener('click', function() {
   searchInput.value = '';
   state.searchQuery = '';
@@ -85,7 +92,7 @@ document.addEventListener('click', function(e) {
   if (!searchBar.contains(e.target) && !dropdown.contains(e.target)) hideSearchDropdown();
 });
 
-// Délégation d'événements globale
+// Délégation d'événements globale pour tout le contenu généré dynamiquement
 document.addEventListener('click', e => {
   const fb = e.target.closest('.filter-btn'); if (fb) { applyFilter(fb.dataset.category); return; }
   const addBtn = e.target.closest('[data-action="add-to-cart"]'); if (addBtn) { e.stopPropagation(); addToCart(parseInt(addBtn.dataset.id), '', '', addBtn); return; }
@@ -96,7 +103,7 @@ document.addEventListener('click', e => {
   const decBtn = e.target.closest('[data-action="cart-decrease"]'); if (decBtn) { changeQty(parseInt(decBtn.dataset.index), -1); return; }
   const recCard = e.target.closest('.rec-card'); if (recCard) { openProductModal(parseInt(recCard.dataset.productId)); return; }
   const catCard = e.target.closest('.category-card'); if (catCard) { trackViewedItem(catCard.dataset.category); applyFilter(catCard.dataset.category); switchView('home'); return; }
-  // ✅ NEW — actions depuis la vue compte
+  // Actions depuis la vue compte
   const acctAction = e.target.closest('[data-account-action]');
   if (acctAction) { handleAccountAction(acctAction.dataset.accountAction); return; }
   const card = e.target.closest('.product-card');
@@ -130,36 +137,28 @@ document.getElementById('cancelEditBtn').addEventListener('click', () => documen
 
 document.getElementById('backToHomeBtn').addEventListener('click', () => switchView('home'));
 
-// ✅ NEW — long-press sur le logo → admin.html (500ms)
+// ─── Accès admin caché : appui long (500 ms) sur le logo ────────────────────
 function initLogoLongPress() {
   const logo = document.querySelector('.logo-wrapper');
   if (!logo) return;
   let pressTimer = null;
   let moved = false;
-  const start = (e) => {
+  logo.addEventListener('pointerdown', () => {
     moved = false;
-    pressTimer = setTimeout(() => {
-      if (!moved) {
-        window.location.href = 'admin.html';
-      }
-    }, 500);
-  };
-  const cancel = () => { clearTimeout(pressTimer); };
-  const onMove = () => { moved = true; cancel(); };
-  logo.addEventListener('pointerdown', start);
-  logo.addEventListener('pointerup', cancel);
-  logo.addEventListener('pointercancel', cancel);
-  logo.addEventListener('pointermove', onMove);
+    pressTimer = setTimeout(() => { if (!moved) window.location.href = 'admin.html'; }, 500);
+  });
+  logo.addEventListener('pointerup', () => clearTimeout(pressTimer));
+  logo.addEventListener('pointercancel', () => clearTimeout(pressTimer));
+  logo.addEventListener('pointermove', () => { moved = true; clearTimeout(pressTimer); });
 }
 
-// ✅ NEW — gestion de la vue compte
+// ─── Vue compte « Mon NRJ » ──────────────────────────────────────────────────
 export function showAccountView() {
   document.getElementById('catalogueWrapper').style.display = 'none';
   const av = document.getElementById('accountView');
   av.style.display = 'flex';
   renderAccount();
   window.scrollTo(0, 0);
-  // active le bouton nav profil
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   document.querySelector('.nav-item[data-nav="profile"]')?.classList.add('active');
 }
@@ -184,7 +183,6 @@ function renderAccount() {
   const orders = state.orders || [];
   const orderCount = orders.length;
 
-  // Historique commandes (10 dernières)
   let ordersHtml = '';
   if (orders.length === 0) {
     ordersHtml = `<div class="account-empty">Aucune commande envoyée pour l'instant.</div>`;
@@ -296,6 +294,9 @@ function renderAccount() {
     </div>` : ''}
   `;
 }
+
+// ✅ Raccord : permet à cart.js de rafraîchir le compte après une commande
+window.renderAccount = renderAccount;
 
 function handleAccountAction(action) {
   switch (action) {
@@ -424,6 +425,7 @@ async function init() {
   await fetchProducts();
   loadOrders();
 
+  // Les catégories en pastilles cliquables
   const cats = [...new Set(state.products.map(p => removeEmojis(p.category)))];
   let html = `<button class="filter-btn active" data-category="all">Tout voir (${state.products.length})</button>`;
   cats.forEach(c => {
@@ -440,6 +442,7 @@ async function init() {
   refreshCartDisplay();
   updateNavFavBadge();
 
+  // Session admin : bouton "modifier" sur les cartes + badge Admin dans le compte
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (session) {
     state.isAdminLoggedIn = true;
@@ -449,8 +452,10 @@ async function init() {
   const urlParams = new URLSearchParams(window.location.search);
   const searchParam = urlParams.get('search');
   const idParam = urlParams.get('id');
-  if (searchParam) switchToSearchView(searchParam);
-  else if (idParam) {
+
+  if (searchParam) {
+    switchToSearchView(searchParam);
+  } else if (idParam) {
     const p = state.products.find(pr => pr.id === parseInt(idParam));
     if (p) openProductModal(parseInt(idParam));
   }
