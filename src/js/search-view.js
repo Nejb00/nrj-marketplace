@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { escapeHtml, formatPrice, debounce, calculateSearchScore, generateBadgesHTML } from './utils.js';
+import { escapeHtml, formatPrice, debounce, calculateSearchScore, generateBadgesHTML, thumbImg } from './utils.js';
 
 export function switchToSearchView(query) {
   document.getElementById('catalogueWrapper').style.display = 'none';
@@ -197,8 +197,6 @@ function sortResults(results, sortBy) {
   return sorted;
 }
 
-// Markup IDENTIQUE à une carte catalogue. Clic / panier / favori / crayon
-// = délégation globale de main.js. Aucun listener ici (sinon double-handler).
 function displaySearchResults(results) {
   const grid = document.getElementById('searchResultsGrid');
   const noResults = document.getElementById('searchNoResults');
@@ -216,15 +214,12 @@ function displaySearchResults(results) {
   noResults.style.display = 'none';
 
   grid.innerHTML = results.map((p, idx) => {
-    const img = p.image
-      ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" loading="lazy" onload="this.classList.add('loaded')" onerror="this.style.display='none'">`
-      : '';
+    // ✅ Vignette légère au lieu de l'image pleine résolution
+    const img = p.image ? thumbImg(p.image, p.name, 300, 400) : '';
     const isFav = state.favorites.includes(p.id);
     const editBtn = state.isAdminLoggedIn
       ? `<button class="product-edit-btn" data-action="edit-product" data-id="${p.id}" aria-label="Modifier le produit">✏️</button>`
       : '';
-    // ② cascade : délai plafonné à 8 cartes (max 480ms) pour ne jamais
-    // laisser une carte du bas invisible trop longtemps.
     const delay = Math.min(idx, 8) * 60;
 
     return `
@@ -247,4 +242,4 @@ function displaySearchResults(results) {
         ${editBtn}
       </div>`;
   }).join('');
-            }
+}
