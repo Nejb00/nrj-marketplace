@@ -233,3 +233,64 @@
     font-size: 2rem;
     margin-bottom: 0.5rem;
 }
+
+/* ─── Panneau de découverte (historique + tendances) ─────────────────────── */
+.discovery { padding: 0.2rem 0 0.6rem; }
+
+.discovery-section { padding: 0.4rem 0.4rem 0.2rem; }
+
+.discovery-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.6rem 0.6rem 0.3rem;
+}
+
+.discovery-chip {
+    background: var(--surface-light);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 0.8rem;
+    font-family: inherit;
+    padding: 0.45rem 0.95rem;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    animation: chipIn 0.3s ease both;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.discovery-chip:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: rgba(255, 140, 66, 0.08);
+    transform: translateY(-1px);
+}
+
+.discovery-chip:active { transform: scale(0.96); }
+
+@keyframes chipIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.discovery-action {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    padding: 0.2rem 0.45rem;
+    border-radius: 6px;
+    transition: color 0.2s, transform 0.25s;
+}
+
+.discovery-action:hover { color: var(--primary); }
+.discovery-action[data-action="refresh-trending"]:active { transform: rotate(180deg); }
+
+@media (prefers-reduced-motion: reduce) {
+    .discovery-chip { animation: none; }
+}
