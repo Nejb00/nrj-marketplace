@@ -8,7 +8,7 @@ NOTION_TOKEN = (os.environ.get("NOTION_TOKEN") or "").strip()
 RAW_PAGE_ID = (os.environ.get("NOTION_PAGE_ID") or "").strip()
 REPO_NAME = os.environ.get("GITHUB_REPOSITORY", "Dépôt GitHub")
 
-# Nettoyage et formatage automatique de l'ID Notion au format UUID (8-4-4-4-12)
+# Formatage automatique au format UUID (8-4-4-4-12)
 hex_chars = re.sub(r'[^a-fA-F0-9]', '', RAW_PAGE_ID)
 if len(hex_chars) == 32:
     PAGE_ID = f"{hex_chars[:8]}-{hex_chars[8:12]}-{hex_chars[12:16]}-{hex_chars[16:20]}-{hex_chars[20:]}"
@@ -57,46 +57,58 @@ def send_to_notion(tree_str, stats, react_components):
 
     ext_summary = ", ".join([f"{k}: {v}" for k, v in stats["extensions"].items()])
     react_summary = ", ".join(react_components[:10]) if react_components else "Aucun détecté"
+    tree_text = tree_str[:1900] if tree_str else "Dépôt vide"
 
     payload = {
         "children": [
             {
                 "object": "block",
                 "type": "heading_2",
-                "heading_2": {"rich_text": [{"type": "text", "text": {"content": f"📊 Vue d'ensemble : {REPO_NAME}"}}]}
+                "heading_2": {
+                    "rich_text": [{"type": "text", "text": {"content": f"📊 Vue d'ensemble : {REPO_NAME}"}}]
+                }
             },
             {
                 "object": "block",
                 "type": "callout",
                 "callout": {
-                    "rich_text": [{"type": "text", "text": {"content": f"📁 Dossiers : {stats['total_dirs']} | 📄 Fichiers : {stats['total_files']}\n🧩 Types : {ext_summary}\n⚛️ Composants React/JS : {len(react_components)} ({react_summary})"}}],
-                    "icon": {"emoji": "🚀"}
+                    "rich_text": [{
+                        "type": "text",
+                        "text": {"content": f"📁 Dossiers : {stats['total_dirs']} | 📄 Fichiers : {stats['total_files']}\n🧩 Types : {ext_summary}\n⚛️ Composants React/JS : {len(react_components)} ({react_summary})"}
+                    }],
+                    "icon": {
+                        "type": "emoji",
+                        "emoji": "🚀"
+                    }
                 }
             },
             {
                 "object": "block",
                 "type": "heading_3",
-                "heading_3": {"rich_text": [{"type": "text", "text": {"content": "🌳 Arborescence du dépôt"}}]}
+                "heading_3": {
+                    "rich_text": [{"type": "text", "text": {"content": "🌳 Arborescence du dépôt"}}]
+                }
             },
             {
                 "object": "block",
                 "type": "code",
                 "code": {
-                    "rich_text": [{"type": "text", "text": {"content": tree_str[:1900]}}],
+                    "rich_text": [{"type": "text", "text": {"content": tree_text}}],
                     "language": "plain text"
                 }
             }
         ]
     }
 
-    req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers, method='PATCH')
+    data = json.dumps(payload).encode('utf-8')
+    req = urllib.request.Request(url, data=data, headers=headers, method='PATCH')
+    
     try:
         with urllib.request.urlopen(req) as response:
             print("Synchronisation Notion réussie !")
     except urllib.error.HTTPError as e:
-        error_details = e.read().decode('utf-8')
         print(f"Erreur HTTP {e.code}: {e.reason}")
-        print(f"Détails de l'erreur Notion : {error_details}")
+        print(f"Détails API Notion : {e.read().decode('utf-8')}")
         raise e
 
 if __name__ == "__main__":
