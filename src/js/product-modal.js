@@ -35,7 +35,7 @@ export function openProductModal(pid) {
         navigator.share ? navigator.share({ title: p.name, text: txt, url }).catch(() => {}) : navigator.clipboard.writeText(txt).then(() => showToast('🔗 Copié !'));
     };
 
-    // ✅ Modale = haute résolution (le client veut voir le détail)
+    // Modale = haute résolution (le client veut voir le détail)
     const imgs = [p.image, p.image2, p.image3, p.image4, p.image5, p.image6].filter(u => u && u.trim());
     const sc = document.getElementById('modalCarouselScroll'), dc = document.getElementById('modalCarouselDots');
     sc.innerHTML = ''; dc.innerHTML = '';
@@ -44,7 +44,8 @@ export function openProductModal(pid) {
         dc.innerHTML = '';
     } else {
         imgs.forEach((u, i) => {
-            sc.innerHTML += `<div class="carousel-item"><img src="${escapeHtml(u)}" alt="${escapeHtml(p.name)}" loading="lazy"></div>`;
+            // ✅ FIX 1 : onload ajoute .loaded → l'image passe de opacity 0 à 1
+            sc.innerHTML += `<div class="carousel-item"><img src="${escapeHtml(u)}" alt="${escapeHtml(p.name)}" loading="lazy" onload="this.classList.add('loaded')"></div>`;
             dc.innerHTML += `<span class="carousel-dot ${i === 0 ? 'active' : ''}" data-index="${i}"></span>`;
         });
     }
