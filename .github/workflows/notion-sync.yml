@@ -1,0 +1,27 @@
+name: Sync Repository Structure to Notion
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  sync-to-notion:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Configuration de Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Exécution de la synchronisation
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_PAGE_ID: ${{ secrets.NOTION_PAGE_ID }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: python scripts/sync_to_notion.py
