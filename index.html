@@ -12,7 +12,7 @@
     <meta property="og:site_name" content="NRJ Marketplace International">
     <meta property="og:locale" content="fr_FR">
     <meta property="og:title" content="NRJ Marketplace International">
-    <meta property="og:description" content="Grossiste en ligne — import direct de Chine 🇨🇳, France 🇫🇷 et Turquie 🇹🇷 vers le Congo Brazzaville 🇨🇬. Catalogue en ligne, commande facile via WhatsApp.">
+    <meta property="og:description" content="Grossiste en ligne — import direct de Chine 🇨🇳, France 🇫🇷 et Turquie 🇹🇷 vers le Congo Brazzaville 🇨🇬. Catalogue en ligne, com[...]">
     <meta property="og:url" content="https://nrj-marketplace.vercel.app/">
     <meta property="og:image" content="https://nrj-marketplace.vercel.app/nrj-og-banner.png">
     <meta property="og:image:type" content="image/png">
@@ -33,9 +33,14 @@
       }
     </script>
 
+    <!-- Fonts: réduire le nombre de graisses chargées pour alléger le payload -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Performance: preconnect / dns-prefetch pour wsrv.nl (service d'images) -->
+    <link rel="dns-prefetch" href="//wsrv.nl">
+    <link rel="preconnect" href="https://wsrv.nl" crossorigin>
 </head>
 <body>
     <div id="catalogueWrapper">
@@ -59,7 +64,7 @@
                     <input type="text" id="searchInput" placeholder="Rechercher un produit..." autocomplete="off" aria-label="Rechercher un produit">
                     <button class="search-voice" id="searchVoice" aria-label="Recherche vocale" title="Recherche vocale">
                         <svg viewBox="0 0 24 24" width="18" height="18">
-                            <path fill="currentColor" d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
+                            <path fill="currentColor" d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.7[...]"></path>
                         </svg>
                     </button>
                     <div class="search-loader" id="searchLoader" style="display:none;"></div>
@@ -90,28 +95,28 @@
         <div id="categoriesView" style="display: none; padding: 1rem 1rem 2rem;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
                 <h2 style="font-size: 1.5rem; font-weight: 800;">Nos Catégories</h2>
-                <button id="backToHomeBtn" style="background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 1rem; border-radius: 50px; cursor: pointer; font-weight: 600; font-size: 0.9rem;">← Retour</button>
+                <button id="backToHomeBtn" style="background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 1rem; border-radius: 50px; cursor: pointer; font-[...]"></button>
             </div>
             <div class="categories-grid" id="categoriesGrid"></div>
         </div>
 
         <nav class="main-nav">
             <a href="#" class="nav-item active" data-nav="home" aria-label="Accueil">
-                <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"></path></svg>
             </a>
             <a href="#" class="nav-item categories-accent" data-nav="categories" aria-label="Catégories">
-                <svg viewBox="0 0 24 24"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/></svg>
+                <svg viewBox="0 0 24 24"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.5[...]"></path></svg>
             </a>
             <a href="#" class="nav-item cart-accent" data-nav="cart" aria-label="Panier">
-                <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.1[...]"></path></svg>
                 <span class="cart-badge" id="navCartBadge" style="display:none;">0</span>
             </a>
             <a href="#" class="nav-item favorites-accent" data-nav="favorites" aria-label="Favoris">
-                <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-[...]"></path></svg>
                 <span class="favorites-badge" id="navFavBadge" style="display:none;">0</span>
             </a>
             <a href="#" class="nav-item" data-nav="profile" aria-label="Mon NRJ">
-                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg>
             </a>
         </nav>
 
@@ -127,7 +132,7 @@
             <div class="product-actions-overlay">
                 <button class="action-circle" id="modalFavBtn" aria-label="Ajouter aux favoris">
                     <svg viewBox="0 0 24 24" class="fav-icon-svg">
-                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.[...]"></path>
                     </svg>
                 </button>
                 <button class="action-circle" id="modalShareBtn" aria-label="Partager">↗</button>
@@ -160,7 +165,7 @@
         <button class="btn-direct-sticky" id="directOrderStickyBtn">⚡ Commander directement</button>
         <button class="btn-cart-sticky" id="addToCartStickyBtn" aria-label="Ajouter au panier">
             <svg viewBox="0 0 24 24">
-                <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+                <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h[...]"></path>
             </svg>
         </button>
     </div>
@@ -218,7 +223,7 @@
         <div class="search-view-header">
             <button class="back-btn" id="backFromSearchBtn" aria-label="Retour">
                 <svg viewBox="0 0 24 24" width="20" height="20">
-                    <path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                    <path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path>
                 </svg>
                 <span>Retour</span>
             </button>
@@ -271,7 +276,7 @@
                     <div class="search-toolbar-actions">
                         <button class="mobile-filter-toggle" id="mobileFilterToggle">
                             <svg viewBox="0 0 24 24" width="18" height="18">
-                                <path fill="currentColor" d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/>
+                                <path fill="currentColor" d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"></path>
                             </svg>
                             Filtres
                         </button>
@@ -285,12 +290,12 @@
                         <div class="view-toggle">
                             <button class="view-btn active" data-view="grid" aria-label="Vue grille">
                                 <svg viewBox="0 0 24 24" width="18" height="18">
-                                    <path fill="currentColor" d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/>
+                                    <path fill="currentColor" d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4[...]"></path>
                                 </svg>
                             </button>
                             <button class="view-btn" data-view="list" aria-label="Vue liste">
                                 <svg viewBox="0 0 24 24" width="18" height="18">
-                                    <path fill="currentColor" d="M4 14h4v-4H4v4zm0 5h4v-4H4v4zM4 9h4V5H4v4zm5 5h12v-4H9v4zm0 5h12v-4H9v4zM9 5v4h12V5H9z"/>
+                                    <path fill="currentColor" d="M4 14h4v-4H4v4zm0 5h4v-4H4v4zM4 9h4V5H4v4zm5 5h12v-4H9v4zm0 5h12v-4H9v4zM9 5v4h12V5H9z"></path>
                                 </svg>
                             </button>
                         </div>
