@@ -2,19 +2,29 @@ import { state } from './state.js';
 import { trackViewedItem } from './state.js';
 import { WHATSAPP_NUMBER, BASE_URL } from './config.js';
 import { escapeHtml, formatPrice, generateBadgesHTML, showToast, thumbImg } from './utils.js';
-import { trackPopularity } from './api.js';
+import { trackPopularity, fetchProductDetails } from './api.js';
 import { toggleFavorite, addToCart } from './cart.js';
 
 function updateCarouselDots(sc, dc, index) {
     dc.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === index));
 }
 
-export function openProductModal(pid) {
-    const p = state.products.find(pr => pr.id === pid);
+// ✅ ÉTAPE 2 : Utiliser fetchProductDetails pour charger les détails complets
+export async function openProductModal(pid) {
+    // D'abord récupérer depuis le cache rapide
+    let p = state.products.find(pr => pr.id === pid);
     if (!p) return;
+    
     state.currentProductId = pid;
     trackPopularity(pid, 1);
     trackViewedItem(p.name);
+    
+    // Charger les détails complets en arrière-plan si nécessaire
+    const fullProduct = await fetchProductDetails(pid);
+    if (fullProduct) {
+        p = fullProduct; // Utiliser les détails complets si disponibles
+    }
+    
     const tailles = (p.tailles || '').split(',').map(s => s.trim()).filter(Boolean);
     const couleurs = (p.couleurs || '').split(',').map(s => s.trim()).filter(Boolean);
     let sT = tailles.length ? tailles[0] : '', sC = couleurs.length ? couleurs[0] : '';
@@ -77,7 +87,7 @@ export function openProductModal(pid) {
     document.getElementById('directOrderStickyBtn').onclick = () => {
         if (tailles.length && !sT) return showToast('⚠️ Sélectionnez une taille');
         trackPopularity(p.id, 10);
-        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour NRJ Marketplace, je souhaite commander : ${p.name} (ID: ${p.id}), Taille: ${sT || 'N/A'}, Quantité: ${moq}. Lien : ${BASE_URL}?id=${p.id}`)}`, '_blank');
+        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour NRJ Marketplace, je souhaite commander : ${p.name} (ID: ${p.id}), Taille: ${sT || 'N/A'}, Quantité: ${moq}`)}`);
     };
 
     let rec = state.products.filter(pr => pr.category === p.category && pr.id !== p.id);
