@@ -9,9 +9,7 @@ function updateCarouselDots(sc, dc, index) {
     dc.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === index));
 }
 
-// ✅ ÉTAPE 2 : Utiliser fetchProductDetails pour charger les détails complets
 export async function openProductModal(pid) {
-    // D'abord récupérer depuis le cache rapide
     let p = state.products.find(pr => pr.id === pid);
     if (!p) return;
     
@@ -19,10 +17,9 @@ export async function openProductModal(pid) {
     trackPopularity(pid, 1);
     trackViewedItem(p.name);
     
-    // Charger les détails complets en arrière-plan si nécessaire
     const fullProduct = await fetchProductDetails(pid);
     if (fullProduct) {
-        p = fullProduct; // Utiliser les détails complets si disponibles
+        p = fullProduct;
     }
     
     const tailles = (p.tailles || '').split(',').map(s => s.trim()).filter(Boolean);
@@ -37,7 +34,7 @@ export async function openProductModal(pid) {
     document.getElementById('modalProductIdBadge').textContent = `[ID: ${p.id}]`;
     document.getElementById('modalBadges').innerHTML = generateBadgesHTML(p, true);
     const favSvg = document.getElementById('modalFavBtn').querySelector('.fav-icon-svg');
-    if (favSvg) favSvg.style.fill = state.favorites.includes(p.id) ? 'var(--favorites)' : 'currentColor';
+    if (favSvg) favSvg.classList.toggle('faved', state.favorites.includes(p.id));
     document.getElementById('modalFavBtn').onclick = () => toggleFavorite(p.id);
     document.getElementById('modalShareBtn').onclick = () => {
         const url = BASE_URL + '?id=' + p.id;
@@ -45,7 +42,6 @@ export async function openProductModal(pid) {
         navigator.share ? navigator.share({ title: p.name, text: txt, url }).catch(() => {}) : navigator.clipboard.writeText(txt).then(() => showToast('🔗 Copié !'));
     };
 
-    // Modale = haute résolution (le client veut voir le détail)
     const imgs = [p.image, p.image2, p.image3, p.image4, p.image5, p.image6].filter(u => u && u.trim());
     const sc = document.getElementById('modalCarouselScroll'), dc = document.getElementById('modalCarouselDots');
     sc.innerHTML = ''; dc.innerHTML = '';
@@ -54,7 +50,6 @@ export async function openProductModal(pid) {
         dc.innerHTML = '';
     } else {
         imgs.forEach((u, i) => {
-            // ✅ FIX 1 : onload ajoute .loaded → l'image passe de opacity 0 à 1
             sc.innerHTML += `<div class="carousel-item"><img src="${escapeHtml(u)}" alt="${escapeHtml(p.name)}" loading="lazy" onload="this.classList.add('loaded')"></div>`;
             dc.innerHTML += `<span class="carousel-dot ${i === 0 ? 'active' : ''}" data-index="${i}"></span>`;
         });
@@ -87,7 +82,7 @@ export async function openProductModal(pid) {
     document.getElementById('directOrderStickyBtn').onclick = () => {
         if (tailles.length && !sT) return showToast('⚠️ Sélectionnez une taille');
         trackPopularity(p.id, 10);
-        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour NRJ Marketplace, je souhaite commander : ${p.name} (ID: ${p.id}), Taille: ${sT || 'N/A'}, Quantité: ${moq}`)}`);
+        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour NRJ Marketplace, je souhaite commander : ${p.name} (ID: ${p.id}), Taille: ${sT || 'N/A'}, Quantité: ${moq}`)}`, '_blank');
     };
 
     let rec = state.products.filter(pr => pr.category === p.category && pr.id !== p.id);
