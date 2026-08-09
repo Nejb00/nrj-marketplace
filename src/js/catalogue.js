@@ -1,6 +1,7 @@
 import { state } from './state.js';
 import { PRODUCTS_PER_PAGE } from './config.js';
 import { escapeHtml, formatPrice, generateBadgesHTML, isFresh, thumbImg } from './utils.js';
+import { createSkeletonCard } from './lazy-loading.js';
 
 export function getFilteredProducts() {
     let filtered = state.currentFilter === 'favorites'
@@ -18,18 +19,27 @@ export function getFilteredProducts() {
     return filtered;
 }
 
+// ✅ ÉTAPE 5 : Afficher les skeleton loaders plus tôt
 export function renderInitialProducts() {
     state.currentFilteredProducts = getFilteredProducts();
     state.displayedCount = 0;
     const grid = document.getElementById('productsGrid');
     grid.innerHTML = '';
+    
     if (state.currentFilteredProducts.length === 0) {
         grid.innerHTML = '<div style="color:#666;text-align:center;padding:3rem;grid-column:1/-1;">Aucun produit trouvé</div>';
         document.getElementById('loadMoreSentinel').style.display = 'none';
         document.getElementById('loadingMessage').style.display = 'none';
         return;
     }
-    appendProducts(0, PRODUCTS_PER_PAGE);
+    
+    // Montrer les skeletons immédiatement
+    for (let i = 0; i < PRODUCTS_PER_PAGE; i++) {
+        grid.appendChild(createSkeletonCard());
+    }
+    
+    // Puis afficher les vrais produits
+    setTimeout(() => appendProducts(0, PRODUCTS_PER_PAGE), 100);
     updateSentinelVisibility();
 }
 
@@ -46,6 +56,13 @@ function setupScrollObserver() {
 export function appendProducts(start, count) {
     if (!state.scrollObserver) setupScrollObserver();
     const grid = document.getElementById('productsGrid');
+    
+    // Supprimer les skeletons si c'est la première fois
+    if (start === 0) {
+        const skeletons = grid.querySelectorAll('.skeleton-card');
+        skeletons.forEach(s => s.remove());
+    }
+    
     const fragment = document.createDocumentFragment();
     const slice = state.currentFilteredProducts.slice(start, start + count);
 
@@ -131,4 +148,4 @@ export function renderCategories() {
         const lp = [...state.products].reverse().find(p => p.category === cat && p.image);
         return `<div class="category-card" data-category="${escapeHtml(cat)}">${lp ? thumbImg(lp.image, cat, 400, 300, 'category-card-bg') : ''}<div class="category-card-overlay"></div><div class="category-card-content"><div class="category-name">${escapeHtml(cat)}</div><div class="category-count">${state.products.filter(p => p.category === cat).length} article${state.products.filter(p => p.category === cat).length > 1 ? 's' : ''}</div></div></div>`;
     }).join('');
-                                                                                                                                                                                                     }
+}
