@@ -1,0 +1,86 @@
+/* Skeleton Loaders */
+
+.skeleton-card {
+    position: relative;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    overflow: hidden;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-image {
+    width: 100%;
+    padding-bottom: 125%;
+    background: var(--bg-tertiary);
+}
+
+.skeleton-info {
+    padding: 12px;
+}
+
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--bg-tertiary) 0%,
+        var(--bg-secondary) 50%,
+        var(--bg-tertiary) 100%
+    );
+    background-size: 200% 100%;
+    border-radius: 6px;
+    height: 12px;
+    margin-bottom: 8px;
+    animation: shimmer 1.5s infinite;
+}
+
+.skeleton-title {
+    height: 16px;
+    margin-bottom: 8px;
+}
+
+.skeleton-text {
+    height: 12px;
+    margin-bottom: 6px;
+}
+
+.skeleton-short {
+    width: 60%;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+/* Lazy loading image styles */
+.lazy-image {
+    transition: filter 0.3s ease;
+}
+
+.lazy-image.loaded {
+    filter: none;
+}
+
+/* Image placeholder background */
+img[data-src] {
+    background: linear-gradient(
+        90deg,
+        var(--bg-tertiary) 0%,
+        var(--bg-secondary) 50%,
+        var(--bg-tertiary) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
