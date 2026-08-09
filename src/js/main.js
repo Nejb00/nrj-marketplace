@@ -1,7 +1,7 @@
 import '../css/main.css';
 import { state } from './state.js';
 import { supabaseClient } from './config.js';
-import { escapeHtml, removeEmojis, formatPrice } from './utils.js';
+import { escapeHtml, removeEmojis, formatPrice, showToast } from './utils.js';
 import { fetchProducts } from './api.js';
 import { trackViewedItem } from './state.js';
 import { refreshCatalogue, applyFilter, switchView, renderCategories } from './catalogue.js';
@@ -12,6 +12,40 @@ import { initPlaceholderRotation, initVoiceSearch, showSearchDropdown, hideSearc
 import { switchToSearchView, switchFromSearchView } from './search-view.js';
 
 let searchDebounceTimer = null;
+
+// ✅ SYSTÈME DE THÈME - Initialisation et gestion
+function initThemeToggle() {
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
+  if (!themeToggleBtn) return;
+
+  // Récupérer le thème sauvegardé ou utiliser la préférence système
+  const savedTheme = localStorage.getItem('nrj_theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
+
+  applyTheme(initialTheme);
+
+  themeToggleBtn.addEventListener('click', () => {
+    const currentTheme = document.documentElement.classList.contains('light-theme') ? 'light' : 'dark';
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    applyTheme(newTheme);
+    localStorage.setItem('nrj_theme', newTheme);
+    showToast(newTheme === 'dark' ? '🌙 Mode sombre activé' : '☀️ Mode clair activé');
+  });
+}
+
+function applyTheme(theme) {
+  const html = document.documentElement;
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
+
+  if (theme === 'light') {
+    html.classList.add('light-theme');
+    if (themeToggleBtn) themeToggleBtn.textContent = '☀️';
+  } else {
+    html.classList.remove('light-theme');
+    if (themeToggleBtn) themeToggleBtn.textContent = '🌙';
+  }
+}
 
 function initSmartHeader() {
   const wrapper = document.getElementById('headerWrapper');
@@ -117,8 +151,8 @@ window.addEventListener('popstate', (e) => {
   else if (state.modalOpen) closeProductModal();
 });
 
-document.getElementById('modalSourcingBtn').addEventListener('click', () => window.open(`https://wa.me/242066271882?text=${encodeURIComponent("Bonjour NRJ Marketplace, je recherche un produit. Je vous envoie une photo juste après 📸")}`, '_blank'));
-document.getElementById('modalDescSourcingBtn').addEventListener('click', () => window.open(`https://wa.me/242066271882?text=${encodeURIComponent("Bonjour NRJ Marketplace International, je recherche un produit spécifique...")}`, '_blank'));
+document.getElementById('modalSourcingBtn').addEventListener('click', () => window.open(`https://wa.me/242066271882?text=${encodeURIComponent("Bonjour NRJ Marketplace, je recherche un produit. Je peux vous envoyer une photo")}`));
+document.getElementById('modalDescSourcingBtn').addEventListener('click', () => window.open(`https://wa.me/242066271882?text=${encodeURIComponent("Bonjour NRJ Marketplace International, je recherche un produit spécifique...")}`));
 
 document.getElementById('cartCloseBtn')?.addEventListener('click', () => {
   document.getElementById('cartPanel').classList.remove('open');
@@ -438,6 +472,7 @@ async function init() {
   initVoiceSearch();
   initSmartHeader();
   initLogoLongPress();
+  initThemeToggle();
   refreshCatalogue();
   refreshCartDisplay();
   updateNavFavBadge();
