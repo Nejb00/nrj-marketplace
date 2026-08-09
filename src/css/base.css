@@ -20,6 +20,24 @@
     --bottom-bar-height: 70px;
 }
 
+/* ✅ Thème LIGHT */
+:root.light-theme {
+    --bg: #ffffff;
+    --surface: #f5f5f5;
+    --surface-light: #e8e8e8;
+    --primary: #ff8c42;
+    --primary-dark: #ff7b2c;
+    --whatsapp: #25D366;
+    --whatsapp-dark: #1da851;
+    --favorites: #ef4444;
+    --favorites-dark: #dc2626;
+    --categories: #a855f7;
+    --categories-dark: #9333ea;
+    --text: #0f0f0f;
+    --text-secondary: #666666;
+    --border: #cccccc;
+}
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
@@ -31,6 +49,7 @@ body {
     display: flex;
     flex-direction: column;
     padding-bottom: var(--nav-height);
+    transition: background-color var(--transition), color var(--transition);
 }
 
 .header-wrapper {
@@ -65,6 +84,10 @@ header {
     gap: 0.8rem;
 }
 
+:root.light-theme header {
+    background: rgba(245, 245, 245, 0.85);
+}
+
 .logo-wrapper { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; flex-shrink: 0; }
 .logo-icon { font-size: 1.5rem; }
 .logo-brand { display: flex; flex-direction: row; align-items: center; gap: 0.3rem; }
@@ -72,13 +95,48 @@ header {
 .logo-subtext { font-size: 0.65rem; color: var(--text-secondary); font-weight: 600; white-space: nowrap; }
 
 .header-actions { display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0; }
-.logout-btn { background: #451a1a; color: #fca5a5; border: 1px solid #7f1d1d; border-radius: 50px; padding: 0.4rem 0.9rem; cursor: pointer; font-size: 0.75rem; font-weight: 600; display: none; align-items: center; gap: 0.3rem; }
+
+/* ✅ Bouton Theme Toggle */
+.theme-toggle-btn {
+    background: var(--surface-light);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    padding: 0.4rem 0.8rem;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    transition: all var(--transition);
+}
+
+.theme-toggle-btn:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    transform: scale(1.05);
+}
+
+.theme-toggle-btn:active {
+    transform: scale(0.95);
+}
+
+.logout-btn { background: #451a1a; color: #fca5a5; border: 1px solid #7f1d1d; border-radius: 50px; padding: 0.4rem 0.9rem; cursor: pointer; font-size: 0.75rem; font-weight: 600; display: none; align-items: center; }
 .logout-btn.visible { display: flex; }
 
-.toast { position: fixed; bottom: calc(var(--nav-height) + 20px); left: 50%; transform: translateX(-50%) translateY(100px); background: #333; color: #fff; padding: 0.6rem 1.5rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600; z-index: 1000; transition: transform 0.2s ease-out; border: 1px solid var(--border); pointer-events: none; }
+.toast { position: fixed; bottom: calc(var(--nav-height) + 20px); left: 50%; transform: translateX(-50%) translateY(100px); background: #333; color: #fff; padding: 0.6rem 1.5rem; border-radius: 50px; transition: transform 0.3s ease; z-index: 1000; }
 .toast.show { transform: translateX(-50%) translateY(0); }
+
+:root.light-theme .toast {
+    background: #333;
+    color: #fff;
+}
+
 footer { text-align: center; padding: 1.5rem 1rem 5rem; color: var(--text-secondary); font-size: 0.75rem; }
 
-.scroll-to-top { position: fixed; bottom: calc(var(--nav-height) + 20px); right: 20px; width: 50px; height: 50px; background: var(--primary); color: white; border: none; border-radius: 50%; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; transform: translateY(20px); transition: opacity 0.3s ease, transform 0.3s ease; z-index: 140; box-shadow: 0 4px 16px rgba(255,140,66,0.4); pointer-events: none; }
+.scroll-to-top { position: fixed; bottom: calc(var(--nav-height) + 20px); right: 20px; width: 50px; height: 50px; background: var(--primary); color: white; border: none; border-radius: 50%; font-size: 1.2rem; cursor: pointer; opacity: 0; transform: translateY(20px); transition: all 0.3s ease; z-index: 99; pointer-events: none; }
 .scroll-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
 .scroll-to-top:active { transform: scale(0.9); }
