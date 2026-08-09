@@ -107,7 +107,6 @@ export function refreshCartDisplay() {
     ctr.innerHTML = state.cart.map((it, idx) => {
         const p = state.products.find(pr => pr.id === it.productId);
         if (!p) return '';
-        // ✅ Miniature légère
         const img = p.image ? thumbImg(p.image, p.name, 100, 100) : '📦';
         let vars = [];
         if (it.couleur) vars.push(`Couleur: ${it.couleur}`);
@@ -182,11 +181,11 @@ export function toggleFavorite(pid) {
     updateNavFavBadge();
     document.querySelectorAll(`.fav-icon[data-id="${pid}"]`).forEach(icon => {
         const svg = icon.querySelector('.fav-icon-svg');
-        if (svg) svg.style.fill = state.favorites.includes(pid) ? 'var(--favorites)' : 'currentColor';
+        if (svg) svg.classList.toggle('faved', state.favorites.includes(pid));
     });
     if (document.getElementById('modalFavBtn') && state.currentProductId === pid) {
         const svg = document.getElementById('modalFavBtn').querySelector('.fav-icon-svg');
-        if (svg) svg.style.fill = state.favorites.includes(pid) ? 'var(--favorites)' : 'currentColor';
+        if (svg) svg.classList.toggle('faved', state.favorites.includes(pid));
     }
     if (state.currentFilter === 'favorites') refreshCatalogue();
     if (added) pulseFavoriteIcons(pid);
