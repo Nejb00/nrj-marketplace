@@ -184,7 +184,7 @@ export function highlightMatch(text, query) {
     return escapedText.replace(regex, '<span class="highlight">$1</span>');
 }
 
-// ─── Optimisation images : vignettes légères pour économiser les forfaits ───
+// ✅ ÉTAPE 3 : Optimisation images avec responsive images
 export function thumb(url, w = 300, h = 400) {
   if (!url) return '';
   if (!/^https?:\/\//i.test(url)) return url;
@@ -196,5 +196,5 @@ export function thumbImg(url, alt = '', w = 300, h = 400, cls = '') {
   if (!url) return '';
   const onerr = `this.onerror=function(){this.style.display='none'};if(this.dataset.full){this.src=this.dataset.full;this.removeAttribute('data-full');}`;
   const clsAttr = cls ? ` class="${escapeHtml(cls)}"` : '';
-  return `<img${clsAttr} src="${escapeHtml(thumb(url, w, h))}" data-full="${escapeHtml(url)}" alt="${escapeHtml(alt)}" loading="lazy" onload="this.classList.add('loaded')" onerror="${onerr}">`;
-                }
+  return `<img${clsAttr} src="${escapeHtml(thumb(url, w, h))}" data-full="${escapeHtml(url)}" alt="${escapeHtml(alt)}" loading="lazy" onload="this.classList.add('loaded')" onerror="${onerr}" width="${w}" height="${h}">`;
+}
