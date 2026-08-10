@@ -59,12 +59,13 @@ export function generateBadgesHTML(p, isModal = false) {
     return (isNew || isBest) ? html : '';
 }
 
+// ✅ Toast discret : 1.2 s au lieu de 2 s
 export function showToast(m) {
     const t = document.getElementById('toast');
     if (!t) return;
     t.textContent = m;
     t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2000);
+    setTimeout(() => t.classList.remove('show'), 1200);
 }
 
 export function getCategoryIcon(category) {
@@ -200,7 +201,6 @@ export function thumbImg(url, alt = '', w = 300, h = 400, cls = '') {
 }
 
 // ✅ WATCHDOG : une image qui rame plus de 6 s bascule sur l'URL d'origine
-// (gère les requêtes qui pendent — cas que onerror ne voit jamais)
 let _watchdogStarted = false;
 function startImgWatchdog() {
   if (_watchdogStarted) return;
@@ -209,9 +209,10 @@ function startImgWatchdog() {
     const now = Date.now();
     document.querySelectorAll('img[data-full][data-ts]:not(.loaded)').forEach((img) => {
       if (now - Number(img.dataset.ts) > 6000) {
+        const full = img.dataset.full;
         img.removeAttribute('data-ts');
         img.removeAttribute('data-full');
-        img.src = img.dataset.full || img.src;
+        img.src = full;
       }
     });
   }, 2000);
