@@ -2,8 +2,9 @@ import { supabaseClient } from './config.js';
 import { state } from './state.js';
 import { showToast } from './utils.js';
 
-// ✅ ÉTAPE 1 & 2 : Caching local + Fetch optimisé
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+// ✅ Cache mémoire (5 min) + cache persistant (survit à la mort de l'app)
+const PRODUCTS_CACHE_KEY = 'nrj_products_cache';
+const CACHE_DURATION = 5 * 60 * 1000;
 let productCache = { data: null, timestamp: 0 };
 
 export async function trackPopularity(productId, points) {
@@ -11,31 +12,45 @@ export async function trackPopularity(productId, points) {
     if (error) console.warn('Erreur tracking popularité:', error);
 }
 
-// ✅ ÉTAPE 1 : Optimisation requête - SELECT seulement colonnes essentielles + LIMIT
 export async function fetchProducts(forceRefresh = false) {
     const now = Date.now();
-    
-    // Retourner le cache s'il est frais
+
+    // Retourner le cache mémoire s'il est frais
     if (!forceRefresh && productCache.data && (now - productCache.timestamp) < CACHE_DURATION) {
         state.products = productCache.data;
         return;
     }
-    
+
     try {
-        // Récupérez SEULEMENT les colonnes essentielles pour la liste
         const { data, error } = await supabaseClient
             .from('products')
             .select('id, name, price, category, image, popularity_score, created_at, moq, tailles, couleurs')
             .order('created_at', { ascending: false })
-            .limit(500); // Limite raisonnable
-        
+            .limit(500);
+
         if (error) throw error;
         state.products = data || [];
-        
-        // Mise à jour du cache
+
+        // Mise à jour du cache mémoire
         productCache = { data: state.products, timestamp: now };
+
+        // ✅ Gravure dans localStorage : le PWA redémarre même sans réseau
+        try {
+            localStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify({ data: state.products, timestamp: now }));
+        } catch {}
     } catch (err) {
         console.error('Erreur fetch products:', err);
+
+        // ✅ Réseau mort → on affiche le catalogue mémorisé au lieu de l'écran vide
+        let saved = null;
+        try { saved = JSON.parse(localStorage.getItem(PRODUCTS_CACHE_KEY) || 'null'); } catch {}
+        if (saved && Array.isArray(saved.data) && saved.data.length) {
+            state.products = saved.data;
+            productCache = { data: saved.data, timestamp: now };
+            showToast('📴 Hors ligne — catalogue mémorisé');
+            return;
+        }
+
         state.products = [];
         showToast('❌ Erreur de connexion.');
         const grid = document.getElementById('productsGrid');
@@ -45,41 +60,18 @@ export async function fetchProducts(forceRefresh = false) {
     }
 }
 
-// ✅ ÉTAPE 2 : Nouvelle fonction pour les détails complets (modal)
 export async function fetchProductDetails(productId) {
     try {
         const { data, error } = await supabaseClient
             .from('products')
-            .select('*') // Tous les champs ici, mais SEULEMENT quand on ouvre la modal
+            .select('*')
             .eq('id', productId)
             .single();
-        
+
         if (error) throw error;
         return data;
     } catch (err) {
         console.error('Erreur fetch product details:', err);
         return null;
     }
-}
-
-export async function insertProduct(p) {
-    const { data, error } = await supabaseClient.from('products').insert([p]).select();
-    if (error) throw error;
-    // Invalidate cache après ajout
-    productCache = { data: null, timestamp: 0 };
-    return data;
-}
-
-export async function deleteProductFromSupabase(id) {
-    const { error } = await supabaseClient.from('products').delete().eq('id', id);
-    if (error) throw error;
-    // Invalidate cache après suppression
-    productCache = { data: null, timestamp: 0 };
-}
-
-export async function updateProductInSupabase(id, updates) {
-    const { error } = await supabaseClient.from('products').update(updates).eq('id', id);
-    if (error) throw error;
-    // Invalidate cache après mise à jour
-    productCache = { data: null, timestamp: 0 };
-}
+                  }
