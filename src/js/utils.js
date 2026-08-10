@@ -22,7 +22,7 @@ export function isNewProduct(p) {
     return (Date.now() - new Date(p.created_at).getTime()) / (1000 * 60 * 60 * 24) <= NEW_PRODUCT_DAYS;
 }
 
-// ✅ PACK POLISH (4) : badge NOUVEAU rare — moins de 7 jours ET parmi les 30 plus récents.
+// ✅ Badge NOUVEAU rare : moins de 7 jours ET parmi les 30 plus récents
 const MAX_FRESH_BADGES = 30;
 let _freshCache = null;
 let _freshRef = null;
@@ -184,7 +184,7 @@ export function highlightMatch(text, query) {
     return escapedText.replace(regex, '<span class="highlight">$1</span>');
 }
 
-// ✅ ÉTAPE 3 : Optimisation images avec responsive images
+// ─── Optimisation images : vignettes légères pour économiser les forfaits ───
 export function thumb(url, w = 300, h = 400) {
   if (!url) return '';
   if (!/^https?:\/\//i.test(url)) return url;
@@ -194,7 +194,26 @@ export function thumb(url, w = 300, h = 400) {
 
 export function thumbImg(url, alt = '', w = 300, h = 400, cls = '') {
   if (!url) return '';
-  const onerr = `this.onerror=function(){this.style.display='none'};if(this.dataset.full){this.src=this.dataset.full;this.removeAttribute('data-full');}`;
+  const onerr = `this.onerror=function(){this.style.display='none'};if(this.dataset.full){this.src=this.dataset.full;this.removeAttribute('data-full');this.removeAttribute('data-ts');}`;
   const clsAttr = cls ? ` class="${escapeHtml(cls)}"` : '';
-  return `<img${clsAttr} src="${escapeHtml(thumb(url, w, h))}" data-full="${escapeHtml(url)}" alt="${escapeHtml(alt)}" loading="lazy" onload="this.classList.add('loaded')" onerror="${onerr}" width="${w}" height="${h}">`;
+  return `<img${clsAttr} src="${escapeHtml(thumb(url, w, h))}" data-full="${escapeHtml(url)}" data-ts="${Date.now()}" alt="${escapeHtml(alt)}" loading="lazy" referrerpolicy="no-referrer" decoding="async" onload="this.classList.add('loaded')" onerror="${onerr}" width="${w}" height="${h}">`;
 }
+
+// ✅ WATCHDOG : une image qui rame plus de 6 s bascule sur l'URL d'origine
+// (gère les requêtes qui pendent — cas que onerror ne voit jamais)
+let _watchdogStarted = false;
+function startImgWatchdog() {
+  if (_watchdogStarted) return;
+  _watchdogStarted = true;
+  setInterval(() => {
+    const now = Date.now();
+    document.querySelectorAll('img[data-full][data-ts]:not(.loaded)').forEach((img) => {
+      if (now - Number(img.dataset.ts) > 6000) {
+        img.removeAttribute('data-ts');
+        img.removeAttribute('data-full');
+        img.src = img.dataset.full || img.src;
+      }
+    });
+  }, 2000);
+}
+startImgWatchdog();
