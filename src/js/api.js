@@ -76,7 +76,7 @@ export async function fetchProductDetails(productId) {
     }
 }
 
-// ✅ CRUD admin (restauré — importé par admin.js)
+// ✅ CRUD admin — importé par admin.js et product-edit.js
 export async function insertProduct(product) {
     const { data, error } = await supabaseClient
         .from('products')
@@ -90,6 +90,14 @@ export async function deleteProductFromSupabase(id) {
     const { error } = await supabaseClient
         .from('products')
         .delete()
+        .eq('id', id);
+    if (error) throw error;
+}
+
+export async function updateProductInSupabase(id, updates) {
+    const { error } = await supabaseClient
+        .from('products')
+        .update(updates)
         .eq('id', id);
     if (error) throw error;
 }
