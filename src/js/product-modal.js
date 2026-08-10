@@ -5,6 +5,12 @@ import { escapeHtml, formatPrice, generateBadgesHTML, showToast, thumbImg } from
 import { trackPopularity, fetchProductDetails } from './api.js';
 import { toggleFavorite, addToCart } from './cart.js';
 
+// ✅ Sourcing AVANT les recommandations : la conversion WhatsApp ne doit pas être enterrée
+const _modal = document.getElementById('productModal');
+const _rec = _modal ? _modal.querySelector('.recommendations') : null;
+const _src = _modal ? _modal.querySelector('.sourcing-section') : null;
+if (_modal && _rec && _src) _modal.insertBefore(_src, _rec);
+
 function updateCarouselDots(sc, dc, index) {
     dc.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === index));
 }
@@ -85,7 +91,7 @@ export async function openProductModal(pid) {
         window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour NRJ Marketplace, je souhaite commander : ${p.name} (ID: ${p.id}), Taille: ${sT || 'N/A'}, Quantité: ${moq}`)}`, '_blank');
     };
 
-    // ✅ "Vous aimerez aussi" : TOUTE la catégorie (mini-catalogue), complétée à 6 si catégorie pauvre
+    // "Vous aimerez aussi" : toute la catégorie, complétée à 6 si catégorie pauvre
     let rec = state.products.filter(pr => pr.category === p.category && pr.id !== p.id);
     if (rec.length < 6) rec = [...rec, ...state.products.filter(pr => pr.id !== p.id && !rec.includes(pr))].slice(0, 6);
     document.getElementById('modalRecCarousel').innerHTML = rec.map(r => `
