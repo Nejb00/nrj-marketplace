@@ -13,7 +13,7 @@ import { switchToSearchView, switchFromSearchView } from './search-view.js';
 
 let searchDebounceTimer = null;
 
-// ✅ SYSTÈME DE THÈME - Initialisation et gestion
+// ✅ SYSTÈME DE THÈME - Initialisation et gestion (sans toast : il gâchait la nav)
 function initThemeToggle() {
   const themeToggleBtn = document.getElementById('themeToggleBtn');
   if (!themeToggleBtn) return;
@@ -30,7 +30,6 @@ function initThemeToggle() {
     const newTheme = currentTheme === 'light' ? 'dark' : 'light';
     applyTheme(newTheme);
     localStorage.setItem('nrj_theme', newTheme);
-    showToast(newTheme === 'dark' ? '🌙 Mode sombre activé' : '☀️ Mode clair activé');
   });
 }
 
