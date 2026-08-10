@@ -85,15 +85,18 @@ export async function openProductModal(pid) {
         window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour NRJ Marketplace, je souhaite commander : ${p.name} (ID: ${p.id}), Taille: ${sT || 'N/A'}, Quantité: ${moq}`)}`, '_blank');
     };
 
+    // ✅ "Vous aimerez aussi" : TOUTE la catégorie (mini-catalogue), complétée à 6 si catégorie pauvre
     let rec = state.products.filter(pr => pr.category === p.category && pr.id !== p.id);
     if (rec.length < 6) rec = [...rec, ...state.products.filter(pr => pr.id !== p.id && !rec.includes(pr))].slice(0, 6);
-    // ✅ Nom + prix posés dans le dégradé en bas de la vignette
     document.getElementById('modalRecCarousel').innerHTML = rec.map(r => `
         <div class="rec-card" data-product-id="${r.id}">
-            <div class="rec-card-img">${r.image ? thumbImg(r.image, r.name, 200, 200) : '📦'}</div>
+            <div class="rec-card-img">${r.image ? thumbImg(r.image, r.name, 300, 400) : '📦'}</div>
             <div class="rec-card-overlay">
                 <div class="rec-card-name">${escapeHtml(r.name)}</div>
-                <div class="rec-card-price">${formatPrice(r.price)}</div>
+                <div class="rec-card-bottom">
+                    <div class="rec-card-price">${formatPrice(r.price)}</div>
+                    <div class="rec-card-moq">Min. ${Number(r.moq) || 1} pcs</div>
+                </div>
             </div>
         </div>
     `).join('');
