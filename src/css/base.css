@@ -52,15 +52,26 @@ body {
     transition: background-color var(--transition), color var(--transition);
 }
 
+/* ✅ LIQUID GLASS sur TOUT le wrapper : logo + recherche sur la même feuille, 72% */
 .header-wrapper {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     z-index: 100;
-    background: transparent;
+    background: rgba(16, 16, 20, 0.72);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
     transition: transform 0.3s ease;
     will-change: transform;
+}
+
+:root.light-theme .header-wrapper {
+    background: rgba(255, 255, 255, 0.82);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
 .header-wrapper.hidden {
@@ -72,24 +83,16 @@ body {
     flex-shrink: 0;
 }
 
-/* ✅ HEADER LIQUID GLASS : une seule feuille de verre */
+/* Le header interne devient transparent : c'est le wrapper qui porte le verre */
 header {
-    background: rgba(16, 16, 20, 0.62);
-    backdrop-filter: blur(24px) saturate(160%);
-    -webkit-backdrop-filter: blur(24px) saturate(160%);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    background: transparent;
+    border-bottom: none;
+    box-shadow: none;
     padding: 0.55rem 1rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.8rem;
-}
-
-:root.light-theme header {
-    background: rgba(255, 255, 255, 0.72);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
 .logo-wrapper { display: flex; align-items: center; gap: 0.55rem; cursor: pointer; flex-shrink: 0; }
