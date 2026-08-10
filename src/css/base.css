@@ -52,43 +52,45 @@ body {
     transition: background-color var(--transition), color var(--transition);
 }
 
-/* ✅ LIQUID GLASS sur TOUT le wrapper : logo + recherche sur la même feuille, 72% */
+/* ✅ HEADER EN PILLULE : flotte en haut, même langage que la nav */
 .header-wrapper {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
+    top: 8px;
+    left: 10px;
+    right: 10px;
     z-index: 100;
     background: rgba(16, 16, 20, 0.72);
     backdrop-filter: blur(24px) saturate(160%);
     -webkit-backdrop-filter: blur(24px) saturate(160%);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 22px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.07);
     transition: transform 0.3s ease;
     will-change: transform;
 }
 
 :root.light-theme .header-wrapper {
     background: rgba(255, 255, 255, 0.82);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .header-wrapper.hidden {
-    transform: translateY(-100%);
+    transform: translateY(-120%);
 }
 
+/* +8px pour compenser le décollement de la pillule */
 #headerSpacer {
     width: 100%;
     flex-shrink: 0;
+    margin-top: 8px;
 }
 
-/* Le header interne devient transparent : c'est le wrapper qui porte le verre */
 header {
     background: transparent;
     border-bottom: none;
     box-shadow: none;
-    padding: 0.55rem 1rem;
+    padding: 0.55rem 0.9rem 0.15rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
