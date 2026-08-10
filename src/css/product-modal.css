@@ -13,14 +13,12 @@
 
 .modal-placeholder { font-size: 5rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
 
-/* ✅ PACK ÉLÉGANCE : retour = chevron fin, cercle discret */
 .back-arrow-btn { position: absolute; top: 16px; left: 16px; z-index: 20; width: 38px; height: 38px; border-radius: 50%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.16); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; }
 .back-arrow-btn:hover { background: rgba(0,0,0,0.75); }
 
-/* ✅ Badge ID discret */
-.product-id-badge { position: absolute; top: 20px; left: 62px; z-index: 10; background: rgba(0,0,0,0.45); border-radius: 20px; padding: 0.15rem 0.6rem; font-size: 0.62rem; color: rgba(255,255,255,0.85); border: 1px solid rgba(255,255,255,0.14); }
+/* ✅ Échange des places : [ID] en haut à droite (libéré par le cœur), badge Nouveau à gauche */
+.product-id-badge { position: absolute; top: 20px; right: 12px; z-index: 10; background: rgba(0,0,0,0.45); border-radius: 20px; padding: 0.15rem 0.6rem; font-size: 0.62rem; color: rgba(255,255,255,0.85); border: 1px solid rgba(255,255,255,0.14); }
 
-/* ✅ Cœur + partage : colonne en bas à droite, le haut de la photo respire */
 .product-actions-overlay { position: absolute; bottom: 44px; right: 12px; z-index: 10; display: flex; flex-direction: column; gap: 0.5rem; }
 .action-circle { width: 38px; height: 38px; border-radius: 50%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.16); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; }
 .action-circle:hover { background: rgba(0,0,0,0.75); }
@@ -46,14 +44,12 @@
 .btn-cart-sticky { flex: 0 0 60px; background: linear-gradient(135deg, #ff8c42, #f97316); box-shadow: 0 8px 24px rgba(255,140,66,0.3); border: none; border-radius: 50px; padding: 0.9rem; font-weight: 700; font-size: 1.5rem; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); min-width: 60px; }
 .btn-cart-sticky:hover { filter: brightness(1.1); }
 
-/* ✅ Sourcing avant les recos (ordre géré par le JS) */
 .sourcing-section { padding: 2rem 1.5rem 3rem; background: var(--surface); border-top: 1px solid var(--border); text-align: center; }
 .sourcing-section h3 { font-size: 1.1rem; margin-bottom: 0.8rem; color: var(--text); }
 .sourcing-section p { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.2rem; line-height: 1.5; }
 .sourcing-btn { background: var(--primary); color: white; border: none; padding: 0.9rem 2rem; border-radius: 50px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 0.8rem; margin-right: 0.5rem; }
 .whatsapp-btn { background: var(--whatsapp); color: white; border: none; padding: 0.9rem 2rem; border-radius: 50px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; }
 
-/* ✅ Recos en grille verticale, en dernier */
 .recommendations { padding: 1rem 0; background: var(--bg); border-top: 1px solid var(--border); margin-bottom: var(--bottom-bar-height); }
 .recommendations h3 { font-size: 1.1rem; margin-left: 1rem; margin-bottom: 0.8rem; color: var(--text); }
 .rec-carousel { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; padding: 0 1rem; }
@@ -66,5 +62,5 @@
 .rec-card-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.35) 50%, transparent 100%); display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; gap: 0.15rem; padding: 0.5rem; }
 .rec-card-name { font-size: 0.72rem; font-weight: 600; color: #fff; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .rec-card-bottom { display: flex; justify-content: space-between; align-items: center; gap: 0.3rem; }
-.rec-card-price { font-size: 0.8rem; font-weight: 700; color: var(--primary); }
-.rec-card-moq { flex-shrink: 0; font-size: 0.58rem; font-weight: 600; color: rgba(255,255,255,0.9); background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.18); border-radius: 50px; padding: 0.1rem 0.45rem; }
+.rec-card-price { font-size: 0.8rem; font-weight: 700; color: var(--primary); white-space: nowrap; }
+.rec-card-moq { flex-shrink: 0; font-size: 0.55rem; font-weight: 600; color: rgba(255,255,255,0.9); background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.18); border-radius: 50px; padding: 0.1rem 0.4rem; white-space: nowrap; }
