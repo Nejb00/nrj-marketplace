@@ -40,10 +40,17 @@
 .btn-cart-sticky { flex: 0 0 60px; background: linear-gradient(135deg, #ff8c42, #f97316); box-shadow: 0 8px 24px rgba(255,140,66,0.3); border: none; border-radius: 50px; padding: 0.9rem; font-weight: 700; font-size: 1.5rem; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); min-width: 60px; }
 .btn-cart-sticky:hover { filter: brightness(1.1); }
 
-.recommendations { padding: 1rem 0; background: var(--bg); border-top: 1px solid var(--border); }
+/* ✅ Sourcing : plus en dernier, donc plus de marge barre sticky ici */
+.sourcing-section { padding: 2rem 1.5rem 3rem; background: var(--surface); border-top: 1px solid var(--border); text-align: center; }
+.sourcing-section h3 { font-size: 1.1rem; margin-bottom: 0.8rem; color: var(--text); }
+.sourcing-section p { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.2rem; line-height: 1.5; }
+.sourcing-btn { background: var(--primary); color: white; border: none; padding: 0.9rem 2rem; border-radius: 50px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 0.8rem; margin-right: 0.5rem; }
+.whatsapp-btn { background: var(--whatsapp); color: white; border: none; padding: 0.9rem 2rem; border-radius: 50px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; }
+
+/* ✅ Recommandations : désormais en DERNIER → elles portent la marge anti-barre sticky */
+.recommendations { padding: 1rem 0; background: var(--bg); border-top: 1px solid var(--border); margin-bottom: var(--bottom-bar-height); }
 .recommendations h3 { font-size: 1.1rem; margin-left: 1rem; margin-bottom: 0.8rem; color: var(--text); }
 
-/* ✅ Grille verticale 2 colonnes : toutes les recos visibles en scrollant */
 .rec-carousel { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; padding: 0 1rem; }
 @media (min-width: 768px) { .rec-carousel { grid-template-columns: repeat(3, 1fr); } }
 .rec-card { background: linear-gradient(90deg, #1a1a1a 25%, #252525 50%, #1a1a1a 75%); background-size: 200% 100%; animation: skeleton-loading 1.5s infinite; border-radius: var(--radius); overflow: hidden; cursor: pointer; transition: var(--transition); aspect-ratio: 3 / 4; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
@@ -56,9 +63,3 @@
 .rec-card-bottom { display: flex; justify-content: space-between; align-items: center; gap: 0.3rem; }
 .rec-card-price { font-size: 0.8rem; font-weight: 700; color: var(--primary); }
 .rec-card-moq { flex-shrink: 0; font-size: 0.58rem; font-weight: 600; color: rgba(255,255,255,0.9); background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.18); border-radius: 50px; padding: 0.1rem 0.45rem; }
-
-.sourcing-section { padding: 2rem 1.5rem 3rem; background: var(--surface); border-top: 1px solid var(--border); text-align: center; margin-bottom: var(--bottom-bar-height); }
-.sourcing-section h3 { font-size: 1.1rem; margin-bottom: 0.8rem; color: var(--text); }
-.sourcing-section p { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.2rem; line-height: 1.5; }
-.sourcing-btn { background: var(--primary); color: white; border: none; padding: 0.9rem 2rem; border-radius: 50px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 0.8rem; margin-right: 0.5rem; }
-.whatsapp-btn { background: var(--whatsapp); color: white; border: none; padding: 0.9rem 2rem; border-radius: 50px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; }
