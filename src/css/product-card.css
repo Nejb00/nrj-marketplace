@@ -1,3 +1,4 @@
+.products-section { padding: 0.5rem 0.8rem 1rem; max-width: 1200px; margin: 0 auto; width: 100%; }
 .products-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
 @media (min-width: 768px) { .products-grid { grid-template-columns: repeat(4, 1fr); } }
 
@@ -36,7 +37,6 @@
 .product-card-details { display: none; }
 .product-card-detail-item { display: inline-flex; align-items: center; gap: 0.2rem; }
 
-/* ── Skeletons (chargement) ─────────────────────────────────────────────── */
 .skeleton-card { border-radius: var(--radius); overflow: hidden; aspect-ratio: 3 / 4; background: var(--surface-light); border: 1px solid var(--border); }
 .skeleton-image { height: 70%; background: linear-gradient(90deg, #1a1a1a 25%, #252525 50%, #1a1a1a 75%); background-size: 200% 100%; animation: skeleton-loading 1.5s infinite; }
 .skeleton-text { padding: 0.7rem; }
@@ -44,17 +44,18 @@
 .skeleton-line--title { width: 85%; }
 .skeleton-line--price { width: 45%; }
 
+/* ✅ PACK ÉLÉGANCE : badges glass discrets, fini les blocs fluo */
 .badge-container { position: absolute; top: 10px; left: 10px; z-index: 4; display: flex; flex-direction: column; gap: 0.3rem; }
-.badge { padding: 0.15rem 0.4rem; border-radius: 50px; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.2px; text-transform: uppercase; color: white; display: inline-flex; align-items: center; gap: 0.2rem; width: fit-content; line-height: 1; }
-.badge-new { background: rgba(37, 211, 102, 0.95); box-shadow: 0 2px 8px rgba(37, 211, 102, 0.4); }
-.badge-best-seller { background: rgba(239, 68, 68, 0.95); box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4); }
-.modal-badges { position: absolute; top: 16px; left: 120px; z-index: 10; display: flex; gap: 0.4rem; }
-.modal-badges .badge { font-size: 0.7rem; padding: 0.3rem 0.7rem; }
+.badge { padding: 0.22rem 0.55rem; border-radius: 50px; font-size: 0.55rem; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #fff; display: inline-flex; align-items: center; gap: 0.25rem; width: fit-content; line-height: 1; background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.22); }
+.badge-new { color: #8af0bb; }
+.badge-best-seller { color: #ffc07a; }
+.modal-badges { position: absolute; top: 20px; left: 120px; z-index: 10; display: flex; gap: 0.4rem; }
+.modal-badges .badge { font-size: 0.62rem; padding: 0.28rem 0.6rem; }
 
-.fav-icon { position: absolute; top: 8px; right: 8px; background: rgba(26,26,26,0.7); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 5; transition: transform 0.2s; border: none; color: #fff; }
-.fav-icon:hover { transform: scale(1.15); }
-
-.fav-icon-svg { width: 18px; height: 18px; fill: transparent; stroke: #fff; stroke-width: 2; transition: fill 0.2s ease, stroke 0.2s ease; }
+/* ✅ Cœur plus petit, plus doux, posé un cran plus bas */
+.fav-icon { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.14); border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 5; transition: transform 0.2s; color: #fff; }
+.fav-icon:hover { transform: scale(1.12); }
+.fav-icon-svg { width: 16px; height: 16px; fill: transparent; stroke: #fff; stroke-width: 2; transition: fill 0.2s ease, stroke 0.2s ease; }
 .fav-icon-svg.faved { fill: var(--favorites); stroke: var(--favorites); }
 .fav-icon:hover .fav-icon-svg { transform: scale(1.1); }
 
@@ -68,17 +69,17 @@
 
 .product-edit-btn {
  position: absolute;
- top: 48px;
- right: 8px;
+ top: 46px;
+ right: 10px;
  background: rgba(255, 140, 66, 0.9);
  border-radius: 50%;
- width: 32px;
- height: 32px;
+ width: 30px;
+ height: 30px;
  display: flex;
  align-items: center;
  justify-content: center;
  cursor: pointer;
- font-size: 0.9rem;
+ font-size: 0.8rem;
  z-index: 5;
  transition: transform 0.2s, background 0.2s;
  border: none;
@@ -88,4 +89,8 @@
 .product-edit-btn:hover {
  transform: scale(1.15);
  background: var(--primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+ .fav-icon-svg.fav-pop { animation: none !important; }
 }
