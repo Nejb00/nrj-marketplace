@@ -31,17 +31,17 @@ export async function fetchProducts(forceRefresh = false) {
         if (error) throw error;
         state.products = data || [];
 
-        // Mise à jour du cache mémoire
+        // Cache mémoire
         productCache = { data: state.products, timestamp: now };
 
-        // ✅ Gravure dans localStorage : le PWA redémarre même sans réseau
+        // ✅ Gravure localStorage : le PWA redémarre même sans réseau
         try {
             localStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify({ data: state.products, timestamp: now }));
         } catch {}
     } catch (err) {
         console.error('Erreur fetch products:', err);
 
-        // ✅ Réseau mort → on affiche le catalogue mémorisé au lieu de l'écran vide
+        // ✅ Réseau mort → catalogue mémorisé au lieu de l'écran vide
         let saved = null;
         try { saved = JSON.parse(localStorage.getItem(PRODUCTS_CACHE_KEY) || 'null'); } catch {}
         if (saved && Array.isArray(saved.data) && saved.data.length) {
@@ -74,4 +74,22 @@ export async function fetchProductDetails(productId) {
         console.error('Erreur fetch product details:', err);
         return null;
     }
-                  }
+}
+
+// ✅ CRUD admin (restauré — importé par admin.js)
+export async function insertProduct(product) {
+    const { data, error } = await supabaseClient
+        .from('products')
+        .insert([product])
+        .select();
+    if (error) throw error;
+    return data;
+}
+
+export async function deleteProductFromSupabase(id) {
+    const { error } = await supabaseClient
+        .from('products')
+        .delete()
+        .eq('id', id);
+    if (error) throw error;
+}
