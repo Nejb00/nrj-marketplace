@@ -327,3 +327,4 @@ body { padding-bottom: calc(var(--nav-height) + 18px); }
   .account-stat-value { font-size: 1rem; }
   .account-greet-hello { font-size: 1rem; }
 }
+.main-nav .nav-item { text-decoration: none; }
