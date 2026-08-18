@@ -1,8 +1,20 @@
-const CACHE = 'nrj-shell-v2';
-const SHELL = ['/', '/index.html', '/admin.html', '/manifest.webmanifest', '/icon.svg'];
+const CACHE = 'nrj-shell-v3';
+const SHELL = ['/', '/index.html', '/admin.html', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png'];
 
+// À l'installation : pré-cache le shell + tous les assets hashés listés dans
+// precache-manifest.json → le site est 100% disponible hors ligne dès la 1re visite.
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  e.waitUntil(
+    caches.open(CACHE).then(async (c) => {
+      c.addAll(SHELL).catch(() => {});
+      try {
+        const res = await fetch('/precache-manifest.json', { cache: 'no-store' });
+        const assets = await res.json();
+        await Promise.all(assets.map((url) => fetch(url).then((r) => r.ok && c.put(url, r.clone())).catch(() => {})));
+      } catch {}
+      return self.skipWaiting();
+    })
+  );
 });
 
 self.addEventListener('activate', (e) => {
@@ -69,8 +81,6 @@ self.addEventListener('fetch', (e) => {
   }
 
   // Données produits Supabase (REST) : stale-while-revalidate.
-  // Les produits s'affichent instantanément depuis le cache, puis se rafraîchissent
-  // en arrière-plan. Le cache mémoire JS (5 min) reste la 1re ligne de défense.
   if (url.hostname.endsWith('.supabase.co')) {
     e.respondWith(
       caches.open(CACHE).then((c) =>
@@ -87,5 +97,6 @@ self.addEventListener('fetch', (e) => {
     );
     return;
   }
+
   // Tout le reste : réseau uniquement → données toujours fraîches
 });

@@ -1,14 +1,32 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 
+// Plugin minimal : après le build, génère precache-manifest.json (liste des
+// assets hashés à pré-cacher) pour que le Service Worker puisse les mettre en
+// cache au moment de l'installation → vrai hors ligne dès la 1re visite.
+function precacheManifestPlugin() {
+  return {
+    name: 'precache-manifest',
+    apply: 'build',
+    generateBundle(_, bundle) {
+      const assets = Object.keys(bundle)
+        .filter(k => k.endsWith('.js') || k.endsWith('.css'))
+        .map(k => '/' + k);
+      const json = JSON.stringify(assets);
+      this.emitFile({
+        type: 'asset',
+        fileName: 'precache-manifest.json',
+        source: json
+      });
+    }
+  };
+}
+
 export default defineConfig({
   // Vercel sert à la racine '/' — plus de sous-chemin GitHub Pages.
   base: '/',
   build: {
     // Code splitting : sépare les gros vendors dans des chunks dédiés.
-    // - @supabase/supabase-js mis en cache séparément par le SW + navigateur,
-    //   partagé entre index et admin sans re-téléchargement.
-    // - Code admin isolé : les visiteurs du catalogue ne le téléchargent jamais.
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
@@ -20,5 +38,6 @@ export default defineConfig({
         }
       }
     }
-  }
+  },
+  plugins: [precacheManifestPlugin()]
 });
