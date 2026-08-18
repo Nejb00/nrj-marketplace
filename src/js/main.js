@@ -454,6 +454,24 @@ document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('clic
   }
 }));
 
+// ✅ Indicateur hors ligne : bannière persistante quand le réseau coupe
+function initOfflineIndicator() {
+  let banner = document.getElementById('offlineBanner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'offlineBanner';
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#7f1d1d;color:#fff;text-align:center;padding:0.4rem;font-size:0.78rem;font-weight:600;transform:translateY(-100%);transition:transform 0.3s ease;';
+    banner.textContent = '📡 Hors ligne — catalogue mémorisé';
+    document.body.prepend(banner);
+  }
+  const update = () => {
+    banner.style.transform = navigator.onLine ? 'translateY(-100%)' : 'translateY(0)';
+  };
+  update();
+  addEventListener('online', update);
+  addEventListener('offline', update);
+}
+
 async function init() {
   await fetchProducts();
   loadOrders();
@@ -472,6 +490,7 @@ async function init() {
   initSmartHeader();
   initLogoLongPress();
   initThemeToggle();
+  initOfflineIndicator();
   refreshCatalogue();
   refreshCartDisplay();
   updateNavFavBadge();

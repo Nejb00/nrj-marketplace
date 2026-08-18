@@ -35,9 +35,19 @@ export async function fetchProducts(forceRefresh = false) {
         productCache = { data: state.products, timestamp: now };
 
         // ✅ Gravure localStorage : le PWA redémarre même sans réseau
+        // Gestion du quota : si ça dépasse ~4.5 Mo, on tronque les produits les
+        // moins récents pour rester sous la limite (localStorage ~5 Mo) sans crasher.
         try {
-            localStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify({ data: state.products, timestamp: now }));
-        } catch {}
+            let toStore = state.products;
+            let payload = JSON.stringify({ data: toStore, timestamp: now });
+            while (payload.length > 4_500_000 && toStore.length > 50) {
+                toStore = toStore.slice(0, Math.floor(toStore.length * 0.8));
+                payload = JSON.stringify({ data: toStore, timestamp: now });
+            }
+            localStorage.setItem(PRODUCTS_CACHE_KEY, payload);
+        } catch (err) {
+            console.warn('localStorage quota dépassé, cache produits ignoré:', err);
+        }
     } catch (err) {
         console.error('Erreur fetch products:', err);
 
