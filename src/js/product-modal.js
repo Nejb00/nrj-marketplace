@@ -62,7 +62,7 @@ export async function openProductModal(pid) {
         dc.innerHTML = '';
     } else {
         imgs.forEach((u, i) => {
-            sc.innerHTML += `<div class="carousel-item">${thumbImg(u, p.name, 600, 600)}</div>`;
+            sc.innerHTML += `<div class="carousel-item"><img src="${escapeHtml(u)}" alt="${escapeHtml(p.name)}" loading="lazy" onload="this.classList.add('loaded')"></div>`;
             dc.innerHTML += `<span class="carousel-dot ${i === 0 ? 'active' : ''}" data-index="${i}"></span>`;
         });
     }
@@ -97,9 +97,15 @@ export async function openProductModal(pid) {
         window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour NRJ Marketplace, je souhaite commander : ${p.name} (ID: ${p.id}), Taille: ${sT || 'N/A'}, Quantité: ${moq}`)}`, '_blank');
     };
 
-    // "Vous aimerez aussi" : toute la catégorie, complétée à 6 si catégorie pauvre
-    let rec = state.products.filter(pr => pr.category === p.category && pr.id !== p.id);
-    if (rec.length < 6) rec = [...rec, ...state.products.filter(pr => pr.id !== p.id && !rec.includes(pr))].slice(0, 6);
+    // ✅ "Vous aimerez aussi" : d'abord la catégorie du produit, puis — quand elle est
+    // finie — les meilleures ventes des AUTRES catégories (jamais de trou dans la grille)
+    const sameCat = state.products.filter(pr => pr.category === p.category && pr.id !== p.id);
+    const others = state.products
+        .filter(pr => pr.category !== p.category && pr.id !== p.id)
+        .sort((a, b) => (Number(b.popularity_score) || 0) - (Number(a.popularity_score) || 0));
+    let rec = [...sameCat, ...others].slice(0, 12);
+    if (rec.length % 2 !== 0) rec.pop();
+
     document.getElementById('modalRecCarousel').innerHTML = rec.map(r => `
         <div class="rec-card" data-product-id="${r.id}">
             <div class="rec-card-img">${r.image ? thumbImg(r.image, r.name, 300, 400) : '📦'}</div>
@@ -126,4 +132,4 @@ export function closeProductModal() {
     document.getElementById('stickyBottomBar').classList.remove('visible');
     state.modalOpen = false;
     history.replaceState({}, '', window.location.pathname);
-        }
+}
