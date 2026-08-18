@@ -52,7 +52,7 @@ body {
     transition: background-color var(--transition), color var(--transition);
 }
 
-/* ✅ HEADER EN PILLULE : flotte en haut, même langage que la nav */
+/* ✅ HEADER EN PILLULE PARFAIT : 9999px pour capsule iOS-style */
 .header-wrapper {
     position: fixed;
     top: 8px;
@@ -63,7 +63,7 @@ body {
     backdrop-filter: blur(24px) saturate(160%);
     -webkit-backdrop-filter: blur(24px) saturate(160%);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 22px;
+    border-radius: 9999px;
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.07);
     transition: transform 0.3s ease;
     will-change: transform;
@@ -180,3 +180,12 @@ footer { text-align: center; padding: 1.5rem 1rem 5rem; color: var(--text-second
 .scroll-to-top { position: fixed; bottom: calc(var(--nav-height) + 20px); right: 20px; width: 50px; height: 50px; background: var(--primary); color: white; border: none; border-radius: 50%; font-size: 1.2rem; cursor: pointer; opacity: 0; transform: translateY(20px); transition: all 0.3s ease; z-index: 99; pointer-events: none; }
 .scroll-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
 .scroll-to-top:active { transform: scale(0.9); }
+
+/* ✅ Bannière hors ligne : pillule flottante sous le header */
+#offlineBanner {
+  top: 128px !important;
+  left: 12px !important;
+  right: 12px !important;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
