@@ -62,7 +62,7 @@ export async function openProductModal(pid) {
         dc.innerHTML = '';
     } else {
         imgs.forEach((u, i) => {
-            sc.innerHTML += `<div class="carousel-item"><img src="${escapeHtml(u)}" alt="${escapeHtml(p.name)}" loading="lazy" onload="this.classList.add('loaded')"></div>`;
+            sc.innerHTML += `<div class="carousel-item">${thumbImg(u, p.name, 600, 600)}</div>`;
             dc.innerHTML += `<span class="carousel-dot ${i === 0 ? 'active' : ''}" data-index="${i}"></span>`;
         });
     }
