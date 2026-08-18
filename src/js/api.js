@@ -2,41 +2,66 @@ import { supabaseClient } from './config.js';
 import { state } from './state.js';
 import { showToast } from './utils.js';
 
-// ✅ Cache mémoire (5 min) + cache persistant (survit à la mort de l'app)
 const PRODUCTS_CACHE_KEY = 'nrj_products_cache';
 const CACHE_DURATION = 5 * 60 * 1000;
 let productCache = { data: null, timestamp: 0 };
+
+// Hash anonyme du navigateur (pas de cookie, pas d'ID personnel)
+const USER_HASH = (() => {
+  try {
+    let h = localStorage.getItem('nrj_user_hash');
+    if (!h) {
+      h = Math.random().toString(36).slice(2) + Date.now().toString(36);
+      localStorage.setItem('nrj_user_hash', h);
+    }
+    return h;
+  } catch { return 'anon'; }
+})();
 
 export async function trackPopularity(productId, points) {
     const { error } = await supabaseClient.rpc('increment_popularity', { product_id: productId, amount: points });
     if (error) console.warn('Erreur tracking popularité:', error);
 }
 
+// 🧠 Enregistre une vue anonyme (anti-spam : 1/user/produit/jour côté SQL)
+export async function trackView(productId) {
+    try {
+        await supabaseClient.from('product_views').insert({
+            user_hash: USER_HASH,
+            product_id: productId
+        });
+    } catch (e) {
+        // Silencieux : la vue anonyme ne doit pas casser l'app
+    }
+}
+
+// 🧠 Récupère les produits liés à un produit (ceux qui ont vu X ont aussi vu Y)
+export async function getRelatedProducts(productId, limit = 8) {
+    try {
+        const { data, error } = await supabaseClient
+            .rpc('get_related_products', { pid: productId, lim: limit });
+        if (error) throw error;
+        return (data || []).map(r => r.product_id);
+    } catch (e) {
+        return [];
+    }
+}
+
 export async function fetchProducts(forceRefresh = false) {
     const now = Date.now();
-
-    // Retourner le cache mémoire s'il est frais
     if (!forceRefresh && productCache.data && (now - productCache.timestamp) < CACHE_DURATION) {
         state.products = productCache.data;
         return;
     }
-
     try {
         const { data, error } = await supabaseClient
             .from('products')
             .select('id, name, price, category, image, popularity_score, created_at, moq, tailles, couleurs')
             .order('created_at', { ascending: false })
             .limit(500);
-
         if (error) throw error;
         state.products = data || [];
-
-        // Cache mémoire
         productCache = { data: state.products, timestamp: now };
-
-        // ✅ Gravure localStorage : le PWA redémarre même sans réseau
-        // Gestion du quota : si ça dépasse ~4.5 Mo, on tronque les produits les
-        // moins récents pour rester sous la limite (localStorage ~5 Mo) sans crasher.
         try {
             let toStore = state.products;
             let payload = JSON.stringify({ data: toStore, timestamp: now });
@@ -45,13 +70,9 @@ export async function fetchProducts(forceRefresh = false) {
                 payload = JSON.stringify({ data: toStore, timestamp: now });
             }
             localStorage.setItem(PRODUCTS_CACHE_KEY, payload);
-        } catch (err) {
-            console.warn('localStorage quota dépassé, cache produits ignoré:', err);
-        }
+        } catch (err) { console.warn('localStorage quota dépassé, cache produits ignoré:', err); }
     } catch (err) {
         console.error('Erreur fetch products:', err);
-
-        // ✅ Réseau mort → catalogue mémorisé au lieu de l'écran vide
         let saved = null;
         try { saved = JSON.parse(localStorage.getItem(PRODUCTS_CACHE_KEY) || 'null'); } catch {}
         if (saved && Array.isArray(saved.data) && saved.data.length) {
@@ -60,7 +81,6 @@ export async function fetchProducts(forceRefresh = false) {
             showToast('📴 Hors ligne — catalogue mémorisé');
             return;
         }
-
         state.products = [];
         showToast('❌ Erreur de connexion.');
         const grid = document.getElementById('productsGrid');
@@ -77,7 +97,6 @@ export async function fetchProductDetails(productId) {
             .select('*')
             .eq('id', productId)
             .single();
-
         if (error) throw error;
         return data;
     } catch (err) {
@@ -86,7 +105,6 @@ export async function fetchProductDetails(productId) {
     }
 }
 
-// ✅ CRUD admin — importé par admin.js et product-edit.js
 export async function insertProduct(product) {
     const { data, error } = await supabaseClient
         .from('products')
