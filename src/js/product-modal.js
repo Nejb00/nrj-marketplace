@@ -2,17 +2,15 @@ import { state } from './state.js';
 import { trackViewedItem } from './state.js';
 import { WHATSAPP_NUMBER, BASE_URL } from './config.js';
 import { escapeHtml, formatPrice, generateBadgesHTML, showToast, thumbImg } from './utils.js';
-import { trackPopularity, fetchProductDetails } from './api.js';
+import { trackPopularity, fetchProductDetails, trackView, getRelatedProducts } from './api.js';
 import { toggleFavorite, addToCart } from './cart.js';
 import { signalView } from './reco.js';
 
-// ✅ Sourcing AVANT les recommandations : la conversion WhatsApp ne doit pas être enterrée
 const _modal = document.getElementById('productModal');
 const _rec = _modal ? _modal.querySelector('.recommendations') : null;
 const _src = _modal ? _modal.querySelector('.sourcing-section') : null;
 if (_modal && _rec && _src) _modal.insertBefore(_src, _rec);
 
-// ✅ PACK ÉLÉGANCE : icônes SVG fines (retour = chevron, partage = icône universelle)
 const _backBtn = document.getElementById('modalCloseBtn');
 if (_backBtn) _backBtn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
 const _shareBtn = document.getElementById('modalShareBtn');
@@ -22,6 +20,38 @@ function updateCarouselDots(sc, dc, index) {
     dc.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === index));
 }
 
+// 🧠 Recos intelligentes : collaboratif (Niveau 2) + profil local (Niveau 1) + fallback
+async function buildRecommendations(currentProduct) {
+    const TARGET = 12;
+    
+    // 1) Collaboratif : ceux qui ont vu ce produit ont aussi vu...
+    const relatedIds = await getRelatedProducts(currentProduct.id, TARGET);
+    const related = relatedIds
+        .map(id => state.products.find(p => p.id === id))
+        .filter(p => p && p.id !== currentProduct.id);
+    
+    // 2) Si pas assez de données collaboratives (au démarrage) → compléter avec
+    //    la même catégorie puis les bestsellers d'autres catégories
+    const needed = TARGET - related.length;
+    if (needed > 0) {
+        const sameCat = state.products.filter(
+            pr => pr.category === currentProduct.category && pr.id !== currentProduct.id
+        );
+        const others = state.products
+            .filter(pr => pr.category !== currentProduct.id && pr.id !== currentProduct.id && !relatedIds.includes(pr.id))
+            .sort((a, b) => (Number(b.popularity_score) || 0) - (Number(a.popularity_score) || 0));
+        const fallback = [...sameCat, ...others];
+        for (const f of fallback) {
+            if (related.length >= TARGET) break;
+            if (!relatedIds.includes(f.id)) related.push(f);
+        }
+    }
+    
+    let rec = related.slice(0, TARGET);
+    if (rec.length % 2 !== 0) rec.pop();
+    return rec;
+}
+
 export async function openProductModal(pid) {
     let p = state.products.find(pr => pr.id === pid);
     if (!p) return;
@@ -29,12 +59,11 @@ export async function openProductModal(pid) {
     state.currentProductId = pid;
     trackPopularity(pid, 1);
     trackViewedItem(p.name);
-    signalView(p); // 🧠 le cerveau apprend
+    signalView(p);
+    trackView(pid); // 🧠 Niveau 2 : enregistre la vue anonyme dans Supabase
     
     const fullProduct = await fetchProductDetails(pid);
-    if (fullProduct) {
-        p = fullProduct;
-    }
+    if (fullProduct) p = fullProduct;
     
     const tailles = (p.tailles || '').split(',').map(s => s.trim()).filter(Boolean);
     const couleurs = (p.couleurs || '').split(',').map(s => s.trim()).filter(Boolean);
@@ -99,15 +128,14 @@ export async function openProductModal(pid) {
         window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour NRJ Marketplace, je souhaite commander : ${p.name} (ID: ${p.id}), Taille: ${sT || 'N/A'}, Quantité: ${moq}`)}`, '_blank');
     };
 
-    // ✅ "Vous aimerez aussi" : d'abord la catégorie du produit, puis — quand elle est
-    // finie — les meilleures ventes des AUTRES catégories (jamais de trou dans la grille)
-    const sameCat = state.products.filter(pr => pr.category === p.category && pr.id !== p.id);
-    const others = state.products
-        .filter(pr => pr.category !== p.category && pr.id !== p.id)
-        .sort((a, b) => (Number(b.popularity_score) || 0) - (Number(a.popularity_score) || 0));
-    let rec = [...sameCat, ...others].slice(0, 12);
-    if (rec.length % 2 !== 0) rec.pop();
-
+    // 🧠 Skeleton pour les recos pendant le calcul collaboratif
+    document.getElementById('modalRecCarousel').innerHTML = Array(6).fill(
+        '<div class="rec-card"><div class="rec-card-img" style="background:var(--surface-light);"></div></div>'
+    ).join('');
+    
+    // Construire les recos en arrière-plan (Niveau 1 + Niveau 2)
+    const rec = await buildRecommendations(p);
+    
     document.getElementById('modalRecCarousel').innerHTML = rec.map(r => `
         <div class="rec-card" data-product-id="${r.id}">
             <div class="rec-card-img">${r.image ? thumbImg(r.image, r.name, 300, 400) : '📦'}</div>
