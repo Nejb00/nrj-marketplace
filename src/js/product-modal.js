@@ -4,6 +4,7 @@ import { WHATSAPP_NUMBER, BASE_URL } from './config.js';
 import { escapeHtml, formatPrice, generateBadgesHTML, showToast, thumbImg } from './utils.js';
 import { trackPopularity, fetchProductDetails } from './api.js';
 import { toggleFavorite, addToCart } from './cart.js';
+import { signalView } from './reco.js';
 
 // ✅ Sourcing AVANT les recommandations : la conversion WhatsApp ne doit pas être enterrée
 const _modal = document.getElementById('productModal');
@@ -28,6 +29,7 @@ export async function openProductModal(pid) {
     state.currentProductId = pid;
     trackPopularity(pid, 1);
     trackViewedItem(p.name);
+    signalView(p); // 🧠 le cerveau apprend
     
     const fullProduct = await fetchProductDetails(pid);
     if (fullProduct) {
