@@ -1,3 +1,6 @@
+```
+# Dependencies
 node_modules/
-dist/
-.DS_Store
+# Package lock file (if not wanted in version control)
+package-lock.json
+```
