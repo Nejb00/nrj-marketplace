@@ -14,7 +14,7 @@
   -webkit-backdrop-filter: blur(24px) saturate(160%);
   backdrop-filter: blur(24px) saturate(160%);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 22px;
+  border-radius: 9999px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 
@@ -27,9 +27,9 @@
   justify-content: center;
   gap: 3px;
   color: rgba(255, 255, 255, 0.42);
-  border-radius: 16px;
+  border-radius: 9999px;
   cursor: pointer;
-  transition: color 0.25s ease, transform 0.1s ease;
+  transition: all 0.25s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -58,20 +58,12 @@
 .main-nav .nav-item[data-nav="favorites"]::after { content: 'Favoris'; }
 .main-nav .nav-item[data-nav="profile"]::after { content: 'Mon NRJ'; }
 
-/* ✅ Halo « liquide » derrière l'icône active */
-.main-nav .nav-item.active::before {
-  content: '';
-  position: absolute;
-  top: 5px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 36px;
-  height: 24px;
-  border-radius: 999px;
-  background: radial-gradient(closest-side, rgba(255, 140, 66, 0.3), transparent 72%);
+/* ✅ Onglet actif : effet d'incrustation (enfoncé dans le verre) + halo orange */
+.main-nav .nav-item.active {
+  color: var(--primary);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
 }
-
-.main-nav .nav-item.active { color: var(--primary); }
 .main-nav .nav-item.active svg { transform: translateY(-1px) scale(1.08); filter: drop-shadow(0 0 8px rgba(255, 140, 66, 0.5)); }
 
 /* ✅ Anciens globes colorés neutralisés (les classes restent au HTML, sans effet) */
