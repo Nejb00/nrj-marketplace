@@ -1,4 +1,4 @@
-const CACHE = 'nrj-shell-v1';
+const CACHE = 'nrj-shell-v2';
 const SHELL = ['/', '/index.html', '/admin.html', '/manifest.webmanifest', '/icon.svg'];
 
 self.addEventListener('install', (e) => {
@@ -68,5 +68,24 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // Tout le reste (Supabase) : réseau uniquement → données toujours fraîches
+  // Données produits Supabase (REST) : stale-while-revalidate.
+  // Les produits s'affichent instantanément depuis le cache, puis se rafraîchissent
+  // en arrière-plan. Le cache mémoire JS (5 min) reste la 1re ligne de défense.
+  if (url.hostname.endsWith('.supabase.co')) {
+    e.respondWith(
+      caches.open(CACHE).then((c) =>
+        c.match(e.request).then((cached) => {
+          const network = fetch(e.request)
+            .then((res) => {
+              if (res.ok) c.put(e.request, res.clone());
+              return res;
+            })
+            .catch(() => cached);
+          return cached || network;
+        })
+      )
+    );
+    return;
+  }
+  // Tout le reste : réseau uniquement → données toujours fraîches
 });
