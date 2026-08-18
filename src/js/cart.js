@@ -3,6 +3,7 @@ import { escapeHtml, formatPrice, showToast, thumbImg } from './utils.js';
 import { trackPopularity } from './api.js';
 import { WHATSAPP_NUMBER, BASE_URL } from './config.js';
 import { refreshCatalogue } from './catalogue.js';
+import { signalFavorite, signalCart, signalOrder } from './reco.js';
 
 const ORDERS_KEY = 'nrj_orders';
 export function loadOrders() {
@@ -31,7 +32,9 @@ function flyToCart(sourceEl) {
         background: var(--primary);
         border-radius: 50%;
         z-index: 9999;
-        display: flex; align-items: center; justify-content: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         pointer-events: none;
         opacity: 1;
         box-shadow: 0 4px 16px rgba(255, 140, 66, 0.5);
@@ -60,6 +63,7 @@ export async function addToCart(pid, t = '', c = '', sourceEl = null) {
     const p = state.products.find(pr => pr.id === pid);
     if (!p) return;
     if (sourceEl) flyToCart(sourceEl);
+    signalCart(p); // 🧠
 
     const moq = Number(p.moq) || 1;
     const exist = state.cart.find(i => i.productId === pid && i.taille === t && i.couleur === c);
@@ -146,6 +150,12 @@ export function sendWhatsAppOrder() {
         return { productId: p.id, name: p.name, price: p.price, qty: Number(i.quantity), variant: variant || null };
     }).filter(Boolean);
 
+    // 🧠 Une commande = le signal le plus fort du cerveau
+    snapshotItems.forEach(i => {
+        const p = state.products.find(pr => pr.id === i.productId);
+        if (p) signalOrder(p);
+    });
+
     state.cart.forEach(i => {
         const p = state.products.find(pr => pr.id === i.productId);
         if (p) {
@@ -177,15 +187,19 @@ export function toggleFavorite(pid) {
     const idx = state.favorites.indexOf(pid);
     const added = idx === -1;
     if (idx > -1) state.favorites.splice(idx, 1); else state.favorites.push(pid);
+    if (added) {
+        const p = state.products.find(pr => pr.id === pid);
+        if (p) signalFavorite(p); // 🧠
+    }
     saveFavorites();
     updateNavFavBadge();
     document.querySelectorAll(`.fav-icon[data-id="${pid}"]`).forEach(icon => {
         const svg = icon.querySelector('.fav-icon-svg');
-        if (svg) svg.classList.toggle('faved', state.favorites.includes(pid));
+        if (svg) svg.style.fill = state.favorites.includes(pid) ? 'var(--favorites)' : 'currentColor';
     });
     if (document.getElementById('modalFavBtn') && state.currentProductId === pid) {
         const svg = document.getElementById('modalFavBtn').querySelector('.fav-icon-svg');
-        if (svg) svg.classList.toggle('faved', state.favorites.includes(pid));
+        if (svg) svg.style.fill = state.favorites.includes(pid) ? 'var(--favorites)' : 'currentColor';
     }
     if (state.currentFilter === 'favorites') refreshCatalogue();
     if (added) pulseFavoriteIcons(pid);

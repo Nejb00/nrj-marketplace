@@ -1,6 +1,7 @@
 import { state } from './state.js';
 import { PRODUCTS_PER_PAGE } from './config.js';
 import { escapeHtml, formatPrice, generateBadgesHTML, isFresh, thumbImg } from './utils.js';
+import { forYou } from './reco.js';
 
 export function getFilteredProducts() {
     let filtered = state.currentFilter === 'favorites'
@@ -9,6 +10,7 @@ export function getFilteredProducts() {
 
     if (state.currentQuickFilter === 'new') filtered = filtered.filter(p => isFresh(p));
     else if (state.currentQuickFilter === 'bestseller') filtered = filtered.filter(p => (p.popularity_score || 0) > 0).sort((a, b) => (b.popularity_score || 0) - (a.popularity_score || 0));
+    else if (state.currentQuickFilter === 'foryou') filtered = forYou(filtered);
 
     if (state.searchQuery && !(/^\d+$/.test(state.searchQuery) && state.products.some(p => p.id === parseInt(state.searchQuery)))) {
         const q = state.searchQuery.toLowerCase();
