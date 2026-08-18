@@ -1,330 +1,204 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="description" content="NRJ Marketplace International - Importation de produits depuis la Chine, la France et la Turquie vers le Congo Brazzaville.">
-    <link rel="icon" href="/icon.svg">
-    <title>NRJ Marketplace • Import Chine, France, Turquie → Congo</title>
-
-    <meta name="theme-color" content="#0f0f0f">
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="NRJ Marketplace International">
-    <meta property="og:locale" content="fr_FR">
-    <meta property="og:title" content="NRJ Marketplace International">
-    <meta property="og:description" content="Grossiste en ligne — import direct de Chine 🇨🇳, France 🇫🇷 et Turquie 🇹🇷 vers le Congo Brazzaville 🇨🇬. Catalogue en ligne, commande via WhatsApp.">
-    <meta property="og:url" content="https://nrj-marketplace.vercel.app/">
-    <meta property="og:image" content="/icon.svg">
-    <meta property="og:image:type" content="image/svg+xml">
-    <meta property="og:image:alt" content="NRJ Marketplace International — Import Chine, France, Turquie vers le Congo Brazzaville">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="NRJ Marketplace International">
-    <meta name="twitter:description" content="Grossiste en ligne — import direct de Chine, France et Turquie vers le Congo Brazzaville. Commande via WhatsApp.">
-    <meta name="twitter:image" content="/icon.svg">
-
-    <link rel="manifest" href="/manifest.webmanifest">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="NRJ Market">
-    <link rel="apple-touch-icon" href="/icon-192.png">
-    <script>
-      if ('serviceWorker' in navigator && location.hostname !== 'localhost') {
-        addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
-      }
-    </script>
-
-    <!-- Fonts: réduire le nombre de graisses chargées pour alléger le payload -->
-    <!-- Performance : preconnect Supabase (premier fetch produits plus rapide) -->
-    <link rel="preconnect" href="https://peojyqliwrtghomyukwn.supabase.co">
-    <link rel="dns-prefetch" href="//peojyqliwrtghomyukwn.supabase.co">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-
-    <!-- Performance: preconnect / dns-prefetch pour wsrv.nl (service d'images) -->
-    <link rel="dns-prefetch" href="//wsrv.nl">
-    <link rel="preconnect" href="https://wsrv.nl" crossorigin>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NRJ Marketplace - Grossiste</title>
+  <link rel="icon" href="/icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/css/main.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#0f0f0f">
+  <meta name="description" content="NRJ Marketplace - Grossiste en Chine, France, Turquie → Congo Brazzaville">
 </head>
 <body>
-    <div id="catalogueWrapper">
-        <div class="header-wrapper" id="headerWrapper">
-            <header>
-                <div class="logo-wrapper" onclick="location.href='/'">
-                    <span class="logo-icon">⚡</span>
-                    <div class="logo-brand">
-                        <div class="logo-text">NRJ Marketplace</div>
-                        <div class="logo-subtext">Grossiste</div>
-                    </div>
-                </div>
-                <div class="header-actions">
-                    <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Changer de thème" title="Basculer thème clair/sombre">🌙</button>
-                    <button class="logout-btn" id="logoutBtn" aria-label="Se déconnecter" title="Se déconnecter" style="display:none;">🚪</button>
-                </div>
-            </header>
-
-            <div class="search-bar-container">
-                <div class="search-bar">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" id="searchInput" placeholder="Rechercher un produit..." autocomplete="off" aria-label="Rechercher un produit">
-                    <button class="search-voice" id="searchVoice" aria-label="Recherche vocale" title="Recherche vocale">
-                        <svg viewBox="0 0 24 24" width="18" height="18">
-                            <path fill="currentColor" d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.7 5.1 5 5.1s5-2.1 5-5.1h-1.7z"></path>
-                        </svg>
-                    </button>
-                    <div class="search-loader" id="searchLoader" style="display:none;"></div>
-                    <button class="search-clear" id="searchClear" style="display:none;" aria-label="Effacer">✕</button>
-                </div>
-                <div class="search-dropdown" id="searchDropdown" style="display:none;"></div>
-            </div>
+  <div id="headerSpacer"></div>
+  <div id="headerWrapper" class="header-wrapper">
+    <header>
+      <div class="logo-wrapper" id="backToHomeBtn" role="button" tabindex="0">
+        <div class="logo-icon"></div>
+        <div class="logo-brand">
+          <div class="logo-text">NRJ Marketplace</div>
+          <div class="logo-subtext">Grossiste</div>
         </div>
-        <div id="headerSpacer"></div>
+      </div>
+      <div class="header-actions">
+        <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Changer le thème"></button>
+      </div>
+    </header>
 
-        <div id="catalogueView">
-            <div class="quick-filters">
-                <button class="filter-chip active" data-filter="all">Tout</button>
-                <button class="filter-chip" data-filter="new">✨ Nouveautés</button>
-                <button class="filter-chip" data-filter="bestseller">🔥 Populaires</button>
-            </div>
-
-            <div class="filter-bar" id="filterBar">
-                <button class="filter-btn active" data-category="all">Tout voir</button>
-            </div>
-            <section class="products-section" aria-live="polite">
-                <div class="products-grid" id="productsGrid" role="list"></div>
-            </section>
-            <div id="loadMoreSentinel" style="height: 20px;"></div>
-            <p id="loadingMessage" style="text-align:center;color:var(--text-secondary);display:none;">⏳ Chargement des produits...</p>
-        </div>
-
-        <div id="categoriesView" style="display: none; padding: 1rem 1rem 2rem;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
-                <h2 style="font-size: 1.5rem; font-weight: 800;">Nos Catégories</h2>
-                <button id="backToHomeBtn" style="background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 1rem; border-radius: 50px; cursor: pointer; font-weight: 600;">← Retour</button>
-            </div>
-            <div class="categories-grid" id="categoriesGrid"></div>
-        </div>
-
-        <nav class="main-nav">
-            <a href="#" class="nav-item active" data-nav="home" aria-label="Accueil">
-                <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"></path></svg>
-            </a>
-            <a href="#" class="nav-item categories-accent" data-nav="categories" aria-label="Catégories">
-                <svg viewBox="0 0 24 24"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.05-.59-1.41z"></path></svg>
-            </a>
-            <a href="#" class="nav-item cart-accent" data-nav="cart" aria-label="Panier">
-                <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"></path></svg>
-                <span class="cart-badge" id="navCartBadge" style="display:none;">0</span>
-            </a>
-            <a href="#" class="nav-item favorites-accent" data-nav="favorites" aria-label="Favoris">
-                <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg>
-                <span class="favorites-badge" id="navFavBadge" style="display:none;">0</span>
-            </a>
-            <a href="#" class="nav-item" data-nav="profile" aria-label="Mon NRJ">
-                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg>
-            </a>
-        </nav>
-
-        <footer><p>© 2026 NRJ Marketplace International — Chine • France • Turquie → Congo Brazzaville ⚡</p></footer>
+    <div class="search-bar-container">
+      <div class="search-bar">
+        <div class="search-icon"></div>
+        <input type="text" id="searchInput" placeholder="Rechercher un produit..." autocomplete="off">
+        <button class="search-voice" id="voiceSearchBtn" aria-label="Recherche vocale">🎤</button>
+      </div>
+      <div id="searchDropdown" class="search-dropdown" style="display: none;"></div>
     </div>
 
-    <div class="product-modal" id="productModal">
-        <div class="modal-image-section">
-            <div class="carousel-scroll" id="modalCarouselScroll"></div>
-            <button class="back-arrow-btn" id="modalCloseBtn" aria-label="Retour">←</button>
-            <div class="product-id-badge" id="modalProductIdBadge">[ID: ...]</div>
-            <div class="modal-badges" id="modalBadges"></div>
-            <div class="product-actions-overlay">
-                <button class="action-circle" id="modalFavBtn" aria-label="Ajouter aux favoris">
-                    <svg viewBox="0 0 24 24" class="fav-icon-svg">
-                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
-                    </svg>
-                </button>
-                <button class="action-circle" id="modalShareBtn" aria-label="Partager">↗</button>
-            </div>
-            <div class="carousel-dots" id="modalCarouselDots"></div>
-        </div>
-        <div class="product-details">
-            <div class="product-detail-price" id="modalPrice"></div>
-            <div class="product-detail-moq" id="modalMoq"></div>
-            <div class="product-detail-total" id="modalTotal"></div>
-            <div class="product-detail-desc" id="modalDesc"></div>
-            <div class="option-group" id="modalTailleGroup" style="display:none;"><label>Taille</label><div class="option-buttons" id="modalTailleOptions"></div></div>
-            <div class="option-group" id="modalCouleurGroup" style="display:none;"><label>Couleur</label><div class="option-buttons" id="modalCouleurOptions"></div></div>
-        </div>
-        <div class="recommendations">
-            <h3>Vous aimerez aussi</h3>
-            <div class="rec-carousel" id="modalRecCarousel"></div>
-        </div>
-        <div class="sourcing-section">
-            <h3>🔍 Vous ne trouvez pas votre bonheur ?</h3>
-            <p>Envoyez-nous une photo ou décrivez votre recherche.</p>
-            <button class="sourcing-btn" id="modalSourcingBtn">📸 Photo</button>
-            <input type="file" id="modalSourcingFileInput" accept="image/*" style="display:none;">
-            <button class="whatsapp-btn" id="modalDescSourcingBtn" style="margin-left:0.5rem;">💬 Message</button>
-            <p id="modalSourcingStatus" style="margin-top:0.8rem;font-size:0.85rem;color:var(--text-secondary);"></p>
-        </div>
+    <div class="discovery">
+      <div class="discovery-section">
+        <div class="discovery-chips" id="discoveryChips"></div>
+      </div>
     </div>
+  </div>
 
-    <div class="sticky-bottom-bar" id="stickyBottomBar">
-        <button class="btn-direct-sticky" id="directOrderStickyBtn">⚡ Commander directement</button>
-        <button class="btn-cart-sticky" id="addToCartStickyBtn" aria-label="Ajouter au panier">
-            <svg viewBox="0 0 24 24">
-                <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"></path>
-            </svg>
+  <div id="catalogueWrapper">
+    <div class="products-section">
+      <div class="filter-chips" id="quickFilters">
+        <button class="filter-chip active" data-filter="all">Tout</button>
+        <button class="filter-chip" data-filter="new">✨ Nouveautés</button>
+        <button class="filter-chip" data-filter="popular">🔥 Populaires</button>
+      </div>
+      <div class="filter-bar" id="filterBar"></div>
+      <div class="products-grid" id="productsGrid"></div>
+    </div>
+  </div>
+
+  <div id="searchView" style="display: none;"></div>
+
+  <div id="categoriesView" style="display: none;">
+    <div class="categories-section">
+      <div class="categories-grid" id="categoriesGrid"></div>
+    </div>
+  </div>
+
+  <div id="accountView">
+    <div class="account-header">
+      <button class="account-back" data-account-action="close" aria-label="Retour">←</button>
+      <div class="account-identity">
+        <div class="account-avatar"></div>
+        <div class="account-greet">
+          <div class="account-greet-hello"></div>
+          <div class="account-greet-sub">Voici votre espace NRJ</div>
+        </div>
+      </div>
+    </div>
+    <div class="account-stats"></div>
+    <div id="accountContent"></div>
+  </div>
+
+  <div class="product-modal" id="productModal">
+    <div class="modal-image-section">
+      <button class="back-arrow-btn" id="modalCloseBtn" aria-label="Retour"></button>
+      <div class="product-id-badge" id="modalProductIdBadge"></div>
+      <div class="product-actions-overlay">
+        <button class="action-circle" id="modalFavBtn" aria-label="Ajouter aux favoris">
+          <svg viewBox="0 0 24 24" class="fav-icon-svg">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
         </button>
+        <button class="action-circle" id="modalShareBtn" aria-label="Partager"></button>
+      </div>
+      <div class="carousel-scroll" id="modalCarouselScroll"></div>
+      <div class="carousel-dots" id="modalCarouselDots"></div>
+      <div class="modal-badges" id="modalBadges"></div>
     </div>
-
-    <button class="scroll-to-top" id="scrollToTopBtn" aria-label="Retour en haut">⬆️</button>
-
-    <div class="cart-overlay" id="cartOverlay"></div>
-    <div class="cart-panel" id="cartPanel">
-        <div class="cart-header">Mon Panier <button class="cart-close" id="cartCloseBtn" aria-label="Fermer le panier">&times;</button></div>
-        <div class="cart-items" id="cartItems"></div>
-        <div class="cart-footer">
-            <div class="cart-total"><span>Total</span><span id="cartTotal">XAF 0</span></div>
-            <button class="checkout-btn" id="checkoutBtn" disabled aria-label="Commander via WhatsApp">Commander via WhatsApp</button>
-        </div>
+    <div class="product-details">
+      <div class="product-detail-price" id="modalPrice"></div>
+      <div class="product-detail-moq" id="modalMoq"></div>
+      <div class="product-detail-total" id="modalTotal"></div>
+      <div class="product-detail-desc" id="modalDesc"></div>
+      
+      <div class="option-group" id="modalTailleGroup">
+        <label>Taille</label>
+        <div class="option-buttons" id="modalTailleOptions"></div>
+      </div>
+      
+      <div class="option-group" id="modalCouleurGroup">
+        <label>Couleur</label>
+        <div class="option-buttons" id="modalCouleurOptions"></div>
+      </div>
     </div>
-
-    <div class="modal-overlay" id="orderModalOverlay">
-        <div class="modal">
-            <h2 style="text-align:center;margin-bottom:1rem;">📋 Valider la commande</h2>
-            <div id="orderSummary" style="background:var(--surface-light);border-radius:12px;padding:0.8rem;margin-bottom:1rem;font-size:0.85rem;"></div>
-            <div class="form-group"><label>👤 Votre nom complet</label><input type="text" id="customerName" placeholder="Ex: Jean Bosco" required></div>
-            <button class="btn btn-primary" id="sendWhatsAppBtn" style="background:var(--whatsapp);">Envoyer sur WhatsApp</button>
-            <button class="btn btn-outline" id="cancelOrderBtn" style="margin-top:0.5rem;background:transparent;border:1px solid var(--border);color:var(--text);">Annuler</button>
-        </div>
+    
+    <div class="recommendations">
+      <h3>Vous aimerez aussi</h3>
+      <div class="rec-carousel" id="modalRecCarousel"></div>
     </div>
-
-    <div class="modal-overlay" id="editProductModalOverlay">
-        <div class="modal modal-edit">
-            <h2 style="text-align:center;margin-bottom:1rem;">✏️ Modifier le produit</h2>
-            <input type="hidden" id="editProductId">
-            <div class="form-group"><label>Nom</label><input type="text" id="editName"></div>
-            <div class="form-group"><label>Catégorie</label><input type="text" id="editCategory"></div>
-            <div class="form-group"><label>Prix (FCFA)</label><input type="number" id="editPrice"></div>
-            <div class="form-group"><label>Image 1 (URL)</label><input type="url" id="editImage"></div>
-            <div class="form-group"><label>Image 2 (URL)</label><input type="url" id="editImage2"></div>
-            <div class="form-group"><label>Image 3 (URL)</label><input type="url" id="editImage3"></div>
-            <div class="form-group"><label>Image 4 (URL)</label><input type="url" id="editImage4"></div>
-            <div class="form-group"><label>Image 5 (URL)</label><input type="url" id="editImage5"></div>
-            <div class="form-group"><label>Image 6 (URL)</label><input type="url" id="editImage6"></div>
-            <div class="form-group"><label>Tailles (séparées par virgules)</label><input type="text" id="editTailles"></div>
-            <div class="form-group"><label>Couleurs (séparées par virgules)</label><input type="text" id="editCouleurs"></div>
-            <div class="form-group"><label>Quantité minimale (MOQ)</label><input type="number" id="editMoq" min="1"></div>
-            <div class="form-group"><label>Description</label><input type="text" id="editDesc"></div>
-            <div style="display:flex;gap:0.5rem;margin-top:1rem;">
-                <button class="btn btn-primary" id="saveEditBtn" style="flex:1;background:var(--primary);">💾 Sauvegarder</button>
-                <button class="btn btn-outline" id="cancelEditBtn" style="flex:1;background:transparent;border:1px solid var(--border);color:var(--text);">Annuler</button>
-            </div>
-            <div id="editError" style="color:#fca5a5;text-align:center;font-size:0.8rem;margin-top:0.5rem;"></div>
-        </div>
+    
+    <div class="sourcing-section">
+      <h3>Vous ne trouvez pas votre bonheur ?</h3>
+      <p>Envoyez-nous une photo ou décrivez votre recherche.</p>
+      <button class="sourcing-btn" id="modalSourcingBtn">📸 Photo</button>
+      <button class="whatsapp-btn" id="modalDescSourcingBtn">💬 Message</button>
     </div>
+  </div>
 
-    <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
-
-    <div id="searchView" style="display:none;">
-        <div class="search-view-header">
-            <button class="back-btn" id="backFromSearchBtn" aria-label="Retour">
-                <svg viewBox="0 0 24 24" width="20" height="20">
-                    <path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path>
-                </svg>
-                <span>Retour</span>
-            </button>
-            <div class="search-view-input-wrapper">
-                <span class="search-icon">🔍</span>
-                <input type="text" id="searchViewInput" placeholder="Rechercher..." autocomplete="off">
-                <button class="search-clear" id="searchViewClear" aria-label="Effacer" style="display:none;">✕</button>
-            </div>
-        </div>
-
-        <div class="search-view-content">
-            <aside class="search-filters-sidebar" id="searchFiltersSidebar">
-                <div class="filters-header">
-                    <h3>🎯 Filtres</h3>
-                    <button class="clear-all-filters" id="clearAllFilters">Tout effacer</button>
-                </div>
-                <div class="filter-section">
-                    <h4>💰 Prix (XAF)</h4>
-                    <div class="price-range-container">
-                        <div class="price-inputs">
-                            <input type="number" id="priceMin" placeholder="Min" min="0">
-                            <span>—</span>
-                            <input type="number" id="priceMax" placeholder="Max" min="0">
-                        </div>
-                        <div class="price-presets">
-                            <button class="price-preset" data-min="0" data-max="5000">0 - 5K</button>
-                            <button class="price-preset" data-min="5000" data-max="15000">5K - 15K</button>
-                            <button class="price-preset" data-min="15000" data-max="50000">15K - 50K</button>
-                            <button class="price-preset" data-min="50000" data-max="">50K+</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="filter-section">
-                    <h4>📂 Catégories</h4>
-                    <div class="filter-checkboxes" id="categoryFilters"></div>
-                </div>
-                <div class="filter-section">
-                    <h4>📏 Tailles</h4>
-                    <div class="filter-checkboxes" id="sizeFilters"></div>
-                </div>
-                <div class="filter-section">
-                    <h4>🎨 Couleurs</h4>
-                    <div class="filter-checkboxes" id="colorFilters"></div>
-                </div>
-            </aside>
-
-            <main class="search-results-main">
-                <div class="search-toolbar">
-                    <div class="search-results-count" id="searchResultsCount">0 résultat</div>
-                    <div class="search-toolbar-actions">
-                        <button class="mobile-filter-toggle" id="mobileFilterToggle">
-                            <svg viewBox="0 0 24 24" width="18" height="18">
-                                <path fill="currentColor" d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"></path>
-                            </svg>
-                            Filtres
-                        </button>
-                        <select id="sortBy" class="sort-select">
-                            <option value="relevance">🎯 Pertinence</option>
-                            <option value="price-asc">💰 Prix croissant</option>
-                            <option value="price-desc">💰 Prix décroissant</option>
-                            <option value="newest">✨ Nouveautés</option>
-                            <option value="popular">🔥 Populaires</option>
-                        </select>
-                        <div class="view-toggle">
-                            <button class="view-btn active" data-view="grid" aria-label="Vue grille">
-                                <svg viewBox="0 0 24 24" width="18" height="18">
-                                    <path fill="currentColor" d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"></path>
-                                </svg>
-                            </button>
-                            <button class="view-btn" data-view="list" aria-label="Vue liste">
-                                <svg viewBox="0 0 24 24" width="18" height="18">
-                                    <path fill="currentColor" d="M4 14h4v-4H4v4zm0 5h4v-4H4v4zM4 9h4V5H4v4zm5 5h12v-4H9v4zm0 5h12v-4H9v4zM9 5v4h12V5H9z"></path>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="search-results-container" id="searchResultsContainer">
-                    <div class="search-results-grid" id="searchResultsGrid"></div>
-                    <div class="search-no-results" id="searchNoResults" style="display:none;">
-                        <div class="no-results-icon">🔍</div>
-                        <h3>Aucun résultat trouvé</h3>
-                        <p>Essayez d'ajuster vos filtres ou votre recherche</p>
-                        <button class="reset-search-btn" id="resetSearchBtn">Réinitialiser la recherche</button>
-                    </div>
-                </div>
-            </main>
-        </div>
-        <div class="filters-overlay" id="filtersOverlay"></div>
+  <div class="cart-panel" id="cartPanel">
+    <div class="cart-header">
+      <h3>Panier</h3>
+      <button class="cart-close" id="cartCloseBtn">✕</button>
     </div>
-
-    <!-- ✅ NEW : vue compte « Mon NRJ » -->
-    <div id="accountView">
-        <div id="accountContent"></div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-footer">
+      <div class="cart-total">Total : <span id="cartTotal">XAF 0</span></div>
+      <button class="checkout-btn" id="checkoutBtn">Commander</button>
     </div>
+  </div>
+  <div class="cart-overlay" id="cartOverlay"></div>
 
-    <script type="module" src="/src/js/main.js"></script>
+  <div class="order-modal" id="orderModalOverlay">
+    <div class="order-content">
+      <h3>Finaliser la commande</h3>
+      <div id="orderSummary"></div>
+      <input type="text" id="customerName" placeholder="Votre nom">
+      <button class="send-btn" id="sendWhatsAppBtn">📤 Envoyer sur WhatsApp</button>
+      <button class="cancel-btn" id="cancelOrderBtn">Annuler</button>
+    </div>
+  </div>
+
+  <div class="edit-modal" id="editProductModalOverlay">
+    <div class="edit-content">
+      <h3>Modifier le produit</h3>
+      <input type="hidden" id="editProductId">
+      <input type="text" id="editName" placeholder="Nom">
+      <input type="text" id="editCategory" placeholder="Catégorie">
+      <input type="number" id="editPrice" placeholder="Prix">
+      <input type="text" id="editImage" placeholder="Image URL">
+      <input type="text" id="editImage2" placeholder="Image 2 URL">
+      <input type="text" id="editImage3" placeholder="Image 3 URL">
+      <input type="text" id="editImage4" placeholder="Image 4 URL">
+      <input type="text" id="editImage5" placeholder="Image 5 URL">
+      <input type="text" id="editImage6" placeholder="Image 6 URL">
+      <input type="text" id="editTailles" placeholder="Tailles (S, M, L)">
+      <input type="text" id="editCouleurs" placeholder="Couleurs">
+      <input type="number" id="editMoq" placeholder="MOQ" value="1">
+      <textarea id="editDesc" placeholder="Description"></textarea>
+      <div id="editError" style="color: #fca5a5; font-size: 0.85rem;"></div>
+      <button class="save-btn" id="saveEditBtn">💾 Enregistrer</button>
+      <button class="cancel-btn" id="cancelEditBtn">Annuler</button>
+    </div>
+  </div>
+
+  <nav class="main-nav" id="mainNav">
+    <div class="nav-item" data-nav="home">
+      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    </div>
+    <div class="nav-item" data-nav="categories">
+      <svg viewBox="0 0 24 24"><path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z"/></svg>
+    </div>
+    <div class="nav-item" data-nav="cart">
+      <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+      <span class="cart-badge" id="navCartBadge" style="display: none;">0</span>
+    </div>
+    <div class="nav-item" data-nav="favorites">
+      <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      <span class="favorites-badge" id="navFavBadge" style="display: none;">0</span>
+    </div>
+    <div class="nav-item" data-nav="profile">
+      <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+    </div>
+  </nav>
+
+  <div class="toast" id="toast"></div>
+
+  <script type="module" src="/src/js/main.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(err => console.warn('SW registration failed:', err));
+    }
+  </script>
 </body>
 </html>
