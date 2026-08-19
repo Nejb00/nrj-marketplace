@@ -1,6 +1,4 @@
-// ─── PHASE 3 📷 v2 — « Montre-moi, je trouve » (précision boostée) ─────────
-// Boosts : CDN de secours, center-crop, signature couleur, diagnostic visible.
-
+// ─── PHASE 3 📷 v3 — « Montre-moi, je trouve » (triple relais anti-CORS) ──
 import { state } from './state.js';
 import { escapeHtml, formatPrice, thumbImg, showToast, thumb } from './utils.js';
 
@@ -14,9 +12,16 @@ const MB_CDNS = [
   'https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js',
   'https://unpkg.com/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js'
 ];
+// ✅ 3 chemins par image : direct, puis 2 relais qui remettent les en-têtes CORS
+const PROXIES = [
+  u => u,
+  u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+  u => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u)
+];
 
 let model = null;
 let busy = false;
+let firstIndexError = null;
 
 function loadScript(src) {
   return new Promise((resolve, reject) => {
@@ -44,17 +49,26 @@ async function loadModel() {
   return model;
 }
 
-function loadImg(src, cross = true) {
+function loadImg(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    if (cross) img.crossOrigin = 'anonymous';
+    img.crossOrigin = 'anonymous';
     img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('Image illisible'));
+    img.onerror = () => reject(new Error('CORS/réseau image'));
     img.src = src;
   });
 }
 
-// ✅ Center-crop carré (comme les vignettes du catalogue) → comparaison cohérente
+// ✅ Essaie les 3 chemins, retient la première erreur pour diagnostic
+async function loadImgSmart(url) {
+  let err = null;
+  for (const wrap of PROXIES) {
+    try { return await loadImg(wrap(url)); }
+    catch (e) { err = e; if (!firstIndexError) firstIndexError = e; }
+  }
+  throw err || new Error('Image illisible');
+}
+
 function croppedTensor(imgEl) {
   return window.tf.tidy(() => {
     let x = window.tf.browser.fromPixels(imgEl);
@@ -79,7 +93,6 @@ async function embed(imgEl) {
   return str;
 }
 
-// ✅ Signature couleur (64 teintes) — le juge de paix anti-faux positifs
 function colorSig(imgEl) {
   try {
     const c = document.createElement('canvas');
@@ -115,7 +128,6 @@ function cosine(aStr, bStr) {
 function readIndex() {
   try {
     const raw = JSON.parse(localStorage.getItem(INDEX_KEY) || '{}');
-    // Migration v1 : les anciennes entrées "string" deviennent { e, c }
     for (const k of Object.keys(raw)) if (typeof raw[k] === 'string') raw[k] = { e: raw[k], c: '' };
     return raw;
   } catch { return {}; }
@@ -126,19 +138,20 @@ function writeIndex(idx) {
 
 async function indexProducts(list, onProgress) {
   const idx = readIndex();
-  let done = 0;
+  let done = 0, ok = 0;
   for (const p of list) {
     if (!idx[p.id] || !idx[p.id].e) {
       try {
-        const img = await loadImg(thumb(p.image, 224, 224));
+        const img = await loadImgSmart(thumb(p.image, 224, 224));
         idx[p.id] = { e: await embed(img), c: colorSig(img) };
         writeIndex(idx);
+        ok++;
       } catch {}
-    }
+    } else ok++;
     done++;
     if (onProgress && done % 10 === 0) onProgress(done, list.length);
   }
-  return idx;
+  return { idx, ok };
 }
 
 // ─── UI injectée ────────────────────────────────────────────────────────────
@@ -205,14 +218,20 @@ async function searchByImage(file) {
 
     const ordered = [...state.products].filter(p => p.image)
       .sort((a, b) => (Number(b.popularity_score) || 0) - (Number(a.popularity_score) || 0));
-    const missing = ordered.filter(p => !readIndex()[p.id] || !readIndex()[p.id].e);
-    const firstBatch = missing.slice(0, 60);
+    const missing = ordered.filter(p => { const v = readIndex()[p.id]; return !v || !v.e; });
+    const firstBatch = missing.slice(0, 30);
     if (firstBatch.length) {
       await indexProducts(firstBatch, (d, n) => showToast(`🧠 Index ${d}/${n}`));
     }
 
+    // ✅ Si aucun produit n'a pu être indexé, on le DIT avec la vraie raison
+    const indexedCount = Object.values(readIndex()).filter(v => v.e).length;
+    if (indexedCount === 0) {
+      throw new Error('Indexage impossible — ' + (firstIndexError ? firstIndexError.message : 'images inaccessibles'));
+    }
+
     showToast('🔍 Analyse de ta photo…');
-    const userImg = await loadImg(URL.createObjectURL(file), false);
+    const userImg = await loadImg(URL.createObjectURL(file));
     const userEmb = await embed(userImg);
     const userCol = colorSig(userImg);
 
@@ -229,7 +248,6 @@ async function searchByImage(file) {
 
     const results = scored.map(s => state.products.find(p => p.id === s.id)).filter(Boolean);
 
-    // ✅ Niveau de confiance affiché (plus de silence !)
     const top = scored[0] ? scored[0].emb : 0;
     const conf = top > 0.85 ? '🟢 Correspondance forte' : top > 0.55 ? '🟡 Similarité moyenne' : '🔴 Similarité faible — prends une photo du produit, centrée et nette';
     overlay.querySelector('#visualConf').textContent = `${conf} · ${results.length} résultat(s)`;
@@ -247,10 +265,10 @@ async function searchByImage(file) {
             </div>
           </div>
         </div>`).join('')
-      : '<div class="visual-empty">Index vide 😅 Le moteur n\'a pas pu indexer les produits (réseau ?). Réessaie.</div>';
+      : '<div class="visual-empty">Aucun produit indexé pour l\'instant 😅 Réessaie dans un instant.</div>';
     overlay.classList.add('open');
 
-    const rest = missing.slice(60);
+    const rest = missing.slice(30);
     if (rest.length) setTimeout(() => { indexProducts(rest).catch(() => {}); }, 3000);
   } catch (e) {
     console.error('visual search', e);
