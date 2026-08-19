@@ -1,9 +1,6 @@
 // ─── CERVEAU NRJ 🧠 — personnalisation locale (niveau 1) ──────────────────
-// Chaque interaction (vue, favori, panier, commande) nourrit un profil
-// d'affinités stocké en localStorage. La puce « ✨ Pour toi » classe les
-// produits selon ce profil. Cold start = classement communautaire.
-
 import { isFresh } from './utils.js';
+import './visual-search.js'; // 📷 Phase 3 : le module visuel s'auto-démarre
 
 const KEY = 'nrj_affinity';
 const MIN_SIGNALS = 4;
@@ -65,4 +62,4 @@ if (qf && !qf.querySelector('[data-filter="foryou"]')) {
     b.dataset.filter = 'foryou';
     b.textContent = '✨ Pour toi';
     qf.appendChild(b);
-}
+        }
