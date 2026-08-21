@@ -1,4 +1,4 @@
-const CACHE = 'nrj-shell-v3';
+const CACHE = 'nrj-shell-v4'; // Version incrémentée pour forcer la mise à jour
 const SHELL = ['/', '/index.html', '/admin.html', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png'];
 
 // À l'installation : pré-cache le shell + tous les assets hashés listés dans
@@ -12,91 +12,47 @@ self.addEventListener('install', (e) => {
         const assets = await res.json();
         await Promise.all(assets.map((url) => fetch(url).then((r) => r.ok && c.put(url, r.clone())).catch(() => {})));
       } catch {}
-      return self.skipWaiting();
     })
   );
+  self.skipWaiting(); // Force la nouvelle version à prendre le contrôle
 });
 
+// À l'activation : nettoie les anciens caches
 self.addEventListener('activate', (e) => {
   e.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim())
+    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
   );
+  self.clientsClaim(); // Met à jour tous les onglets ouverts
 });
 
+// Gestion des requêtes
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET') return;
 
-  // Navigations : réseau d'abord, repli sur le shell en cache (offline)
+  // Requêtes de navigation (pages)
   if (e.request.mode === 'navigate') {
     e.respondWith(
-      fetch(e.request)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put('/index.html', copy));
-          return res;
-        })
-        .catch(() => caches.match('/index.html'))
-    );
-    return;
-  }
-
-  // Assets du site (js/css hashés) : cache d'abord, mise à jour en arrière-plan
-  if (url.origin === self.location.origin) {
-    e.respondWith(
       caches.match(e.request).then((cached) => {
-        const network = fetch(e.request)
-          .then((res) => {
-            if (res.ok) {
-              const copy = res.clone();
-              caches.open(CACHE).then((c) => c.put(e.request, copy));
-            }
-            return res;
-          })
-          .catch(() => cached);
-        return cached || network;
+        return cached || fetch(e.request).catch(() => caches.match('/index.html')); // Fallback sur index.html
       })
     );
     return;
   }
 
-  // Images produits + polices : cache d'abord (rechargement ultra-rapide)
-  if (e.request.destination === 'image' || url.hostname.includes('fonts.g')) {
+  // Requêtes statiques (CSS, JS, images, etc.)
+  if (url.origin === self.location.origin) {
     e.respondWith(
-      caches.match(e.request).then(
-        (cached) =>
-          cached ||
-          fetch(e.request).then((res) => {
-            if (res.ok) {
-              const copy = res.clone();
-              caches.open(CACHE).then((c) => c.put(e.request, copy));
-            }
-            return res;
-          })
-      )
+      caches.match(e.request).then((cached) => {
+        return cached || fetch(e.request).catch(() => caches.match('/index.html'));
+      })
     );
-    return;
   }
+});
 
-  // Données produits Supabase (REST) : stale-while-revalidate.
-  if (url.hostname.endsWith('.supabase.co')) {
-    e.respondWith(
-      caches.open(CACHE).then((c) =>
-        c.match(e.request).then((cached) => {
-          const network = fetch(e.request)
-            .then((res) => {
-              if (res.ok) c.put(e.request, res.clone());
-              return res;
-            })
-            .catch(() => cached);
-          return cached || network;
-        })
-      )
-    );
-    return;
+// Mise à jour automatique
+self.addEventListener('message', (e) => {
+  if (e.data === 'skipWaiting') {
+    self.skipWaiting();
   }
-
-  // Tout le reste : réseau uniquement → données toujours fraîches
 });
