@@ -22,7 +22,7 @@ else:
 
 print(f"ID Notion ciblé : {PAGE_ID}")
 
-EXCLUDE_DIRS = {'.git', 'node_modules', 'dist', 'build', '.next', '.cache', '.github', 'public'}
+EXCLUDE_DIRS = {'.git', 'node_modules', 'dist', 'build', '.next', '.cache'}
 EXCLUDE_FILES = {'package-lock.json', 'yarn.lock'}
 
 LANG_MAP = {
@@ -79,7 +79,7 @@ def push_blocks_in_batches(blocks):
         "Notion-Version": "2022-06-28"
     }
 
-    batch_size = 80  # Marge de sécurité
+    batch_size = 80
     for i in range(0, len(blocks), batch_size):
         batch = blocks[i:i + batch_size]
         payload = {"children": batch}
@@ -94,8 +94,6 @@ def push_blocks_in_batches(blocks):
 
 def generate_notion_content():
     all_blocks = []
-    
-    # 1. En-tête
     all_blocks.append({
         "object": "block",
         "type": "heading_1",
@@ -129,7 +127,6 @@ def generate_notion_content():
         lang = get_language(filepath)
         chunks = chunk_text(content)
 
-        # Création des blocs de code enfants pour le Toggle
         children_code_blocks = []
         for chunk in chunks:
             children_code_blocks.append({
@@ -141,7 +138,6 @@ def generate_notion_content():
                 }
             })
 
-        # Bloc Toggle pour le fichier
         toggle_block = {
             "object": "block",
             "type": "toggle",
@@ -158,19 +154,19 @@ def generate_notion_content():
                         "annotations": {"italic": True, "color": "gray"}
                     }
                 ],
-                "children": children_code_blocks[:100]  # Limite enfants par toggle
+                "children": children_code_blocks[:100]
             }
         }
         all_blocks.append(toggle_block)
 
-    # Résumé au début de la page (Callout)
     summary_block = {
         "object": "block",
         "type": "callout",
         "callout": {
             "rich_text": [{
                 "type": "text",
-                "text": {"content": f"📊 Projet synchronisé : {len(file_list)} fichiers | {total_chars:,} caractères au total.\nCliquez sur un fichier pour dérouler son code ou laissez Claude lire la page."}
+                "text": {"content": f"📊 Projet synchronisé : {len(file_list)} fichiers | {total_chars:,} caractères au total.
+Cliquez sur un fichier pour dérouler son code ou laissez Claude lire la page."}
             }],
             "icon": {"type": "emoji", "emoji": "⚡"}
         }
@@ -182,10 +178,8 @@ def generate_notion_content():
 if __name__ == "__main__":
     print("Nettoyage de l'ancienne page Notion...")
     clear_existing_blocks()
-    
     print("Génération du code source pour Notion...")
     blocks = generate_notion_content()
-    
     print(f"Envoi de {len(blocks)} éléments vers Notion...")
     push_blocks_in_batches(blocks)
     print("Synchronisation terminée avec succès !")
