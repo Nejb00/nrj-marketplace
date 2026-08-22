@@ -2,18 +2,16 @@ const CACHE = 'nrj-v8';
 const SHELL = ['/', '/index.html', '/admin.html', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png', '/placeholder.svg'];
 const IMAGE_CACHE = 'nrj-images-v2';
 const ASSETS_CACHE = 'nrj-assets-v2';
+const SEARCH_CACHE = 'nrj-search-v1';
 
 // ─── Limites de cache ─────────────────────────────────────
 const MAX_IMAGE_ENTRIES = 300;
 const MAX_IMAGE_AGE_MS = 7 * 24 * 60 * 60 * 1000;
-const MAX_IMAGE_CACHE_BYTES = 50 * 1024 * 1024; // 50 MB
-const TARGET_IMAGE_CACHE_BYTES = 40 * 1024 * 1024; // 40 MB (marge de securite)
+const MAX_IMAGE_CACHE_BYTES = 50 * 1024 * 1024;
+const TARGET_IMAGE_CACHE_BYTES = 40 * 1024 * 1024;
 
 // ─── Helpers ──────────────────────────────────────────────
 
-/**
- * Calcule la taille totale du cache images en octets.
- */
 async function getImageCacheSize() {
   const cache = await caches.open(IMAGE_CACHE);
   const keys = await cache.keys();
@@ -28,19 +26,12 @@ async function getImageCacheSize() {
   return total;
 }
 
-/**
- * Nettoie le cache images selon 3 regles:
- * 1. Supprime les images de plus de 7 jours
- * 2. Supprime les plus anciennes si > 300 entrees
- * 3. Supprime les plus anciennes si > 50 MB
- */
 async function cleanupImageCache() {
   const cache = await caches.open(IMAGE_CACHE);
   const keys = await cache.keys();
   const now = Date.now();
   const toDelete = [];
 
-  // 1. Supprimer les entrees trop vieilles
   for (const req of keys) {
     const url = new URL(req.url);
     const ts = url.searchParams.get('_nrj_ts');
@@ -49,16 +40,12 @@ async function cleanupImageCache() {
     }
   }
 
-  // Appliquer la suppression des vieilles entrees avant de verifier la taille
   await Promise.all(toDelete.map(req => cache.delete(req)));
 
-  // 2. Verifier la taille totale du cache
   let currentSize = await getImageCacheSize();
   let remaining = (await cache.keys()).filter(k => !toDelete.includes(k));
 
-  // Si > 50 MB, supprimer les plus anciennes jusqu'a < 40 MB
   if (currentSize > MAX_IMAGE_CACHE_BYTES) {
-    // Trier par timestamp (plus ancien en premier)
     remaining.sort((a, b) => {
       const tsA = new URL(a.url).searchParams.get('_nrj_ts') || '0';
       const tsB = new URL(b.url).searchParams.get('_nrj_ts') || '0';
@@ -77,7 +64,6 @@ async function cleanupImageCache() {
     }
   }
 
-  // 3. Si toujours trop d'entrees, supprimer les plus anciennes (LRU)
   remaining = (await cache.keys());
   if (remaining.length > MAX_IMAGE_ENTRIES) {
     remaining.sort((a, b) => {
@@ -116,6 +102,39 @@ async function getCachedImage(request) {
   return null;
 }
 
+/**
+ * Pre-cache une liste d'URLs d'images.
+ * Utilise par le client pour telecharger des produits specifiques.
+ */
+async function precacheImages(urls) {
+  if (!Array.isArray(urls) || urls.length === 0) return;
+  const cache = await caches.open(IMAGE_CACHE);
+  let cached = 0;
+  let failed = 0;
+
+  await Promise.all(urls.map(async (url) => {
+    if (!url || !url.trim()) return;
+    try {
+      const req = new Request(url);
+      const existing = await getCachedImage(req);
+      if (existing) { cached++; return; }
+
+      const res = await fetch(req, { mode: 'no-cors' });
+      if (res.ok || res.type === 'opaque') {
+        await cacheImage(req, res);
+        cached++;
+      } else {
+        failed++;
+      }
+    } catch (e) {
+      failed++;
+    }
+  }));
+
+  console.log('[SW] Precache:', cached, 'caches,', failed, 'echecs sur', urls.length, 'URLs');
+  return { cached, failed, total: urls.length };
+}
+
 // ─── Install ──────────────────────────────────────────────
 self.addEventListener('install', (e) => {
   e.waitUntil(
@@ -135,7 +154,7 @@ self.addEventListener('install', (e) => {
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) => Promise.all(
-      keys.filter((k) => k !== CACHE && k !== IMAGE_CACHE && k !== ASSETS_CACHE).map((k) => caches.delete(k))
+      keys.filter((k) => k !== CACHE && k !== IMAGE_CACHE && k !== ASSETS_CACHE && k !== SEARCH_CACHE).map((k) => caches.delete(k))
     ))
   );
   self.clientsClaim();
@@ -147,6 +166,7 @@ self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
   if (url.hostname.includes('supabase.co')) return;
 
+  // ── IMAGES ──────────────────────────────────────────────
   const isImage = url.hostname.includes('wsrv.nl') ||
                   url.pathname.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp|ico)$/i) ||
                   (url.searchParams.has('output') && url.searchParams.get('output') === 'webp');
@@ -167,7 +187,6 @@ self.addEventListener('fetch', (e) => {
           const anyCached = await getCachedImage(e.request);
           if (anyCached) return anyCached;
 
-          // Fallback propre: placeholder.svg au lieu de icon.svg
           const placeholder = await caches.match('/placeholder.svg');
           if (placeholder) return placeholder;
 
@@ -178,6 +197,33 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
+  // ── PAGES DE RECHERCHE (stale-while-revalidate) ─────────
+  if (url.searchParams.has('search')) {
+    e.respondWith(
+      (async () => {
+        const cache = await caches.open(SEARCH_CACHE);
+        const cached = await cache.match(e.request);
+
+        // Mise a jour en arriere-plan
+        const fetchAndCache = fetch(e.request).then((res) => {
+          if (res.ok) cache.put(e.request, res.clone());
+          return res;
+        }).catch(() => cached);
+
+        // Si on a du cache, on le sert immediatement
+        if (cached) {
+          fetchAndCache; // declenche la maj en bg
+          return cached;
+        }
+
+        // Sinon on attend le reseau
+        return await fetchAndCache;
+      })()
+    );
+    return;
+  }
+
+  // ── ASSETS (CSS, JS, fonts) ─────────────────────────────
   if (url.pathname.match(/\.(css|js|woff2?|ttf|eot)$/i)) {
     e.respondWith(
       fetch(e.request).then((res) => {
@@ -190,6 +236,7 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
+  // ── NAVIGATION ──────────────────────────────────────────
   if (e.request.mode === 'navigate') {
     e.respondWith(
       fetch(e.request).then((res) => {
@@ -200,6 +247,7 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
+  // ── SAME-ORIGIN ─────────────────────────────────────────
   if (url.origin === self.location.origin) {
     e.respondWith(
       fetch(e.request).then((res) => {
@@ -216,5 +264,13 @@ self.addEventListener('message', (e) => {
     self.skipWaiting();
   } else if (e.data === 'cleanup-images') {
     e.waitUntil(cleanupImageCache());
+  } else if (e.data && e.data.type === 'precache-images') {
+    e.waitUntil(
+      precacheImages(e.data.urls).then((result) => {
+        if (e.ports && e.ports[0]) {
+          e.ports[0].postMessage(result);
+        }
+      })
+    );
   }
 });
