@@ -56,16 +56,13 @@ er' in navigator && location.hostname !== 'localhost') {
       }
     </script>
 
-    <link rel="preload" href="/src/css/base.css" as="style">
-    <link rel="preload" href="/src/css/main.css" as="style">
-    <link rel="preload" href="/src/css/product-card.css" as="style">
-    <link rel="preload" href="/src/css/navigation.css" as="style">
     <!-- Fonts: réduire le nombre de graisses chargées pour alléger le payload -->
     <!-- Performance : preconnect Supabase (premier fetch produits plus rapide) -->
     <link rel="preconnect" href="https://peojyqliwrtghomyukwn.supabase.co">
     <link rel="dns-prefetch" href="//peojyqliwrtghomyukwn.supabase.co">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="/css/main.css" as="style">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 
     <!-- Performance: preconnect / dns-prefetch pour wsrv.nl (service d'images) -->
