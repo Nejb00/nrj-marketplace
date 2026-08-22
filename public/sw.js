@@ -1,7 +1,7 @@
-const CACHE = 'nrj-v8';
+const CACHE = 'nrj-v9';
 const SHELL = ['/', '/index.html', '/admin.html', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png', '/placeholder.svg'];
 const IMAGE_CACHE = 'nrj-images-v2';
-const ASSETS_CACHE = 'nrj-assets-v2';
+const ASSETS_CACHE = 'nrj-assets-v3';
 const SEARCH_CACHE = 'nrj-search-v1';
 
 // ─── Limites de cache ─────────────────────────────────────
@@ -223,7 +223,7 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // ── ASSETS (CSS, JS, fonts) ─────────────────────────────
+  // ── ASSETS (CSS, JS, fonts) — Network first avec maj cache ─
   if (url.pathname.match(/\.(css|js|woff2?|ttf|eot)$/i)) {
     e.respondWith(
       fetch(e.request).then((res) => {
