@@ -1,7 +1,7 @@
 import { state } from './state.js';
 import { trackViewedItem } from './state.js';
 import { WHATSAPP_NUMBER, BASE_URL } from './config.js';
-import { escapeHtml, formatPrice, generateBadgesHTML, showToast, thumbImg, modalImg } from './utils.js';
+import { escapeHtml, formatPrice, generateBadgesHTML, showToast, thumbImg, modalImg, thumb } from './utils.js';
 import { trackPopularity, fetchProductDetails, trackView, getRelatedProducts } from './api.js';
 import { toggleFavorite, addToCart } from './cart.js';
 import { signalView } from './reco.js';
@@ -97,8 +97,7 @@ async function downloadProductForOffline(product) {
         return;
     }
 
-    // Generer les URLs wsrv.nl pour le cache (meme format que thumbImg)
-    const { thumb } = await import('./utils.js');
+    // Generer les URLs wsrv.nl pour le cache
     const imageUrls = imgs.map(url => thumb(url.trim(), 300, 400));
 
     showToast(`📥 Telechargement de ${imgs.length} image${imgs.length > 1 ? 's' : ''}...`);
@@ -159,7 +158,9 @@ export async function openProductModal(pid) {
     document.getElementById('modalFavBtn').onclick = () => toggleFavorite(p.id);
     document.getElementById('modalShareBtn').onclick = () => {
         const url = BASE_URL + '?id=' + p.id;
-        const txt = `${formatPrice(uPrice)}\nMinimum d'achat : ${moq} piece(s)\nDecouvre "${p.name}" sur NRJ Marketplace ${url}`;
+        const txt = `${formatPrice(uPrice)}
+Minimum d'achat : ${moq} piece(s)
+Decouvre "${p.name}" sur NRJ Marketplace ${url}`;
         navigator.share ? navigator.share({ title: p.name, text: txt, url }).catch(() => {}) : navigator.clipboard.writeText(txt).then(() => showToast('🔗 Copie !'));
     };
 
