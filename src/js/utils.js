@@ -221,14 +221,14 @@ rv.nl/?${params.toString()}`;
 export function thumbImg(url, alt = '', w = 300, h = 400, cls = '') {
     if (!url) return '';
 
-    const optimized = thumb(url, w, h);
-    const original = url;
+    const thumbUrl = thumb(url, w, h);
+    // CORRECTION: Fallback explicite avec verification de longueur
+    const DATA_URI_FALLBACK = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGZpbGwgZmlsbD0iI0NFRkY2QiIvPjxwYXRoIGQ9Ik0yIDEyTDEyIDJMMjAgMTJMMjAgMjBMMTIgN0wyMCAxOFoiLz48L3N2Zz4=';
     
-    // ✅ Fallback vers l'URL originale si wsrv.nl échoue
-    const onerr = `this.onerror=function(){this.onerror=null;this.src='${original}';this.removeAttribute('data-full');this.removeAttribute('data-ts');}`;
+    const onerr = `this.onerror=function(){this.onerror=null;const fullUrl=this.dataset.full;if(fullUrl&&fullUrl.length<=1500){this.src=fullUrl;}else{this.src='${DATA_URI_FALLBACK}';}this.removeAttribute('data-full');this.removeAttribute('data-ts');}`;
     const clsAttr = cls ? ` class="${escapeHtml(cls)}"` : '';
 
-    return `<img${clsAttr} src="${escapeHtml(optimized)}" data-full="${escapeHtml(original)}" data-ts="${Date.now()}" alt="${escapeHtml(alt)}" loading="lazy" referrerpolicy="no-referrer" decoding="async" onload="this.classList.add('loaded')" onerror="${onerr}" width="${w}" height="${h}">`;
+    return `<img${clsAttr} src="${escapeHtml(thumbUrl)}" data-full="${escapeHtml(url)}" data-ts="${Date.now()}" alt="${escapeHtml(alt)}" loading="lazy" referrerpolicy="no-referrer" decoding="async" onload="this.classList.add('loaded')" onerror="${onerr}" width="${w}" height="${h}">`;
 }
 
 /**
@@ -240,13 +240,11 @@ export function thumbImg(url, alt = '', w = 300, h = 400, cls = '') {
 export function modalImg(url, alt = '') {
     if (!url) return '';
 
-    const optimized = thumb(url, 800, 1200, 'contain');
-    const original = url;
-    
-    // ✅ Fallback vers l'URL originale
-    const onerr = `this.onerror=function(){this.onerror=null;this.src='${original}';};`;
+    const thumbUrl = thumb(url, 800, 1200, 'contain');
+    // Si wsrv.nl echoue, on bascule sur l'URL originale
+    const onerr = `this.onerror=function(){this.onerror=null;this.src=this.dataset.full;};`;
 
-    return `<img src="${escapeHtml(optimized)}" data-full="${escapeHtml(original)}" alt="${escapeHtml(alt)}" loading="eager" decoding="async" onload="this.classList.add('loaded')" onerror="${onerr}" style="width:100%;height:100%;object-fit:contain;">`;
+    return `<img src="${escapeHtml(thumbUrl)}" data-full="${escapeHtml(url)}" alt="${escapeHtml(alt)}" loading="eager" decoding="async" onload="this.classList.add('loaded')" onerror="${onerr}" style="width:100%;height:100%;object-fit:contain;">`;
 }
 
 /**
@@ -258,10 +256,8 @@ export function modalImg(url, alt = '') {
 export function searchThumbImg(url, alt = '') {
     if (!url) return '';
 
-    const optimized = thumb(url, 100, 100, 'cover');
-    const original = url;
-    
-    const onerr = `this.onerror=function(){this.onerror=null;this.src='${original}';};`;
+    const thumbUrl = thumb(url, 100, 100, 'cover');
+    const onerr = `this.onerror=function(){this.onerror=null;this.src=this.dataset.full;};`;
 
     return `<img src="${escapeHtml(thumbUrl)}" data-full="${escapeHtml(url)}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async" onerror="${onerr}" style="width:100%;height:100%;object-fit:cover;
 ">`;
@@ -285,24 +281,3 @@ function startImgWatchdog() {
     }, 2000);
 }
 startImgWatchdog();
-
-// ✅ Nouvelle fonction pour initialiser le lazy loading
-export function initLazyImages() {
-    if ('IntersectionObserver' in window) {
-        const lazyImages = document.querySelectorAll('img.lazy-load');
-        if (lazyImages.length === 0) return;
-        
-        const imageObserver = new IntersectionObserver((entries, observer) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const img = entry.target;
-                    img.src = img.dataset.src || img.src;
-                    img.classList.remove('lazy-load');
-                    observer.unobserve(img);
-                }
-            });
-        }, { rootMargin: '100px' });
-
-        lazyImages.forEach(img => imageObserver.observe(img));
-    }
-};
