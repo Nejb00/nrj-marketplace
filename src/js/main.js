@@ -1,7 +1,7 @@
 import '../css/main.css';
 import { state, trackViewedItem, loadPersistedState, saveCart, saveFavorites, saveOrders } from './state.js';
 import { supabaseClient } from './config.js';
-import { escapeHtml, removeEmojis, formatPrice, showToast } from './utils.js';
+import { escapeHtml, removeEmojis, formatPrice, showToast, thumb } from './utils.js';
 import { fetchProducts } from './api.js';
 import { refreshCatalogue, applyFilter, switchView } from './catalogue.js';
 import { addToCart, changeQty, removeCartItem, refreshCartDisplay, toggleFavorite, updateNavFavBadge, updateNavCartBadge, openOrderModal, sendWhatsAppOrder, loadOrders } from './cart.js';
@@ -80,7 +80,7 @@ function initServiceWorkerUpdates() {
       if (!newWorker) return;
       newWorker.addEventListener('statechange', () => {
         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-          showToast("📦 Mise à jour disponible — relance l'app");
+          showToast("📦 Mise a jour disponible — relance l'app");
         }
       });
     });
@@ -167,7 +167,7 @@ window.addEventListener('popstate', (e) => {
 });
 
 document.getElementById('modalSourcingBtn')?.addEventListener('click', () => window.open(`https://wa.me/242066271882?text=${encodeURIComponent('Bonjour NRJ Marketplace, je recherche un produit. Je peux vous envoyer une photo')}`));
-document.getElementById('modalDescSourcingBtn')?.addEventListener('click', () => window.open(`https://wa.me/242066271882?text=${encodeURIComponent('Bonjour NRJ Marketplace International, je recherche un produit spécifique...')}`));
+document.getElementById('modalDescSourcingBtn')?.addEventListener('click', () => window.open(`https://wa.me/242066271882?text=${encodeURIComponent('Bonjour NRJ Marketplace International, je recherche un produit specifique...')}`));
 
 document.getElementById('cartCloseBtn')?.addEventListener('click', () => {
   document.getElementById('cartPanel').classList.remove('open');
@@ -232,7 +232,7 @@ function renderAccount() {
 
   let ordersHtml = '';
   if (orders.length === 0) {
-    ordersHtml = `<div class="account-empty">Aucune commande envoyée pour l'instant.</div>`;
+    ordersHtml = `<div class="account-empty">Aucune commande envoyee pour l'instant.</div>`;
   } else {
     ordersHtml = orders.slice(0, 10).map(o => {
       const date = new Date(o.date);
@@ -291,14 +291,14 @@ function renderAccount() {
           <span class="account-menu-meta">${favCount}</span>
         </button>
         <button class="account-menu-item" data-account-action="go-history">
-          <span>🕐 Recherches récentes</span>
+          <span>🕐 Recherches recentes</span>
           <span class="account-menu-meta">→</span>
         </button>
       </div>
     </div>
 
     <div class="account-section">
-      <div class="account-section-title">Mes commandes envoyées</div>
+      <div class="account-section-title">Mes commandes envoyees</div>
       ${ordersHtml}
     </div>
 
@@ -310,7 +310,7 @@ function renderAccount() {
           <span class="account-menu-meta">→</span>
         </button>
         <button class="account-menu-item" data-account-action="go-new">
-          <span>✨ Nouveautés</span>
+          <span>✨ Nouveautes</span>
           <span class="account-menu-meta">→</span>
         </button>
         <button class="account-menu-item" data-account-action="contact">
@@ -321,10 +321,10 @@ function renderAccount() {
     </div>
 
     <div class="account-section">
-      <div class="account-section-title">Données</div>
+      <div class="account-section-title">Donnees</div>
       <div class="account-menu">
         <button class="account-menu-item danger" data-account-action="clear-all">
-          <span>🧹 Effacer toutes mes données</span>
+          <span>🧹 Effacer toutes mes donnees</span>
           <span class="account-menu-meta">→</span>
         </button>
       </div>
@@ -389,12 +389,12 @@ function handleAccountAction(action) {
       if (window.deferredInstallPrompt) {
         window.deferredInstallPrompt.prompt();
       } else {
-        alert("Pour installer l'app NRJ :\n\n• Chrome Android : menu ⋮ → « Installer l'application »\n• iOS Safari : bouton Partager → « Sur l'écran d'accueil »");
+        alert("Pour installer l'app NRJ :\n\n• Chrome Android : menu ⋮ → « Installer l'application »\n• iOS Safari : bouton Partager → « Sur l'ecran d'accueil »");
       }
       break;
     }
     case 'clear-all': {
-      if (!confirm('Effacer vos favoris, votre panier, votre historique de recherches et de commandes ? Cette action est définitive.')) return;
+      if (!confirm('Effacer vos favoris, votre panier, votre historique de recherches et de commandes ? Cette action est definitive.')) return;
       try {
         localStorage.removeItem('nrj_favorites');
         localStorage.removeItem('nrj_cart');
@@ -413,7 +413,7 @@ function handleAccountAction(action) {
       updateNavCartBadge();
       refreshCartDisplay();
       renderAccount();
-      showToast('🧹 Données effacées');
+      showToast('🧹 Donnees effacees');
       break;
     }
     case 'go-admin': {
@@ -477,7 +477,7 @@ function initOfflineIndicator() {
     banner = document.createElement('div');
     banner.id = 'offlineBanner';
     banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#7f1d1d;color:#fff;text-align:center;padding:0.4rem;font-size:0.78rem;font-weight:600;transform:translateY(-100%);transition:transform 0.3s ease;';
-    banner.textContent = '📡 Hors ligne — catalogue mémorisé';
+    banner.textContent = '📡 Hors ligne — catalogue memorise';
     document.body.prepend(banner);
   }
   const update = () => {
@@ -488,10 +488,58 @@ function initOfflineIndicator() {
   addEventListener('offline', update);
 }
 
+// ============================================================
+//  PRE-CACHE IMAGES POPULAIRES (Action 7)
+// ============================================================
+
+/**
+ * Envoie les URLs des images des produits populaires au Service Worker
+ * pour les pre-cacher. Limite aux 30 produits les plus populaires.
+ */
+async function precachePopularImages() {
+  if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) return;
+  if (!state.products || state.products.length === 0) return;
+
+  const popular = [...state.products]
+    .sort((a, b) => (b.popularity_score || 0) - (a.popularity_score || 0))
+    .slice(0, 30);
+
+  const imageUrls = [];
+  for (const p of popular) {
+    for (const img of [p.image, p.image2, p.image3, p.image4, p.image5, p.image6]) {
+      if (img && img.trim()) {
+        imageUrls.push(thumb(img.trim(), 300, 400));
+      }
+    }
+  }
+
+  if (imageUrls.length === 0) return;
+
+  try {
+    const channel = new MessageChannel();
+    navigator.serviceWorker.controller.postMessage(
+      { type: 'precache-images', urls: imageUrls },
+      [channel.port2]
+    );
+
+    channel.port1.onmessage = (event) => {
+      const { cached, failed, total } = event.data;
+      console.log(`[Main] Precache: ${cached}/${total} images mises en cache`);
+    };
+  } catch (e) {
+    console.warn('[Main] Precache images echoue:', e);
+  }
+}
+
+// ============================================================
+
 async function init() {
   await loadPersistedState();
   await fetchProducts();
   loadOrders();
+
+  // Pre-cacher les images populaires apres le chargement des produits
+  precachePopularImages();
 
   const cats = [...new Set(state.products.map(p => removeEmojis(p.category)))];
   let html = `<button class="filter-btn active" data-category="all">Tout voir (${state.products.length})</button>`;
