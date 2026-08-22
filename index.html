@@ -29,7 +29,8 @@
     <meta name="apple-mobile-web-app-title" content="NRJ Market">
     <link rel="apple-touch-icon" href="/icon-192.png">
     <script>
-      if ('serviceWorker' in navigator && location.hostname !== 'localhost') {
+      if ('serviceWork
+er' in navigator && location.hostname !== 'localhost') {
         addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js').then(() => {
 
@@ -55,6 +56,10 @@
       }
     </script>
 
+    <link rel="preload" href="/src/css/base.css" as="style">
+    <link rel="preload" href="/src/css/main.css" as="style">
+    <link rel="preload" href="/src/css/product-card.css" as="style">
+    <link rel="preload" href="/src/css/navigation.css" as="style">
     <!-- Fonts: réduire le nombre de graisses chargées pour alléger le payload -->
     <!-- Performance : preconnect Supabase (premier fetch produits plus rapide) -->
     <link rel="preconnect" href="https://peojyqliwrtghomyukwn.supabase.co">
@@ -69,7 +74,8 @@
 </head>
 <body>
     <div id="catalogueWrapper">
-        <div class="header-wrapper" id="headerWrapper">
+        <div class="header-wrapper" id="headerWrapper
+">
             <header>
                 <div class="logo-wrapper" onclick="location.href='/'">
                     <span class="logo-icon">⚡</span>
@@ -103,7 +109,8 @@
         <div id="headerSpacer"></div>
 
         <div id="catalogueView">
-            <div class="quick-filters">
+            <d
+iv class="quick-filters">
                 <button class="filter-chip active" data-filter="all">Tout</button>
                 <button class="filter-chip" data-filter="new">✨ Nouveautés</button>
                 <button class="filter-chip" data-filter="bestseller">🔥 Populaires</button>
@@ -132,7 +139,8 @@
                 <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"></path></svg>
             </a>
             <a href="#" class="nav-item categories-accent" data-nav="categories" aria-label="Catégories">
-                <svg viewBox="0 0 24 24"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"></path></svg>
+                <svg viewBox="0 0 24 24"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.
+36.59-.86.59-1.41 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"></path></svg>
             </a>
             <a href="#" class="nav-item cart-accent" data-nav="cart" aria-label="Panier">
                 <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.9
@@ -157,6 +165,7 @@
             <button class="back-arrow-btn" id="modalCloseBtn" aria-label="Retour">←</button>
             <div class="product-id-badge" id="modalProductIdBadge">[ID: ...]</div>
             <div class="modal-badges" id="modalBadges"></div>
+
             <div class="product-actions-overlay">
                 <button class="action-circle" id="modalFavBtn" aria-label="Ajouter aux favoris">
                     <svg viewBox="0 0 24 24" class="fav-icon-svg">
@@ -186,7 +195,8 @@
             <button class="sourcing-btn" id="modalSourcingBtn">📸 Photo</button>
             <input type="file" id="modalSourcingFileInput" accept="image/*" style="display:none;">
             <button class="whatsapp-btn" id="modalDescSourcingBtn" style="margin-left:0.5rem;">💬 Message</button>
-            <p id="modalSourcingStatus" style="margin-top:0.8rem;font-size:0.85rem;color:var(--text-secondary);"></p>
+            <p id="modalSourci
+ngStatus" style="margin-top:0.8rem;font-size:0.85rem;color:var(--text-secondary);"></p>
         </div>
     </div>
 
@@ -215,7 +225,8 @@
             <h2 style="text-align:center;margin-bottom:1rem;">📋 Valider la commande</h2>
             <div id="orderSummary" style="background:var(--surface-light);border-radius:12px;padding:0.8rem;margin-bottom:1rem;font-size:0.85rem;"></div>
             <div class="form-group"><label>👤 Votre nom complet</label><input type="text" id="customerName" placeholder="Ex: Jean Bosco" required></div>
-            <button class="btn btn-primary" id="sendWhatsAppBtn" style="background:var(--whatsapp);">Envoyer sur WhatsApp</button>
+            <button class="btn btn-primary" id="sendWhatsAppBtn" style="background:var(--whatsapp);">Envoyer sur WhatsApp</bu
+tton>
             <button class="btn btn-outline" id="cancelOrderBtn" style="margin-top:0.5rem;background:transparent;border:1px solid var(--border);color:var(--text);">Annuler</button>
         </div>
     </div>
@@ -238,7 +249,8 @@
             <div class="form-group"><label>Quantité minimale (MOQ)</label><input type="number" id="editMoq" min="1"></div>
             <div class="form-group"><label>Description</label><input type="text" id="editDesc"></div>
             <div style="display:flex;gap:0.5rem;margin-top:1rem;">
-                <button class="btn btn-primary" id="saveEditBtn" style="flex:1;background:var(--primary);">💾 Sauvegarder</button>
+                <button class="btn btn-primary" id="saveEditBtn" sty
+le="flex:1;background:var(--primary);">💾 Sauvegarder</button>
                 <button class="btn btn-outline" id="cancelEditBtn" style="flex:1;background:transparent;border:1px solid var(--border);color:var(--text);">Annuler</button>
             </div>
             <div id="editError" style="color:#fca5a5;text-align:center;font-size:0.8rem;margin-top:0.5rem;"></div>
@@ -274,7 +286,8 @@
                         <div class="price-inputs">
                             <input type="number" id="priceMin" placeholder="Min" min="0">
                             <span>—</span>
-                            <input type="number" id="priceMax" placeholder="Max" min="0">
+                            <input type="number" id="priceMax" placeholder="Max" 
+min="0">
                         </div>
                         <div class="price-presets">
                             <button class="price-preset" data-min="0" data-max="5000">0 - 5K</button>
@@ -310,7 +323,8 @@
                         </button>
                         <select id="sortBy" class="sort-select">
                             <option value="relevance">🎯 Pertinence</option>
-                            <option value="price-asc">💰 Prix croissant</option>
+                            <option value="price-asc">💰 Prix
+ croissant</option>
                             <option value="price-desc">💰 Prix décroissant</option>
                             <option value="newest">✨ Nouveautés</option>
                             <option value="popular">🔥 Populaires</option>
@@ -341,7 +355,8 @@
                 </div>
             </main>
         </div>
-        <div class="filters-overlay" id="filtersOverlay"></div>
+        <div class="filters-overlay" id="filters
+Overlay"></div>
     </div>
 
     <!-- ✅ NEW : vue compte « Mon NRJ » -->
