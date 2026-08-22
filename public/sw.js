@@ -3,9 +3,11 @@ const SHELL = [
   '/', '/index.html', '/admin.html',
   '/manifest.webmanifest',
   '/icon.svg', '/icon-192.png', '/icon-512.png', '/placeholder.svg',
-  // ✅ Ajout des CSS principaux pour un chargement instantané
+  // ✅ CSS principaux pour chargement instantané
   '/src/css/main.css', '/src/css/base.css', '/src/css/admin.css',
-  '/src/css/product-card.css', '/src/css/navigation.css'
+  '/src/css/product-card.css', '/src/css/navigation.css',
+  '/src/css/cart-admin.css', '/src/css/product-modal.css',
+  '/src/css/search-view.css'
 ];
 const IMAGE_CACHE = 'nrj-images-v2';
 const ASSETS_CACHE = 'nrj-assets-v3';
@@ -197,7 +199,7 @@ self.addEventListener('fetch', (e) => {
           const placeholder = await caches.match('/placeholder.svg');
           if (placeholder) return placeholder;
 
-          // ✅ Fallback vers une image data:URI si placeholder non disponible
+          // ✅ Fallback vers une image data:URI
           const fallbackImg = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23ddd" width="100" height="100"/><text x="50" y="55" text-anchor="middle" fill="%23999">📦</text></svg>';
           return new Response(fallbackImg, { headers: { 'Content-Type': 'image/svg+xml' } });
         }
@@ -236,14 +238,14 @@ self.addEventListener('fetch', (e) => {
   if (url.pathname.match(/\.(css|js|woff2?|ttf|eot)$/i)) {
     e.respondWith(
       caches.match(e.request).then((cached) => {
-        if (cached) return cached; // ✅ Retourne le cache si disponible
+        if (cached) return cached; // ✅ Cache d'abord
         return fetch(e.request).then((res) => {
           if (res.ok) {
             caches.open(ASSETS_CACHE).then((cache) => cache.put(e.request, res.clone()));
           }
           return res;
         }).catch(() => {
-          // ✅ Fallback vers /index.html si rien ne fonctionne
+          // ✅ Fallback vers index.html
           return caches.match('/index.html') || new Response('', { status: 503 });
         });
       })
@@ -255,12 +257,12 @@ self.addEventListener('fetch', (e) => {
   if (e.request.mode === 'navigate') {
     e.respondWith(
       caches.match(e.request).then((cached) => {
-        if (cached) return cached;
+        if (cached) return cached; // ✅ Cache d'abord
         return fetch(e.request).then((res) => {
           if (res.ok) caches.open(CACHE).then((c) => c.put(e.request, res.clone()));
           return res;
         }).catch(() => {
-          // ✅ Fallback vers index.html si réseau échoue
+          // ✅ Fallback vers index.html
           return caches.match('/index.html') || new Response('', { status: 503 });
         });
       })
