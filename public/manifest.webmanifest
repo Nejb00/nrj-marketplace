@@ -10,6 +10,7 @@
   "orientation": "any",
   "theme_color": "#0f0f0f",
   "background_color": "#0f0f0f",
+  "handle_links": "preferred",
   "categories": ["shopping", "business"],
   "related_applications": [],
   "icons": [
@@ -30,6 +31,34 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "apple"
+    },
+    {
+      "src": "/icon-167.png",
+      "sizes": "167x167",
+      "type": "image/png",
+      "purpose": "apple"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-1.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "NRJ Marketplace - Catalogue de produits"
+    },
+    {
+      "src": "/screenshot-2.jpg",
+      "sizes": "720x1280",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "NRJ Marketplace - Fiche produit"
     }
   ]
 }
