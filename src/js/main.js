@@ -186,18 +186,77 @@ document.getElementById('cancelEditBtn')?.addEventListener('click', () => docume
 
 document.getElementById('backToHomeBtn')?.addEventListener('click', () => switchView('home'));
 
+// ============================================================
+//  ACCES ADMIN — Appui long sur le logo (CORRIGE pour mobile)
+// ============================================================
+
 function initLogoLongPress() {
   const logo = document.querySelector('.logo-wrapper');
   if (!logo) return;
+
+  // Empecher la selection de texte et le menu contextuel
+  logo.style.webkitUserSelect = 'none';
+  logo.style.userSelect = 'none';
+  logo.style.webkitTouchCallout = 'none';
+
   let pressTimer = null;
   let moved = false;
-  logo.addEventListener('pointerdown', () => {
+  const LONG_PRESS_DURATION = 800; // ms
+
+  function startPress(e) {
     moved = false;
-    pressTimer = setTimeout(() => { if (!moved) window.location.href = 'admin.html'; }, 500);
+    pressTimer = setTimeout(() => {
+      if (!moved) {
+        // Feedback visuel
+        logo.style.transform = 'scale(0.95)';
+        logo.style.opacity = '0.8';
+        setTimeout(() => {
+          logo.style.transform = '';
+          logo.style.opacity = '';
+          window.location.href = 'admin.html';
+        }, 150);
+      }
+    }, LONG_PRESS_DURATION);
+  }
+
+  function cancelPress() {
+    if (pressTimer) {
+      clearTimeout(pressTimer);
+      pressTimer = null;
+    }
+    logo.style.transform = '';
+    logo.style.opacity = '';
+  }
+
+  function markMoved() {
+    moved = true;
+    cancelPress();
+  }
+
+  // Desktop
+  logo.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    startPress(e);
   });
-  logo.addEventListener('pointerup', () => clearTimeout(pressTimer));
-  logo.addEventListener('pointercancel', () => clearTimeout(pressTimer));
-  logo.addEventListener('pointermove', () => { moved = true; clearTimeout(pressTimer); });
+  logo.addEventListener('pointerup', cancelPress);
+  logo.addEventListener('pointercancel', cancelPress);
+  logo.addEventListener('pointermove', markMoved);
+
+  // Mobile : empecher le menu contextuel natif
+  logo.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  });
+
+  // Touch specifique pour iOS/Android
+  logo.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    startPress(e);
+  }, { passive: false });
+  logo.addEventListener('touchend', cancelPress);
+  logo.addEventListener('touchmove', markMoved);
+  logo.addEventListener('touchcancel', cancelPress);
 }
 
 export function showAccountView() {
@@ -492,10 +551,6 @@ function initOfflineIndicator() {
 //  PRE-CACHE IMAGES POPULAIRES (Action 7)
 // ============================================================
 
-/**
- * Envoie les URLs des images des produits populaires au Service Worker
- * pour les pre-cacher. Limite aux 30 produits les plus populaires.
- */
 async function precachePopularImages() {
   if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) return;
   if (!state.products || state.products.length === 0) return;
@@ -538,7 +593,6 @@ async function init() {
   await fetchProducts();
   loadOrders();
 
-  // Pre-cacher les images populaires apres le chargement des produits
   precachePopularImages();
 
   const cats = [...new Set(state.products.map(p => removeEmojis(p.category)))];
