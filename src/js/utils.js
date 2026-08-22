@@ -43,8 +43,7 @@ export function isFresh(p) {
 
 export function isBestSeller(p) { return (Number(p.popularity_score) || 0) >= POPULAR_THRESHOLD; }
 
-export function generate
-BadgesHTML(p, isModal = false) {
+export function generateBadgesHTML(p, isModal = false) {
     const isNew = isFresh(p);
     const isBest = isBestSeller(p);
     if (!isModal) {
@@ -71,11 +70,11 @@ export function getCategoryIcon(category) {
     if (!category) return '📦';
     const cat = category.toLowerCase();
     if (cat.includes('chaussure') || cat.includes('basket') || cat.includes('sneaker') || cat.includes('sport')) return '👟';
-    if (cat.includes('electronique') || cat.includes('tech') || cat.includes('phone') || cat.includes('mobile')) return '📱';
-    if (cat.includes('mode') || cat.includes('vetement') || cat.includes('fashion')) return '👕';
+    if (cat.includes('électronique') || cat.includes('electronique') || cat.includes('tech') || cat.includes('phone') || cat.includes('mobile')) return '📱';
+    if (cat.includes('mode') || cat.includes('vêtement') || cat.includes('vetement') || cat.includes('fashion')) return '👕';
     if (cat.includes('bijou') || cat.includes('accessoire')) return '💍';
-    if (cat.includes('maison') || cat.includes('deco')) return '🏠';
-    if (cat.includes('beaute') || cat.includes('cosmetique')) return '💄';
+    if (cat.includes('maison') || cat.includes('déco') || cat.includes('deco')) return '🏠';
+    if (cat.includes('beauté') || cat.includes('beaute') || cat.includes('cosmétique')) return '💄';
     if (cat.includes('enfant') || cat.includes('jouet')) return '🧸';
     if (cat.includes('livre') || cat.includes('book')) return '📚';
     return '📦';
@@ -92,8 +91,7 @@ export function normalizeString(str) {
 
 export function levenshteinDistance(a, b) {
     if (a.length === 0) return b.length;
- 
-   if (b.length === 0) return a.length;
+    if (b.length === 0) return a.length;
 
     const matrix = [];
     for (let i = 0; i <= b.length; i++) matrix[i] = [i];
@@ -148,8 +146,7 @@ export function calculateSearchScore(query, product) {
     if (score === 0 && queryWords.length === 1) {
         const queryWord = queryWords[0];
         const nameWords = name.split(' ');
-        for (c
-onst nameWord of nameWords) {
+        for (const nameWord of nameWords) {
             if (nameWord.length < 3) continue;
             const distance = levenshteinDistance(queryWord, nameWord);
             const maxLen = Math.max(queryWord.length, nameWord.length);
@@ -214,17 +211,15 @@ export function thumb(url, w = 300, h = 400, fit = 'cover') {
         output: 'webp',
         q: '80'
     });
-    return `https://ws
-rv.nl/?${params.toString()}`;
+    return `https://wsrv.nl/?${params.toString()}`;
 }
 
 export function thumbImg(url, alt = '', w = 300, h = 400, cls = '') {
     if (!url) return '';
 
     const thumbUrl = thumb(url, w, h);
-    // CORRECTION: Fallback explicite avec verification de longueur
     const DATA_URI_FALLBACK = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGZpbGwgZmlsbD0iI0NFRkY2QiIvPjxwYXRoIGQ9Ik0yIDEyTDEyIDJMMjAgMTJMMjAgMjBMMTIgN0wyMCAxOFoiLz48L3N2Zz4=';
-    
+
     const onerr = `this.onerror=function(){this.onerror=null;const fullUrl=this.dataset.full;if(fullUrl&&fullUrl.length<=1500){this.src=fullUrl;}else{this.src='${DATA_URI_FALLBACK}';}this.removeAttribute('data-full');this.removeAttribute('data-ts');}`;
     const clsAttr = cls ? ` class="${escapeHtml(cls)}"` : '';
 
@@ -232,35 +227,29 @@ export function thumbImg(url, alt = '', w = 300, h = 400, cls = '') {
 }
 
 /**
- * Genere une balise <img> pour le carousel de la modale produit.
- * Utilise des dimensions plus grandes (800x1200) avec fit='contain'.
- *
- * CORRECTION: ajout du fallback onerror + loading eager pour le carousel
+ * ✅ Image du carrousel de la modale : 600x800 (légère pour la 4G),
+ * data-ts pour le watchdog (bascule auto sur l'URL d'origine après 6 s),
+ * fallback onerror si wsrv.nl échoue franchement.
  */
 export function modalImg(url, alt = '') {
     if (!url) return '';
 
-    const thumbUrl = thumb(url, 800, 1200, 'contain');
-    // Si wsrv.nl echoue, on bascule sur l'URL originale
-    const onerr = `this.onerror=function(){this.onerror=null;this.src=this.dataset.full;};`;
+    const thumbUrl = thumb(url, 600, 800, 'contain');
+    const onerr = `this.onerror=function(){this.onerror=null;this.removeAttribute('data-ts');this.removeAttribute('data-full');const fullUrl=this.dataset.full;if(fullUrl){this.src=fullUrl;}};`;
 
-    return `<img src="${escapeHtml(thumbUrl)}" data-full="${escapeHtml(url)}" alt="${escapeHtml(alt)}" loading="eager" decoding="async" onload="this.classList.add('loaded')" onerror="${onerr}" style="width:100%;height:100%;object-fit:contain;">`;
+    return `<img src="${escapeHtml(thumbUrl)}" data-full="${escapeHtml(url)}" data-ts="${Date.now()}" alt="${escapeHtml(alt)}" loading="eager" decoding="async" onload="this.classList.add('loaded');this.removeAttribute('data-ts');" onerror="${onerr}" style="width:100%;height:100%;object-fit:contain;">`;
 }
 
 /**
- * Genere une balise <img> pour le dropdown de recherche.
- * Petite vignette rapide a charger (100x100).
- *
- * CORRECTION: ajout du fallback onerror
+ * Vignette rapide du dropdown de recherche (100x100), avec watchdog.
  */
 export function searchThumbImg(url, alt = '') {
     if (!url) return '';
 
     const thumbUrl = thumb(url, 100, 100, 'cover');
-    const onerr = `this.onerror=function(){this.onerror=null;this.src=this.dataset.full;};`;
+    const onerr = `this.onerror=function(){this.onerror=null;this.removeAttribute('data-ts');this.removeAttribute('data-full');const fullUrl=this.dataset.full;if(fullUrl){this.src=fullUrl;}};`;
 
-    return `<img src="${escapeHtml(thumbUrl)}" data-full="${escapeHtml(url)}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async" onerror="${onerr}" style="width:100%;height:100%;object-fit:cover;
-">`;
+    return `<img src="${escapeHtml(thumbUrl)}" data-full="${escapeHtml(url)}" data-ts="${Date.now()}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async" onerror="${onerr}" style="width:100%;height:100%;object-fit:cover;">`;
 }
 
 // WATCHDOG : une image qui rame plus de 6 s bascule sur l'URL d'origine
