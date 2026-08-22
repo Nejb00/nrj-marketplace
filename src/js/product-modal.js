@@ -1,7 +1,7 @@
 import { state } from './state.js';
 import { trackViewedItem } from './state.js';
 import { WHATSAPP_NUMBER, BASE_URL } from './config.js';
-import { escapeHtml, formatPrice, generateBadgesHTML, showToast, thumbImg } from './utils.js';
+import { escapeHtml, formatPrice, generateBadgesHTML, showToast, thumbImg, modalImg } from './utils.js';
 import { trackPopularity, fetchProductDetails, trackView, getRelatedProducts } from './api.js';
 import { toggleFavorite, addToCart } from './cart.js';
 import { signalView } from './reco.js';
@@ -20,18 +20,18 @@ function updateCarouselDots(sc, dc, index) {
     dc.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === index));
 }
 
-// 🧠 Recos intelligentes : collaboratif (Niveau 2) + profil local (Niveau 1) + fallback
+// Recos intelligentes : collaboratif (Niveau 2) + profil local (Niveau 1) + fallback
 async function buildRecommendations(currentProduct) {
     const TARGET = 12;
-    
+
     // 1) Collaboratif : ceux qui ont vu ce produit ont aussi vu...
     const relatedIds = await getRelatedProducts(currentProduct.id, TARGET);
     const related = relatedIds
         .map(id => state.products.find(p => p.id === id))
         .filter(p => p && p.id !== currentProduct.id);
-    
-    // 2) Si pas assez de données collaboratives (au démarrage) → compléter avec
-    //    la même catégorie puis les bestsellers d'autres catégories
+
+    // 2) Si pas assez de donnees collaboratives (au demarrage) -> completer avec
+    //    la meme categorie puis les bestsellers d'autres categories
     const needed = TARGET - related.length;
     if (needed > 0) {
         const sameCat = state.products.filter(
@@ -46,7 +46,7 @@ async function buildRecommendations(currentProduct) {
             if (!relatedIds.includes(f.id)) related.push(f);
         }
     }
-    
+
     let rec = related.slice(0, TARGET);
     if (rec.length % 2 !== 0) rec.pop();
     return rec;
@@ -55,23 +55,23 @@ async function buildRecommendations(currentProduct) {
 export async function openProductModal(pid) {
     let p = state.products.find(pr => pr.id === pid);
     if (!p) return;
-    
+
     state.currentProductId = pid;
     trackPopularity(pid, 1);
     trackViewedItem(p.name);
     signalView(p);
-    trackView(pid); // 🧠 Niveau 2 : enregistre la vue anonyme dans Supabase
-    
+    trackView(pid); // Niveau 2 : enregistre la vue anonyme dans Supabase
+
     const fullProduct = await fetchProductDetails(pid);
     if (fullProduct) p = fullProduct;
-    
+
     const tailles = (p.tailles || '').split(',').map(s => s.trim()).filter(Boolean);
     const couleurs = (p.couleurs || '').split(',').map(s => s.trim()).filter(Boolean);
     let sT = tailles.length ? tailles[0] : '', sC = couleurs.length ? couleurs[0] : '';
     const moq = Number(p.moq) || 1, uPrice = Number(p.price);
 
     document.getElementById('modalPrice').textContent = formatPrice(uPrice);
-    document.getElementById('modalMoq').textContent = `Minimum d'achat : ${moq} pièce(s)`;
+    document.getElementById('modalMoq').textContent = `Minimum d'achat : ${moq} piece(s)`;
     document.getElementById('modalTotal').textContent = `Total minimum : ${formatPrice(uPrice * moq)}`;
     document.getElementById('modalDesc').textContent = p.description || '';
     document.getElementById('modalProductIdBadge').textContent = `[ID: ${p.id}]`;
@@ -81,8 +81,8 @@ export async function openProductModal(pid) {
     document.getElementById('modalFavBtn').onclick = () => toggleFavorite(p.id);
     document.getElementById('modalShareBtn').onclick = () => {
         const url = BASE_URL + '?id=' + p.id;
-        const txt = `${formatPrice(uPrice)}\nMinimum d'achat : ${moq} pièce(s)\nDécouvre "${p.name}" sur NRJ Marketplace ${url}`;
-        navigator.share ? navigator.share({ title: p.name, text: txt, url }).catch(() => {}) : navigator.clipboard.writeText(txt).then(() => showToast('🔗 Copié !'));
+        const txt = `${formatPrice(uPrice)}\nMinimum d'achat : ${moq} piece(s)\nDecouvre "${p.name}" sur NRJ Marketplace ${url}`;
+        navigator.share ? navigator.share({ title: p.name, text: txt, url }).catch(() => {}) : navigator.clipboard.writeText(txt).then(() => showToast('🔗 Copie !'));
     };
 
     const imgs = [p.image, p.image2, p.image3, p.image4, p.image5, p.image6].filter(u => u && u.trim());
@@ -93,7 +93,8 @@ export async function openProductModal(pid) {
         dc.innerHTML = '';
     } else {
         imgs.forEach((u, i) => {
-            sc.innerHTML += `<div class="carousel-item"><img src="${escapeHtml(u)}" alt="${escapeHtml(p.name)}" loading="lazy" onload="this.classList.add('loaded')"></div>`;
+            // Utilise modalImg() pour passer par wsrv.nl et etre cachable par le SW
+            sc.innerHTML += `<div class="carousel-item">${modalImg(u, p.name)}</div>`;
             dc.innerHTML += `<span class="carousel-dot ${i === 0 ? 'active' : ''}" data-index="${i}"></span>`;
         });
     }
@@ -123,19 +124,19 @@ export async function openProductModal(pid) {
 
     document.getElementById('addToCartStickyBtn').onclick = (e) => addToCart(p.id, sT, sC, e.currentTarget);
     document.getElementById('directOrderStickyBtn').onclick = () => {
-        if (tailles.length && !sT) return showToast('⚠️ Sélectionnez une taille');
+        if (tailles.length && !sT) return showToast('⚠️ Selectionnez une taille');
         trackPopularity(p.id, 10);
-        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour NRJ Marketplace, je souhaite commander : ${p.name} (ID: ${p.id}), Taille: ${sT || 'N/A'}, Quantité: ${moq}`)}`, '_blank');
+        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour NRJ Marketplace, je souhaite commander : ${p.name} (ID: ${p.id}), Taille: ${sT || 'N/A'}, Quantite: ${moq}`)}`, '_blank');
     };
 
-    // 🧠 Skeleton pour les recos pendant le calcul collaboratif
+    // Skeleton pour les recos pendant le calcul collaboratif
     document.getElementById('modalRecCarousel').innerHTML = Array(6).fill(
         '<div class="rec-card"><div class="rec-card-img" style="background:var(--surface-light);"></div></div>'
     ).join('');
-    
-    // Construire les recos en arrière-plan (Niveau 1 + Niveau 2)
+
+    // Construire les recos en arriere-plan (Niveau 1 + Niveau 2)
     const rec = await buildRecommendations(p);
-    
+
     document.getElementById('modalRecCarousel').innerHTML = rec.map(r => `
         <div class="rec-card" data-product-id="${r.id}">
             <div class="rec-card-img">${r.image ? thumbImg(r.image, r.name, 300, 400) : '📦'}</div>

@@ -1,12 +1,12 @@
 import { state } from './state.js';
 import { SEARCH_HISTORY_KEY, MAX_HISTORY_ITEMS, MAX_PLACEHOLDER_SUGGESTIONS } from './config.js';
-import { escapeHtml, formatPrice, fuzzySearch, highlightMatch, getCategoryIcon, showToast } from './utils.js';
+import { escapeHtml, formatPrice, fuzzySearch, highlightMatch, getCategoryIcon, showToast, searchThumbImg } from './utils.js';
 import { openProductModal } from './product-modal.js';
 import { switchToSearchView } from './search-view.js';
 
 const TRENDING_COUNT = 10;
 
-// ─── Suggestions intelligentes pour le placeholder ───────────────────────────
+// Suggestions intelligentes pour le placeholder
 export function buildSmartRotationList() {
   const max = MAX_PLACEHOLDER_SUGGESTIONS;
   const suggestions = [];
@@ -53,7 +53,7 @@ export function initPlaceholderRotation() {
   const input = document.getElementById('searchInput');
   if (!input) return;
 
-  // Enregistre la recherche dans l'historique quand on valide avec Entrée
+  // Enregistre la recherche dans l'historique quand on valide avec Entree
   if (!historyCaptureBound) {
     historyCaptureBound = true;
     input.addEventListener('keydown', (e) => {
@@ -104,7 +104,7 @@ window.clearSearchHistory = function() {
   showSearchDropdown('');
 };
 
-// ─── Panneau de découverte (historique + tendances) ─────────────────────────
+// Panneau de decouverte (historique + tendances)
 function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -218,9 +218,9 @@ export function initVoiceSearch() {
   recognition.onerror = (event) => {
     console.warn('Erreur reconnaissance vocale:', event.error);
     if (event.error === 'no-speech') {
-      showToast('❌ Aucune parole détectée');
+      showToast('❌ Aucune parole detectee');
     } else if (event.error === 'not-allowed') {
-      showToast('❌ Accès au microphone refusé');
+      showToast('❌ Acces au microphone refuse');
     } else {
       showToast('❌ Erreur de reconnaissance vocale');
     }
@@ -239,7 +239,7 @@ export function initVoiceSearch() {
       try {
         recognition.start();
       } catch (e) {
-        console.warn('Impossible de démarrer la reconnaissance vocale:', e);
+        console.warn('Impossible de demarrer la reconnaissance vocale:', e);
       }
     }
   });
@@ -266,17 +266,18 @@ export function showSearchDropdown(query) {
     if (loader) loader.style.display = 'none';
 
     if (results.length === 0) {
-      dropdown.innerHTML = `<div class="dropdown-no-results"><div class="dropdown-no-results-icon">🔍</div><div>Aucun produit trouvé pour "${escapeHtml(query)}"</div></div>`;
+      dropdown.innerHTML = `<div class="dropdown-no-results"><div class="dropdown-no-results-icon">🔍</div><div>Aucun produit trouve pour "${escapeHtml(query)}"</div></div>`;
       dropdown.style.display = 'block';
       return;
     }
 
-    let html = `<div class="dropdown-header"><span>${results.length} résultat${results.length > 1 ? 's' : ''}</span></div>`;
+    let html = `<div class="dropdown-header"><span>${results.length} resultat${results.length > 1 ? 's' : ''}</span></div>`;
 
     results.forEach(p => {
-      const img = p.image ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" loading="lazy">` : `<span>${getCategoryIcon(p.category)}</span>`;
+      // Utilise searchThumbImg() pour passer par wsrv.nl et etre cachable par le SW
+      const img = p.image ? searchThumbImg(p.image, p.name) : `<span>${getCategoryIcon(p.category)}</span>`;
       const categoryIcon = getCategoryIcon(p.category);
-      html += `<div class="dropdown-item" data-product-id="${p.id}"><div class="dropdown-item-img">${img}</div><div class="dropdown-item-info"><div class="dropdown-item-name">${highlightMatch(p.name, query)}</div><div class="dropdown-item-category">${categoryIcon} ${escapeHtml(p.category || 'Sans catégorie')}</div></div><div class="dropdown-item-price">${formatPrice(p.price)}</div></div>`;
+      html += `<div class="dropdown-item" data-product-id="${p.id}"><div class="dropdown-item-img">${img}</div><div class="dropdown-item-info"><div class="dropdown-item-name">${highlightMatch(p.name, query)}</div><div class="dropdown-item-category">${categoryIcon} ${escapeHtml(p.category || 'Sans categorie')}</div></div><div class="dropdown-item-price">${formatPrice(p.price)}</div></div>`;
     });
 
     dropdown.innerHTML = html;

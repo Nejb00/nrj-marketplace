@@ -22,7 +22,7 @@ export function isNewProduct(p) {
     return (Date.now() - new Date(p.created_at).getTime()) / (1000 * 60 * 60 * 24) <= NEW_PRODUCT_DAYS;
 }
 
-// ✅ Badge NOUVEAU rare : moins de 7 jours ET parmi les 30 plus récents
+// Badge NOUVEAU rare : moins de 7 jours ET parmi les 30 plus recents
 const MAX_FRESH_BADGES = 30;
 let _freshCache = null;
 let _freshRef = null;
@@ -59,7 +59,7 @@ export function generateBadgesHTML(p, isModal = false) {
     return (isNew || isBest) ? html : '';
 }
 
-// ✅ Toast discret : 1.2 s au lieu de 2 s
+// Toast discret : 1.2 s au lieu de 2 s
 export function showToast(m) {
     const t = document.getElementById('toast');
     if (!t) return;
@@ -72,11 +72,11 @@ export function getCategoryIcon(category) {
     if (!category) return '📦';
     const cat = category.toLowerCase();
     if (cat.includes('chaussure') || cat.includes('basket') || cat.includes('sneaker') || cat.includes('sport')) return '👟';
-    if (cat.includes('électronique') || cat.includes('electronique') || cat.includes('tech') || cat.includes('phone') || cat.includes('mobile')) return '📱';
-    if (cat.includes('mode') || cat.includes('vêtement') || cat.includes('vetement') || cat.includes('fashion')) return '👕';
+    if (cat.includes('electronique') || cat.includes('tech') || cat.includes('phone') || cat.includes('mobile')) return '📱';
+    if (cat.includes('mode') || cat.includes('vetement') || cat.includes('fashion')) return '👕';
     if (cat.includes('bijou') || cat.includes('accessoire')) return '💍';
-    if (cat.includes('maison') || cat.includes('déco') || cat.includes('deco')) return '🏠';
-    if (cat.includes('beauté') || cat.includes('beaute') || cat.includes('cosmétique')) return '💄';
+    if (cat.includes('maison') || cat.includes('deco')) return '🏠';
+    if (cat.includes('beaute') || cat.includes('cosmetique')) return '💄';
     if (cat.includes('enfant') || cat.includes('jouet')) return '🧸';
     if (cat.includes('livre') || cat.includes('book')) return '📚';
     return '📦';
@@ -185,36 +185,125 @@ export function highlightMatch(text, query) {
     return escapedText.replace(regex, '<span class="highlight">$1</span>');
 }
 
-// ─── Optimisation images : vignettes légères pour économiser les forfaits ───
-export function thumb(url, w = 300, h = 400) {
-  if (!url) return '';
-  if (!/^https?:\/\//i.test(url)) return url;
-  const params = new URLSearchParams({ url, w: String(w), h: String(h), fit: 'cover', output: 'webp', q: '80' });
-  return `https://wsrv.nl/?${params.toString()}`;
+// ============================================================
+//  OPTIMISATION IMAGES — CACHE PWA ROBUSTE
+// ============================================================
+
+/**
+ * Dimensions normalisees pour eviter les doublons de cache.
+ * Les dimensions sont arrondies aux paliers ci-dessous pour que
+ * des tailles proches partagent la meme entree de cache.
+ */
+const SIZE_TIERS = [100, 150, 200, 300, 400, 500, 600, 800, 1200];
+
+function normalizeSize(size) {
+    for (const tier of SIZE_TIERS) {
+        if (size <= tier) return tier;
+    }
+    return SIZE_TIERS[SIZE_TIERS.length - 1];
 }
 
+/**
+ * Genere une URL wsrv.nl standardisee pour le cache du Service Worker.
+ *
+ * Strategie:
+ * - Dimensions normalisees (pas de doublons pour des tailles proches)
+ * - Format WebP pour reduire la taille
+ * - Qualite 80 (bon compromis poids/qualite)
+ *
+ * @param {string} url - URL originale de l'image
+ * @param {number} w - Largeur souhaitee
+ * @param {number} h - Hauteur souhaitee
+ * @param {string} fit - Mode de recadrage ('cover' | 'contain')
+ * @returns {string} URL wsrv.nl prete pour le cache
+ */
+export function thumb(url, w = 300, h = 400, fit = 'cover') {
+    if (!url) return '';
+    if (!/^https?:\/\//i.test(url)) return url;
+
+    const nw = normalizeSize(w);
+    const nh = normalizeSize(h);
+
+    const params = new URLSearchParams({
+        url,
+        w: String(nw),
+        h: String(nh),
+        fit,
+        output: 'webp',
+        q: '80'
+    });
+    return `https://wsrv.nl/?${params.toString()}`;
+}
+
+/**
+ * Genere une balise <img> complete avec lazy loading et fallback.
+ * Utilisee pour les cartes produits du catalogue.
+ *
+ * @param {string} url - URL originale
+ * @param {string} alt - Texte alternatif
+ * @param {number} w - Largeur
+ * @param {number} h - Hauteur
+ * @param {string} cls - Classes CSS additionnelles
+ * @returns {string} HTML de la balise img
+ */
 export function thumbImg(url, alt = '', w = 300, h = 400, cls = '') {
-  if (!url) return '';
-  const onerr = `this.onerror=function(){this.style.display='none'};if(this.dataset.full){this.src=this.dataset.full;this.removeAttribute('data-full');this.removeAttribute('data-ts');}`;
-  const clsAttr = cls ? ` class="${escapeHtml(cls)}"` : '';
-  return `<img${clsAttr} src="${escapeHtml(thumb(url, w, h))}" data-full="${escapeHtml(url)}" data-ts="${Date.now()}" alt="${escapeHtml(alt)}" loading="lazy" referrerpolicy="no-referrer" decoding="async" onload="this.classList.add('loaded')" onerror="${onerr}" width="${w}" height="${h}">`;
+    if (!url) return '';
+
+    const thumbUrl = thumb(url, w, h);
+    const onerr = `this.onerror=function(){this.style.display='none'};if(this.dataset.full){this.src=this.dataset.full;this.removeAttribute('data-full');this.removeAttribute('data-ts');}`;
+    const clsAttr = cls ? ` class="${escapeHtml(cls)}"` : '';
+
+    return `<img${clsAttr} src="${escapeHtml(thumbUrl)}" data-full="${escapeHtml(url)}" data-ts="${Date.now()}" alt="${escapeHtml(alt)}" loading="lazy" referrerpolicy="no-referrer" decoding="async" onload="this.classList.add('loaded')" onerror="${onerr}" width="${w}" height="${h}">`;
 }
 
-// ✅ WATCHDOG : une image qui rame plus de 6 s bascule sur l'URL d'origine
+/**
+ * Genere une balise <img> pour le carousel de la modale produit.
+ * Utilise des dimensions plus grandes (800x1200) avec fit='contain'
+ * pour preserver les proportions.
+ *
+ * @param {string} url - URL originale
+ * @param {string} alt - Texte alternatif
+ * @returns {string} HTML de la balise img
+ */
+export function modalImg(url, alt = '') {
+    if (!url) return '';
+
+    const thumbUrl = thumb(url, 800, 1200, 'contain');
+
+    return `<img src="${escapeHtml(thumbUrl)}" data-full="${escapeHtml(url)}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async" onload="this.classList.add('loaded')" style="width:100%;height:100%;object-fit:contain;">`;
+}
+
+/**
+ * Genere une balise <img> pour le dropdown de recherche.
+ * Petite vignette rapide a charger (100x100).
+ *
+ * @param {string} url - URL originale
+ * @param {string} alt - Texte alternatif
+ * @returns {string} HTML de la balise img
+ */
+export function searchThumbImg(url, alt = '') {
+    if (!url) return '';
+
+    const thumbUrl = thumb(url, 100, 100, 'cover');
+
+    return `<img src="${escapeHtml(thumbUrl)}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;">`;
+}
+
+// WATCHDOG : une image qui rame plus de 6 s bascule sur l'URL d'origine
 let _watchdogStarted = false;
 function startImgWatchdog() {
-  if (_watchdogStarted) return;
-  _watchdogStarted = true;
-  setInterval(() => {
-    const now = Date.now();
-    document.querySelectorAll('img[data-full][data-ts]:not(.loaded)').forEach((img) => {
-      if (now - Number(img.dataset.ts) > 6000) {
-        const full = img.dataset.full;
-        img.removeAttribute('data-ts');
-        img.removeAttribute('data-full');
-        img.src = full;
-      }
-    });
-  }, 2000);
+    if (_watchdogStarted) return;
+    _watchdogStarted = true;
+    setInterval(() => {
+        const now = Date.now();
+        document.querySelectorAll('img[data-full][data-ts]:not(.loaded)').forEach((img) => {
+            if (now - Number(img.dataset.ts) > 6000) {
+                const full = img.dataset.full;
+                img.removeAttribute('data-ts');
+                img.removeAttribute('data-full');
+                img.src = full;
+            }
+        });
+    }, 2000);
 }
 startImgWatchdog();
