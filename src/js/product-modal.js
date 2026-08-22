@@ -24,14 +24,11 @@ function updateCarouselDots(sc, dc, index) {
 async function buildRecommendations(currentProduct) {
     const TARGET = 12;
 
-    // 1) Collaboratif : ceux qui ont vu ce produit ont aussi vu...
     const relatedIds = await getRelatedProducts(currentProduct.id, TARGET);
     const related = relatedIds
         .map(id => state.products.find(p => p.id === id))
         .filter(p => p && p.id !== currentProduct.id);
 
-    // 2) Si pas assez de donnees collaboratives (au demarrage) -> completer avec
-    //    la meme categorie puis les bestsellers d'autres categories
     const needed = TARGET - related.length;
     if (needed > 0) {
         const sameCat = state.products.filter(
@@ -52,6 +49,83 @@ async function buildRecommendations(currentProduct) {
     return rec;
 }
 
+// ============================================================
+//  BOUTON "TELECHARGER POUR HORS LIGNE" (Action 8)
+// ============================================================
+
+/**
+ * Cree le bouton de telechargement hors ligne dans la modale
+ * s'il n'existe pas encore.
+ */
+function ensureDownloadButton() {
+    if (document.getElementById('modalDownloadBtn')) return;
+
+    const actionsContainer = document.querySelector('.modal-actions');
+    if (!actionsContainer) return;
+
+    const btn = document.createElement('button');
+    btn.id = 'modalDownloadBtn';
+    btn.className = 'btn-icon';
+    btn.setAttribute('aria-label', 'Telecharger pour hors ligne');
+    btn.title = 'Telecharger pour hors ligne';
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+
+    // Inserer entre le bouton favori et le bouton partage
+    const favBtn = document.getElementById('modalFavBtn');
+    if (favBtn && favBtn.nextSibling) {
+        actionsContainer.insertBefore(btn, favBtn.nextSibling);
+    } else {
+        actionsContainer.appendChild(btn);
+    }
+}
+
+/**
+ * Telecharge les images d'un produit pour la navigation hors ligne.
+ * Envoie les URLs au Service Worker pour mise en cache.
+ */
+async function downloadProductForOffline(product) {
+    if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) {
+        showToast('❌ Service Worker non disponible');
+        return;
+    }
+
+    const imgs = [product.image, product.image2, product.image3, product.image4, product.image5, product.image6]
+        .filter(u => u && u.trim());
+
+    if (imgs.length === 0) {
+        showToast('📦 Aucune image a telecharger');
+        return;
+    }
+
+    // Generer les URLs wsrv.nl pour le cache (meme format que thumbImg)
+    const { thumb } = await import('./utils.js');
+    const imageUrls = imgs.map(url => thumb(url.trim(), 300, 400));
+
+    showToast(`📥 Telechargement de ${imgs.length} image${imgs.length > 1 ? 's' : ''}...`);
+
+    try {
+        const channel = new MessageChannel();
+        navigator.serviceWorker.controller.postMessage(
+            { type: 'precache-images', urls: imageUrls },
+            [channel.port2]
+        );
+
+        channel.port1.onmessage = (event) => {
+            const { cached, failed, total } = event.data;
+            if (failed === 0) {
+                showToast(`✅ ${cached} image${cached > 1 ? 's' : ''} telechargee${cached > 1 ? 's' : ''} !`);
+            } else {
+                showToast(`⚠️ ${cached}/${total} telechargee${cached > 1 ? 's' : ''}`);
+            }
+        };
+    } catch (e) {
+        console.warn('[ProductModal] Telechargement echoue:', e);
+        showToast('❌ Erreur de telechargement');
+    }
+}
+
+// ============================================================
+
 export async function openProductModal(pid) {
     let p = state.products.find(pr => pr.id === pid);
     if (!p) return;
@@ -60,7 +134,7 @@ export async function openProductModal(pid) {
     trackPopularity(pid, 1);
     trackViewedItem(p.name);
     signalView(p);
-    trackView(pid); // Niveau 2 : enregistre la vue anonyme dans Supabase
+    trackView(pid);
 
     const fullProduct = await fetchProductDetails(pid);
     if (fullProduct) p = fullProduct;
@@ -76,6 +150,10 @@ export async function openProductModal(pid) {
     document.getElementById('modalDesc').textContent = p.description || '';
     document.getElementById('modalProductIdBadge').textContent = `[ID: ${p.id}]`;
     document.getElementById('modalBadges').innerHTML = generateBadgesHTML(p, true);
+
+    // S'assurer que le bouton telechargement existe
+    ensureDownloadButton();
+
     const favSvg = document.getElementById('modalFavBtn').querySelector('.fav-icon-svg');
     if (favSvg) favSvg.classList.toggle('faved', state.favorites.includes(p.id));
     document.getElementById('modalFavBtn').onclick = () => toggleFavorite(p.id);
@@ -85,6 +163,12 @@ export async function openProductModal(pid) {
         navigator.share ? navigator.share({ title: p.name, text: txt, url }).catch(() => {}) : navigator.clipboard.writeText(txt).then(() => showToast('🔗 Copie !'));
     };
 
+    // Bouton telechargement
+    const downloadBtn = document.getElementById('modalDownloadBtn');
+    if (downloadBtn) {
+        downloadBtn.onclick = () => downloadProductForOffline(p);
+    }
+
     const imgs = [p.image, p.image2, p.image3, p.image4, p.image5, p.image6].filter(u => u && u.trim());
     const sc = document.getElementById('modalCarouselScroll'), dc = document.getElementById('modalCarouselDots');
     sc.innerHTML = ''; dc.innerHTML = '';
@@ -93,7 +177,6 @@ export async function openProductModal(pid) {
         dc.innerHTML = '';
     } else {
         imgs.forEach((u, i) => {
-            // Utilise modalImg() pour passer par wsrv.nl et etre cachable par le SW
             sc.innerHTML += `<div class="carousel-item">${modalImg(u, p.name)}</div>`;
             dc.innerHTML += `<span class="carousel-dot ${i === 0 ? 'active' : ''}" data-index="${i}"></span>`;
         });
@@ -129,12 +212,10 @@ export async function openProductModal(pid) {
         window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour NRJ Marketplace, je souhaite commander : ${p.name} (ID: ${p.id}), Taille: ${sT || 'N/A'}, Quantite: ${moq}`)}`, '_blank');
     };
 
-    // Skeleton pour les recos pendant le calcul collaboratif
     document.getElementById('modalRecCarousel').innerHTML = Array(6).fill(
         '<div class="rec-card"><div class="rec-card-img" style="background:var(--surface-light);"></div></div>'
     ).join('');
 
-    // Construire les recos en arriere-plan (Niveau 1 + Niveau 2)
     const rec = await buildRecommendations(p);
 
     document.getElementById('modalRecCarousel').innerHTML = rec.map(r => `
