@@ -10,7 +10,6 @@
   "orientation": "any",
   "theme_color": "#0f0f0f",
   "background_color": "#0f0f0f",
-  "handle_links": "preferred",
   "categories": ["shopping", "business"],
   "related_applications": [],
   "icons": [
@@ -33,32 +32,44 @@
       "purpose": "any maskable"
     },
     {
-      "src": "/icon-180.png",
+      "src": "/apple-touch-icon.png",
       "sizes": "180x180",
       "type": "image/png",
-      "purpose": "apple"
+      "purpose": "apple touch icon"
     },
     {
-      "src": "/icon-167.png",
+      "src": "/apple-touch-icon-167.png",
       "sizes": "167x167",
       "type": "image/png",
-      "purpose": "apple"
+      "purpose": "apple touch icon"
     }
   ],
   "screenshots": [
     {
-      "src": "/screenshot-1.jpg",
+      "src": "/screenshot-wide.png",
       "sizes": "1280x720",
-      "type": "image/jpeg",
+      "type": "image/png",
       "form_factor": "wide",
-      "label": "NRJ Marketplace - Catalogue de produits"
+      "label": "NRJ Marketplace - Vue catalogue"
     },
     {
-      "src": "/screenshot-2.jpg",
+      "src": "/screenshot-narrow.png",
       "sizes": "720x1280",
-      "type": "image/jpeg",
+      "type": "image/png",
       "form_factor": "narrow",
-      "label": "NRJ Marketplace - Fiche produit"
+      "label": "NRJ Marketplace - Vue produit"
+    }
+  ],
+  "handle_links": ["https"],
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "shortcuts": [
+    {
+      "name": "Rechercher",
+      "short_name": "Recherche",
+      "description": "Rechercher un produit dans le catalogue",
+      "url": "/search"
     }
   ]
 }
