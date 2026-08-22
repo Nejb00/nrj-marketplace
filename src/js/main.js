@@ -11,11 +11,6 @@ import { initPlaceholderRotation, initVoiceSearch, showSearchDropdown, hideSearc
 import { switchToSearchView, switchFromSearchView } from './search-view.js';
 import { setupAutoSync } from './sync.js';
 
-// CORRECTION: Initialisation securisee avec try/catch
-async function init() {
-  try {
-
-
 let searchDebounceTimer = null;
 
 function initThemeToggle() {
@@ -85,13 +80,332 @@ function initServiceWorkerUpdates() {
       if (!newWorker) return;
       newWorker.addEventListener('statechange', () => {
         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-          showToast("📦 Mise a jour disponible — relance l'app");
+          showToast('📦 Mise à jour disponible — relancez l'application');
         }
       });
     });
   });
 }
 
+function initOfflineIndicator() {
+  let banner = document.getElementById('offlineBanner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'offlineBanner';
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#7f1d1d;color:#fff;text-align:center;padding:0.4rem;font-size:0.78rem;font-weight:600;transform:translateY(-100%);transition:transform 0.3s ease;';
+    banner.textContent = '📡 Hors ligne — catalogue mémorisé';
+    document.body.prepend(banner);
+  }
+  const update = () => {
+    banner.style.transform = navigator.onLine ? 'translateY(-100%)' : 'translateY(0)';
+  };
+  update();
+  addEventListener('online', update);
+  addEventListener('offline', update);
+}
+
+// ─── Pré-cache des images populaires via le service worker ─────────────────
+async function precachePopularImages() {
+  if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) return;
+  if (!state.products || state.products.length === 0) return;
+
+  const popular = [...state.products]
+    .sort((a, b) => (Number(b.popularity_score) || 0) - (Number(a.popularity_score) || 0))
+    .slice(0, 30);
+
+  const imageUrls = [];
+  for (const p of popular) {
+    for (const img of [p.image, p.image2, p.image3, p.image4, p.image5, p.image6]) {
+      if (img && img.trim()) imageUrls.push(thumb(img.trim(), 300, 400));
+    }
+  }
+  if (imageUrls.length === 0) return;
+
+  try {
+    const channel = new MessageChannel();
+    navigator.serviceWorker.controller.postMessage({ type: 'precache-images', urls: imageUrls }, [channel.port2]);
+    channel.port1.onmessage = (event) => {
+      const { cached, total } = event.data || {};
+      console.log(`[Main] Precache: ${cached}/${total} images`);
+    };
+  } catch (e) {
+    console.warn('[Main] Precache images échoué:', e);
+  }
+}
+
+// ─── Appui long sur le logo → admin ────────────────────────────────────────
+function initLogoLongPress() {
+  const logo = document.querySelector('.logo-wrapper');
+  if (!logo) return;
+
+  logo.style.webkitUserSelect = 'none';
+  logo.style.userSelect = 'none';
+  logo.style.webkitTouchCallout = 'none';
+
+  let pressTimer = null;
+  let moved = false;
+  const LONG_PRESS_DURATION = 800;
+
+  function startPress() {
+    moved = false;
+    pressTimer = setTimeout(() => {
+      if (!moved) {
+        logo.style.transform = 'scale(0.95)';
+        logo.style.opacity = '0.8';
+        setTimeout(() => {
+          logo.style.transform = '';
+          logo.style.opacity = '';
+          window.location.href = 'admin.html';
+        }, 150);
+      }
+    }, LONG_PRESS_DURATION);
+  }
+
+  function cancelPress() {
+    if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+    logo.style.transform = '';
+    logo.style.opacity = '';
+  }
+
+  function markMoved() { moved = true; cancelPress(); }
+
+  logo.addEventListener('pointerdown', (e) => { e.preventDefault(); startPress(); });
+  logo.addEventListener('pointerup', cancelPress);
+  logo.addEventListener('pointercancel', cancelPress);
+  logo.addEventListener('pointermove', markMoved);
+  logo.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); });
+  logo.addEventListener('touchstart', (e) => { e.preventDefault(); startPress(); }, { passive: false });
+  logo.addEventListener('touchend', cancelPress);
+  logo.addEventListener('touchmove', markMoved);
+  logo.addEventListener('touchcancel', cancelPress);
+}
+
+// ─── Vue compte « Mon NRJ » ────────────────────────────────────────────────
+export function showAccountView() {
+  document.getElementById('catalogueWrapper').style.display = 'none';
+  const av = document.getElementById('accountView');
+  av.style.display = 'flex';
+  renderAccount();
+  window.scrollTo(0, 0);
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.querySelector('.nav-item[data-nav="profile"]')?.classList.add('active');
+}
+
+export function hideAccountView() {
+  const av = document.getElementById('accountView');
+  if (av) av.style.display = 'none';
+  document.getElementById('catalogueWrapper').style.display = 'block';
+}
+
+function renderAccount() {
+  const root = document.getElementById('accountContent');
+  if (!root) return;
+
+  const name = localStorage.getItem('nrj_customer_name') || '';
+  const initials = name ? name.split(/\s+/).map(s => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() : '?';
+  const greeting = name ? `Bonjour, ${escapeHtml(name.split(/\s+/)[0])}` : 'Bienvenue';
+  const isAdmin = state.isAdminLoggedIn === true;
+
+  const favCount = state.favorites.length;
+  const cartCount = state.cart.reduce((s, i) => s + Number(i.quantity), 0);
+  const orders = state.orders || [];
+  const orderCount = orders.length;
+
+  let ordersHtml = '';
+  if (orders.length === 0) {
+    ordersHtml = `<div class="account-empty">Aucune commande envoyée pour l'instant.</div>`;
+  } else {
+    ordersHtml = orders.slice(0, 10).map(o => {
+      const date = new Date(o.date);
+      const dateStr = date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+      const timeStr = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      const itemsPreview = (o.items || []).slice(0, 3).map(it => `${escapeHtml(it.name)} x${it.qty}`).join(' · ');
+      const more = (o.items || []).length > 3 ? ` · +${o.items.length - 3}` : '';
+      return `<div class="account-order">
+        <div class="account-order-head">
+          <span class="account-order-date">📦 ${dateStr} · ${timeStr}</span>
+          <span class="account-order-total">${formatPrice(o.total)}</span>
+        </div>
+        <div class="account-order-items">${itemsPreview}${more}</div>
+        <div class="account-order-meta">Destinataire WhatsApp : ${escapeHtml(o.recipient || '')}</div>
+      </div>`;
+    }).join('');
+  }
+
+  root.innerHTML = `
+    <div class="account-header">
+      <button class="account-back" data-account-action="close" aria-label="Retour">←</button>
+      <div class="account-identity">
+        <div class="account-avatar">${escapeHtml(initials)}</div>
+        <div class="account-greet">
+          <div class="account-greet-hello">${greeting}</div>
+          <div class="account-greet-sub">Voici votre espace NRJ</div>
+        </div>
+      </div>
+      ${isAdmin ? '<span class="account-admin-badge">Admin</span>' : ''}
+    </div>
+
+    <div class="account-stats">
+      <div class="account-stat">
+        <div class="account-stat-label">Favoris</div>
+        <div class="account-stat-value">❤️ ${favCount}</div>
+      </div>
+      <div class="account-stat">
+        <div class="account-stat-label">Au panier</div>
+        <div class="account-stat-value">🛒 ${cartCount}</div>
+      </div>
+      <div class="account-stat">
+        <div class="account-stat-label">Commandes</div>
+        <div class="account-stat-value">📦 ${orderCount}</div>
+      </div>
+    </div>
+
+    <div class="account-section">
+      <div class="account-section-title">Mes achats</div>
+      <div class="account-menu">
+        <button class="account-menu-item" data-account-action="go-cart">
+          <span>🛒 Mon panier</span>
+          <span class="account-menu-meta">${cartCount}</span>
+        </button>
+        <button class="account-menu-item" data-account-action="go-favs">
+          <span>❤️ Mes favoris</span>
+          <span class="account-menu-meta">${favCount}</span>
+        </button>
+        <button class="account-menu-item" data-account-action="go-history">
+          <span>🕐 Recherches récentes</span>
+          <span class="account-menu-meta">→</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="account-section">
+      <div class="account-section-title">Mes commandes envoyées</div>
+      ${ordersHtml}
+    </div>
+
+    <div class="account-section">
+      <div class="account-section-title">Avantages</div>
+      <div class="account-menu">
+        <button class="account-menu-item" data-account-action="install-app">
+          <span>⚡ Installer l'application</span>
+          <span class="account-menu-meta">→</span>
+        </button>
+        <button class="account-menu-item" data-account-action="go-new">
+          <span>✨ Nouveautés</span>
+          <span class="account-menu-meta">→</span>
+        </button>
+        <button class="account-menu-item" data-account-action="contact">
+          <span>💬 Assistance WhatsApp</span>
+          <span class="account-menu-meta">→</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="account-section">
+      <div class="account-section-title">Données</div>
+      <div class="account-menu">
+        <button class="account-menu-item danger" data-account-action="clear-all">
+          <span>🧹 Effacer toutes mes données</span>
+          <span class="account-menu-meta">→</span>
+        </button>
+      </div>
+    </div>
+
+    ${isAdmin ? `<div class="account-section">
+      <div class="account-section-title">Vendeur</div>
+      <div class="account-menu">
+        <button class="account-menu-item" data-account-action="go-admin">
+          <span>🛠️ Espace vendeur</span>
+          <span class="account-menu-meta">→</span>
+        </button>
+      </div>
+    </div>` : ''}
+  `;
+}
+
+window.renderAccount = renderAccount;
+
+function handleAccountAction(action) {
+  switch (action) {
+    case 'close': {
+      hideAccountView();
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      document.querySelector('.nav-item[data-nav="home"]').classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      break;
+    }
+    case 'go-cart': {
+      hideAccountView();
+      document.getElementById('cartPanel').classList.add('open');
+      document.getElementById('cartOverlay').classList.add('open');
+      refreshCartDisplay();
+      break;
+    }
+    case 'go-favs': {
+      hideAccountView();
+      state.currentFilter = 'favorites';
+      refreshCatalogue();
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      document.querySelector('.nav-item[data-nav="favorites"]').classList.add('active');
+      window.scrollTo(0, 0);
+      break;
+    }
+    case 'go-history': {
+      hideAccountView();
+      document.getElementById('searchInput').focus();
+      showSearchDropdown('');
+      break;
+    }
+    case 'go-new': {
+      hideAccountView();
+      document.querySelector('.filter-chip[data-filter="new"]')?.click();
+      window.scrollTo(0, 0);
+      break;
+    }
+    case 'contact': {
+      window.open(`https://wa.me/242066271882?text=${encodeURIComponent("Bonjour NRJ Marketplace, j'ai besoin d'assistance 🙏")}`, '_blank');
+      break;
+    }
+    case 'install-app': {
+      if (window.deferredInstallPrompt) {
+        window.deferredInstallPrompt.prompt();
+      } else {
+        alert("Pour installer l'app NRJ :\n\n• Chrome Android : menu ⋮ → « Installer l'application »\n• iOS Safari : bouton Partager → « Sur l'écran d'accueil »");
+      }
+      break;
+    }
+    case 'clear-all': {
+      if (!confirm('Effacer vos favoris, votre panier, votre historique de recherches et de commandes ? Cette action est définitive.')) return;
+      try {
+        localStorage.removeItem('nrj_favorites');
+        localStorage.removeItem('nrj_cart');
+        localStorage.removeItem('nrj_cart_v32');
+        localStorage.removeItem('nrj_search_history');
+        localStorage.removeItem('nrj_orders');
+        localStorage.removeItem('nrj_customer_name');
+        localStorage.removeItem('nrj_affinity');
+      } catch {}
+      state.favorites = [];
+      state.cart = [];
+      state.orders = [];
+      saveCart();
+      saveFavorites();
+      saveOrders();
+      updateNavFavBadge();
+      updateNavCartBadge();
+      refreshCartDisplay();
+      renderAccount();
+      showToast('🧹 Données effacées');
+      break;
+    }
+    case 'go-admin': {
+      window.location.href = 'admin.html';
+      break;
+    }
+  }
+}
+
+// ─── Écouteurs globaux ─────────────────────────────────────────────────────
 window.addEventListener('scroll', () => {
   const btn = document.getElementById('scrollToTopBtn');
   if (btn) btn.classList.toggle('visible', window.scrollY > 300);
@@ -172,7 +486,7 @@ window.addEventListener('popstate', (e) => {
 });
 
 document.getElementById('modalSourcingBtn')?.addEventListener('click', () => window.open(`https://wa.me/242066271882?text=${encodeURIComponent('Bonjour NRJ Marketplace, je recherche un produit. Je peux vous envoyer une photo')}`));
-document.getElementById('modalDescSourcingBtn')?.addEventListener('click', () => window.open(`https://wa.me/242066271882?text=${encodeURIComponent('Bonjour NRJ Marketplace International, je recherche un produit specifique...')}`));
+document.getElementById('modalDescSourcingBtn')?.addEventListener('click', () => window.open(`https://wa.me/242066271882?text=${encodeURIComponent('Bonjour NRJ Marketplace International, je recherche un produit spécifique...')}`));
 
 document.getElementById('cartCloseBtn')?.addEventListener('click', () => {
   document.getElementById('cartPanel').classList.remove('open');
@@ -190,302 +504,6 @@ document.getElementById('saveEditBtn')?.addEventListener('click', updateProduct)
 document.getElementById('cancelEditBtn')?.addEventListener('click', () => document.getElementById('editProductModalOverlay').classList.remove('open'));
 
 document.getElementById('backToHomeBtn')?.addEventListener('click', () => switchView('home'));
-
-// ============================================================
-//  ACCES ADMIN — Appui long sur le logo (CORRIGE pour mobile)
-// ============================================================
-
-function initLogoLongPress() {
-  const logo = document.querySelector('.logo-wrapper');
-  if (!logo) return;
-
-  // Empecher la selection de texte et le menu contextuel
-  logo.style.webkitUserSelect = 'none';
-  logo.style.userSelect = 'none';
-  logo.style.webkitTouchCallout = 'none';
-
-  let pressTimer = null;
-  let moved = false;
-  const LONG_PRESS_DURATION = 800; // ms
-
-  function startPress(e) {
-    moved = false;
-    pressTimer = setTimeout(() => {
-      if (!moved) {
-        // Feedback visuel
-        logo.style.transform = 'scale(0.95)';
-        logo.style.opacity = '0.8';
-        setTimeout(() => {
-          logo.style.transform = '';
-          logo.style.opacity = '';
-          window.location.href = 'admin.html';
-        }, 150);
-      }
-    }, LONG_PRESS_DURATION);
-  }
-
-  function cancelPress() {
-    if (pressTimer) {
-      clearTimeout(pressTimer);
-      pressTimer = null;
-    }
-    logo.style.transform = '';
-    logo.style.opacity = '';
-  }
-
-  function markMoved() {
-    moved = true;
-    cancelPress();
-  }
-
-  // Desktop
-  logo.addEventListener('pointerdown', (e) => {
-    e.preventDefault();
-    startPress(e);
-  });
-  logo.addEventListener('pointerup', cancelPress);
-  logo.addEventListener('pointercancel', cancelPress);
-  logo.addEventListener('pointermove', markMoved);
-
-  // Mobile : empecher le menu contextuel natif
-  logo.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    return false;
-  });
-
-  // Touch specifique pour iOS/Android
-  logo.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    startPress(e);
-  }, { passive: false });
-  logo.addEventListener('touchend', cancelPress);
-  logo.addEventListener('touchmove', markMoved);
-  logo.addEventListener('touchcancel', cancelPress);
-}
-
-export function showAccountView() {
-  document.getElementById('catalogueWrapper').style.display = 'none';
-  const av = document.getElementById('accountView');
-  av.style.display = 'flex';
-  renderAccount();
-  window.scrollTo(0, 0);
-  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-  document.querySelector('.nav-item[data-nav="profile"]')?.classList.add('active');
-}
-
-export function hideAccountView() {
-  const av = document.getElementById('accountView');
-  if (av) av.style.display = 'none';
-  document.getElementById('catalogueWrapper').style.display = 'block';
-}
-
-function renderAccount() {
-  const root = document.getElementById('accountContent');
-  if (!root) return;
-
-  const name = localStorage.getItem('nrj_customer_name') || '';
-  const initials = name ? name.split(/\s+/).map(s => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() : '?';
-  const greeting = name ? `Bonjour, ${escapeHtml(name.split(/\s+/)[0])}` : 'Bienvenue';
-  const isAdmin = state.isAdminLoggedIn === true;
-
-  const favCount = state.favorites.length;
-  const cartCount = state.cart.reduce((s, i) => s + Number(i.quantity), 0);
-  const orders = state.orders || [];
-  const orderCount = orders.length;
-
-  let ordersHtml = '';
-  if (orders.length === 0) {
-    ordersHtml = `<div class="account-empty">Aucune commande envoyee pour l'instant.</div>`;
-  } else {
-    ordersHtml = orders.slice(0, 10).map(o => {
-      const date = new Date(o.date);
-      const dateStr = date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
-      const timeStr = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-      const itemsPreview = (o.items || []).slice(0, 3).map(it => `${escapeHtml(it.name)} x${it.qty}`).join(' · ');
-      const more = (o.items || []).length > 3 ? ` · +${o.items.length - 3}` : '';
-      return `<div class="account-order">
-        <div class="account-order-head">
-          <span class="account-order-date">📦 ${dateStr} · ${timeStr}</span>
-          <span class="account-order-total">${formatPrice(o.total)}</span>
-        </div>
-        <div class="account-order-items">${itemsPreview}${more}</div>
-        <div class="account-order-meta">Destinataire WhatsApp : ${escapeHtml(o.recipient || '')}</div>
-      </div>`;
-    }).join('');
-  }
-
-  root.innerHTML = `
-    <div class="account-header">
-      <button class="account-back" data-account-action="close" aria-label="Retour">←</button>
-      <div class="account-identity">
-        <div class="account-avatar">${escapeHtml(initials)}</div>
-        <div class="account-greet">
-          <div class="account-greet-hello">${greeting}</div>
-          <div class="account-greet-sub">Voici votre espace NRJ</div>
-        </div>
-      </div>
-      ${isAdmin ? '<span class="account-admin-badge">Admin</span>' : ''}
-    </div>
-
-    <div class="account-stats">
-      <div class="account-stat">
-        <div class="account-stat-label">Favoris</div>
-        <div class="account-stat-value">❤️ ${favCount}</div>
-      </div>
-      <div class="account-stat">
-        <div class="account-stat-label">Au panier</div>
-        <div class="account-stat-value">🛒 ${cartCount}</div>
-      </div>
-      <div class="account-stat">
-        <div class="account-stat-label">Commandes</div>
-        <div class="account-stat-value">📦 ${orderCount}</div>
-      </div>
-    </div>
-
-    <div class="account-section">
-      <div class="account-section-title">Mes achats</div>
-      <div class="account-menu">
-        <button class="account-menu-item" data-account-action="go-cart">
-          <span>🛒 Mon panier</span>
-          <span class="account-menu-meta">${cartCount}</span>
-        </button>
-        <button class="account-menu-item" data-account-action="go-favs">
-          <span>❤️ Mes favoris</span>
-          <span class="account-menu-meta">${favCount}</span>
-        </button>
-        <button class="account-menu-item" data-account-action="go-history">
-          <span>🕐 Recherches recentes</span>
-          <span class="account-menu-meta">→</span>
-        </button>
-      </div>
-    </div>
-
-    <div class="account-section">
-      <div class="account-section-title">Mes commandes envoyees</div>
-      ${ordersHtml}
-    </div>
-
-    <div class="account-section">
-      <div class="account-section-title">Avantages</div>
-      <div class="account-menu">
-        <button class="account-menu-item" data-account-action="install-app">
-          <span>⚡ Installer l'application</span>
-          <span class="account-menu-meta">→</span>
-        </button>
-        <button class="account-menu-item" data-account-action="go-new">
-          <span>✨ Nouveautes</span>
-          <span class="account-menu-meta">→</span>
-        </button>
-        <button class="account-menu-item" data-account-action="contact">
-          <span>💬 Assistance WhatsApp</span>
-          <span class="account-menu-meta">→</span>
-        </button>
-      </div>
-    </div>
-
-    <div class="account-section">
-      <div class="account-section-title">Donnees</div>
-      <div class="account-menu">
-        <button class="account-menu-item danger" data-account-action="clear-all">
-          <span>🧹 Effacer toutes mes donnees</span>
-          <span class="account-menu-meta">→</span>
-        </button>
-      </div>
-    </div>
-
-    ${isAdmin ? `<div class="account-section">
-      <div class="account-section-title">Vendeur</div>
-      <div class="account-menu">
-        <button class="account-menu-item" data-account-action="go-admin">
-          <span>🛠️ Espace vendeur</span>
-          <span class="account-menu-meta">→</span>
-        </button>
-      </div>
-    </div>` : ''}
-  `;
-}
-
-window.renderAccount = renderAccount;
-
-function handleAccountAction(action) {
-  switch (action) {
-    case 'close': {
-      hideAccountView();
-      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-      document.querySelector('.nav-item[data-nav="home"]').classList.add('active');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      break;
-    }
-    case 'go-cart': {
-      hideAccountView();
-      document.getElementById('cartPanel').classList.add('open');
-      document.getElementById('cartOverlay').classList.add('open');
-      refreshCartDisplay();
-      break;
-    }
-    case 'go-favs': {
-      hideAccountView();
-      state.currentFilter = 'favorites';
-      refreshCatalogue();
-      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-      document.querySelector('.nav-item[data-nav="favorites"]').classList.add('active');
-      window.scrollTo(0, 0);
-      break;
-    }
-    case 'go-history': {
-      hideAccountView();
-      document.getElementById('searchInput').focus();
-      showSearchDropdown('');
-      break;
-    }
-    case 'go-new': {
-      hideAccountView();
-      document.querySelector('.filter-chip[data-filter="new"]')?.click();
-      window.scrollTo(0, 0);
-      break;
-    }
-    case 'contact': {
-      window.open(`https://wa.me/242066271882?text=${encodeURIComponent("Bonjour NRJ Marketplace, j'ai besoin d'assistance 🙏")}`, '_blank');
-      break;
-    }
-    case 'install-app': {
-      if (window.deferredInstallPrompt) {
-        window.deferredInstallPrompt.prompt();
-      } else {
-        alert("Pour installer l'app NRJ :\n\n• Chrome Android : menu ⋮ → « Installer l'application »\n• iOS Safari : bouton Partager → « Sur l'ecran d'accueil »");
-      }
-      break;
-    }
-    case 'clear-all': {
-      if (!confirm('Effacer vos favoris, votre panier, votre historique de recherches et de commandes ? Cette action est definitive.')) return;
-      try {
-        localStorage.removeItem('nrj_favorites');
-        localStorage.removeItem('nrj_cart');
-        localStorage.removeItem('nrj_cart_v32');
-        localStorage.removeItem('nrj_search_history');
-        localStorage.removeItem('nrj_orders');
-        localStorage.removeItem('nrj_customer_name');
-      } catch {}
-      state.favorites = [];
-      state.cart = [];
-      state.orders = [];
-      saveCart();
-      saveFavorites();
-      saveOrders();
-      updateNavFavBadge();
-      updateNavCartBadge();
-      refreshCartDisplay();
-      renderAccount();
-      showToast('🧹 Donnees effacees');
-      break;
-    }
-    case 'go-admin': {
-      window.location.href = 'admin.html';
-      break;
-    }
-  }
-}
 
 document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('click', function(e) {
   e.preventDefault();
@@ -535,119 +553,59 @@ document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('clic
   }
 }));
 
-function initOfflineIndicator() {
-  let banner = document.getElementById('offlineBanner');
-  if (!banner) {
-    banner = document.createElement('div');
-    banner.id = 'offlineBanner';
-    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#7f1d1d;color:#fff;text-align:center;padding:0.4rem;font-size:0.78rem;font-weight:600;transform:translateY(-100%);transition:transform 0.3s ease;';
-    banner.textContent = '📡 Hors ligne — catalogue memorise';
-    document.body.prepend(banner);
-  }
-  const update = () => {
-    banner.style.transform = navigator.onLine ? 'translateY(-100%)' : 'translateY(0)';
-  };
-  update();
-  addEventListener('online', update);
-  addEventListener('offline', update);
-}
-
-// ============================================================
-//  PRE-CACHE IMAGES POPULAIRES (Action 7)
-// ============================================================
-
-async function precachePopularImages() {
-  if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) return;
-  if (!state.products || state.products.length === 0) return;
-
-  const popular = [...state.products]
-    .sort((a, b) => (b.popularity_score || 0) - (a.popularity_score || 0))
-    .slice(0, 30);
-
-  const imageUrls = [];
-  for (const p of popular) {
-    for (const img of [p.image, p.image2, p.image3, p.image4, p.image5, p.image6]) {
-      if (img && img.trim()) {
-        imageUrls.push(thumb(img.trim(), 300, 400));
-      }
-    }
-  }
-
-  if (imageUrls.length === 0) return;
-
-  try {
-    const channel = new MessageChannel();
-    navigator.serviceWorker.controller.postMessage(
-      { type: 'precache-images', urls: imageUrls },
-      [channel.port2]
-    );
-
-    channel.port1.onmessage = (event) => {
-      const { cached, failed, total } = event.data;
-      console.log(`[Main] Precache: ${cached}/${total} images mises en cache`);
-    };
-  } catch (e) {
-    console.warn('[Main] Precache images echoue:', e);
-  }
-}
-
-// ============================================================
-
+// ─── Initialisation ────────────────────────────────────────────────────────
 async function init() {
-  await loadPersistedState();
-  await fetchProducts();
-  loadOrders();
+  try {
+    await loadPersistedState();
+    await fetchProducts();
+    loadOrders();
 
-  precachePopularImages();
+    precachePopularImages();
 
-  const cats = [...new Set(state.products.map(p => removeEmojis(p.category)))];
-  let html = `<button class="filter-btn active" data-category="all">Tout voir (${state.products.length})</button>`;
-  cats.forEach(c => {
-    const count = state.products.filter(p => p.category === c).length;
-    html += `<button class="filter-btn" data-category="${escapeHtml(c)}">${escapeHtml(c)} (${count})</button>`;
-  });
-  const filterBar = document.getElementById('filterBar');
-  if (filterBar) filterBar.innerHTML = html;
+    const cats = [...new Set(state.products.map(p => removeEmojis(p.category)))];
+    let html = `<button class="filter-btn active" data-category="all">Tout voir (${state.products.length})</button>`;
+    cats.forEach(c => {
+      const count = state.products.filter(p => p.category === c).length;
+      html += `<button class="filter-btn" data-category="${escapeHtml(c)}">${escapeHtml(c)} (${count})</button>`;
+    });
+    const filterBar = document.getElementById('filterBar');
+    if (filterBar) filterBar.innerHTML = html;
 
-  initPlaceholderRotation();
-  initVoiceSearch();
-  initSmartHeader();
-  initLogoLongPress();
-  initThemeToggle();
-  initOfflineIndicator();
-  initServiceWorkerUpdates();
-  refreshCatalogue();
-  refreshCartDisplay();
-  updateNavFavBadge();
-  setupAutoSync();
-
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  if (session) {
-    state.isAdminLoggedIn = true;
+    initPlaceholderRotation();
+    initVoiceSearch();
+    initSmartHeader();
+    initLogoLongPress();
+    initThemeToggle();
+    initOfflineIndicator();
+    initServiceWorkerUpdates();
     refreshCatalogue();
-  }
+    refreshCartDisplay();
+    updateNavFavBadge();
+    setupAutoSync();
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const searchParam = urlParams.get('search');
-  const idParam = urlParams.get('id');
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) {
+      state.isAdminLoggedIn = true;
+      refreshCatalogue();
+    }
 
-  if (searchParam) {
-    switchToSearchView(searchParam);
-  } else if (idParam) {
-    const p = state.products.find(pr => pr.id === parseInt(idParam));
-    if (p) openProductModal(parseInt(idParam));
-  }
-}
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchParam = urlParams.get('search');
+    const idParam = urlParams.get('id');
 
-init();
+    if (searchParam) {
+      switchToSearchView(searchParam);
+    } else if (idParam) {
+      const p = state.products.find(pr => pr.id === parseInt(idParam));
+      if (p) openProductModal(parseInt(idParam));
+    }
   } catch (err) {
     console.error('Erreur initiale:', err);
     showToast('⚠️ Erreur de chargement. Veuillez réessayer.');
   }
 }
 
-// Demarre l'app
 init().catch(err => {
-  console.error('Init echoue:', err);
-  showToast('⚠️ Erreur critique. Relancez l'application.');
+  console.error('Init échoué:', err);
+  showToast("⚠️ Erreur critique. Relancez l'application.");
 });
