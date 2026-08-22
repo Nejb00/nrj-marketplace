@@ -1,20 +1,21 @@
 import { supabaseClient } from './config.js';
 import { state } from './state.js';
 import { showToast } from './utils.js';
-
-// CORRECTION: Helper pour timeout
-async function withTimeout(promise, ms = 10000) {
-  const timeout = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error(`Timeout apres ${ms}ms`)), ms)
-  );
-  return Promise.race([promise, timeout]);
-}
+import db from './db.js';
 
 const PRODUCTS_CACHE_KEY = 'nrj_products_cache';
 const CACHE_DURATION = 5 * 60 * 1000;
 let productCache = { data: null, timestamp: 0 };
 
-// Hash anonyme du navigateur (pas de cookie, pas d'ID personnel)
+const REQUEST_TIMEOUT = 10000;
+
+async function fetchWithTimeout(promise, timeout = REQUEST_TIMEOUT) {
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Timeout: La requête a pris trop de temps')), timeout);
+  });
+  return Promise.race([promise, timeoutPromise]);
+}
+
 const USER_HASH = (() => {
   try {
     let h = localStorage.getItem('nrj_user_hash');
@@ -27,29 +28,34 @@ const USER_HASH = (() => {
 })();
 
 export async function trackPopularity(productId, points) {
-    const { error } = await supabaseClient.rpc('increment_popularity', { product_id: productId, amount: points });
-    if (error) console.warn('Erreur tracking popularité:', error);
+    try {
+        const { error } = await fetchWithTimeout(
+            supabaseClient.rpc('increment_popularity', { product_id: productId, amount: points })
+        );
+        if (error) console.warn('Erreur tracking popularité:', error);
+    } catch (err) {
+        console.warn('Timeout tracking popularité:', err.message);
+    }
 }
 
-// 🧠 Enregistre une vue anonyme (anti-spam : 1/user/produit/jour côté SQL)
 export async function trackView(productId) {
     try {
-        await supabaseClient.from('product_views').insert({
-            user_hash: USER_HASH,
-            product_id: productId
-        });
+        await fetchWithTimeout(
+            supabaseClient.from('product_views').insert({
+                user_hash: USER_HASH,
+                product_id: productId
+            })
+        );
     } catch (e) {
         // Silencieux : la vue anonyme ne doit pas casser l'app
     }
 }
 
-// 🧠 Récupère les produits liés à un produit (ceux qui ont vu X ont aussi vu Y)
 export async function getRelatedProducts(productId, limit = 8) {
     try {
-        // CORRECTION: Timeout de 10s
-        const { data, error } = await withTimeout(
-          supabaseClient
-            .rpc('get_related_products', { pid: productId, lim: limit });
+        const { data, error } = await fetchWithTimeout(
+            supabaseClient.rpc('get_related_products', { pid: productId, lim: limit })
+        );
         if (error) throw error;
         return (data || []).map(r => r.product_id);
     } catch (e) {
@@ -63,62 +69,71 @@ export async function fetchProducts(forceRefresh = false) {
         state.products = productCache.data;
         return;
     }
+    
     try {
-        const { data, error } = await supabaseClient
-            .from('products')
-            .select('id, name, price
-, category, image, popularity_score, created_at, moq, tailles, couleurs')
-            .order('created_at', { ascending: false })
-            .limit(500);,
-          10000 // 10 secondes
+        const cached = await db.getProductsCache();
+        if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+            state.products = cached.products;
+            productCache = { data: cached.products, timestamp: now };
+            return;
+        }
+
+        const { data, error } = await fetchWithTimeout(
+            supabaseClient
+                .from('products')
+                .select('id, name, price, category, image, popularity_score, created_at, moq, tailles, couleurs')
+                .order('created_at', { ascending: false })
+                .limit(500)
         );
+        
         if (error) throw error;
         state.products = data || [];
         productCache = { data: state.products, timestamp: now };
+        
         try {
-            let toStore = state.products;
-            let payload = JSON.stringify({ data: toStore, timestamp: now });
-            while (payload.length > 4_500_000 && toStore.length > 50) {
-                toStore = toStore.slice(0, Math.floor(toStore.length * 0.8));
-                payload = JSON.stringify({ data: toStore, timestamp: now });
+            await db.putProductsCache(state.products);
+        } catch (err) {
+            console.warn('IndexedDB produits cache:', err);
+            try {
+                let toStore = state.products;
+                let payload = JSON.stringify({ data: toStore, timestamp: now });
+                while (payload.length > 4_500_000 && toStore.length > 50) {
+                    toStore = toStore.slice(0, Math.floor(toStore.length * 0.8));
+                    payload = JSON.stringify({ data: toStore, timestamp: now });
+                }
+                localStorage.setItem(PRODUCTS_CACHE_KEY, payload);
+            } catch (err2) { 
+                console.warn('localStorage quota dépassé, cache produits ignoré:', err2); 
             }
-            localStorage.setItem(PRODUCTS_CACHE_KEY, payload);
-        // CORRECTION: Cache dans IndexedDB
-        try {
-            const dbModule = await import('./db.js');
-            await dbModule.default.putRecord('products_cache', {
-                data: state.products,
-                timestamp: now
-            });
-        } catch (e) {
-            console.warn('IndexedDB indisponible pour le cache produits:', e);
         }
-        } catch (err) { console.warn('localStorage quota dépassé, cache produits ignoré:', err); }
     } catch (err) {
         console.error('Erreur fetch products:', err);
-        let saved = null;
-        try { saved = JSON.parse(localStorage.getItem(PRODUCTS_CACHE_KEY) || 'null'); } catch {}
-                // CORRECTION: Essayer IndexedDB aussi
+        
         try {
-            const dbModule = await import('./db.js');
-            const cached = await dbModule.default.getRecord('products_cache');
-            if (cached && cached.data) {
-                state.products = cached.data;
-                productCache = { data: cached.data, timestamp: now };
-                showToast('📴 Hors ligne — catalogue memorise (IndexedDB)');
+            const cached = await db.getProductsCache();
+            if (cached && cached.products.length) {
+                state.products = cached.products;
+                productCache = { data: cached.products, timestamp: now };
+                showToast('📴 Hors ligne — catalogue mémorisé (IndexedDB)');
                 return;
             }
-        } catch (e) {
-            console.warn('IndexedDB indisponible:', e);
-        }
+        } catch {}
+
+        let saved = null;
+        try { saved = JSON.parse(localStorage.getItem(PRODUCTS_CACHE_KEY) || 'null'); } catch {}
         if (saved && Array.isArray(saved.data) && saved.data.length) {
             state.products = saved.data;
             productCache = { data: saved.data, timestamp: now };
             showToast('📴 Hors ligne — catalogue mémorisé');
             return;
         }
-        state.products = [];
-        showToast('❌ Erreur de connexion.');
+        
+        if (err.message === 'Timeout: La requête a pris trop de temps') {
+            showToast('⏱️ Requête trop longue. Vérifiez votre connexion.');
+        } else {
+            showToast('❌ Erreur de connexion.');
+        }
+        
         const grid = document.getElementById('productsGrid');
         if (grid) {
             grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;"><div style="font-size:3rem;margin-bottom:1rem;">⚠️</div><h3 style="color:var(--text);margin-bottom:0.5rem;">Impossible de charger les produits</h3><button onclick="location.reload()" style="background:var(--primary);color:white;border:none;padding:0.8rem 2rem;border-radius:50px;font-weight:700;cursor:pointer;">🔄 Réessayer</button></div>';
@@ -128,12 +143,13 @@ export async function fetchProducts(forceRefresh = false) {
 
 export async function fetchProductDetails(productId) {
     try {
-        const { data, error } = await s
-upabaseClient
-            .from('products')
-            .select('*')
-            .eq('id', productId)
-            .single();
+        const { data, error } = await fetchWithTimeout(
+            supabaseClient
+                .from('products')
+                .select('*')
+                .eq('id', productId)
+                .single()
+        );
         if (error) throw error;
         return data;
     } catch (err) {
@@ -143,26 +159,47 @@ upabaseClient
 }
 
 export async function insertProduct(product) {
-    const { data, error } = await supabaseClient
-        .from('products')
-        .insert([product])
-        .select();
-    if (error) throw error;
-    return data;
+    try {
+        const { data, error } = await fetchWithTimeout(
+            supabaseClient
+                .from('products')
+                .insert([product])
+                .select()
+        );
+        if (error) throw error;
+        return data;
+    } catch (err) {
+        console.error('Erreur insert product:', err);
+        throw err;
+    }
 }
 
 export async function deleteProductFromSupabase(id) {
-    const { error } = await supabaseClient
-        .from('products')
-        .delete()
-        .eq('id', id);
-    if (error) throw error;
+    try {
+        const { error } = await fetchWithTimeout(
+            supabaseClient
+                .from('products')
+                .delete()
+                .eq('id', id)
+        );
+        if (error) throw error;
+    } catch (err) {
+        console.error('Erreur delete product:', err);
+        throw err;
+    }
 }
 
 export async function updateProductInSupabase(id, updates) {
-    const { error } = await supabaseClient
-        .from('products')
-        .update(updates)
-        .eq('id', id);
-    if (error) throw error;
+    try {
+        const { error } = await fetchWithTimeout(
+            supabaseClient
+                .from('products')
+                .update(updates)
+                .eq('id', id)
+        );
+        if (error) throw error;
+    } catch (err) {
+        console.error('Erreur update product:', err);
+        throw err;
+    }
 }
