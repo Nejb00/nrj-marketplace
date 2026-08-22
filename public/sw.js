@@ -1,5 +1,12 @@
 const CACHE = 'nrj-v9';
-const SHELL = ['/', '/index.html', '/admin.html', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png', '/placeholder.svg'];
+const SHELL = [
+  '/', '/index.html', '/admin.html',
+  '/manifest.webmanifest',
+  '/icon.svg', '/icon-192.png', '/icon-512.png', '/placeholder.svg',
+  // ✅ Ajout des CSS principaux pour un chargement instantané
+  '/src/css/main.css', '/src/css/base.css', '/src/css/admin.css',
+  '/src/css/product-card.css', '/src/css/navigation.css'
+];
 const IMAGE_CACHE = 'nrj-images-v2';
 const ASSETS_CACHE = 'nrj-assets-v3';
 const SEARCH_CACHE = 'nrj-search-v1';
@@ -190,7 +197,9 @@ self.addEventListener('fetch', (e) => {
           const placeholder = await caches.match('/placeholder.svg');
           if (placeholder) return placeholder;
 
-          return new Response('', { status: 503, statusText: 'Service Unavailable' });
+          // ✅ Fallback vers une image data:URI si placeholder non disponible
+          const fallbackImg = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23ddd" width="100" height="100"/><text x="50" y="55" text-anchor="middle" fill="%23999">📦</text></svg>';
+          return new Response(fallbackImg, { headers: { 'Content-Type': 'image/svg+xml' } });
         }
       })()
     );
@@ -223,15 +232,21 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // ── ASSETS (CSS, JS, fonts) — Network first avec maj cache ─
+  // ── ASSETS (CSS, JS, fonts) — Cache-first avec fallback réseau ─────────
   if (url.pathname.match(/\.(css|js|woff2?|ttf|eot)$/i)) {
     e.respondWith(
-      fetch(e.request).then((res) => {
-        if (res.ok) {
-          caches.open(ASSETS_CACHE).then((cache) => cache.put(e.request, res.clone()));
-        }
-        return res;
-      }).catch(() => caches.match(e.request))
+      caches.match(e.request).then((cached) => {
+        if (cached) return cached; // ✅ Retourne le cache si disponible
+        return fetch(e.request).then((res) => {
+          if (res.ok) {
+            caches.open(ASSETS_CACHE).then((cache) => cache.put(e.request, res.clone()));
+          }
+          return res;
+        }).catch(() => {
+          // ✅ Fallback vers /index.html si rien ne fonctionne
+          return caches.match('/index.html') || new Response('', { status: 503 });
+        });
+      })
     );
     return;
   }
@@ -239,10 +254,16 @@ self.addEventListener('fetch', (e) => {
   // ── NAVIGATION ──────────────────────────────────────────
   if (e.request.mode === 'navigate') {
     e.respondWith(
-      fetch(e.request).then((res) => {
-        if (res.ok) caches.open(CACHE).then((c) => c.put(e.request, res.clone()));
-        return res;
-      }).catch(() => caches.match(e.request).then((cached) => cached || caches.match('/index.html')))
+      caches.match(e.request).then((cached) => {
+        if (cached) return cached;
+        return fetch(e.request).then((res) => {
+          if (res.ok) caches.open(CACHE).then((c) => c.put(e.request, res.clone()));
+          return res;
+        }).catch(() => {
+          // ✅ Fallback vers index.html si réseau échoue
+          return caches.match('/index.html') || new Response('', { status: 503 });
+        });
+      })
     );
     return;
   }
@@ -250,10 +271,15 @@ self.addEventListener('fetch', (e) => {
   // ── SAME-ORIGIN ─────────────────────────────────────────
   if (url.origin === self.location.origin) {
     e.respondWith(
-      fetch(e.request).then((res) => {
-        if (res.ok) caches.open(CACHE).then((c) => c.put(e.request, res.clone()));
-        return res;
-      }).catch(() => caches.match(e.request).then((cached) => cached || caches.match('/index.html')))
+      caches.match(e.request).then((cached) => {
+        if (cached) return cached;
+        return fetch(e.request).then((res) => {
+          if (res.ok) caches.open(CACHE).then((c) => c.put(e.request, res.clone()));
+          return res;
+        }).catch(() => {
+          return caches.match('/index.html') || new Response('', { status: 503 });
+        });
+      })
     );
   }
 });
