@@ -80,7 +80,7 @@ function initServiceWorkerUpdates() {
       if (!newWorker) return;
       newWorker.addEventListener('statechange', () => {
         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-          showToast('📦 Mise à jour disponible — relancez l'application');
+          showToast("📦 Mise à jour disponible — relancez l'application.");
         }
       });
     });
@@ -104,7 +104,6 @@ function initOfflineIndicator() {
   addEventListener('offline', update);
 }
 
-// ─── Pré-cache des images populaires via le service worker ─────────────────
 async function precachePopularImages() {
   if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) return;
   if (!state.products || state.products.length === 0) return;
@@ -133,7 +132,6 @@ async function precachePopularImages() {
   }
 }
 
-// ─── Appui long sur le logo → admin ────────────────────────────────────────
 function initLogoLongPress() {
   const logo = document.querySelector('.logo-wrapper');
   if (!logo) return;
@@ -180,7 +178,6 @@ function initLogoLongPress() {
   logo.addEventListener('touchcancel', cancelPress);
 }
 
-// ─── Vue compte « Mon NRJ » ────────────────────────────────────────────────
 export function showAccountView() {
   document.getElementById('catalogueWrapper').style.display = 'none';
   const av = document.getElementById('accountView');
@@ -405,7 +402,6 @@ function handleAccountAction(action) {
   }
 }
 
-// ─── Écouteurs globaux ─────────────────────────────────────────────────────
 window.addEventListener('scroll', () => {
   const btn = document.getElementById('scrollToTopBtn');
   if (btn) btn.classList.toggle('visible', window.scrollY > 300);
@@ -553,7 +549,6 @@ document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('clic
   }
 }));
 
-// ─── Initialisation ────────────────────────────────────────────────────────
 async function init() {
   try {
     await loadPersistedState();
