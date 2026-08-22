@@ -1,0 +1,43 @@
+/* ============================================================
+   PLACEHOLDER IMAGES — Fallback hors ligne propre
+   ============================================================ */
+
+/* Quand une image charge le placeholder (fallback SW), 
+   on l'affiche proprement sans deformation */
+img[src*="placeholder.svg"],
+img[data-placeholder="true"] {
+    object-fit: contain !important;
+    background: var(--surface-light, #1a1a1a);
+    padding: 1rem;
+}
+
+/* Dans les cartes produits: le placeholder garde le ratio */
+.product-card img[src*="placeholder.svg"] {
+    padding: 2rem;
+    opacity: 0.8;
+}
+
+/* Dans le carousel: placeholder centre */
+.carousel-item img[src*="placeholder.svg"] {
+    padding: 3rem;
+    max-width: 80%;
+    max-height: 80%;
+    margin: auto;
+}
+
+/* Dans le dropdown: placeholder petit et discret */
+.dropdown-item-img img[src*="placeholder.svg"] {
+    padding: 0.5rem;
+    opacity: 0.6;
+}
+
+/* Dans le panier: placeholder mini */
+.cart-item-img img[src*="placeholder.svg"] {
+    padding: 0.3rem;
+    opacity: 0.5;
+}
+
+/* Animation douce quand une image bascule sur le placeholder */
+img {
+    transition: opacity 0.3s ease, filter 0.3s ease;
+}
