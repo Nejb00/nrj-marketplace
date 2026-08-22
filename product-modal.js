@@ -1,0 +1,166 @@
+import { state } from './state.js';
+import { trackViewedItem } from './state.js';
+import { WHATSAPP_NUMBER, BASE_URL } from './config.js';
+import { escapeHtml, formatPrice, generateBadgesHTML, showToast, thumbImg, modalImg } from './utils.js';
+import { trackPopularity, fetchProductDetails, trackView, getRelatedProducts } from './api.js';
+import { toggleFavorite, addToCart } from './cart.js';
+import { signalView } from './reco.js';
+
+const _modal = document.getElementById('productModal');
+const _rec = _modal ? _modal.querySelector('.recommendations') : null;
+const _src = _modal ? _modal.querySelector('.sourcing-section') : null;
+if (_modal && _rec && _src) _modal.insertBefore(_src, _rec);
+
+const _backBtn = document.getElementById('modalCloseBtn');
+if (_backBtn) _backBtn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
+const _shareBtn = document.getElementById('modalShareBtn');
+if (_shareBtn) _shareBtn.innerHTML = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>';
+
+function updateCarouselDots(sc, dc, index) {
+    dc.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === index));
+}
+
+// Recos intelligentes : collaboratif (Niveau 2) + profil local (Niveau 1) + fallback
+async function buildRecommendations(currentProduct) {
+    const TARGET = 12;
+
+    // 1) Collaboratif : ceux qui ont vu ce produit ont aussi vu...
+    const relatedIds = await getRelatedProducts(currentProduct.id, TARGET);
+    const related = relatedIds
+        .map(id => state.products.find(p => p.id === id))
+        .filter(p => p && p.id !== currentProduct.id);
+
+    // 2) Si pas assez de donnees collaboratives (au demarrage) -> completer avec
+    //    la meme categorie puis les bestsellers d'autres categories
+    const needed = TARGET - related.length;
+    if (needed > 0) {
+        const sameCat = state.products.filter(
+            pr => pr.category === currentProduct.category && pr.id !== currentProduct.id
+        );
+        const others = state.products
+            .filter(pr => pr.category !== currentProduct.id && pr.id !== currentProduct.id && !relatedIds.includes(pr.id))
+            .sort((a, b) => (Number(b.popularity_score) || 0) - (Number(a.popularity_score) || 0));
+        const fallback = [...sameCat, ...others];
+        for (const f of fallback) {
+            if (related.length >= TARGET) break;
+            if (!relatedIds.includes(f.id)) related.push(f);
+        }
+    }
+
+    let rec = related.slice(0, TARGET);
+    if (rec.length % 2 !== 0) rec.pop();
+    return rec;
+}
+
+export async function openProductModal(pid) {
+    let p = state.products.find(pr => pr.id === pid);
+    if (!p) return;
+
+    state.currentProductId = pid;
+    trackPopularity(pid, 1);
+    trackViewedItem(p.name);
+    signalView(p);
+    trackView(pid); // Niveau 2 : enregistre la vue anonyme dans Supabase
+
+    const fullProduct = await fetchProductDetails(pid);
+    if (fullProduct) p = fullProduct;
+
+    const tailles = (p.tailles || '').split(',').map(s => s.trim()).filter(Boolean);
+    const couleurs = (p.couleurs || '').split(',').map(s => s.trim()).filter(Boolean);
+    let sT = tailles.length ? tailles[0] : '', sC = couleurs.length ? couleurs[0] : '';
+    const moq = Number(p.moq) || 1, uPrice = Number(p.price);
+
+    document.getElementById('modalPrice').textContent = formatPrice(uPrice);
+    document.getElementById('modalMoq').textContent = `Minimum d'achat : ${moq} piece(s)`;
+    document.getElementById('modalTotal').textContent = `Total minimum : ${formatPrice(uPrice * moq)}`;
+    document.getElementById('modalDesc').textContent = p.description || '';
+    document.getElementById('modalProductIdBadge').textContent = `[ID: ${p.id}]`;
+    document.getElementById('modalBadges').innerHTML = generateBadgesHTML(p, true);
+    const favSvg = document.getElementById('modalFavBtn').querySelector('.fav-icon-svg');
+    if (favSvg) favSvg.classList.toggle('faved', state.favorites.includes(p.id));
+    document.getElementById('modalFavBtn').onclick = () => toggleFavorite(p.id);
+    document.getElementById('modalShareBtn').onclick = () => {
+        const url = BASE_URL + '?id=' + p.id;
+        const txt = `${formatPrice(uPrice)}\nMinimum d'achat : ${moq} piece(s)\nDecouvre "${p.name}" sur NRJ Marketplace ${url}`;
+        navigator.share ? navigator.share({ title: p.name, text: txt, url }).catch(() => {}) : navigator.clipboard.writeText(txt).then(() => showToast('🔗 Copie !'));
+    };
+
+    const imgs = [p.image, p.image2, p.image3, p.image4, p.image5, p.image6].filter(u => u && u.trim());
+    const sc = document.getElementById('modalCarouselScroll'), dc = document.getElementById('modalCarouselDots');
+    sc.innerHTML = ''; dc.innerHTML = '';
+    if (!imgs.length) {
+        sc.innerHTML = '<div class="modal-placeholder">📦</div>';
+        dc.innerHTML = '';
+    } else {
+        imgs.forEach((u, i) => {
+            // Utilise modalImg() pour passer par wsrv.nl et etre cachable par le SW
+            sc.innerHTML += `<div class="carousel-item">${modalImg(u, p.name)}</div>`;
+            dc.innerHTML += `<span class="carousel-dot ${i === 0 ? 'active' : ''}" data-index="${i}"></span>`;
+        });
+    }
+
+    if (!sc.dataset.bound) { sc.addEventListener('scroll', () => updateCarouselDots(sc, dc, Math.round(sc.scrollLeft / sc.offsetWidth))); sc.dataset.bound = '1'; }
+    if (!dc.dataset.bound) { dc.addEventListener('click', e => { if (e.target.classList.contains('carousel-dot')) sc.scrollTo({ left: sc.offsetWidth * parseInt(e.target.dataset.index), behavior: 'smooth' }); }); dc.dataset.bound = '1'; }
+
+    function renderOptions(ct, opts, sel, ty) {
+        ct.innerHTML = '';
+        opts.forEach(o => {
+            const b = document.createElement('button');
+            b.className = 'option-btn' + (o === sel ? ' selected' : '');
+            b.textContent = o;
+            b.onclick = () => {
+                ct.querySelectorAll('.option-btn').forEach(x => x.classList.remove('selected'));
+                b.classList.add('selected');
+                if (ty === 'taille') sT = o; else sC = o;
+            };
+            ct.appendChild(b);
+        });
+    }
+
+    document.getElementById('modalTailleGroup').style.display = tailles.length ? 'block' : 'none';
+    if (tailles.length) renderOptions(document.getElementById('modalTailleOptions'), tailles, sT, 'taille');
+    document.getElementById('modalCouleurGroup').style.display = couleurs.length ? 'block' : 'none';
+    if (couleurs.length) renderOptions(document.getElementById('modalCouleurOptions'), couleurs, sC, 'couleur');
+
+    document.getElementById('addToCartStickyBtn').onclick = (e) => addToCart(p.id, sT, sC, e.currentTarget);
+    document.getElementById('directOrderStickyBtn').onclick = () => {
+        if (tailles.length && !sT) return showToast('⚠️ Selectionnez une taille');
+        trackPopularity(p.id, 10);
+        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour NRJ Marketplace, je souhaite commander : ${p.name} (ID: ${p.id}), Taille: ${sT || 'N/A'}, Quantite: ${moq}`)}`, '_blank');
+    };
+
+    // Skeleton pour les recos pendant le calcul collaboratif
+    document.getElementById('modalRecCarousel').innerHTML = Array(6).fill(
+        '<div class="rec-card"><div class="rec-card-img" style="background:var(--surface-light);"></div></div>'
+    ).join('');
+
+    // Construire les recos en arriere-plan (Niveau 1 + Niveau 2)
+    const rec = await buildRecommendations(p);
+
+    document.getElementById('modalRecCarousel').innerHTML = rec.map(r => `
+        <div class="rec-card" data-product-id="${r.id}">
+            <div class="rec-card-img">${r.image ? thumbImg(r.image, r.name, 300, 400) : '📦'}</div>
+            <div class="rec-card-overlay">
+                <div class="rec-card-name">${escapeHtml(r.name)}</div>
+                <div class="rec-card-bottom">
+                    <div class="rec-card-price">${formatPrice(r.price)}</div>
+                    <div class="rec-card-moq">Min. ${Number(r.moq) || 1} pcs</div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+
+    document.getElementById('productModal').classList.add('open');
+    document.getElementById('stickyBottomBar').classList.add('visible');
+    if (!state.modalOpen) {
+        history.replaceState({ modalOpen: true }, '', `?id=${p.id}`);
+        state.modalOpen = true;
+    }
+}
+
+export function closeProductModal() {
+    document.getElementById('productModal').classList.remove('open');
+    document.getElementById('stickyBottomBar').classList.remove('visible');
+    state.modalOpen = false;
+    history.replaceState({}, '', window.location.pathname);
+}
