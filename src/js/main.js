@@ -1,7 +1,7 @@
 import '../css/main.css';
 import { state, trackViewedItem, loadPersistedState, saveCart, saveFavorites, saveOrders } from './state.js';
 import { supabaseClient } from './config.js';
-import { escapeHtml, removeEmojis, formatPrice, showToast, thumb, initLazyImages } from './utils.js';
+import { escapeHtml, removeEmojis, formatPrice, showToast, thumb } from './utils.js';
 import { fetchProducts } from './api.js';
 import { refreshCatalogue, applyFilter, switchView } from './catalogue.js';
 import { addToCart, changeQty, removeCartItem, refreshCartDisplay, toggleFavorite, updateNavFavBadge, updateNavCartBadge, openOrderModal, sendWhatsAppOrder, loadOrders } from './cart.js';
@@ -10,6 +10,11 @@ import { openEditModal, updateProduct } from './product-edit.js';
 import { initPlaceholderRotation, initVoiceSearch, showSearchDropdown, hideSearchDropdown } from './search.js';
 import { switchToSearchView, switchFromSearchView } from './search-view.js';
 import { setupAutoSync } from './sync.js';
+
+// CORRECTION: Initialisation securisee avec try/catch
+async function init() {
+  try {
+
 
 let searchDebounceTimer = null;
 
@@ -589,9 +594,8 @@ async function precachePopularImages() {
 // ============================================================
 
 async function init() {
-  try {
-    await loadPersistedState();
-    await fetchProducts();
+  await loadPersistedState();
+  await fetchProducts();
   loadOrders();
 
   precachePopularImages();
@@ -611,7 +615,6 @@ async function init() {
   initLogoLongPress();
   initThemeToggle();
   initOfflineIndicator();
-  initLazyImages();  // ✅ Initialiser le lazy loading
   initServiceWorkerUpdates();
   refreshCatalogue();
   refreshCartDisplay();
@@ -634,14 +637,17 @@ async function init() {
     const p = state.products.find(pr => pr.id === parseInt(idParam));
     if (p) openProductModal(parseInt(idParam));
   }
-  } catch (err) {
-    console.error('Erreur initiale:', err);
-    showToast('⚠️ Erreur de chargement initial');
-    const grid = document.getElementById('productsGrid');
-    if (grid) {
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;"><div style="font-size:3rem;margin-bottom:1rem;">⚠️</div><h3 style="color:var(--text);margin-bottom:0.5rem;">Erreur de chargement</h3><button onclick="location.reload()" style="background:var(--primary);color:white;border:none;padding:0.8rem 2rem;border-radius:50px;font-weight:700;cursor:pointer;">🔄 Réessayer</button></div>';
-    }
-  }
 }
 
 init();
+  } catch (err) {
+    console.error('Erreur initiale:', err);
+    showToast('⚠️ Erreur de chargement. Veuillez réessayer.');
+  }
+}
+
+// Demarre l'app
+init().catch(err => {
+  console.error('Init echoue:', err);
+  showToast('⚠️ Erreur critique. Relancez l'application.');
+});
