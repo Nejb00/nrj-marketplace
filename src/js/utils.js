@@ -43,7 +43,8 @@ export function isFresh(p) {
 
 export function isBestSeller(p) { return (Number(p.popularity_score) || 0) >= POPULAR_THRESHOLD; }
 
-export function generateBadgesHTML(p, isModal = false) {
+export function generate
+BadgesHTML(p, isModal = false) {
     const isNew = isFresh(p);
     const isBest = isBestSeller(p);
     if (!isModal) {
@@ -91,7 +92,8 @@ export function normalizeString(str) {
 
 export function levenshteinDistance(a, b) {
     if (a.length === 0) return b.length;
-    if (b.length === 0) return a.length;
+ 
+   if (b.length === 0) return a.length;
 
     const matrix = [];
     for (let i = 0; i <= b.length; i++) matrix[i] = [i];
@@ -146,7 +148,8 @@ export function calculateSearchScore(query, product) {
     if (score === 0 && queryWords.length === 1) {
         const queryWord = queryWords[0];
         const nameWords = name.split(' ');
-        for (const nameWord of nameWords) {
+        for (c
+onst nameWord of nameWords) {
             if (nameWord.length < 3) continue;
             const distance = levenshteinDistance(queryWord, nameWord);
             const maxLen = Math.max(queryWord.length, nameWord.length);
@@ -211,17 +214,21 @@ export function thumb(url, w = 300, h = 400, fit = 'cover') {
         output: 'webp',
         q: '80'
     });
-    return `https://wsrv.nl/?${params.toString()}`;
+    return `https://ws
+rv.nl/?${params.toString()}`;
 }
 
 export function thumbImg(url, alt = '', w = 300, h = 400, cls = '') {
     if (!url) return '';
 
-    const thumbUrl = thumb(url, w, h);
-    const onerr = `this.onerror=function(){this.onerror=null;this.src=this.dataset.full;this.removeAttribute('data-full');this.removeAttribute('data-ts');}`;
+    const optimized = thumb(url, w, h);
+    const original = url;
+    
+    // ✅ Fallback vers l'URL originale si wsrv.nl échoue
+    const onerr = `this.onerror=function(){this.onerror=null;this.src='${original}';this.removeAttribute('data-full');this.removeAttribute('data-ts');}`;
     const clsAttr = cls ? ` class="${escapeHtml(cls)}"` : '';
 
-    return `<img${clsAttr} src="${escapeHtml(thumbUrl)}" data-full="${escapeHtml(url)}" data-ts="${Date.now()}" alt="${escapeHtml(alt)}" loading="lazy" referrerpolicy="no-referrer" decoding="async" onload="this.classList.add('loaded')" onerror="${onerr}" width="${w}" height="${h}">`;
+    return `<img${clsAttr} src="${escapeHtml(optimized)}" data-full="${escapeHtml(original)}" data-ts="${Date.now()}" alt="${escapeHtml(alt)}" loading="lazy" referrerpolicy="no-referrer" decoding="async" onload="this.classList.add('loaded')" onerror="${onerr}" width="${w}" height="${h}">`;
 }
 
 /**
@@ -233,11 +240,13 @@ export function thumbImg(url, alt = '', w = 300, h = 400, cls = '') {
 export function modalImg(url, alt = '') {
     if (!url) return '';
 
-    const thumbUrl = thumb(url, 800, 1200, 'contain');
-    // Si wsrv.nl echoue, on bascule sur l'URL originale
-    const onerr = `this.onerror=function(){this.onerror=null;this.src=this.dataset.full;};`;
+    const optimized = thumb(url, 800, 1200, 'contain');
+    const original = url;
+    
+    // ✅ Fallback vers l'URL originale
+    const onerr = `this.onerror=function(){this.onerror=null;this.src='${original}';};`;
 
-    return `<img src="${escapeHtml(thumbUrl)}" data-full="${escapeHtml(url)}" alt="${escapeHtml(alt)}" loading="eager" decoding="async" onload="this.classList.add('loaded')" onerror="${onerr}" style="width:100%;height:100%;object-fit:contain;">`;
+    return `<img src="${escapeHtml(optimized)}" data-full="${escapeHtml(original)}" alt="${escapeHtml(alt)}" loading="eager" decoding="async" onload="this.classList.add('loaded')" onerror="${onerr}" style="width:100%;height:100%;object-fit:contain;">`;
 }
 
 /**
@@ -249,10 +258,13 @@ export function modalImg(url, alt = '') {
 export function searchThumbImg(url, alt = '') {
     if (!url) return '';
 
-    const thumbUrl = thumb(url, 100, 100, 'cover');
-    const onerr = `this.onerror=function(){this.onerror=null;this.src=this.dataset.full;};`;
+    const optimized = thumb(url, 100, 100, 'cover');
+    const original = url;
+    
+    const onerr = `this.onerror=function(){this.onerror=null;this.src='${original}';};`;
 
-    return `<img src="${escapeHtml(thumbUrl)}" data-full="${escapeHtml(url)}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async" onerror="${onerr}" style="width:100%;height:100%;object-fit:cover;">`;
+    return `<img src="${escapeHtml(thumbUrl)}" data-full="${escapeHtml(url)}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async" onerror="${onerr}" style="width:100%;height:100%;object-fit:cover;
+">`;
 }
 
 // WATCHDOG : une image qui rame plus de 6 s bascule sur l'URL d'origine
@@ -273,3 +285,24 @@ function startImgWatchdog() {
     }, 2000);
 }
 startImgWatchdog();
+
+// ✅ Nouvelle fonction pour initialiser le lazy loading
+export function initLazyImages() {
+    if ('IntersectionObserver' in window) {
+        const lazyImages = document.querySelectorAll('img.lazy-load');
+        if (lazyImages.length === 0) return;
+        
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    img.src = img.dataset.src || img.src;
+                    img.classList.remove('lazy-load');
+                    observer.unobserve(img);
+                }
+            });
+        }, { rootMargin: '100px' });
+
+        lazyImages.forEach(img => imageObserver.observe(img));
+    }
+};
