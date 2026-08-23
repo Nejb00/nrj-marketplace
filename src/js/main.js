@@ -10,6 +10,7 @@ import { openEditModal, updateProduct } from './product-edit.js';
 import { initPlaceholderRotation, initVoiceSearch, showSearchDropdown, hideSearchDropdown } from './search.js';
 import { switchToSearchView, switchFromSearchView } from './search-view.js';
 import { setupAutoSync } from './sync.js';
+@import url('light-theme-patch.css');
 
 let searchDebounceTimer = null;
 
