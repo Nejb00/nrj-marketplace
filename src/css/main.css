@@ -7,3 +7,4 @@
 @import './cart-admin.css';
 @import './search-view.css';
 @import './placeholder.css';
+@import url('light-theme-patch.css');
