@@ -1,0 +1,283 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   🌞 NRJ MARKETPLACE — LIGHT THEME PATCH
+   Ajoute ce fichier à la fin de main.css (ou importe-le en dernier)
+   pour que le thème clair claque autant que le sombre.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. FOND BODY PLUS CHAUD (évite le blanc clinique) ─────────────────── */
+:root.light-theme {
+  --bg: #f8f7f5;
+  --surface: #ffffff;
+  --surface-light: #f0eeeb;
+  --border: #e2e0dc;
+  --text: #1a1a1a;
+  --text-secondary: #6b6b6b;
+}
+
+/* ── 2. TOAST : inversé, élégant, avec ombre douce ──────────────────────── */
+:root.light-theme .toast {
+  background: rgba(255, 255, 255, 0.95);
+  color: #1a1a1a;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(12px);
+}
+
+/* ── 3. HEADER PILLULE : plus de relief en clair ───────────────────────── */
+:root.light-theme .header-wrapper {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.06),
+    0 16px 40px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* ── 4. NAV LIQUID GLASS : icônes inactives visibles en clair ──────────── */
+:root.light-theme .main-nav {
+  background: rgba(255, 255, 255, 0.82);
+  border-color: rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.06),
+    0 16px 40px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+:root.light-theme .main-nav .nav-item {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+:root.light-theme .main-nav .nav-item.active {
+  color: var(--primary);
+}
+
+:root.light-theme .main-nav .nav-item.active::before {
+  background: radial-gradient(closest-side, rgba(255, 140, 66, 0.18), transparent 72%);
+}
+
+:root.light-theme .cart-badge,
+:root.light-theme .favorites-badge {
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+/* ── 5. SEARCH BAR : plus d'éclat en clair ─────────────────────────────── */
+:root.light-theme .search-bar {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.06);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+:root.light-theme .search-bar:focus-within {
+  background: #ffffff;
+  border-color: rgba(255, 140, 66, 0.5);
+  box-shadow:
+    0 0 0 3px rgba(255, 140, 66, 0.12),
+    0 4px 12px rgba(255, 140, 66, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+:root.light-theme .search-dropdown {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(0, 0, 0, 0.06);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+}
+
+/* ── 6. PRODUCT CARDS : overlays adaptés au clair ─────────────────────── */
+:root.light-theme .product-card-info {
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.82) 0%,
+    rgba(0, 0, 0, 0.55) 50%,
+    transparent 100%
+  );
+}
+
+:root.light-theme .product-card-name {
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+:root.light-theme .product-card-moq {
+  background: rgba(0, 0, 0, 0.45);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+:root.light-theme .product-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* ── 7. FAV ICON : visible et élégant en clair ─────────────────────────── */
+:root.light-theme .fav-icon {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: #1a1a1a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+:root.light-theme .fav-icon-svg {
+  stroke: #1a1a1a;
+}
+
+:root.light-theme .fav-icon:hover {
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* ── 8. BADGES : lisibles en clair ──────────────────────────────────────── */
+:root.light-theme .badge {
+  background: rgba(0, 0, 0, 0.5);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* ── 9. SKELETON LOADING : tons clairs ─────────────────────────────────── */
+:root.light-theme .product-card,
+:root.light-theme .rec-card {
+  background: linear-gradient(90deg, #e8e6e3 25%, #f0eeeb 50%, #e8e6e3 75%);
+  background-size: 200% 100%;
+}
+
+:root.light-theme .skeleton-image,
+:root.light-theme .skeleton-line {
+  background: linear-gradient(90deg, #e8e6e3 25%, #f0eeeb 50%, #e8e6e3 75%);
+  background-size: 200% 100%;
+}
+
+/* ── 10. MODAL IMAGE SECTION : fond clair ─────────────────────────────── */
+:root.light-theme .modal-image-section {
+  background: #f0eeeb;
+}
+
+:root.light-theme .carousel-item::before {
+  opacity: 0.12;
+}
+
+:root.light-theme .back-arrow-btn {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: #1a1a1a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+:root.light-theme .back-arrow-btn:hover {
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+:root.light-theme .product-id-badge {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: #6b6b6b;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+:root.light-theme .action-circle {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: #1a1a1a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+:root.light-theme .action-circle:hover {
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* ── 11. STICKY BOTTOM BAR : glassmorphism clair ───────────────────────── */
+:root.light-theme .sticky-bottom-bar {
+  background: rgba(255, 255, 255, 0.92);
+  border-top-color: rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04);
+}
+
+/* ── 12. REC CARDS : overlays adaptés ──────────────────────────────────── */
+:root.light-theme .rec-card-overlay {
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.78) 0%,
+    rgba(0, 0, 0, 0.4) 50%,
+    transparent 100%
+  );
+}
+
+:root.light-theme .rec-card-name {
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+:root.light-theme .rec-card-moq {
+  background: rgba(0, 0, 0, 0.45);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+:root.light-theme .rec-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* ── 13. CATEGORY CARDS : overlay plus doux ──────────────────────────────── */
+:root.light-theme .category-card-overlay {
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.75) 0%,
+    rgba(0, 0, 0, 0.3) 60%,
+    transparent 100%
+  );
+}
+
+:root.light-theme .category-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* ── 14. OVERLAYS MODAL / CART : plus légers en clair ──────────────────── */
+:root.light-theme .modal-overlay {
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(4px);
+}
+
+:root.light-theme .cart-overlay {
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(4px);
+}
+
+:root.light-theme .filters-overlay {
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(2px);
+}
+
+/* ── 15. FORMS : focus clair et propre ─────────────────────────────────── */
+:root.light-theme .form-group input:focus,
+:root.light-theme .form-group textarea:focus {
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(255, 140, 66, 0.12);
+}
+
+/* ── 16. CART PANEL : ombre plus douce ───────────────────────────────────── */
+:root.light-theme .cart-panel {
+  box-shadow: -8px 0 40px rgba(0, 0, 0, 0.08);
+}
+
+/* ── 17. MODAL : ombre plus douce ──────────────────────────────────────── */
+:root.light-theme .modal {
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+}
+
+/* ── 18. FILTER CHIPS : plus de pep's en clair ─────────────────────────── */
+:root.light-theme .filter-chip.active {
+  box-shadow: 0 4px 12px rgba(255, 140, 66, 0.2);
+}
+
+/* ── 19. SCROLL TO TOP : visible en clair ──────────────────────────────── */
+:root.light-theme .scroll-to-top {
+  box-shadow: 0 4px 16px rgba(255, 140, 66, 0.25);
+}
+
+/* ── 20. PRODUCT EDIT BTN : visible en clair ───────────────────────────── */
+:root.light-theme .product-edit-btn {
+  box-shadow: 0 2px 8px rgba(255, 140, 66, 0.3);
+}
