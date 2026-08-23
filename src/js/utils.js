@@ -70,11 +70,11 @@ export function getCategoryIcon(category) {
     if (!category) return '📦';
     const cat = category.toLowerCase();
     if (cat.includes('chaussure') || cat.includes('basket') || cat.includes('sneaker') || cat.includes('sport')) return '👟';
-    if (cat.includes('électronique') || cat.includes('electronique') || cat.includes('tech') || cat.includes('phone') || cat.includes('mobile')) return '📱';
-    if (cat.includes('mode') || cat.includes('vêtement') || cat.includes('vetement') || cat.includes('fashion')) return '👕';
+    if (cat.includes('electronique') || cat.includes('tech') || cat.includes('phone') || cat.includes('mobile')) return '📱';
+    if (cat.includes('mode') || cat.includes('vetement') || cat.includes('fashion')) return '👕';
     if (cat.includes('bijou') || cat.includes('accessoire')) return '💍';
-    if (cat.includes('maison') || cat.includes('déco') || cat.includes('deco')) return '🏠';
-    if (cat.includes('beauté') || cat.includes('beaute') || cat.includes('cosmétique')) return '💄';
+    if (cat.includes('maison') || cat.includes('deco')) return '🏠';
+    if (cat.includes('beaute') || cat.includes('cosmetique')) return '💄';
     if (cat.includes('enfant') || cat.includes('jouet')) return '🧸';
     if (cat.includes('livre') || cat.includes('book')) return '📚';
     return '📦';
@@ -218,37 +218,37 @@ export function thumbImg(url, alt = '', w = 300, h = 400, cls = '') {
     if (!url) return '';
 
     const thumbUrl = thumb(url, w, h);
-    const DATA_URI_FALLBACK = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGZpbGwgZmlsbD0iI0NFRkY2QiIvPjxwYXRoIGQ9Ik0yIDEyTDEyIDJMMjAgMTJMMjAgMjBMMTIgN0wyMCAxOFoiLz48L3N2Zz4=';
-
-    const onerr = `this.onerror=function(){this.onerror=null;const fullUrl=this.dataset.full;if(fullUrl&&fullUrl.length<=1500){this.src=fullUrl;}else{this.src='${DATA_URI_FALLBACK}';}this.removeAttribute('data-full');this.removeAttribute('data-ts');}`;
+    const onerr = `this.onerror=function(){this.onerror=null;this.src=this.dataset.full;this.removeAttribute('data-full');this.removeAttribute('data-ts');}`;
     const clsAttr = cls ? ` class="${escapeHtml(cls)}"` : '';
 
     return `<img${clsAttr} src="${escapeHtml(thumbUrl)}" data-full="${escapeHtml(url)}" data-ts="${Date.now()}" alt="${escapeHtml(alt)}" loading="lazy" referrerpolicy="no-referrer" decoding="async" onload="this.classList.add('loaded')" onerror="${onerr}" width="${w}" height="${h}">`;
 }
 
 /**
- * ✅ Image du carrousel de la modale : 600x800 (légère pour la 4G),
- * data-ts pour le watchdog (bascule auto sur l'URL d'origine après 6 s),
- * fallback onerror si wsrv.nl échoue franchement.
+ * Genere une balise <img> pour le carousel de la modale produit.
+ * CORRECTION: ajout de data-ts pour le watchdog + loading eager
  */
 export function modalImg(url, alt = '') {
     if (!url) return '';
 
-    const thumbUrl = thumb(url, 600, 800, 'contain');
-    const onerr = `this.onerror=function(){this.onerror=null;this.removeAttribute('data-ts');this.removeAttribute('data-full');const fullUrl=this.dataset.full;if(fullUrl){this.src=fullUrl;}};`;
+    const thumbUrl = thumb(url, 800, 1200, 'contain');
+    const onerr = `this.onerror=function(){this.onerror=null;this.src=this.dataset.full;};`;
 
-    return `<img src="${escapeHtml(thumbUrl)}" data-full="${escapeHtml(url)}" data-ts="${Date.now()}" alt="${escapeHtml(alt)}" loading="eager" decoding="async" onload="this.classList.add('loaded');this.removeAttribute('data-ts');" onerror="${onerr}" style="width:100%;height:100%;object-fit:contain;">`;
+    // ✅ CORRECTION: data-ts ajoute pour que le watchdog surveille cette image
+    return `<img src="${escapeHtml(thumbUrl)}" data-full="${escapeHtml(url)}" data-ts="${Date.now()}" alt="${escapeHtml(alt)}" loading="eager" decoding="async" onload="this.classList.add('loaded')" onerror="${onerr}" style="width:100%;height:100%;object-fit:contain;">`;
 }
 
 /**
- * Vignette rapide du dropdown de recherche (100x100), avec watchdog.
+ * Genere une balise <img> pour le dropdown de recherche.
+ * CORRECTION: ajout de data-ts pour le watchdog
  */
 export function searchThumbImg(url, alt = '') {
     if (!url) return '';
 
     const thumbUrl = thumb(url, 100, 100, 'cover');
-    const onerr = `this.onerror=function(){this.onerror=null;this.removeAttribute('data-ts');this.removeAttribute('data-full');const fullUrl=this.dataset.full;if(fullUrl){this.src=fullUrl;}};`;
+    const onerr = `this.onerror=function(){this.onerror=null;this.src=this.dataset.full;};`;
 
+    // ✅ CORRECTION: data-ts ajoute pour que le watchdog surveille cette image
     return `<img src="${escapeHtml(thumbUrl)}" data-full="${escapeHtml(url)}" data-ts="${Date.now()}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async" onerror="${onerr}" style="width:100%;height:100%;object-fit:cover;">`;
 }
 
