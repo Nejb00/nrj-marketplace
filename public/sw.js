@@ -1,7 +1,7 @@
-const CACHE = 'nrj-v9';
+const CACHE = 'nrj-v10';
 const SHELL = ['/', '/index.html', '/admin.html', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png', '/placeholder.svg'];
 const IMAGE_CACHE = 'nrj-images-v2';
-const ASSETS_CACHE = 'nrj-assets-v3';
+const ASSETS_CACHE = 'nrj-assets-v4';
 const SEARCH_CACHE = 'nrj-search-v1';
 
 // ─── Limites de cache ─────────────────────────────────────
@@ -102,10 +102,6 @@ async function getCachedImage(request) {
   return null;
 }
 
-/**
- * Pre-cache une liste d'URLs d'images.
- * Utilise par le client pour telecharger des produits specifiques.
- */
 async function precacheImages(urls) {
   if (!Array.isArray(urls) || urls.length === 0) return;
   const cache = await caches.open(IMAGE_CACHE);
@@ -190,7 +186,7 @@ self.addEventListener('fetch', (e) => {
           const placeholder = await caches.match('/placeholder.svg');
           if (placeholder) return placeholder;
 
-          // ✅ CORRECTION : Fallback data:URI si placeholder non disponible
+          // ✅ Fallback data:URI si placeholder non disponible
           return new Response(
             'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGZpbGwgZmlsbD0iI0NFRkY2QiIvPjxwYXRoIGQ9Ik0yIDEyTDEyIDJMMjAgMTJMMjAgMjBMMTIgN0wyMCAxOFoiLz48L3N2Zz4=',
             { headers: { 'Content-Type': 'image/svg+xml' } }
@@ -208,19 +204,16 @@ self.addEventListener('fetch', (e) => {
         const cache = await caches.open(SEARCH_CACHE);
         const cached = await cache.match(e.request);
 
-        // Mise a jour en arriere-plan
         const fetchAndCache = fetch(e.request).then((res) => {
           if (res.ok) cache.put(e.request, res.clone());
           return res;
         }).catch(() => cached);
 
-        // Si on a du cache, on le sert immediatement
         if (cached) {
-          fetchAndCache; // declenche la maj en bg
+          fetchAndCache;
           return cached;
         }
 
-        // Sinon on attend le reseau
         return await fetchAndCache;
       })()
     );
