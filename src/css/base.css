@@ -1,0 +1,434 @@
+:root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface-light: #252525;
+    --primary: #ff8c42;
+    --primary-dark: #ff7b2c;
+    --whatsapp: #25D366;
+    --whatsapp-dark: #1da851;
+    --favorites: #ef4444;
+    --favorites-dark: #dc2626;
+    --categories: #a855f7;
+    --categories-dark: #9333ea;
+    --text: #ffffff;
+    --text-secondary: #a0a0a0;
+    --border: #333333;
+    --radius: 16px;
+    --radius-sm: 12px;
+    --transition: 0.2s ease;
+    --nav-height: 56px;
+    --bottom-bar-height: 70px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🌞 THÈME CLAIR — intégré depuis Main3 (couleurs plus chaudes & completes)
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root.light-theme {
+    --bg: #f8f7f5;
+    --surface: #ffffff;
+    --surface-light: #f0eeeb;
+    --border: #e2e0dc;
+    --text: #1a1a1a;
+    --text-secondary: #6b6b6b;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Plus Jakarta Sans', 'Poppins', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.4;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: var(--nav-height);
+    transition: background-color var(--transition), color var(--transition);
+}
+
+/* ✅ HEADER EN PILLULE : flotte en haut, même langage que la nav */
+.header-wrapper {
+    position: fixed;
+    top: 8px;
+    left: 10px;
+    right: 10px;
+    z-index: 100;
+    background: rgba(16, 16, 20, 0.72);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 22px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    transition: transform 0.3s ease;
+    will-change: transform;
+}
+
+:root.light-theme .header-wrapper {
+    background: rgba(255, 255, 255, 0.88);
+    border-color: rgba(0, 0, 0, 0.06);
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.06),
+        0 16px 40px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.header-wrapper.hidden {
+    transform: translateY(-120%);
+}
+
+/* +8px pour compenser le décollement de la pillule */
+#headerSpacer {
+    width: 100%;
+    flex-shrink: 0;
+    margin-top: 8px;
+}
+
+header {
+    background: transparent;
+    border-bottom: none;
+    box-shadow: none;
+    padding: 0.55rem 0.9rem 0.15rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+}
+
+.logo-wrapper { display: flex; align-items: center; gap: 0.55rem; cursor: pointer; flex-shrink: 0; }
+
+/* ✅ Éclair vectoriel dans un tile dégradé (icône d'app) */
+.logo-icon {
+    font-size: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--primary), #f97316);
+    box-shadow: 0 4px 14px rgba(255, 140, 66, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.logo-icon::before {
+    content: '';
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M13 2 3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M13 2 3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.logo-brand { display: flex; flex-direction: row; align-items: center; gap: 0.35rem; }
+.logo-text { font-weight: 800; font-size: 1.02rem; letter-spacing: -0.5px; color: var(--text); line-height: 1.1; }
+.logo-subtext { font-size: 0.58rem; color: var(--text-secondary); font-weight: 700; white-space: nowrap; text-transform: uppercase; letter-spacing: 1.2px; }
+
+.header-actions { display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0; }
+
+/* ✅ Bouton thème : hublot glass + lune/soleil vectoriels */
+.theme-toggle-btn {
+    position: relative;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 50%;
+    padding: 0;
+    cursor: pointer;
+    font-size: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition);
+}
+.theme-toggle-btn::before {
+    content: '';
+    width: 18px;
+    height: 18px;
+    background: var(--text);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+:root.light-theme .theme-toggle-btn {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+:root.light-theme .theme-toggle-btn::before {
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.theme-toggle-btn:hover { background: rgba(255, 255, 255, 0.12); transform: scale(1.05); }
+.theme-toggle-btn:active { transform: scale(0.95); }
+
+.logout-btn { background: #451a1a; color: #fca5a5; border: 1px solid #7f1d1d; border-radius: 50px; padding: 0.4rem 0.9rem; cursor: pointer; font-size: 0.75rem; font-weight: 600; display: none; align-items: center; }
+.logout-btn.visible { display: flex; }
+
+/* ✅ Toast discret : petit, translucide, disparaît vite */
+.toast { position: fixed; bottom: calc(var(--nav-height) + 25px); left: 50%; transform: translateX(-50%) translateY(100px); background: rgba(51, 51, 51, 0.85); backdrop-filter: blur(8px); color: #fff; padding: 0.4rem 1rem; border-radius: 50px; font-size: 0.75rem; font-weight: 600; transition: transform 0.3s ease, opacity 0.3s ease; z-index: 99; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+:root.light-theme .toast {
+    background: rgba(255, 255, 255, 0.95);
+    color: #1a1a1a;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    backdrop-filter: blur(12px);
+}
+
+footer { text-align: center; padding: 1.5rem 1rem 5rem; color: var(--text-secondary); font-size: 0.75rem; }
+
+.scroll-to-top { position: fixed; bottom: calc(var(--nav-height) + 20px); right: 20px; width: 50px; height: 50px; background: var(--primary); color: white; border: none; border-radius: 50%; font-size: 1.2rem; cursor: pointer; opacity: 0; transform: translateY(20px); transition: all 0.3s ease; z-index: 99; pointer-events: none; }
+.scroll-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.scroll-to-top:active { transform: scale(0.9); }
+
+:root.light-theme .scroll-to-top {
+    box-shadow: 0 4px 16px rgba(255, 140, 66, 0.25);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🌞 LIGHT THEME — compléments depuis Main3 (nav, cartes, modal, etc.)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. NAV LIQUID GLASS : icônes inactives visibles en clair ──────────── */
+:root.light-theme .main-nav {
+    background: rgba(255, 255, 255, 0.82);
+    border-color: rgba(0, 0, 0, 0.06);
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.06),
+        0 16px 40px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+:root.light-theme .main-nav .nav-item {
+    color: rgba(0, 0, 0, 0.35);
+}
+
+:root.light-theme .main-nav .nav-item.active {
+    color: var(--primary);
+}
+
+:root.light-theme .main-nav .nav-item.active::before {
+    background: radial-gradient(closest-side, rgba(255, 140, 66, 0.18), transparent 72%);
+}
+
+:root.light-theme .cart-badge,
+:root.light-theme .favorites-badge {
+    border-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+/* ── 2. SEARCH BAR : plus d'éclat en clair ─────────────────────────────── */
+:root.light-theme .search-bar {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.06);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+:root.light-theme .search-bar:focus-within {
+    background: #ffffff;
+    border-color: rgba(255, 140, 66, 0.5);
+    box-shadow:
+        0 0 0 3px rgba(255, 140, 66, 0.12),
+        0 4px 12px rgba(255, 140, 66, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+:root.light-theme .search-dropdown {
+    background: rgba(255, 255, 255, 0.96);
+    border-color: rgba(0, 0, 0, 0.06);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+}
+
+/* ── 3. PRODUCT CARDS : overlays adaptés au clair ─────────────────────── */
+:root.light-theme .product-card-info {
+    background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.82) 0%,
+        rgba(0, 0, 0, 0.55) 50%,
+        transparent 100%
+    );
+}
+
+:root.light-theme .product-card-name {
+    color: #ffffff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+:root.light-theme .product-card-moq {
+    background: rgba(0, 0, 0, 0.45);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.95);
+}
+
+:root.light-theme .product-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* ── 4. FAV ICON : visible et élégant en clair ─────────────────────────── */
+:root.light-theme .fav-icon {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 0, 0, 0.08);
+    color: #1a1a1a;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+:root.light-theme .fav-icon-svg {
+    stroke: #1a1a1a;
+}
+
+:root.light-theme .fav-icon:hover {
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* ── 5. BADGES : lisibles en clair ──────────────────────────────────────── */
+:root.light-theme .badge {
+    background: rgba(0, 0, 0, 0.5);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* ── 6. SKELETON LOADING : tons clairs ─────────────────────────────────── */
+:root.light-theme .product-card,
+:root.light-theme .rec-card {
+    background: linear-gradient(90deg, #e8e6e3 25%, #f0eeeb 50%, #e8e6e3 75%);
+    background-size: 200% 100%;
+}
+
+:root.light-theme .skeleton-image,
+:root.light-theme .skeleton-line {
+    background: linear-gradient(90deg, #e8e6e3 25%, #f0eeeb 50%, #e8e6e3 75%);
+    background-size: 200% 100%;
+}
+
+/* ── 7. MODAL IMAGE SECTION : fond clair ─────────────────────────────── */
+:root.light-theme .modal-image-section {
+    background: #f0eeeb;
+}
+
+:root.light-theme .carousel-item::before {
+    opacity: 0.12;
+}
+
+:root.light-theme .back-arrow-btn {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 0, 0, 0.08);
+    color: #1a1a1a;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+:root.light-theme .back-arrow-btn:hover {
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+:root.light-theme .product-id-badge {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 0, 0, 0.08);
+    color: #6b6b6b;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+:root.light-theme .action-circle {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 0, 0, 0.08);
+    color: #1a1a1a;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+:root.light-theme .action-circle:hover {
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* ── 8. STICKY BOTTOM BAR : glassmorphism clair ───────────────────────── */
+:root.light-theme .sticky-bottom-bar {
+    background: rgba(255, 255, 255, 0.92);
+    border-top-color: rgba(0, 0, 0, 0.06);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04);
+}
+
+/* ── 9. REC CARDS : overlays adaptés ──────────────────────────────────── */
+:root.light-theme .rec-card-overlay {
+    background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.78) 0%,
+        rgba(0, 0, 0, 0.4) 50%,
+        transparent 100%
+    );
+}
+
+:root.light-theme .rec-card-name {
+    color: #ffffff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+:root.light-theme .rec-card-moq {
+    background: rgba(0, 0, 0, 0.45);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.95);
+}
+
+:root.light-theme .rec-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* ── 10. CATEGORY CARDS : overlay plus doux ──────────────────────────────── */
+:root.light-theme .category-card-overlay {
+    background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.75) 0%,
+        rgba(0, 0, 0, 0.3) 60%,
+        transparent 100%
+    );
+}
+
+:root.light-theme .category-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* ── 11. OVERLAYS MODAL / CART : plus légers en clair ──────────────────── */
+:root.light-theme .modal-overlay {
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(4px);
+}
+
+:root.light-theme .cart-overlay {
+    background: rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(4px);
+}
+
+:root.light-theme .filters-overlay {
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(2px);
+}
+
+/* ── 12. FORMS : focus clair et propre ─────────────────────────────────── */
+:root.light-theme .form-group input:focus,
+:root.light-theme .form-group textarea:focus {
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(255, 140, 66, 0.12);
+}
+
+/* ── 13. CART PANEL : ombre plus douce ───────────────────────────────────── */
+:root.light-theme .cart-panel {
+    box-shadow: -8px 0 40px rgba(0, 0, 0, 0.08);
+}
+
+/* ── 14. MODAL : ombre plus douce ──────────────────────────────────────── */
+:root.light-theme .modal {
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+}
+
+/* ── 15. FILTER CHIPS : plus de pep's en clair ─────────────────────────── */
+:root.light-theme .filter-chip.active {
+    box-shadow: 0 4px 12px rgba(255, 140, 66, 0.2);
+}
+
+/* ── 16. PRODUCT EDIT BTN : visible en clair ───────────────────────────── */
+:root.light-theme .product-edit-btn {
+    box-shadow: 0 2px 8px rgba(255, 140, 66, 0.3);
+}
