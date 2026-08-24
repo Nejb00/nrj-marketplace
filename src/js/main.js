@@ -68,6 +68,12 @@ function initSmartHeader() {
     if (!ticking) { requestAnimationFrame(updateHeader); ticking = true; }
   }, { passive: true });
 
+  // ✅ CORRECTION: scrollToTopBtn géré ici aussi pour éviter un listener séparé
+  window.addEventListener('scroll', () => {
+    const btn = document.getElementById('scrollToTopBtn');
+    if (btn) btn.classList.toggle('visible', window.scrollY > 300);
+  }, { passive: true });
+
   window.addEventListener('resize', () => { spacer.style.height = wrapper.offsetHeight + 'px'; });
 }
 
@@ -327,7 +333,7 @@ function handleAccountAction(action) {
     case 'close': {
       hideAccountView();
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-      document.querySelector('.nav-item[data-nav="home"]').classList.add('active');
+      document.querySelector('.nav-item[data-nav="home"]')?.classList.add('active');
       window.scrollTo({ top: 0, behavior: 'smooth' });
       break;
     }
@@ -343,7 +349,7 @@ function handleAccountAction(action) {
       state.currentFilter = 'favorites';
       refreshCatalogue();
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-      document.querySelector('.nav-item[data-nav="favorites"]').classList.add('active');
+      document.querySelector('.nav-item[data-nav="favorites"]')?.classList.add('active');
       window.scrollTo(0, 0);
       break;
     }
@@ -402,10 +408,8 @@ function handleAccountAction(action) {
   }
 }
 
-window.addEventListener('scroll', () => {
-  const btn = document.getElementById('scrollToTopBtn');
-  if (btn) btn.classList.toggle('visible', window.scrollY > 300);
-}, { passive: true });
+// ✅ CORRECTION: scrollToTopBtn fusionne dans initSmartHeader pour eviter listener double
+// (supprime le window.addEventListener('scroll') separe qui etait ici)
 
 document.querySelectorAll('.filter-chip').forEach(chip => {
   chip.addEventListener('click', function() {
@@ -516,7 +520,11 @@ document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('clic
     state.currentQuickFilter = 'all';
     state.searchQuery = '';
     const inp = document.getElementById('searchInput');
-    if (inp) { inp.value = ''; inp.placeholder = state.rotationList[0]; }
+    // ✅ CORRECTION: verification que rotationList existe avant d'y acceder
+    if (inp) { 
+      inp.value = ''; 
+      inp.placeholder = (state.rotationList && state.rotationList[0]) ? state.rotationList[0] : 'Rechercher...'; 
+    }
     document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
     document.querySelector('.filter-chip[data-filter="all"]')?.classList.add('active');
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
