@@ -20,22 +20,20 @@ function updateCarouselDots(sc, dc, index) {
     dc.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === index));
 }
 
-// Recos intelligentes : collaboratif (Niveau 2) + profil local (Niveau 1) + fallback
 async function buildRecommendations(currentProduct) {
     const TARGET = 12;
-
     const relatedIds = await getRelatedProducts(currentProduct.id, TARGET);
     const related = relatedIds
         .map(id => state.products.find(p => p.id === id))
         .filter(p => p && p.id !== currentProduct.id);
-
+    
     const needed = TARGET - related.length;
     if (needed > 0) {
         const sameCat = state.products.filter(
             pr => pr.category === currentProduct.category && pr.id !== currentProduct.id
         );
         const others = state.products
-            .filter(pr => pr.category !== currentProduct.id && pr.id !== currentProduct.id && !relatedIds.includes(pr.id))
+            .filter(pr => pr.category !== currentProduct.category && pr.id !== currentProduct.id && !relatedIds.includes(pr.id))
             .sort((a, b) => (Number(b.popularity_score) || 0) - (Number(a.popularity_score) || 0));
         const fallback = [...sameCat, ...others];
         for (const f of fallback) {
@@ -43,132 +41,44 @@ async function buildRecommendations(currentProduct) {
             if (!relatedIds.includes(f.id)) related.push(f);
         }
     }
-
+    
     let rec = related.slice(0, TARGET);
     if (rec.length % 2 !== 0) rec.pop();
     return rec;
 }
 
-// ============================================================
-//  BOUTON "TELECHARGER POUR HORS LIGNE" (Action 8)
-// ============================================================
-
-/**
- * Cree le bouton de telechargement hors ligne dans la modale
- * s'il n'existe pas encore.
- */
-function ensureDownloadButton() {
-    if (document.getElementById('modalDownloadBtn')) return;
-
-    const actionsContainer = document.querySelector('.modal-actions');
-    if (!actionsContainer) return;
-
-    const btn = document.createElement('button');
-    btn.id = 'modalDownloadBtn';
-    btn.className = 'btn-icon';
-    btn.setAttribute('aria-label', 'Telecharger pour hors ligne');
-    btn.title = 'Telecharger pour hors ligne';
-    btn.innerHTML = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
-
-    // Inserer entre le bouton favori et le bouton partage
-    const favBtn = document.getElementById('modalFavBtn');
-    if (favBtn && favBtn.nextSibling) {
-        actionsContainer.insertBefore(btn, favBtn.nextSibling);
-    } else {
-        actionsContainer.appendChild(btn);
-    }
-}
-
-/**
- * Telecharge les images d'un produit pour la navigation hors ligne.
- * Envoie les URLs au Service Worker pour mise en cache.
- */
-async function downloadProductForOffline(product) {
-    if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) {
-        showToast('❌ Service Worker non disponible');
-        return;
-    }
-
-    const imgs = [product.image, product.image2, product.image3, product.image4, product.image5, product.image6]
-        .filter(u => u && u.trim());
-
-    if (imgs.length === 0) {
-        showToast('📦 Aucune image a telecharger');
-        return;
-    }
-
-    // Generer les URLs wsrv.nl pour le cache
-    const imageUrls = imgs.map(url => thumb(url.trim(), 300, 400));
-
-    showToast(`📥 Telechargement de ${imgs.length} image${imgs.length > 1 ? 's' : ''}...`);
-
-    try {
-        const channel = new MessageChannel();
-        navigator.serviceWorker.controller.postMessage(
-            { type: 'precache-images', urls: imageUrls },
-            [channel.port2]
-        );
-
-        channel.port1.onmessage = (event) => {
-            const { cached, failed, total } = event.data;
-            if (failed === 0) {
-                showToast(`✅ ${cached} image${cached > 1 ? 's' : ''} telechargee${cached > 1 ? 's' : ''} !`);
-            } else {
-                showToast(`⚠️ ${cached}/${total} telechargee${cached > 1 ? 's' : ''}`);
-            }
-        };
-    } catch (e) {
-        console.warn('[ProductModal] Telechargement echoue:', e);
-        showToast('❌ Erreur de telechargement');
-    }
-}
-
-// ============================================================
-
 export async function openProductModal(pid) {
     let p = state.products.find(pr => pr.id === pid);
     if (!p) return;
-
+    
     state.currentProductId = pid;
     trackPopularity(pid, 1);
     trackViewedItem(p.name);
     signalView(p);
     trackView(pid);
-
+    
     const fullProduct = await fetchProductDetails(pid);
     if (fullProduct) p = fullProduct;
-
+    
     const tailles = (p.tailles || '').split(',').map(s => s.trim()).filter(Boolean);
     const couleurs = (p.couleurs || '').split(',').map(s => s.trim()).filter(Boolean);
     let sT = tailles.length ? tailles[0] : '', sC = couleurs.length ? couleurs[0] : '';
     const moq = Number(p.moq) || 1, uPrice = Number(p.price);
 
     document.getElementById('modalPrice').textContent = formatPrice(uPrice);
-    document.getElementById('modalMoq').textContent = `Minimum d'achat : ${moq} piece(s)`;
+    document.getElementById('modalMoq').textContent = `Minimum d'achat : ${moq} pièce(s)`;
     document.getElementById('modalTotal').textContent = `Total minimum : ${formatPrice(uPrice * moq)}`;
     document.getElementById('modalDesc').textContent = p.description || '';
     document.getElementById('modalProductIdBadge').textContent = `[ID: ${p.id}]`;
     document.getElementById('modalBadges').innerHTML = generateBadgesHTML(p, true);
-
-    // S'assurer que le bouton telechargement existe
-    ensureDownloadButton();
-
     const favSvg = document.getElementById('modalFavBtn').querySelector('.fav-icon-svg');
     if (favSvg) favSvg.classList.toggle('faved', state.favorites.includes(p.id));
     document.getElementById('modalFavBtn').onclick = () => toggleFavorite(p.id);
     document.getElementById('modalShareBtn').onclick = () => {
         const url = BASE_URL + '?id=' + p.id;
-        const txt = `${formatPrice(uPrice)}
-Minimum d'achat : ${moq} piece(s)
-Decouvre "${p.name}" sur NRJ Marketplace ${url}`;
-        navigator.share ? navigator.share({ title: p.name, text: txt, url }).catch(() => {}) : navigator.clipboard.writeText(txt).then(() => showToast('🔗 Copie !'));
+        const txt = `${formatPrice(uPrice)}\nMinimum d'achat : ${moq} pièce(s)\nDécouvre "${p.name}" sur FLUO ${url}`; // ✅ MIS À JOUR
+        navigator.share ? navigator.share({ title: p.name, text: txt, url }).catch(() => {}) : navigator.clipboard.writeText(txt).then(() => showToast('🔗 Copié !'));
     };
-
-    // Bouton telechargement
-    const downloadBtn = document.getElementById('modalDownloadBtn');
-    if (downloadBtn) {
-        downloadBtn.onclick = () => downloadProductForOffline(p);
-    }
 
     const imgs = [p.image, p.image2, p.image3, p.image4, p.image5, p.image6].filter(u => u && u.trim());
     const sc = document.getElementById('modalCarouselScroll'), dc = document.getElementById('modalCarouselDots');
@@ -208,17 +118,17 @@ Decouvre "${p.name}" sur NRJ Marketplace ${url}`;
 
     document.getElementById('addToCartStickyBtn').onclick = (e) => addToCart(p.id, sT, sC, e.currentTarget);
     document.getElementById('directOrderStickyBtn').onclick = () => {
-        if (tailles.length && !sT) return showToast('⚠️ Selectionnez une taille');
+        if (tailles.length && !sT) return showToast('⚠️ Sélectionnez une taille');
         trackPopularity(p.id, 10);
-        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour NRJ Marketplace, je souhaite commander : ${p.name} (ID: ${p.id}), Taille: ${sT || 'N/A'}, Quantite: ${moq}`)}`, '_blank');
+        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour FLUO, je souhaite commander : ${p.name} (ID: ${p.id}), Taille: ${sT || 'N/A'}, Quantité: ${moq}`)}`, '_blank'); // ✅ MIS À JOUR
     };
 
     document.getElementById('modalRecCarousel').innerHTML = Array(6).fill(
         '<div class="rec-card"><div class="rec-card-img" style="background:var(--surface-light);"></div></div>'
     ).join('');
-
+    
     const rec = await buildRecommendations(p);
-
+    
     document.getElementById('modalRecCarousel').innerHTML = rec.map(r => `
         <div class="rec-card" data-product-id="${r.id}">
             <div class="rec-card-img">${r.image ? thumbImg(r.image, r.name, 300, 400) : '📦'}</div>
@@ -245,4 +155,4 @@ export function closeProductModal() {
     document.getElementById('stickyBottomBar').classList.remove('visible');
     state.modalOpen = false;
     history.replaceState({}, '', window.location.pathname);
-}
+            }
