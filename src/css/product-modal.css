@@ -73,7 +73,7 @@
     height: 100%; 
     object-fit: cover; 
     opacity: 0; /* Invisible au départ */
-    transition: opacity 0.3s ease-in-out; /* Apparition douce */
+    transition: opacity 0.3s ease-in-out; 
 }
 .carousel-item img.loaded { 
     opacity: 1; 
@@ -324,4 +324,4 @@
     border-radius: 50px; 
     padding: 0.1rem 0.4rem; 
     white-space: nowrap; 
-  }
+        }
