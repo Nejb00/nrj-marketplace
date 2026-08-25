@@ -69,13 +69,49 @@ function initSmartHeader() {
   window.addEventListener('scroll', () => {
     if (!ticking) { requestAnimationFrame(updateHeader); ticking = true; }
   }, { passive: true });
-  // ✅ CORRECTION: scrollToTopBtn géré ici aussi pour éviter un listener séparé
+
+  // ✅ scrollToTopBtn géré ici aussi pour éviter un listener séparé
   window.addEventListener('scroll', () => {
     const btn = document.getElementById('scrollToTopBtn');
     if (btn) btn.classList.toggle('visible', window.scrollY > 300);
   }, { passive: true });
 
-  window.addEventListener('resize', () => { spacer.style.height = wrapper.offsetHeight + 'px'; });
+  window.addEventListener('resize', () => { spacer.style.height = fixed.offsetHeight + 'px'; });
+
+  updateHeader(); // état initial (utile si on recharge la page déjà scrollée)
+}
+
+/* 🔥 Bulle loupe compacte → ouvre directement la page de recherche dédiée */
+function initHeaderSearchCompact() {
+  const searchCompact = document.getElementById('searchCompact');
+  if (!searchCompact) return;
+  searchCompact.addEventListener('click', () => {
+    if (!searchCompact.classList.contains('active')) return;
+    switchToSearchView('');
+  });
+}
+
+/* 🔥 Bulle actions (catalogue / profil / panier) → réutilise la logique
+   existante de la bottom nav en simulant un clic sur le nav-item correspondant */
+function initHeaderActionsBubble() {
+  const map = { catalogBtnHeader: 'categories', profileBtnHeader: 'profile', cartBtnHeader: 'cart' };
+  Object.entries(map).forEach(([btnId, navTarget]) => {
+    document.getElementById(btnId)?.addEventListener('click', () => {
+      document.querySelector(`.nav-item[data-nav="${navTarget}"]`)?.click();
+    });
+  });
+
+  // Miroir du badge panier de la bottom nav vers la bulle header
+  const navBadge = document.getElementById('navCartBadge');
+  const headerBadge = document.getElementById('headerCartBadge');
+  if (navBadge && headerBadge) {
+    const syncBadge = () => {
+      headerBadge.textContent = navBadge.textContent;
+      headerBadge.style.display = navBadge.style.display;
+    };
+    syncBadge();
+    new MutationObserver(syncBadge).observe(navBadge, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['style'] });
+  }
 }
 
 function initServiceWorkerUpdates() {
@@ -209,7 +245,6 @@ function renderAccount() {
   const initials = name ? name.split(/\s+/).map(s => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() : '?';
   const greeting = name ? `Bonjour, ${escapeHtml(name.split(/\s+/)[0])}` : 'Bienvenue';
   const isAdmin = state.isAdminLoggedIn === true;
-  const isLightTheme = document.documentElement.classList.contains('light-theme');
 
   const favCount = state.favorites.length;
   const cartCount = state.cart.reduce((s, i) => s + Number(i.quantity), 0);
@@ -307,16 +342,6 @@ function renderAccount() {
     </div>
 
     <div class="account-section">
-      <div class="account-section-title">Préférences</div>
-      <div class="account-menu">
-        <button class="account-menu-item" data-account-action="toggle-theme">
-          <span>🎨 Thème</span>
-          <span class="account-menu-meta" id="accountThemeMeta">${isLightTheme ? '☀️ Clair' : '🌙 Sombre'}</span>
-        </button>
-      </div>
-    </div>
-
-    <div class="account-section">
       <div class="account-section-title">Données</div>
       <div class="account-menu">
         <button class="account-menu-item danger" data-account-action="clear-all">
@@ -369,16 +394,6 @@ function handleAccountAction(action) {
       hideAccountView();
       document.getElementById('searchInput').focus();
       showSearchDropdown('');
-      break;
-    }
-    case 'toggle-theme': {
-      const currentTheme = document.documentElement.classList.contains('light-theme') ? 'light' : 'dark';
-      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-      applyTheme(newTheme);
-      localStorage.setItem('nrj_theme', newTheme);
-      // Rafraîchit l'affichage de l'état du thème dans le menu
-      const themeMeta = document.getElementById('accountThemeMeta');
-      if (themeMeta) themeMeta.textContent = newTheme === 'light' ? '☀️ Clair' : '🌙 Sombre';
       break;
     }
     case 'go-new': {
@@ -582,26 +597,33 @@ document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('clic
 async function init() {
   try {
     await loadPersistedState();
-    await fetchProducts();
-    loadOrders();
 
-    precachePopularImages();
+    // ✅ Isolé : si le chargement produits échoue, le reste de l'app (header,
+    // thème, nav...) continue quand même à s'initialiser correctement
+    try {
+      await fetchProducts();
+      loadOrders();
+      precachePopularImages();
 
-    const cats = [...new Set(state.products.map(p => removeEmojis(p.category)))];
-    let html = `<button class="filter-btn active" data-category="all">Tout voir (${state.products.length})</button>`;
-    cats.forEach(c => {
-      const count = state.products.filter(p => p.category === c).length;
-      html += `<button class="filter-btn" data-category="${escapeHtml(c)}">${escapeHtml(c)} (${count})</button>`;
-    });
-    const filterBar = document.getElementById('filterBar');
-    if (filterBar) filterBar.innerHTML = html;
+      const cats = [...new Set(state.products.map(p => removeEmojis(p.category)))];
+      let html = `<button class="filter-btn active" data-category="all">Tout voir (${state.products.length})</button>`;
+      cats.forEach(c => {
+        const count = state.products.filter(p => p.category === c).length;
+        html += `<button class="filter-btn" data-category="${escapeHtml(c)}">${escapeHtml(c)} (${count})</button>`;
+      });
+      const filterBar = document.getElementById('filterBar');
+      if (filterBar) filterBar.innerHTML = html;
+    } catch (fetchErr) {
+      console.error('Erreur chargement produits:', fetchErr);
+      showToast('⚠️ Impossible de charger les produits. Vérifiez votre connexion.');
+    }
 
     initPlaceholderRotation();
     initVoiceSearch();
-    initSmartHeader();
-    initHeaderSearchCompact();
-    initHeaderActionsBubble();
-    initLogoLongPress();
+    try { initSmartHeader(); } catch (e) { console.error('initSmartHeader:', e); }
+    try { initHeaderSearchCompact(); } catch (e) { console.error('initHeaderSearchCompact:', e); }
+    try { initHeaderActionsBubble(); } catch (e) { console.error('initHeaderActionsBubble:', e); }
+    try { initLogoLongPress(); } catch (e) { console.error('initLogoLongPress:', e); }
     initThemeToggle();
     initOfflineIndicator();
     initServiceWorkerUpdates();
