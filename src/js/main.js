@@ -245,6 +245,7 @@ function renderAccount() {
   const initials = name ? name.split(/\s+/).map(s => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() : '?';
   const greeting = name ? `Bonjour, ${escapeHtml(name.split(/\s+/)[0])}` : 'Bienvenue';
   const isAdmin = state.isAdminLoggedIn === true;
+  const isLightTheme = document.documentElement.classList.contains('light-theme');
 
   const favCount = state.favorites.length;
   const cartCount = state.cart.reduce((s, i) => s + Number(i.quantity), 0);
@@ -342,6 +343,16 @@ function renderAccount() {
     </div>
 
     <div class="account-section">
+      <div class="account-section-title">Préférences</div>
+      <div class="account-menu">
+        <button class="account-menu-item" data-account-action="toggle-theme">
+          <span>🎨 Thème</span>
+          <span class="account-menu-meta" id="accountThemeMeta">${isLightTheme ? '☀️ Clair' : '🌙 Sombre'}</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="account-section">
       <div class="account-section-title">Données</div>
       <div class="account-menu">
         <button class="account-menu-item danger" data-account-action="clear-all">
@@ -394,6 +405,16 @@ function handleAccountAction(action) {
       hideAccountView();
       document.getElementById('searchInput').focus();
       showSearchDropdown('');
+      break;
+    }
+    case 'toggle-theme': {
+      const currentTheme = document.documentElement.classList.contains('light-theme') ? 'light' : 'dark';
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      applyTheme(newTheme);
+      localStorage.setItem('nrj_theme', newTheme);
+      // Rafraîchit l'affichage de l'état du thème dans le menu
+      const themeMeta = document.getElementById('accountThemeMeta');
+      if (themeMeta) themeMeta.textContent = newTheme === 'light' ? '☀️ Clair' : '🌙 Sombre';
       break;
     }
     case 'go-new': {
