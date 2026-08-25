@@ -186,11 +186,7 @@ self.addEventListener('fetch', (e) => {
           const placeholder = await caches.match('/placeholder.svg');
           if (placeholder) return placeholder;
 
-          // ✅ Fallback data:URI si placeholder non disponible
-          return new Response(
-            'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGZpbGwgZmlsbD0iI0NFRkY2QiIvPjxwYXRoIGQ9Ik0yIDEyTDEyIDJMMjAgMTJMMjAgMjBMMTIgN0wyMCAxOFoiLz48L3N2Zz4=',
-            { headers: { 'Content-Type': 'image/svg+xml' } }
-          );
+          return new Response('', { status: 503, statusText: 'Service Unavailable' });
         }
       })()
     );
