@@ -44,19 +44,28 @@ function applyTheme(theme) {
   }
 }
 
+// 🌟 ÉTAPE 2 : Animation de compression "Premium" (Ease-out cubique)
 function initSmartHeader() {
   const fixed = document.getElementById('headerFixed');
   const spacer = document.getElementById('headerSpacer');
   const searchCompact = document.getElementById('searchCompact');
   if (!fixed || !spacer) return;
 
-  const THRESHOLD = 90;
+  const THRESHOLD = 90; // px de scroll pour une compression complète
   let ticking = false;
 
   function updateHeader() {
-    const progress = Math.min(1, Math.max(0, window.scrollY / THRESHOLD));
+    // 1. Progression brute (0 à 1)
+    const rawProgress = Math.min(1, Math.max(0, window.scrollY / THRESHOLD));
+    
+    // 2. 🌟 Courbe ease-out cubique : compresse vite au début, puis ralentit doucement (effet ressort iOS)
+    const progress = 1 - Math.pow(1 - rawProgress, 3);
+    
     fixed.style.setProperty('--sp', progress);
-    if (searchCompact) searchCompact.classList.toggle('active', progress > 0.92);
+    
+    // La loupe compacte n'apparaît que quand le header est presque totalement replié
+    if (searchCompact) searchCompact.classList.toggle('active', rawProgress > 0.92);
+    
     spacer.style.height = fixed.offsetHeight + 'px';
     ticking = false;
   }
@@ -71,7 +80,8 @@ function initSmartHeader() {
   }, { passive: true });
 
   window.addEventListener('resize', () => { spacer.style.height = fixed.offsetHeight + 'px'; });
-  updateHeader();
+  
+  updateHeader(); // État initial
 }
 
 function initHeaderSearchCompact() {
@@ -230,7 +240,7 @@ function renderAccount() {
   const root = document.getElementById('accountContent');
   if (!root) return;
 
-  const name = localStorage.getItem('fluo_customer_name') || ''; // ✅ MIS À JOUR
+  const name = localStorage.getItem('fluo_customer_name') || '';
   const initials = name ? name.split(/\s+/).map(s => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() : '?';
   const greeting = name ? `Bonjour, ${escapeHtml(name.split(/\s+/)[0])}` : 'Bienvenue';
   const isAdmin = state.isAdminLoggedIn === true;
@@ -269,7 +279,7 @@ function renderAccount() {
         <div class="account-avatar">${escapeHtml(initials)}</div>
         <div class="account-greet">
           <div class="account-greet-hello">${greeting}</div>
-          <div class="account-greet-sub">Voici votre espace FLUO</div> <!-- ✅ MIS À JOUR -->
+          <div class="account-greet-sub">Voici votre espace FLUO</div>
         </div>
       </div>
       ${isAdmin ? '<span class="account-admin-badge">Admin</span>' : ''}
@@ -412,14 +422,14 @@ function handleAccountAction(action) {
       break;
     }
     case 'contact': {
-      window.open(`https://wa.me/242066271882?text=${encodeURIComponent("Bonjour FLUO, j'ai besoin d'assistance 🙏")}`, '_blank'); // ✅ MIS À JOUR
+      window.open(`https://wa.me/242066271882?text=${encodeURIComponent("Bonjour FLUO, j'ai besoin d'assistance 🙏")}`, '_blank');
       break;
     }
     case 'install-app': {
       if (window.deferredInstallPrompt) {
         window.deferredInstallPrompt.prompt();
       } else {
-        alert("Pour installer l'app FLUO :\n\n• Chrome Android : menu ⋮ → « Installer l'application »\n• iOS Safari : bouton Partager → « Sur l'écran d'accueil »"); // ✅ MIS À JOUR
+        alert("Pour installer l'app FLUO :\n\n• Chrome Android : menu ⋮ → « Installer l'application »\n• iOS Safari : bouton Partager → « Sur l'écran d'accueil »");
       }
       break;
     }
@@ -431,7 +441,7 @@ function handleAccountAction(action) {
         localStorage.removeItem('nrj_cart_v32');
         localStorage.removeItem('nrj_search_history');
         localStorage.removeItem('nrj_orders');
-        localStorage.removeItem('fluo_customer_name'); // ✅ MIS À JOUR
+        localStorage.removeItem('fluo_customer_name');
         localStorage.removeItem('nrj_affinity');
       } catch {}
       state.favorites = [];
@@ -528,8 +538,8 @@ window.addEventListener('popstate', (e) => {
   else if (state.modalOpen) closeProductModal();
 });
 
-document.getElementById('modalSourcingBtn')?.addEventListener('click', () => window.open(`https://wa.me/242066271882?text=${encodeURIComponent('Bonjour FLUO, je recherche un produit. Je peux vous envoyer une photo')}`)); // ✅ MIS À JOUR
-document.getElementById('modalDescSourcingBtn')?.addEventListener('click', () => window.open(`https://wa.me/242066271882?text=${encodeURIComponent('Bonjour FLUO International, je recherche un produit spécifique...')}`)); // ✅ MIS À JOUR
+document.getElementById('modalSourcingBtn')?.addEventListener('click', () => window.open(`https://wa.me/242066271882?text=${encodeURIComponent('Bonjour FLUO, je recherche un produit. Je peux vous envoyer une photo')}`));
+document.getElementById('modalDescSourcingBtn')?.addEventListener('click', () => window.open(`https://wa.me/242066271882?text=${encodeURIComponent('Bonjour FLUO International, je recherche un produit spécifique...')}`));
 
 document.getElementById('cartCloseBtn')?.addEventListener('click', () => {
   document.getElementById('cartPanel').classList.remove('open');
