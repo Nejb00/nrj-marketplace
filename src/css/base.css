@@ -20,22 +20,16 @@
     --bottom-bar-height: 70px;
 }
 
-/* ✅ Thème LIGHT */
+/* ═══════════════════════════════════════════════════════════════════════════
+   🌞 THÈME CLAIR — intégré depuis Main3 (couleurs plus chaudes & completes)
+   ═══════════════════════════════════════════════════════════════════════════ */
 :root.light-theme {
-    --bg: #ffffff;
-    --surface: #f5f5f5;
-    --surface-light: #e8e8e8;
-    --primary: #ff8c42;
-    --primary-dark: #ff7b2c;
-    --whatsapp: #25D366;
-    --whatsapp-dark: #1da851;
-    --favorites: #ef4444;
-    --favorites-dark: #dc2626;
-    --categories: #a855f7;
-    --categories-dark: #9333ea;
-    --text: #0f0f0f;
-    --text-secondary: #666666;
-    --border: #cccccc;
+    --bg: #f8f7f5;
+    --surface: #ffffff;
+    --surface-light: #f0eeeb;
+    --border: #e2e0dc;
+    --text: #1a1a1a;
+    --text-secondary: #6b6b6b;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -52,80 +46,206 @@ body {
     transition: background-color var(--transition), color var(--transition);
 }
 
-/* ✅ HEADER EN PILLULE : flotte en haut, même langage que la nav */
-.header-wrapper {
+/* ═══════════════════════════════════════════════════════════════════════════
+   🔥 HEADER FLUO — 3 bulles liquid-glass indépendantes, scroll-linked (option B)
+   --sp = "scroll progress" (0 → 1), piloté par JS à chaque frame de scroll
+   ═══════════════════════════════════════════════════════════════════════════ */
+.header-fixed {
     position: fixed;
     top: 8px;
     left: 10px;
     right: 10px;
     z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: calc(8px * (1 - var(--sp, 0)));
+    --sp: 0;
+}
+
+.header-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+/* ── Style commun "verre" pour les 3 bulles ─────────────────────────────── */
+.logo-bubble,
+.actions-bubble,
+.search-bubble-compact,
+.search-bubble-full .search-bar-container {
     background: rgba(16, 16, 20, 0.72);
     backdrop-filter: blur(24px) saturate(160%);
     -webkit-backdrop-filter: blur(24px) saturate(160%);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 22px;
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.07);
-    transition: transform 0.3s ease;
-    will-change: transform;
 }
 
-:root.light-theme .header-wrapper {
-    background: rgba(255, 255, 255, 0.82);
-    border-color: rgba(0, 0, 0, 0.08);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+:root.light-theme .logo-bubble,
+:root.light-theme .actions-bubble,
+:root.light-theme .search-bubble-compact,
+:root.light-theme .search-bubble-full .search-bar-container {
+    background: rgba(255, 255, 255, 0.88);
+    border-color: rgba(0, 0, 0, 0.06);
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.06),
+        0 16px 40px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
-.header-wrapper.hidden {
-    transform: translateY(-120%);
-}
-
-/* +8px pour compenser le décollement de la pillule */
+/* +8px pour compenser le décollement des bulles */
 #headerSpacer {
     width: 100%;
     flex-shrink: 0;
     margin-top: 8px;
 }
 
-header {
-    background: transparent;
-    border-bottom: none;
-    box-shadow: none;
-    padding: 0.55rem 0.9rem 0.15rem;
+/* ── Bulle 1 : logo ──────────────────────────────────────────────────────── */
+.logo-bubble {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.8rem;
+    gap: 0.5rem;
+    border-radius: 999px;
+    padding: 0.5rem 0.9rem 0.5rem 0.5rem;
+    cursor: pointer;
+    flex-shrink: 0;
 }
 
-.logo-wrapper { display: flex; align-items: center; gap: 0.55rem; cursor: pointer; flex-shrink: 0; }
-
-/* ✅ Éclair vectoriel dans un tile dégradé (icône d'app) */
+/* ✅ Flamme glossy/3D dégradé — masque SVG sur tuile orange (façon FLUO) */
 .logo-icon {
-    font-size: 0;
-    width: 34px;
-    height: 34px;
+    position: relative;
+    overflow: hidden;
+    width: calc(34px - 8px * var(--sp, 0));
+    height: calc(34px - 8px * var(--sp, 0));
     border-radius: 10px;
-    background: linear-gradient(135deg, var(--primary), #f97316);
-    box-shadow: 0 4px 14px rgba(255, 140, 66, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    background: linear-gradient(135deg, #ffb066, var(--primary) 55%, #f97316);
+    box-shadow: 0 4px 14px rgba(255, 140, 66, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    opacity: calc(1 - var(--sp, 0));
 }
-.logo-icon::before {
+/* silhouette flamme via vrai SVG inline (dégradé jaune→orange→rouge) */
+.logo-flame-svg {
+    position: relative;
+    z-index: 1;
+    width: 60%;
+    height: 60%;
+    filter: drop-shadow(0 1px 2px rgba(120, 25, 0, 0.4));
+}
+/* reflet glossy en haut de la tuile */
+.logo-icon::after {
     content: '';
-    width: 18px;
-    height: 18px;
-    background: #fff;
-    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M13 2 3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E") center / contain no-repeat;
-    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M13 2 3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E") center / contain no-repeat;
+    position: absolute;
+    top: 2px;
+    left: 15%;
+    right: 15%;
+    height: 42%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.45), transparent);
+    border-radius: 50%;
+    pointer-events: none;
 }
 
-.logo-brand { display: flex; flex-direction: row; align-items: center; gap: 0.35rem; }
-.logo-text { font-weight: 800; font-size: 1.02rem; letter-spacing: -0.5px; color: var(--text); line-height: 1.1; }
-.logo-subtext { font-size: 0.58rem; color: var(--text-secondary); font-weight: 700; white-space: nowrap; text-transform: uppercase; letter-spacing: 1.2px; }
+.logo-brand-text {
+    font-weight: 800;
+    font-size: calc(1.05rem - 0.25rem * var(--sp, 0));
+    letter-spacing: -0.5px;
+    color: var(--text);
+    white-space: nowrap;
+    line-height: 1;
+}
 
-.header-actions { display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0; }
+/* ── Bulle compacte recherche (apparaît en fin de scroll, occupe l'espace libre) ── */
+.search-bubble-compact {
+    width: calc(150px * var(--sp, 0));
+    flex-shrink: 1;
+    min-width: 0;
+    max-width: 320px;
+    height: 40px;
+    border-radius: 20px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    opacity: var(--sp, 0);
+    cursor: pointer;
+    pointer-events: none;
+}
+.search-bubble-compact.active { pointer-events: auto; }
+.search-bubble-compact .search-icon {
+    font-size: 0;
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+    background: var(--text-secondary);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* ── Bulle 2 : actions (catalogue / profil / panier) ────────────────────── */
+.actions-bubble {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    border-radius: 999px;
+    padding: 0.3rem;
+    flex-shrink: 0;
+}
+
+.action-btn {
+    position: relative;
+    background: transparent;
+    color: var(--text);
+    border: none;
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background var(--transition), transform var(--transition);
+}
+.action-btn:hover { background: rgba(255, 255, 255, 0.08); }
+:root.light-theme .action-btn:hover { background: rgba(0, 0, 0, 0.05); }
+.action-btn:active { transform: scale(0.92); }
+
+.header-cart-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: var(--favorites);
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 800;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
+    border: 2px solid rgba(16, 16, 20, 0.72);
+}
+:root.light-theme .header-cart-badge { border-color: rgba(255, 255, 255, 0.88); }
+
+/* ── Bulle 3 : recherche complète (se replie au scroll) ─────────────────── */
+.search-bubble-full {
+    overflow: hidden;
+    max-height: calc(68px * (1 - var(--sp, 0)));
+    opacity: calc(1 - var(--sp, 0) * 1.6);
+}
+.search-bubble-full .search-bar-container {
+    border-radius: 22px;
+    padding: 0;
+}
+.search-bubble-full .search-bar {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
 
 /* ✅ Bouton thème : hublot glass + lune/soleil vectoriels */
 .theme-toggle-btn {
@@ -171,8 +291,11 @@ header {
 .toast.show { transform: translateX(-50%) translateY(0); }
 
 :root.light-theme .toast {
-    background: rgba(51, 51, 51, 0.85);
-    color: #fff;
+    background: rgba(255, 255, 255, 0.95);
+    color: #1a1a1a;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    backdrop-filter: blur(12px);
 }
 
 footer { text-align: center; padding: 1.5rem 1rem 5rem; color: var(--text-secondary); font-size: 0.75rem; }
@@ -180,3 +303,255 @@ footer { text-align: center; padding: 1.5rem 1rem 5rem; color: var(--text-second
 .scroll-to-top { position: fixed; bottom: calc(var(--nav-height) + 20px); right: 20px; width: 50px; height: 50px; background: var(--primary); color: white; border: none; border-radius: 50%; font-size: 1.2rem; cursor: pointer; opacity: 0; transform: translateY(20px); transition: all 0.3s ease; z-index: 99; pointer-events: none; }
 .scroll-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
 .scroll-to-top:active { transform: scale(0.9); }
+
+:root.light-theme .scroll-to-top {
+    box-shadow: 0 4px 16px rgba(255, 140, 66, 0.25);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🌞 LIGHT THEME — compléments depuis Main3 (nav, cartes, modal, etc.)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. NAV LIQUID GLASS : icônes inactives visibles en clair ──────────── */
+:root.light-theme .main-nav {
+    background: rgba(255, 255, 255, 0.82);
+    border-color: rgba(0, 0, 0, 0.06);
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.06),
+        0 16px 40px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+:root.light-theme .main-nav .nav-item {
+    color: rgba(0, 0, 0, 0.35);
+}
+
+:root.light-theme .main-nav .nav-item.active {
+    color: var(--primary);
+}
+
+:root.light-theme .main-nav .nav-item.active::before {
+    background: radial-gradient(closest-side, rgba(255, 140, 66, 0.18), transparent 72%);
+}
+
+:root.light-theme .cart-badge,
+:root.light-theme .favorites-badge {
+    border-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+/* ── 2. SEARCH BAR : plus d'éclat en clair ─────────────────────────────── */
+:root.light-theme .search-bar {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.06);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+:root.light-theme .search-bar:focus-within {
+    background: #ffffff;
+    border-color: rgba(255, 140, 66, 0.5);
+    box-shadow:
+        0 0 0 3px rgba(255, 140, 66, 0.12),
+        0 4px 12px rgba(255, 140, 66, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+:root.light-theme .search-dropdown {
+    background: rgba(255, 255, 255, 0.96);
+    border-color: rgba(0, 0, 0, 0.06);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+}
+
+/* ── 3. PRODUCT CARDS : liquid glass blanc ─────────────────────────────── */
+:root.light-theme .product-card-info {
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    border-top: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+:root.light-theme .product-card-name {
+    color: #1a1a1a;
+    text-shadow: none;
+}
+
+:root.light-theme .product-card-moq {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-color: rgba(0, 0, 0, 0.08);
+    color: rgba(26, 26, 26, 0.85);
+}
+
+:root.light-theme .product-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* ── 4. FAV ICON : visible et élégant en clair ─────────────────────────── */
+:root.light-theme .fav-icon {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 0, 0, 0.08);
+    color: #1a1a1a;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+:root.light-theme .fav-icon-svg {
+    stroke: #1a1a1a;
+}
+
+:root.light-theme .fav-icon:hover {
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* ── 5. BADGES : liquid glass orange ─────────────────────────────────────── */
+:root.light-theme .badge {
+    background: rgba(255, 140, 66, 0.85);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #ffffff;
+    text-shadow: none;
+}
+
+/* ── 6. SKELETON LOADING : tons clairs ─────────────────────────────────── */
+:root.light-theme .product-card,
+:root.light-theme .rec-card {
+    background: linear-gradient(90deg, #e8e6e3 25%, #f0eeeb 50%, #e8e6e3 75%);
+    background-size: 200% 100%;
+}
+
+:root.light-theme .skeleton-image,
+:root.light-theme .skeleton-line {
+    background: linear-gradient(90deg, #e8e6e3 25%, #f0eeeb 50%, #e8e6e3 75%);
+    background-size: 200% 100%;
+}
+
+/* ── 7. MODAL IMAGE SECTION : fond clair ─────────────────────────────── */
+:root.light-theme .modal-image-section {
+    background: #f0eeeb;
+}
+
+:root.light-theme .carousel-item::before {
+    opacity: 0.12;
+}
+
+:root.light-theme .back-arrow-btn {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 0, 0, 0.08);
+    color: #1a1a1a;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+:root.light-theme .back-arrow-btn:hover {
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+:root.light-theme .product-id-badge {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 0, 0, 0.08);
+    color: #6b6b6b;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+:root.light-theme .action-circle {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 0, 0, 0.08);
+    color: #1a1a1a;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+:root.light-theme .action-circle:hover {
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* ── 8. STICKY BOTTOM BAR : glassmorphism clair ───────────────────────── */
+:root.light-theme .sticky-bottom-bar {
+    background: rgba(255, 255, 255, 0.92);
+    border-top-color: rgba(0, 0, 0, 0.06);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04);
+}
+
+/* ── 9. REC CARDS : liquid glass blanc ──────────────────────────────────── */
+:root.light-theme .rec-card-overlay {
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    border-top: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+:root.light-theme .rec-card-name {
+    color: #1a1a1a;
+    text-shadow: none;
+}
+
+:root.light-theme .rec-card-moq {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-color: rgba(0, 0, 0, 0.08);
+    color: rgba(26, 26, 26, 0.85);
+}
+
+:root.light-theme .rec-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* ── 10. CATEGORY CARDS : liquid glass blanc ─────────────────────────────── */
+:root.light-theme .category-card-overlay {
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    border-top: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+:root.light-theme .category-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* ── 11. OVERLAYS MODAL / CART : plus légers en clair ──────────────────── */
+:root.light-theme .modal-overlay {
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(4px);
+}
+
+:root.light-theme .cart-overlay {
+    background: rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(4px);
+}
+
+:root.light-theme .filters-overlay {
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(2px);
+}
+
+/* ── 12. FORMS : focus clair et propre ─────────────────────────────────── */
+:root.light-theme .form-group input:focus,
+:root.light-theme .form-group textarea:focus {
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(255, 140, 66, 0.12);
+}
+
+/* ── 13. CART PANEL : ombre plus douce ───────────────────────────────────── */
+:root.light-theme .cart-panel {
+    box-shadow: -8px 0 40px rgba(0, 0, 0, 0.08);
+}
+
+/* ── 14. MODAL : ombre plus douce ──────────────────────────────────────── */
+:root.light-theme .modal {
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+}
+
+/* ── 15. FILTER CHIPS : plus de pep's en clair ─────────────────────────── */
+:root.light-theme .filter-chip.active {
+    box-shadow: 0 4px 12px rgba(255, 140, 66, 0.2);
+}
+
+/* ── 16. PRODUCT EDIT BTN : visible en clair ───────────────────────────── */
+:root.light-theme .product-edit-btn {
+    box-shadow: 0 2px 8px rgba(255, 140, 66, 0.3);
+}

@@ -44,30 +44,31 @@ function applyTheme(theme) {
   }
 }
 
+/* 🔥 HEADER FLUO — compression scroll-linked continue (pas de hide-on-scroll,
+   la bottom nav étant retirée le header reste toujours visible et accessible).
+   --sp (0 → 1) pilote en CSS : fade de la flamme, réduction du texte FLUO,
+   repli de la search bar complète, apparition de la bulle loupe compacte. */
 function initSmartHeader() {
-  const wrapper = document.getElementById('headerWrapper');
+  const fixed = document.getElementById('headerFixed');
   const spacer = document.getElementById('headerSpacer');
-  if (!wrapper || !spacer) return;
+  const searchCompact = document.getElementById('searchCompact');
+  if (!fixed || !spacer) return;
 
-  const headerHeight = wrapper.offsetHeight;
-  spacer.style.height = headerHeight + 'px';
-
-  let lastScrollY = window.scrollY;
+  const THRESHOLD = 90; // px de scroll pour une compression complète (--sp = 1)
   let ticking = false;
 
   function updateHeader() {
-    const currentScrollY = window.scrollY;
-    if (currentScrollY <= 0) wrapper.classList.remove('hidden');
-    else if (currentScrollY > lastScrollY && currentScrollY > headerHeight) wrapper.classList.add('hidden');
-    else if (currentScrollY < lastScrollY) wrapper.classList.remove('hidden');
-    lastScrollY = currentScrollY;
+    const progress = Math.min(1, Math.max(0, window.scrollY / THRESHOLD));
+    fixed.style.setProperty('--sp', progress);
+    // n'active le tap sur la loupe compacte qu'une fois quasi totalement repliée
+    if (searchCompact) searchCompact.classList.toggle('active', progress > 0.92);
+    spacer.style.height = fixed.offsetHeight + 'px';
     ticking = false;
   }
 
   window.addEventListener('scroll', () => {
     if (!ticking) { requestAnimationFrame(updateHeader); ticking = true; }
   }, { passive: true });
-
   // ✅ CORRECTION: scrollToTopBtn géré ici aussi pour éviter un listener séparé
   window.addEventListener('scroll', () => {
     const btn = document.getElementById('scrollToTopBtn');
@@ -139,7 +140,7 @@ async function precachePopularImages() {
 }
 
 function initLogoLongPress() {
-  const logo = document.querySelector('.logo-wrapper');
+  const logo = document.querySelector('.logo-bubble');
   if (!logo) return;
 
   logo.style.webkitUserSelect = 'none';
@@ -208,6 +209,7 @@ function renderAccount() {
   const initials = name ? name.split(/\s+/).map(s => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() : '?';
   const greeting = name ? `Bonjour, ${escapeHtml(name.split(/\s+/)[0])}` : 'Bienvenue';
   const isAdmin = state.isAdminLoggedIn === true;
+  const isLightTheme = document.documentElement.classList.contains('light-theme');
 
   const favCount = state.favorites.length;
   const cartCount = state.cart.reduce((s, i) => s + Number(i.quantity), 0);
@@ -305,6 +307,16 @@ function renderAccount() {
     </div>
 
     <div class="account-section">
+      <div class="account-section-title">Préférences</div>
+      <div class="account-menu">
+        <button class="account-menu-item" data-account-action="toggle-theme">
+          <span>🎨 Thème</span>
+          <span class="account-menu-meta" id="accountThemeMeta">${isLightTheme ? '☀️ Clair' : '🌙 Sombre'}</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="account-section">
       <div class="account-section-title">Données</div>
       <div class="account-menu">
         <button class="account-menu-item danger" data-account-action="clear-all">
@@ -357,6 +369,16 @@ function handleAccountAction(action) {
       hideAccountView();
       document.getElementById('searchInput').focus();
       showSearchDropdown('');
+      break;
+    }
+    case 'toggle-theme': {
+      const currentTheme = document.documentElement.classList.contains('light-theme') ? 'light' : 'dark';
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      applyTheme(newTheme);
+      localStorage.setItem('nrj_theme', newTheme);
+      // Rafraîchit l'affichage de l'état du thème dans le menu
+      const themeMeta = document.getElementById('accountThemeMeta');
+      if (themeMeta) themeMeta.textContent = newTheme === 'light' ? '☀️ Clair' : '🌙 Sombre';
       break;
     }
     case 'go-new': {
@@ -577,6 +599,8 @@ async function init() {
     initPlaceholderRotation();
     initVoiceSearch();
     initSmartHeader();
+    initHeaderSearchCompact();
+    initHeaderActionsBubble();
     initLogoLongPress();
     initThemeToggle();
     initOfflineIndicator();

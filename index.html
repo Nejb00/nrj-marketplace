@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="description" content="NRJ Marketplace International - Importation de produits depuis la Chine, la France et la Turquie vers le Congo Brazzaville.">
+    <meta name="description" content="FLUO - Importation de produits depuis la Chine, la France et la Turquie vers le Congo Brazzaville.">
     <link rel="icon" href="/icon.svg">
-    <title>NRJ Marketplace • Import Chine, France, Turquie → Congo</title>
+    <title>FLUO • Import Chine, France, Turquie → Congo</title>
 
     <meta name="theme-color" content="#0f0f0f">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="NRJ Marketplace International">
+    <meta property="og:site_name" content="FLUO">
     <meta property="og:locale" content="fr_FR">
-    <meta property="og:title" content="NRJ Marketplace International">
+    <meta property="og:title" content="FLUO">
     <meta property="og:description" content="Grossiste en ligne — import direct de Chine 🇨🇳, France 🇷 et Turquie 🇹🇷 vers le Congo Brazzaville 🇨. Catalogue en ligne, commande via WhatsApp.">
     <meta property="og:url" content="https://nrj-marketplace.vercel.app/">
     <meta property="og:image" content="/icon.svg">
     <meta property="og:image:type" content="image/svg+xml">
-    <meta property="og:image:alt" content="NRJ Marketplace International — Import Chine, France, Turquie vers le Congo Brazzaville">
+    <meta property="og:image:alt" content="FLUO — Import Chine, France, Turquie vers le Congo Brazzaville">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="NRJ Marketplace International">
+    <meta name="twitter:title" content="FLUO">
     <meta name="twitter:description" content="Grossiste en ligne — import direct de Chine, France et Turquie vers le Congo Brazzaville. Commande via WhatsApp.">
     <meta name="twitter:image" content="/icon.svg">
 
@@ -26,7 +26,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="NRJ Market">
+    <meta name="apple-mobile-web-app-title" content="FLUO">
     <link rel="apple-touch-icon" href="/icon-192.png">
     <script>
       if ('serviceWorker' in navigator && location.hostname !== 'localhost') {
@@ -65,36 +65,70 @@
 </head>
 <body>
     <div id="catalogueWrapper">
-        <div class="header-wrapper" id="headerWrapper">
-            <header>
-                <div class="logo-wrapper" onclick="location.href='/'">
-                    <span class="logo-icon">⚡</span>
-                    <div class="logo-brand">
-                        <div class="logo-text">NRJ Marketplace</div>
-                        <div class="logo-subtext">Grossiste</div>
-                    </div>
-                </div>
-                <div class="header-actions">
-                    <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Changer de thème" title="Basculer thème clair/sombre">🌙</button>
-                    <button class="logout-btn" id="logoutBtn" aria-label="Se déconnecter" title="Se déconnecter" style="display:none;">🚪</button>
-                </div>
-            </header>
-
-            <div class="search-bar-container">
-                <div class="search-bar">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" id="searchInput" placeholder="Rechercher un produit..." autocomplete="off" aria-label="Rechercher un produit">
-                    <button class="search-voice" id="searchVoice" aria-label="Recherche vocale" title="Recherche vocale">
-                        <svg viewBox="0 0 24 24" width="18" height="18">
-                            <path fill="currentColor" d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.7 5.1 5 5.1s5-2.1 5-5.1h-1.7z"></path>
+        <!-- ✅ HEADER FLUO : 3 bulles liquid-glass indépendantes, compression scroll-linked -->
+        <div class="header-fixed" id="headerFixed">
+            <div class="header-top-row">
+                <!-- Bulle 1 : logo -->
+                <div class="logo-bubble" id="logoBubble" onclick="location.href='/'" role="button" aria-label="Accueil FLUO">
+                    <span class="logo-icon" id="logoIcon" aria-hidden="true">
+                        <svg class="logo-flame-svg" viewBox="0 0 24 24">
+                            <defs>
+                                <linearGradient id="fluoFlameGrad" x1="0" y1="0" x2="0.15" y2="1">
+                                    <stop offset="0%" stop-color="#fff6d9"/>
+                                    <stop offset="30%" stop-color="#ffd27a"/>
+                                    <stop offset="65%" stop-color="#ff7a1a"/>
+                                    <stop offset="100%" stop-color="#d92d0a"/>
+                                </linearGradient>
+                            </defs>
+                            <path fill="url(#fluoFlameGrad)" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.88a3 3 0 10-4.242-4.244 3 3 0 004.242 4.243z"/>
                         </svg>
-                    </button>
-                    <div class="search-loader" id="searchLoader" style="display:none;"></div>
-                    <button class="search-clear" id="searchClear" style="display:none;" aria-label="Effacer">✕</button>
+                    </span>
+                    <span class="logo-brand-text">FLUO</span>
                 </div>
-                <div class="search-dropdown" id="searchDropdown" style="display:none;"></div>
+
+                <!-- Bulle recherche compacte : apparaît uniquement une fois la bulle pleine repliée -->
+                <button class="search-bubble-compact" id="searchCompact" aria-label="Rechercher">
+                    <span class="search-icon" aria-hidden="true"></span>
+                </button>
+
+                <!-- Bulle 2 : actions (catalogue / profil / panier) -->
+                <div class="actions-bubble" id="actionsBubble">
+                    <button class="action-btn" id="catalogBtnHeader" aria-label="Catégories" title="Catégories">
+                        <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 5h18v2H3V5zm0 6h18v2H3v-2zm0 6h18v2H3v-2z"></path></svg>
+                    </button>
+                    <button class="action-btn" id="profileBtnHeader" aria-label="Mon FLUO" title="Mon FLUO">
+                        <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg>
+                    </button>
+                    <button class="action-btn cart-btn" id="cartBtnHeader" aria-label="Panier" title="Panier">
+                        <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"></path></svg>
+                        <span class="header-cart-badge" id="headerCartBadge" style="display:none;">0</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bulle 3 : barre de recherche complète (se replie au scroll) -->
+            <div class="search-bubble-full" id="searchFull">
+                <div class="search-bar-container">
+                    <div class="search-bar">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="searchInput" placeholder="Rechercher un produit..." autocomplete="off" aria-label="Rechercher un produit">
+                        <button class="search-voice" id="searchVoice" aria-label="Recherche vocale" title="Recherche vocale">
+                            <svg viewBox="0 0 24 24" width="18" height="18">
+                                <path fill="currentColor" d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.7 5.1 5 5.1s5-2.1 5-5.1h-1.7z"></path>
+                            </svg>
+                        </button>
+                        <div class="search-loader" id="searchLoader" style="display:none;"></div>
+                        <button class="search-clear" id="searchClear" style="display:none;" aria-label="Effacer">✕</button>
+                    </div>
+                    <div class="search-dropdown" id="searchDropdown" style="display:none;"></div>
+                </div>
             </div>
         </div>
+
+        <!-- Boutons conservés fonctionnellement mais retirés du header visuel (à recaser dans "Mon FLUO") -->
+        <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Changer de thème" title="Basculer thème clair/sombre" style="display:none;">🌙</button>
+        <button class="logout-btn" id="logoutBtn" aria-label="Se déconnecter" title="Se déconnecter" style="display:none;">🚪</button>
+
         <div id="headerSpacer"></div>
 
         <div id="catalogueView">
@@ -142,7 +176,7 @@
             </a>
         </nav>
 
-        <footer><p>© 2026 NRJ Marketplace International — Chine • France • Turquie → Congo Brazzaville ⚡</p></footer>
+        <footer><p>© 2026 FLUO — Chine • France • Turquie → Congo Brazzaville 🔥</p></footer>
     </div>
 
     <div class="product-modal" id="productModal">
