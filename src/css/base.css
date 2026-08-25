@@ -93,14 +93,11 @@ body {
         inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
-/* +8px pour compenser le décollement des bulles
-   ⚠️ min-height de secours : si le JS plante avant d'atteindre initSmartHeader()
-   (ex: fetchProducts() en échec), le contenu ne se fait plus écraser par le header */
+/* +8px pour compenser le décollement des bulles */
 #headerSpacer {
     width: 100%;
     flex-shrink: 0;
     margin-top: 8px;
-    min-height: 132px;
 }
 
 /* ── Bulle 1 : logo ──────────────────────────────────────────────────────── */
@@ -120,33 +117,25 @@ body {
     overflow: hidden;
     width: calc(34px - 8px * var(--sp, 0));
     height: calc(34px - 8px * var(--sp, 0));
-    border-radius: 11px;
+    border-radius: 10px;
     background: linear-gradient(135deg, #ffb066, var(--primary) 55%, #f97316);
-    box-shadow:
-        0 0 0 2px rgba(255, 255, 255, 0.9),
-        0 0 22px 4px rgba(255, 122, 26, 0.55),
-        0 6px 14px rgba(230, 90, 10, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    box-shadow: 0 4px 14px rgba(255, 140, 66, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
     opacity: calc(1 - var(--sp, 0));
 }
-:root.light-theme .logo-icon {
-    box-shadow:
-        0 0 0 2px rgba(255, 255, 255, 0.95),
-        0 0 20px 4px rgba(255, 122, 26, 0.45),
-        0 4px 12px rgba(230, 90, 10, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.4);
-}
-/* silhouette flamme via vrai SVG inline (dégradé jaune→orange→rouge) */
-.logo-flame-svg {
+/* silhouette flamme blanche */
+.logo-icon::before {
+    content: '';
     position: relative;
     z-index: 1;
-    width: 70%;
-    height: 70%;
-    filter: drop-shadow(0 1px 2px rgba(120, 25, 0, 0.4));
+    width: 62%;
+    height: 62%;
+    background: #fff;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.88a3 3 0 10-4.242-4.244 3 3 0 004.242 4.243z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.88a3 3 0 10-4.242-4.244 3 3 0 004.242 4.243z'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 /* reflet glossy en haut de la tuile */
 .logo-icon::after {
@@ -170,18 +159,17 @@ body {
     line-height: 1;
 }
 
-/* ── Bulle compacte recherche (apparaît en fin de scroll, occupe l'espace libre) ── */
+/* ── Bulle compacte recherche (loupe seule, apparaît en fin de scroll) ──── */
 .search-bubble-compact {
-    width: calc(150px * var(--sp, 0));
-    flex-shrink: 1;
-    min-width: 0;
-    max-width: 320px;
+    width: calc(40px * var(--sp, 0));
     height: 40px;
-    border-radius: 20px;
+    min-width: 0;
+    border-radius: 50%;
     padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
     overflow: hidden;
     opacity: var(--sp, 0);
     cursor: pointer;
