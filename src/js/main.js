@@ -44,28 +44,23 @@ function applyTheme(theme) {
   }
 }
 
-// 🌟 ÉTAPE 2 : Animation de compression "Premium" (Ease-out cubique)
+// 🌟 Animation de compression "Premium" (Ease-out cubique)
 function initSmartHeader() {
   const fixed = document.getElementById('headerFixed');
   const spacer = document.getElementById('headerSpacer');
   const searchCompact = document.getElementById('searchCompact');
   if (!fixed || !spacer) return;
 
-  const THRESHOLD = 90; // px de scroll pour une compression complète
+  const THRESHOLD = 90;
   let ticking = false;
 
   function updateHeader() {
-    // 1. Progression brute (0 à 1)
     const rawProgress = Math.min(1, Math.max(0, window.scrollY / THRESHOLD));
-    
-    // 2. 🌟 Courbe ease-out cubique : compresse vite au début, puis ralentit doucement (effet ressort iOS)
+    // Courbe ease-out cubique : compresse vite au début, puis ralentit doucement
     const progress = 1 - Math.pow(1 - rawProgress, 3);
     
     fixed.style.setProperty('--sp', progress);
-    
-    // La loupe compacte n'apparaît que quand le header est presque totalement replié
     if (searchCompact) searchCompact.classList.toggle('active', rawProgress > 0.92);
-    
     spacer.style.height = fixed.offsetHeight + 'px';
     ticking = false;
   }
@@ -80,8 +75,7 @@ function initSmartHeader() {
   }, { passive: true });
 
   window.addEventListener('resize', () => { spacer.style.height = fixed.offsetHeight + 'px'; });
-  
-  updateHeader(); // État initial
+  updateHeader();
 }
 
 function initHeaderSearchCompact() {
@@ -464,6 +458,53 @@ function handleAccountAction(action) {
   }
 }
 
+// 🌟 NAVIGATION PAR SWIPE ENTRE LES CATÉGORIES
+function initSwipeCategories() {
+    let touchStartX = 0;
+    let touchEndX = 0;
+    const minSwipeDistance = 60; // Seuil (en px) pour éviter les conflits avec le scroll ou le retour navigateur
+
+    document.addEventListener('touchstart', e => {
+        // 🛡️ SÉCURITÉ : On ignore le swipe si l'utilisateur touche un carrousel d'images ou une modale
+        if (e.target.closest('.carousel-scroll') || e.target.closest('.rec-carousel') || e.target.closest('.modal-overlay')) return;
+        touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    document.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    }, { passive: true });
+
+    function handleSwipe() {
+        const diff = touchStartX - touchEndX;
+        
+        // Si le geste est trop court, on ne fait rien
+        if (Math.abs(diff) < minSwipeDistance) return; 
+
+        const buttons = Array.from(document.querySelectorAll('.filter-btn'));
+        if (buttons.length === 0) return;
+        
+        const activeIndex = buttons.findIndex(btn => btn.classList.contains('active'));
+        if (activeIndex === -1) return;
+
+        let nextIndex = activeIndex;
+
+        if (diff > 0) {
+            // Swipe vers la GAUCHE -> Catégorie suivante
+            nextIndex = (activeIndex + 1) % buttons.length;
+        } else {
+            // Swipe vers la DROITE -> Catégorie précédente
+            nextIndex = (activeIndex - 1 + buttons.length) % buttons.length;
+        }
+
+        // On simule un clic pour réutiliser toute la logique existante
+        buttons[nextIndex].click();
+
+        // 🌟 Bonus UX : on centre automatiquement le bouton actif dans la barre de filtres
+        buttons[nextIndex].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+}
+
 document.querySelectorAll('.filter-chip').forEach(chip => {
   chip.addEventListener('click', function() {
     document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
@@ -634,6 +675,9 @@ async function init() {
     initThemeToggle();
     initOfflineIndicator();
     initServiceWorkerUpdates();
+    
+    initSwipeCategories(); // 🌟 INITIALISATION DU SWIPE CATÉGORIES
+    
     refreshCatalogue();
     refreshCartDisplay();
     updateNavFavBadge();
