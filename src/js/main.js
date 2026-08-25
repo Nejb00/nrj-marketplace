@@ -44,23 +44,18 @@ function applyTheme(theme) {
   }
 }
 
-/* 🔥 HEADER FLUO — compression scroll-linked continue (pas de hide-on-scroll,
-   la bottom nav étant retirée le header reste toujours visible et accessible).
-   --sp (0 → 1) pilote en CSS : fade de la flamme, réduction du texte FLUO,
-   repli de la search bar complète, apparition de la bulle loupe compacte. */
 function initSmartHeader() {
   const fixed = document.getElementById('headerFixed');
   const spacer = document.getElementById('headerSpacer');
   const searchCompact = document.getElementById('searchCompact');
   if (!fixed || !spacer) return;
 
-  const THRESHOLD = 90; // px de scroll pour une compression complète (--sp = 1)
+  const THRESHOLD = 90;
   let ticking = false;
 
   function updateHeader() {
     const progress = Math.min(1, Math.max(0, window.scrollY / THRESHOLD));
     fixed.style.setProperty('--sp', progress);
-    // n'active le tap sur la loupe compacte qu'une fois quasi totalement repliée
     if (searchCompact) searchCompact.classList.toggle('active', progress > 0.92);
     spacer.style.height = fixed.offsetHeight + 'px';
     ticking = false;
@@ -70,18 +65,15 @@ function initSmartHeader() {
     if (!ticking) { requestAnimationFrame(updateHeader); ticking = true; }
   }, { passive: true });
 
-  // ✅ scrollToTopBtn géré ici aussi pour éviter un listener séparé
   window.addEventListener('scroll', () => {
     const btn = document.getElementById('scrollToTopBtn');
     if (btn) btn.classList.toggle('visible', window.scrollY > 300);
   }, { passive: true });
 
   window.addEventListener('resize', () => { spacer.style.height = fixed.offsetHeight + 'px'; });
-
-  updateHeader(); // état initial (utile si on recharge la page déjà scrollée)
+  updateHeader();
 }
 
-/* 🔥 Bulle loupe compacte → ouvre directement la page de recherche dédiée */
 function initHeaderSearchCompact() {
   const searchCompact = document.getElementById('searchCompact');
   if (!searchCompact) return;
@@ -91,8 +83,6 @@ function initHeaderSearchCompact() {
   });
 }
 
-/* 🔥 Bulle actions (catalogue / profil / panier) → réutilise la logique
-   existante de la bottom nav en simulant un clic sur le nav-item correspondant */
 function initHeaderActionsBubble() {
   const map = { catalogBtnHeader: 'categories', profileBtnHeader: 'profile', cartBtnHeader: 'cart' };
   Object.entries(map).forEach(([btnId, navTarget]) => {
@@ -101,7 +91,6 @@ function initHeaderActionsBubble() {
     });
   });
 
-  // Miroir du badge panier de la bottom nav vers la bulle header
   const navBadge = document.getElementById('navCartBadge');
   const headerBadge = document.getElementById('headerCartBadge');
   if (navBadge && headerBadge) {
@@ -241,7 +230,7 @@ function renderAccount() {
   const root = document.getElementById('accountContent');
   if (!root) return;
 
-  const name = localStorage.getItem('nrj_customer_name') || '';
+  const name = localStorage.getItem('fluo_customer_name') || ''; // ✅ MIS À JOUR
   const initials = name ? name.split(/\s+/).map(s => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() : '?';
   const greeting = name ? `Bonjour, ${escapeHtml(name.split(/\s+/)[0])}` : 'Bienvenue';
   const isAdmin = state.isAdminLoggedIn === true;
@@ -280,7 +269,7 @@ function renderAccount() {
         <div class="account-avatar">${escapeHtml(initials)}</div>
         <div class="account-greet">
           <div class="account-greet-hello">${greeting}</div>
-          <div class="account-greet-sub">Voici votre espace NRJ</div>
+          <div class="account-greet-sub">Voici votre espace FLUO</div> <!-- ✅ MIS À JOUR -->
         </div>
       </div>
       ${isAdmin ? '<span class="account-admin-badge">Admin</span>' : ''}
@@ -412,7 +401,6 @@ function handleAccountAction(action) {
       const newTheme = currentTheme === 'light' ? 'dark' : 'light';
       applyTheme(newTheme);
       localStorage.setItem('nrj_theme', newTheme);
-      // Rafraîchit l'affichage de l'état du thème dans le menu
       const themeMeta = document.getElementById('accountThemeMeta');
       if (themeMeta) themeMeta.textContent = newTheme === 'light' ? '☀️ Clair' : '🌙 Sombre';
       break;
@@ -424,14 +412,14 @@ function handleAccountAction(action) {
       break;
     }
     case 'contact': {
-      window.open(`https://wa.me/242066271882?text=${encodeURIComponent("Bonjour NRJ Marketplace, j'ai besoin d'assistance 🙏")}`, '_blank');
+      window.open(`https://wa.me/242066271882?text=${encodeURIComponent("Bonjour FLUO, j'ai besoin d'assistance 🙏")}`, '_blank'); // ✅ MIS À JOUR
       break;
     }
     case 'install-app': {
       if (window.deferredInstallPrompt) {
         window.deferredInstallPrompt.prompt();
       } else {
-        alert("Pour installer l'app NRJ :\n\n• Chrome Android : menu ⋮ → « Installer l'application »\n• iOS Safari : bouton Partager → « Sur l'écran d'accueil »");
+        alert("Pour installer l'app FLUO :\n\n• Chrome Android : menu ⋮ → « Installer l'application »\n• iOS Safari : bouton Partager → « Sur l'écran d'accueil »"); // ✅ MIS À JOUR
       }
       break;
     }
@@ -443,7 +431,7 @@ function handleAccountAction(action) {
         localStorage.removeItem('nrj_cart_v32');
         localStorage.removeItem('nrj_search_history');
         localStorage.removeItem('nrj_orders');
-        localStorage.removeItem('nrj_customer_name');
+        localStorage.removeItem('fluo_customer_name'); // ✅ MIS À JOUR
         localStorage.removeItem('nrj_affinity');
       } catch {}
       state.favorites = [];
@@ -465,9 +453,6 @@ function handleAccountAction(action) {
     }
   }
 }
-
-// ✅ CORRECTION: scrollToTopBtn fusionne dans initSmartHeader pour eviter listener double
-// (supprime le window.addEventListener('scroll') separe qui etait ici)
 
 document.querySelectorAll('.filter-chip').forEach(chip => {
   chip.addEventListener('click', function() {
@@ -543,8 +528,8 @@ window.addEventListener('popstate', (e) => {
   else if (state.modalOpen) closeProductModal();
 });
 
-document.getElementById('modalSourcingBtn')?.addEventListener('click', () => window.open(`https://wa.me/242066271882?text=${encodeURIComponent('Bonjour NRJ Marketplace, je recherche un produit. Je peux vous envoyer une photo')}`));
-document.getElementById('modalDescSourcingBtn')?.addEventListener('click', () => window.open(`https://wa.me/242066271882?text=${encodeURIComponent('Bonjour NRJ Marketplace International, je recherche un produit spécifique...')}`));
+document.getElementById('modalSourcingBtn')?.addEventListener('click', () => window.open(`https://wa.me/242066271882?text=${encodeURIComponent('Bonjour FLUO, je recherche un produit. Je peux vous envoyer une photo')}`)); // ✅ MIS À JOUR
+document.getElementById('modalDescSourcingBtn')?.addEventListener('click', () => window.open(`https://wa.me/242066271882?text=${encodeURIComponent('Bonjour FLUO International, je recherche un produit spécifique...')}`)); // ✅ MIS À JOUR
 
 document.getElementById('cartCloseBtn')?.addEventListener('click', () => {
   document.getElementById('cartPanel').classList.remove('open');
@@ -578,7 +563,6 @@ document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('clic
     state.currentQuickFilter = 'all';
     state.searchQuery = '';
     const inp = document.getElementById('searchInput');
-    // ✅ CORRECTION: verification que rotationList existe avant d'y acceder
     if (inp) { 
       inp.value = ''; 
       inp.placeholder = (state.rotationList && state.rotationList[0]) ? state.rotationList[0] : 'Rechercher...'; 
