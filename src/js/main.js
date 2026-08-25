@@ -44,23 +44,25 @@ function applyTheme(theme) {
   }
 }
 
+/* 🔥 HEADER FLUO — compression scroll-linked continue (pas de hide-on-scroll,
+   la bottom nav étant retirée le header reste toujours visible et accessible).
+   --sp (0 → 1) pilote en CSS : fade de la flamme, réduction du texte FLUO,
+   repli de la search bar complète, apparition de la bulle loupe compacte. */
 function initSmartHeader() {
-  const wrapper = document.getElementById('headerWrapper');
+  const fixed = document.getElementById('headerFixed');
   const spacer = document.getElementById('headerSpacer');
-  if (!wrapper || !spacer) return;
+  const searchCompact = document.getElementById('searchCompact');
+  if (!fixed || !spacer) return;
 
-  const headerHeight = wrapper.offsetHeight;
-  spacer.style.height = headerHeight + 'px';
-
-  let lastScrollY = window.scrollY;
+  const THRESHOLD = 90; // px de scroll pour une compression complète (--sp = 1)
   let ticking = false;
 
   function updateHeader() {
-    const currentScrollY = window.scrollY;
-    if (currentScrollY <= 0) wrapper.classList.remove('hidden');
-    else if (currentScrollY > lastScrollY && currentScrollY > headerHeight) wrapper.classList.add('hidden');
-    else if (currentScrollY < lastScrollY) wrapper.classList.remove('hidden');
-    lastScrollY = currentScrollY;
+    const progress = Math.min(1, Math.max(0, window.scrollY / THRESHOLD));
+    fixed.style.setProperty('--sp', progress);
+    // n'active le tap sur la loupe compacte qu'une fois quasi totalement repliée
+    if (searchCompact) searchCompact.classList.toggle('active', progress > 0.92);
+    spacer.style.height = fixed.offsetHeight + 'px';
     ticking = false;
   }
 
@@ -68,13 +70,48 @@ function initSmartHeader() {
     if (!ticking) { requestAnimationFrame(updateHeader); ticking = true; }
   }, { passive: true });
 
-  // ✅ CORRECTION: scrollToTopBtn géré ici aussi pour éviter un listener séparé
+  // ✅ scrollToTopBtn géré ici aussi pour éviter un listener séparé
   window.addEventListener('scroll', () => {
     const btn = document.getElementById('scrollToTopBtn');
     if (btn) btn.classList.toggle('visible', window.scrollY > 300);
   }, { passive: true });
 
-  window.addEventListener('resize', () => { spacer.style.height = wrapper.offsetHeight + 'px'; });
+  window.addEventListener('resize', () => { spacer.style.height = fixed.offsetHeight + 'px'; });
+
+  updateHeader(); // état initial (utile si on recharge la page déjà scrollée)
+}
+
+/* 🔥 Bulle loupe compacte → ouvre directement la page de recherche dédiée */
+function initHeaderSearchCompact() {
+  const searchCompact = document.getElementById('searchCompact');
+  if (!searchCompact) return;
+  searchCompact.addEventListener('click', () => {
+    if (!searchCompact.classList.contains('active')) return;
+    switchToSearchView('');
+  });
+}
+
+/* 🔥 Bulle actions (catalogue / profil / panier) → réutilise la logique
+   existante de la bottom nav en simulant un clic sur le nav-item correspondant */
+function initHeaderActionsBubble() {
+  const map = { catalogBtnHeader: 'categories', profileBtnHeader: 'profile', cartBtnHeader: 'cart' };
+  Object.entries(map).forEach(([btnId, navTarget]) => {
+    document.getElementById(btnId)?.addEventListener('click', () => {
+      document.querySelector(`.nav-item[data-nav="${navTarget}"]`)?.click();
+    });
+  });
+
+  // Miroir du badge panier de la bottom nav vers la bulle header
+  const navBadge = document.getElementById('navCartBadge');
+  const headerBadge = document.getElementById('headerCartBadge');
+  if (navBadge && headerBadge) {
+    const syncBadge = () => {
+      headerBadge.textContent = navBadge.textContent;
+      headerBadge.style.display = navBadge.style.display;
+    };
+    syncBadge();
+    new MutationObserver(syncBadge).observe(navBadge, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['style'] });
+  }
 }
 
 function initServiceWorkerUpdates() {
@@ -139,7 +176,7 @@ async function precachePopularImages() {
 }
 
 function initLogoLongPress() {
-  const logo = document.querySelector('.logo-wrapper');
+  const logo = document.querySelector('.logo-bubble');
   if (!logo) return;
 
   logo.style.webkitUserSelect = 'none';
@@ -577,6 +614,8 @@ async function init() {
     initPlaceholderRotation();
     initVoiceSearch();
     initSmartHeader();
+    initHeaderSearchCompact();
+    initHeaderActionsBubble();
     initLogoLongPress();
     initThemeToggle();
     initOfflineIndicator();
