@@ -1,479 +1,559 @@
-/* ── Base / Reset ──────────────────────────────────────────────────────── */
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-html {
-  scroll-behavior: smooth;
-  -webkit-text-size-adjust: 100%;
-  scrollbar-width: thin;
-  scrollbar-color: var(--surface-light) transparent;
-  background: var(--bg);
-  color: var(--text);
+:root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface-light: #252525;
+    --primary: #ff8c42;
+    --primary-dark: #ff7b2c;
+    --whatsapp: #25D366;
+    --whatsapp-dark: #1da851;
+    --favorites: #ef4444;
+    --favorites-dark: #dc2626;
+    --categories: #a855f7;
+    --categories-dark: #9333ea;
+    --text: #ffffff;
+    --text-secondary: #a0a0a0;
+    --border: #333333;
+    --radius: 16px;
+    --radius-sm: 12px;
+    --transition: 0.2s ease;
+    --nav-height: 56px;
+    --bottom-bar-height: 70px;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🌞 THÈME CLAIR — intégré depuis Main3 (couleurs plus chaudes & completes)
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root.light-theme {
+    --bg: #f8f7f5;
+    --surface: #ffffff;
+    --surface-light: #f0eeeb;
+    --border: #e2e0dc;
+    --text: #1a1a1a;
+    --text-secondary: #6b6b6b;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
+    font-family: 'Plus Jakarta Sans', 'Poppins', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.4;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: var(--nav-height);
+    transition: background-color var(--transition), color var(--transition);
 }
 
-/* ── Scrollbar personnalisée (WebKit) ─────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--surface-light); border-radius: 3px; }
-
-/* ── Sélection ──────────────────────────────────────────────────────────── */
-::selection { background: rgba(255, 140, 66, 0.25); color: var(--text); }
-
-/* ── Liens & boutons globaux ──────────────────────────────────────────── */
-a { color: inherit; text-decoration: none; }
-button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
-input, select, textarea { font-family: inherit; color: inherit; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 0.6rem 0.8rem; outline: none; transition: border-color 0.2s; }
-input:focus, select:focus, textarea:focus { border-color: var(--primary); }
-img { max-width: 100%; display: block; }
-
-/* ── Layout catalogue ─────────────────────────────────────────────────── */
-#catalogueWrapper { min-height: 100vh; padding-bottom: 5rem; }
-
-/* ── Header fixed (scroll-linked) ─────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   🔥 HEADER FLUO — 3 bulles liquid-glass indépendantes, scroll-linked (option B)
+   --sp = "scroll progress" (0 → 1), piloté par JS à chaque frame de scroll
+   ═══════════════════════════════════════════════════════════════════════════ */
 .header-fixed {
-  position: fixed;
-  top: 8px;
-  left: 10px;
-  right: 10px;
-  z-index: 100;
-  display: flex;
-  flex-direction: column;
-  gap: calc(8px * (1 - var(--sp, 0)));
-  --sp: 0;
+    position: fixed;
+    top: 8px;
+    left: 10px;
+    right: 10px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: calc(8px * (1 - var(--sp, 0)));
+    --sp: 0;
 }
 
-/* ── Header top row ───────────────────────────────────────────────────── */
 .header-top-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: calc(8px * (1 - var(--sp, 0)));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
 }
 
-/* ── Bulle logo ─────────────────────────────────────────────────────────── */
-.logo-bubble {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(16, 16, 20, 0.72);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.07);
-  border-radius: 999px;
-  padding: 8px 14px;
-  cursor: pointer;
-  transition: transform 0.15s ease;
-}
-
-.logo-bubble:active { transform: scale(0.96); }
-
-.logo-icon {
-  display: inline-block;
-  width: calc(34px - (8px * var(--sp, 0)));
-  height: calc(34px - (8px * var(--sp, 0)));
-  opacity: calc(1 - var(--sp, 0));
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23FF8C42' d='M12 2C10.5 4 8 6 8 9c0 2.5 1.5 4 3 5.5V20h2v-5.5c1.5-1.5 3-3 3-5.5 0-3-2.5-5-4-7z'/%3E%3C/svg%3E") no-repeat center/contain;
-  transition: none;
-}
-
-.logo-brand-text {
-  font-weight: 800;
-  font-size: calc(1.05rem - (0.25rem * var(--sp, 0)));
-  letter-spacing: -0.02em;
-  color: var(--text);
-  transition: none;
-}
-
-/* ── Bulle recherche compacte ───────────────────────────────────────── */
-.search-bubble-compact {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 0;
-  height: 0;
-  opacity: 0;
-  overflow: hidden;
-  background: rgba(16, 16, 20, 0.72);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.07);
-  border-radius: 50%;
-  cursor: pointer;
-  transition: width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), height 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
-}
-
-.search-bubble-compact.active {
-  width: 40px;
-  height: 40px;
-  opacity: 1;
-}
-
-.search-bubble-compact .search-icon {
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23aaa' d='M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5z'/%3E%3C/svg%3E") no-repeat center/contain;
-}
-
-/* ── Bulle actions ────────────────────────────────────────────────────── */
-.actions-bubble {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(16, 16, 20, 0.72);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.07);
-  border-radius: 999px;
-  padding: 4px;
-}
-
-.action-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  color: var(--text-secondary);
-  transition: background 0.2s, color 0.2s;
-}
-
-.action-btn:hover { background: rgba(255, 255, 255, 0.06); color: var(--text); }
-
-.action-btn svg { width: 20px; height: 20px; fill: currentColor; }
-
-.cart-btn { position: relative; }
-
-.header-cart-badge {
-  position: absolute;
-  top: -2px;
-  right: -2px;
-  background: var(--primary);
-  color: white;
-  font-size: 0.65rem;
-  font-weight: 700;
-  min-width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 4px;
-}
-
-/* ── Bulle recherche pleine ───────────────────────────────────────────── */
-.search-bubble-full {
-  background: rgba(16, 16, 20, 0.72);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.07);
-  border-radius: 999px;
-  padding: 6px 8px;
-  max-height: calc(68px * (1 - var(--sp, 0)));
-  opacity: calc(1 - var(--sp, 0) * 1.2);
-  overflow: hidden;
-  transition: none;
-}
-
-.search-bar-container { position: relative; }
-
-.search-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 999px;
-  padding: 0.5rem 0.7rem;
-}
-
-.search-bar .search-icon { font-size: 1rem; opacity: 0.6; }
-
-#searchInput {
-  flex: 1;
-  background: transparent;
-  border: none;
-  color: var(--text);
-  font-size: 0.95rem;
-  padding: 0;
-}
-
-#searchInput::placeholder { color: var(--text-secondary); opacity: 0.7; }
-
-.search-voice {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  color: var(--text-secondary);
-  transition: background 0.2s;
-}
-
-.search-voice:hover { background: rgba(255, 255, 255, 0.06); }
-
-.search-voice svg { width: 18px; height: 18px; fill: currentColor; }
-
-.search-loader {
-  width: 16px;
-  height: 16px;
-  border: 2px solid var(--surface-light);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.search-clear {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--surface-light);
-  color: var(--text-secondary);
-  font-size: 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
-}
-
-.search-clear:hover { background: var(--border); color: var(--text); }
-
-/* ── Dropdown recherche ─────────────────────────────────────────────────── */
-.search-dropdown {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  right: 0;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-  max-height: 320px;
-  overflow-y: auto;
-  z-index: 101;
-  padding: 0.4rem;
-}
-
-.search-dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.6rem 0.8rem;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.15s;
-  font-size: 0.9rem;
-}
-
-.search-dropdown-item:hover { background: var(--surface-light); }
-
-.search-dropdown-item img {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  object-fit: cover;
-  background: var(--surface-light);
-}
-
-.search-dropdown-empty {
-  padding: 1rem;
-  text-align: center;
-  color: var(--text-secondary);
-  font-size: 0.85rem;
-}
-
-/* ── Filter bar dans le header (scroll-linked) ───────────────────────── */
-.header-fixed .filter-bar {
-  background: rgba(16, 16, 20, 0.72);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.07);
-  border-radius: 999px;
-  padding: 0.3rem 0.6rem;
-  max-height: calc(44px * (1 - var(--sp, 0)));
-  opacity: calc(1 - var(--sp, 0) * 1.2);
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-  transition: none;
-  /* Surcharge le padding par défaut de filters.css */
-  padding-bottom: 0.3rem;
-}
-
-.header-fixed .filter-bar::-webkit-scrollbar { display: none; }
-
-/* ── Spacer header ──────────────────────────────────────────────────────── */
-#headerSpacer { transition: height 0.1s linear; }
-
-/* ── Navigation bottom ──────────────────────────────────────────────────── */
-.main-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  height: 64px;
-  background: rgba(16, 16, 20, 0.88);
-  backdrop-filter: blur(20px) saturate(150%);
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  z-index: 100;
-  padding-bottom: env(safe-area-inset-bottom, 0);
-}
-
-.nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  flex: 1;
-  height: 100%;
-  color: var(--text-secondary);
-  transition: color 0.2s;
-  position: relative;
-}
-
-.nav-item.active { color: var(--primary); }
-
-.nav-item svg { width: 24px; height: 24px; fill: currentColor; }
-
-.nav-item .cart-badge,
-.nav-item .favorites-badge {
-  position: absolute;
-  top: 6px;
-  right: calc(50% - 18px);
-  background: var(--primary);
-  color: white;
-  font-size: 0.6rem;
-  font-weight: 700;
-  min-width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 3px;
-}
-
-/* ── Footer ─────────────────────────────────────────────────────────────── */
-footer {
-  text-align: center;
-  padding: 2rem 1rem;
-  color: var(--text-secondary);
-  font-size: 0.8rem;
-  opacity: 0.7;
-}
-
-/* ── Scroll to top ──────────────────────────────────────────────────────── */
-#scrollToTopBtn {
-  position: fixed;
-  bottom: 80px;
-  right: 16px;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-size: 1.2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transform: translateY(10px);
-  pointer-events: none;
-  transition: opacity 0.3s, transform 0.3s;
-  z-index: 99;
-}
-
-#scrollToTopBtn.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
-
-/* ── Bouton thème & logout (cachés par défaut, utilisés dans Mon FLUO) ─── */
-.theme-toggle-btn, .logout-btn {
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  z-index: 101;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.logout-btn { top: 56px; }
-
-/* ── Light theme overrides ──────────────────────────────────────────────── */
-:root.light-theme {
-  --bg: #f5f5f7;
-  --surface: rgba(255, 255, 255, 0.85);
-  --surface-light: rgba(0, 0, 0, 0.04);
-  --border: rgba(0, 0, 0, 0.08);
-  --text: #1a1a1a;
-  --text-secondary: #666;
+/* ── Style commun "verre" pour les 3 bulles ─────────────────────────────── */
+.logo-bubble,
+.actions-bubble,
+.search-bubble-compact,
+.search-bubble-full .search-bar-container {
+    background: rgba(16, 16, 20, 0.72);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 
 :root.light-theme .logo-bubble,
 :root.light-theme .actions-bubble,
-:root.light-theme .search-bubble-full,
 :root.light-theme .search-bubble-compact,
-:root.light-theme .header-fixed .filter-bar {
-  background: rgba(255, 255, 255, 0.88);
-  border-color: rgba(0, 0, 0, 0.06);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 16px 40px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+:root.light-theme .search-bubble-full .search-bar-container {
+    background: rgba(255, 255, 255, 0.88);
+    border-color: rgba(0, 0, 0, 0.06);
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.06),
+        0 16px 40px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
-:root.light-theme .search-bar {
-  background: rgba(0, 0, 0, 0.03);
-  border-color: rgba(0, 0, 0, 0.06);
+/* +8px pour compenser le décollement des bulles */
+#headerSpacer {
+    width: 100%;
+    flex-shrink: 0;
+    margin-top: 8px;
 }
 
+/* ── Bulle 1 : logo ──────────────────────────────────────────────────────── */
+.logo-bubble {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    padding: 0.5rem 0.9rem 0.5rem 0.5rem;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+/* ✅ Flamme glossy/3D dégradé — masque SVG sur tuile orange (façon FLUO) */
+.logo-icon {
+    position: relative;
+    overflow: hidden;
+    width: calc(34px - 8px * var(--sp, 0));
+    height: calc(34px - 8px * var(--sp, 0));
+    border-radius: 10px;
+    background: linear-gradient(135deg, #ffb066, var(--primary) 55%, #f97316);
+    box-shadow: 0 4px 14px rgba(255, 140, 66, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    opacity: calc(1 - var(--sp, 0));
+}
+/* silhouette flamme blanche */
+.logo-icon::before {
+    content: '';
+    position: relative;
+    z-index: 1;
+    width: 62%;
+    height: 62%;
+    background: #fff;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.88a3 3 0 10-4.242-4.244 3 3 0 004.242 4.243z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.88a3 3 0 10-4.242-4.244 3 3 0 004.242 4.243z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+/* reflet glossy en haut de la tuile */
+.logo-icon::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 15%;
+    right: 15%;
+    height: 42%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.45), transparent);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.logo-brand-text {
+    font-weight: 800;
+    font-size: calc(1.05rem - 0.25rem * var(--sp, 0));
+    letter-spacing: -0.5px;
+    color: var(--text);
+    white-space: nowrap;
+    line-height: 1;
+}
+
+/* ── Bulle compacte recherche (loupe seule, apparaît en fin de scroll) ──── */
+.search-bubble-compact {
+    width: calc(40px * var(--sp, 0));
+    height: 40px;
+    min-width: 0;
+    border-radius: 50%;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+    opacity: var(--sp, 0);
+    cursor: pointer;
+    pointer-events: none;
+}
+.search-bubble-compact.active { pointer-events: auto; }
+.search-bubble-compact .search-icon {
+    font-size: 0;
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+    background: var(--text-secondary);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* ── Bulle 2 : actions (catalogue / profil / panier) ────────────────────── */
+.actions-bubble {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    border-radius: 999px;
+    padding: 0.3rem;
+    flex-shrink: 0;
+}
+
+.action-btn {
+    position: relative;
+    background: transparent;
+    color: var(--text);
+    border: none;
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background var(--transition), transform var(--transition);
+}
+.action-btn:hover { background: rgba(255, 255, 255, 0.08); }
+:root.light-theme .action-btn:hover { background: rgba(0, 0, 0, 0.05); }
+.action-btn:active { transform: scale(0.92); }
+
+.header-cart-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: var(--favorites);
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 800;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
+    border: 2px solid rgba(16, 16, 20, 0.72);
+}
+:root.light-theme .header-cart-badge { border-color: rgba(255, 255, 255, 0.88); }
+
+/* ── Bulle 3 : recherche complète (se replie au scroll) ─────────────────── */
+.search-bubble-full {
+    overflow: hidden;
+    max-height: calc(68px * (1 - var(--sp, 0)));
+    opacity: calc(1 - var(--sp, 0) * 1.6);
+}
+.search-bubble-full .search-bar-container {
+    border-radius: 22px;
+    padding: 0;
+}
+.search-bubble-full .search-bar {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+/* ✅ Bouton thème : hublot glass + lune/soleil vectoriels */
+.theme-toggle-btn {
+    position: relative;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 50%;
+    padding: 0;
+    cursor: pointer;
+    font-size: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition);
+}
+.theme-toggle-btn::before {
+    content: '';
+    width: 18px;
+    height: 18px;
+    background: var(--text);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+:root.light-theme .theme-toggle-btn {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+:root.light-theme .theme-toggle-btn::before {
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.theme-toggle-btn:hover { background: rgba(255, 255, 255, 0.12); transform: scale(1.05); }
+.theme-toggle-btn:active { transform: scale(0.95); }
+
+.logout-btn { background: #451a1a; color: #fca5a5; border: 1px solid #7f1d1d; border-radius: 50px; padding: 0.4rem 0.9rem; cursor: pointer; font-size: 0.75rem; font-weight: 600; display: none; align-items: center; }
+.logout-btn.visible { display: flex; }
+
+/* ✅ Toast discret : petit, translucide, disparaît vite */
+.toast { position: fixed; bottom: calc(var(--nav-height) + 25px); left: 50%; transform: translateX(-50%) translateY(100px); background: rgba(51, 51, 51, 0.85); backdrop-filter: blur(8px); color: #fff; padding: 0.4rem 1rem; border-radius: 50px; font-size: 0.75rem; font-weight: 600; transition: transform 0.3s ease, opacity 0.3s ease; z-index: 99; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+:root.light-theme .toast {
+    background: rgba(255, 255, 255, 0.95);
+    color: #1a1a1a;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    backdrop-filter: blur(12px);
+}
+
+footer { text-align: center; padding: 1.5rem 1rem 5rem; color: var(--text-secondary); font-size: 0.75rem; }
+
+.scroll-to-top { position: fixed; bottom: calc(var(--nav-height) + 20px); right: 20px; width: 50px; height: 50px; background: var(--primary); color: white; border: none; border-radius: 50%; font-size: 1.2rem; cursor: pointer; opacity: 0; transform: translateY(20px); transition: all 0.3s ease; z-index: 99; pointer-events: none; }
+.scroll-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.scroll-to-top:active { transform: scale(0.9); }
+
+:root.light-theme .scroll-to-top {
+    box-shadow: 0 4px 16px rgba(255, 140, 66, 0.25);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🌞 LIGHT THEME — compléments depuis Main3 (nav, cartes, modal, etc.)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. NAV LIQUID GLASS : icônes inactives visibles en clair ──────────── */
 :root.light-theme .main-nav {
-  background: rgba(255, 255, 255, 0.92);
-  border-top-color: rgba(0, 0, 0, 0.06);
+    background: rgba(255, 255, 255, 0.82);
+    border-color: rgba(0, 0, 0, 0.06);
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.06),
+        0 16px 40px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+:root.light-theme .main-nav .nav-item {
+    color: rgba(0, 0, 0, 0.35);
+}
+
+:root.light-theme .main-nav .nav-item.active {
+    color: var(--primary);
+}
+
+:root.light-theme .main-nav .nav-item.active::before {
+    background: radial-gradient(closest-side, rgba(255, 140, 66, 0.18), transparent 72%);
+}
+
+:root.light-theme .cart-badge,
+:root.light-theme .favorites-badge {
+    border-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+/* ── 2. SEARCH BAR : plus d'éclat en clair ─────────────────────────────── */
+:root.light-theme .search-bar {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.06);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+:root.light-theme .search-bar:focus-within {
+    background: #ffffff;
+    border-color: rgba(255, 140, 66, 0.5);
+    box-shadow:
+        0 0 0 3px rgba(255, 140, 66, 0.12),
+        0 4px 12px rgba(255, 140, 66, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 :root.light-theme .search-dropdown {
-  background: rgba(255, 255, 255, 0.95);
-  border-color: rgba(0, 0, 0, 0.08);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.96);
+    border-color: rgba(0, 0, 0, 0.06);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
 }
 
-:root.light-theme .search-dropdown-item:hover { background: rgba(0, 0, 0, 0.03); }
-
-/* ── Responsive ─────────────────────────────────────────────────────────── */
-@media (min-width: 768px) {
-  .header-fixed { left: max(10px, calc(50% - 380px)); right: max(10px, calc(50% - 380px)); }
-  .products-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+/* ── 3. PRODUCT CARDS : liquid glass blanc ─────────────────────────────── */
+:root.light-theme .product-card-info {
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    border-top: 1px solid rgba(255, 255, 255, 0.4);
 }
 
-@media (min-width: 1024px) {
-  .header-fixed { left: max(10px, calc(50% - 480px)); right: max(10px, calc(50% - 480px)); }
-  .products-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+:root.light-theme .product-card-name {
+    color: #1a1a1a;
+    text-shadow: none;
+}
+
+:root.light-theme .product-card-moq {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-color: rgba(0, 0, 0, 0.08);
+    color: rgba(26, 26, 26, 0.85);
+}
+
+:root.light-theme .product-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* ── 4. FAV ICON : visible et élégant en clair ─────────────────────────── */
+:root.light-theme .fav-icon {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 0, 0, 0.08);
+    color: #1a1a1a;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+:root.light-theme .fav-icon-svg {
+    stroke: #1a1a1a;
+}
+
+:root.light-theme .fav-icon:hover {
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* ── 5. BADGES : liquid glass orange ─────────────────────────────────────── */
+:root.light-theme .badge {
+    background: rgba(255, 140, 66, 0.85);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #ffffff;
+    text-shadow: none;
+}
+
+/* ── 6. SKELETON LOADING : tons clairs ─────────────────────────────────── */
+:root.light-theme .product-card,
+:root.light-theme .rec-card {
+    background: linear-gradient(90deg, #e8e6e3 25%, #f0eeeb 50%, #e8e6e3 75%);
+    background-size: 200% 100%;
+}
+
+:root.light-theme .skeleton-image,
+:root.light-theme .skeleton-line {
+    background: linear-gradient(90deg, #e8e6e3 25%, #f0eeeb 50%, #e8e6e3 75%);
+    background-size: 200% 100%;
+}
+
+/* ── 7. MODAL IMAGE SECTION : fond clair ─────────────────────────────── */
+:root.light-theme .modal-image-section {
+    background: #f0eeeb;
+}
+
+:root.light-theme .carousel-item::before {
+    opacity: 0.12;
+}
+
+:root.light-theme .back-arrow-btn {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 0, 0, 0.08);
+    color: #1a1a1a;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+:root.light-theme .back-arrow-btn:hover {
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+:root.light-theme .product-id-badge {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 0, 0, 0.08);
+    color: #6b6b6b;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+:root.light-theme .action-circle {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 0, 0, 0.08);
+    color: #1a1a1a;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+:root.light-theme .action-circle:hover {
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* ── 8. STICKY BOTTOM BAR : glassmorphism clair ───────────────────────── */
+:root.light-theme .sticky-bottom-bar {
+    background: rgba(255, 255, 255, 0.92);
+    border-top-color: rgba(0, 0, 0, 0.06);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04);
+}
+
+/* ── 9. REC CARDS : liquid glass blanc ──────────────────────────────────── */
+:root.light-theme .rec-card-overlay {
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    border-top: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+:root.light-theme .rec-card-name {
+    color: #1a1a1a;
+    text-shadow: none;
+}
+
+:root.light-theme .rec-card-moq {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-color: rgba(0, 0, 0, 0.08);
+    color: rgba(26, 26, 26, 0.85);
+}
+
+:root.light-theme .rec-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* ── 10. CATEGORY CARDS : liquid glass blanc ─────────────────────────────── */
+:root.light-theme .category-card-overlay {
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    border-top: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+:root.light-theme .category-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* ── 11. OVERLAYS MODAL / CART : plus légers en clair ──────────────────── */
+:root.light-theme .modal-overlay {
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(4px);
+}
+
+:root.light-theme .cart-overlay {
+    background: rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(4px);
+}
+
+:root.light-theme .filters-overlay {
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(2px);
+}
+
+/* ── 12. FORMS : focus clair et propre ─────────────────────────────────── */
+:root.light-theme .form-group input:focus,
+:root.light-theme .form-group textarea:focus {
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(255, 140, 66, 0.12);
+}
+
+/* ── 13. CART PANEL : ombre plus douce ───────────────────────────────────── */
+:root.light-theme .cart-panel {
+    box-shadow: -8px 0 40px rgba(0, 0, 0, 0.08);
+}
+
+/* ── 14. MODAL : ombre plus douce ──────────────────────────────────────── */
+:root.light-theme .modal {
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+}
+
+/* ── 15. FILTER CHIPS : plus de pep's en clair ─────────────────────────── */
+:root.light-theme .filter-chip.active {
+    box-shadow: 0 4px 12px rgba(255, 140, 66, 0.2);
+}
+
+/* ── 16. PRODUCT EDIT BTN : visible en clair ───────────────────────────── */
+:root.light-theme .product-edit-btn {
+    box-shadow: 0 2px 8px rgba(255, 140, 66, 0.3);
 }
