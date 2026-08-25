@@ -624,10 +624,9 @@ async function init() {
     precachePopularImages();
 
     const cats = [...new Set(state.products.map(p => removeEmojis(p.category)))];
-    let html = `<button class="filter-btn active" data-category="all">Tout voir (${state.products.length})</button>`;
+    let html = `<button class="filter-btn active" data-category="all">Tout</button>`;
     cats.forEach(c => {
-      const count = state.products.filter(p => p.category === c).length;
-      html += `<button class="filter-btn" data-category="${escapeHtml(c)}">${escapeHtml(c)} (${count})</button>`;
+      html += `<button class="filter-btn" data-category="${escapeHtml(c)}">${escapeHtml(c)}</button>`;
     });
     const filterBar = document.getElementById('filterBar');
     if (filterBar) filterBar.innerHTML = html;
