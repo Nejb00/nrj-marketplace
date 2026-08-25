@@ -245,6 +245,7 @@ function renderAccount() {
   const initials = name ? name.split(/\s+/).map(s => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() : '?';
   const greeting = name ? `Bonjour, ${escapeHtml(name.split(/\s+/)[0])}` : 'Bienvenue';
   const isAdmin = state.isAdminLoggedIn === true;
+  const isLightTheme = document.documentElement.classList.contains('light-theme');
 
   const favCount = state.favorites.length;
   const cartCount = state.cart.reduce((s, i) => s + Number(i.quantity), 0);
@@ -342,6 +343,16 @@ function renderAccount() {
     </div>
 
     <div class="account-section">
+      <div class="account-section-title">Préférences</div>
+      <div class="account-menu">
+        <button class="account-menu-item" data-account-action="toggle-theme">
+          <span>🎨 Thème</span>
+          <span class="account-menu-meta" id="accountThemeMeta">${isLightTheme ? '☀️ Clair' : '🌙 Sombre'}</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="account-section">
       <div class="account-section-title">Données</div>
       <div class="account-menu">
         <button class="account-menu-item danger" data-account-action="clear-all">
@@ -394,6 +405,16 @@ function handleAccountAction(action) {
       hideAccountView();
       document.getElementById('searchInput').focus();
       showSearchDropdown('');
+      break;
+    }
+    case 'toggle-theme': {
+      const currentTheme = document.documentElement.classList.contains('light-theme') ? 'light' : 'dark';
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      applyTheme(newTheme);
+      localStorage.setItem('nrj_theme', newTheme);
+      // Rafraîchit l'affichage de l'état du thème dans le menu
+      const themeMeta = document.getElementById('accountThemeMeta');
+      if (themeMeta) themeMeta.textContent = newTheme === 'light' ? '☀️ Clair' : '🌙 Sombre';
       break;
     }
     case 'go-new': {
@@ -597,33 +618,26 @@ document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('clic
 async function init() {
   try {
     await loadPersistedState();
+    await fetchProducts();
+    loadOrders();
 
-    // ✅ Isolé : si le chargement produits échoue, le reste de l'app (header,
-    // thème, nav...) continue quand même à s'initialiser correctement
-    try {
-      await fetchProducts();
-      loadOrders();
-      precachePopularImages();
+    precachePopularImages();
 
-      const cats = [...new Set(state.products.map(p => removeEmojis(p.category)))];
-      let html = `<button class="filter-btn active" data-category="all">Tout voir (${state.products.length})</button>`;
-      cats.forEach(c => {
-        const count = state.products.filter(p => p.category === c).length;
-        html += `<button class="filter-btn" data-category="${escapeHtml(c)}">${escapeHtml(c)} (${count})</button>`;
-      });
-      const filterBar = document.getElementById('filterBar');
-      if (filterBar) filterBar.innerHTML = html;
-    } catch (fetchErr) {
-      console.error('Erreur chargement produits:', fetchErr);
-      showToast('⚠️ Impossible de charger les produits. Vérifiez votre connexion.');
-    }
+    const cats = [...new Set(state.products.map(p => removeEmojis(p.category)))];
+    let html = `<button class="filter-btn active" data-category="all">Tout voir (${state.products.length})</button>`;
+    cats.forEach(c => {
+      const count = state.products.filter(p => p.category === c).length;
+      html += `<button class="filter-btn" data-category="${escapeHtml(c)}">${escapeHtml(c)} (${count})</button>`;
+    });
+    const filterBar = document.getElementById('filterBar');
+    if (filterBar) filterBar.innerHTML = html;
 
     initPlaceholderRotation();
     initVoiceSearch();
-    try { initSmartHeader(); } catch (e) { console.error('initSmartHeader:', e); }
-    try { initHeaderSearchCompact(); } catch (e) { console.error('initHeaderSearchCompact:', e); }
-    try { initHeaderActionsBubble(); } catch (e) { console.error('initHeaderActionsBubble:', e); }
-    try { initLogoLongPress(); } catch (e) { console.error('initLogoLongPress:', e); }
+    initSmartHeader();
+    initHeaderSearchCompact();
+    initHeaderActionsBubble();
+    initLogoLongPress();
     initThemeToggle();
     initOfflineIndicator();
     initServiceWorkerUpdates();
