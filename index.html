@@ -111,6 +111,11 @@
                     <div class="search-dropdown" id="searchDropdown" style="display:none;"></div>
                 </div>
             </div>
+
+            <!-- ✅ Filter bar dans le header (scroll-linked) -->
+            <div class="filter-bar" id="filterBar">
+                <button class="filter-btn active" data-category="all">Tout</button>
+            </div>
         </div>
 
         <!-- Boutons conservés fonctionnellement mais retirés du header visuel (à recaser dans "Mon FLUO") -->
@@ -126,9 +131,6 @@
                 <button class="filter-chip" data-filter="bestseller">🔥 Populaires</button>
             </div>
 
-            <div class="filter-bar" id="filterBar">
-                <button class="filter-btn active" data-category="all">Tout voir</button>
-            </div>
             <section class="products-section" aria-live="polite">
                 <div class="products-grid" id="productsGrid" role="list"></div>
             </section>
