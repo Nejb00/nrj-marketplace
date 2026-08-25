@@ -44,7 +44,6 @@ function applyTheme(theme) {
   }
 }
 
-// 🌟 Animation de compression "Premium" (Ease-out cubique)
 function initSmartHeader() {
   const fixed = document.getElementById('headerFixed');
   const spacer = document.getElementById('headerSpacer');
@@ -56,7 +55,6 @@ function initSmartHeader() {
 
   function updateHeader() {
     const rawProgress = Math.min(1, Math.max(0, window.scrollY / THRESHOLD));
-    // Courbe ease-out cubique : compresse vite au début, puis ralentit doucement
     const progress = 1 - Math.pow(1 - rawProgress, 3);
     
     fixed.style.setProperty('--sp', progress);
@@ -462,10 +460,9 @@ function handleAccountAction(action) {
 function initSwipeCategories() {
     let touchStartX = 0;
     let touchEndX = 0;
-    const minSwipeDistance = 60; // Seuil (en px) pour éviter les conflits avec le scroll ou le retour navigateur
+    const minSwipeDistance = 60;
 
     document.addEventListener('touchstart', e => {
-        // 🛡️ SÉCURITÉ : On ignore le swipe si l'utilisateur touche un carrousel d'images ou une modale
         if (e.target.closest('.carousel-scroll') || e.target.closest('.rec-carousel') || e.target.closest('.modal-overlay')) return;
         touchStartX = e.changedTouches[0].screenX;
     }, { passive: true });
@@ -477,8 +474,6 @@ function initSwipeCategories() {
 
     function handleSwipe() {
         const diff = touchStartX - touchEndX;
-        
-        // Si le geste est trop court, on ne fait rien
         if (Math.abs(diff) < minSwipeDistance) return; 
 
         const buttons = Array.from(document.querySelectorAll('.filter-btn'));
@@ -490,17 +485,12 @@ function initSwipeCategories() {
         let nextIndex = activeIndex;
 
         if (diff > 0) {
-            // Swipe vers la GAUCHE -> Catégorie suivante
             nextIndex = (activeIndex + 1) % buttons.length;
         } else {
-            // Swipe vers la DROITE -> Catégorie précédente
             nextIndex = (activeIndex - 1 + buttons.length) % buttons.length;
         }
 
-        // On simule un clic pour réutiliser toute la logique existante
         buttons[nextIndex].click();
-
-        // 🌟 Bonus UX : on centre automatiquement le bouton actif dans la barre de filtres
         buttons[nextIndex].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
     }
 }
