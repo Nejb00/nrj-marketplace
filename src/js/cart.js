@@ -144,7 +144,7 @@ export function openOrderModal() {
         return `• ${escapeHtml(p.name)} [ID: ${p.id}] x${Number(i.quantity)}`;
     }).filter(Boolean).join('<br>');
     document.getElementById('orderSummary').innerHTML = `${items}<br><br><strong>Total : ${formatPrice(tot)}</strong>`;
-    document.getElementById('customerName').value = localStorage.getItem('nrj_customer_name') || '';
+    document.getElementById('customerName').value = localStorage.getItem('fluo_customer_name') || ''; // ✅ MIS À JOUR
     document.getElementById('orderModalOverlay').classList.add('open');
     document.getElementById('cartPanel').classList.remove('open');
     document.getElementById('cartOverlay').classList.remove('open');
@@ -153,8 +153,8 @@ export function openOrderModal() {
 export async function sendWhatsAppOrder() {
     const name = document.getElementById('customerName').value.trim();
     if (!name) return alert('Entre ton nom');
-    localStorage.setItem('nrj_customer_name', name);
-    let msg = `Bonjour NRJ Marketplace International, je suis ${name}. Ma commande :\n`;
+    localStorage.setItem('fluo_customer_name', name); // ✅ MIS À JOUR
+    let msg = `Bonjour FLUO International, je suis ${name}. Ma commande :\n`; // ✅ MIS À JOUR
     let tot = 0;
 
     const snapshotItems = state.cart.map(i => {
