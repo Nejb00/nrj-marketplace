@@ -69,49 +69,13 @@ function initSmartHeader() {
   window.addEventListener('scroll', () => {
     if (!ticking) { requestAnimationFrame(updateHeader); ticking = true; }
   }, { passive: true });
-
-  // ✅ scrollToTopBtn géré ici aussi pour éviter un listener séparé
+  // ✅ CORRECTION: scrollToTopBtn géré ici aussi pour éviter un listener séparé
   window.addEventListener('scroll', () => {
     const btn = document.getElementById('scrollToTopBtn');
     if (btn) btn.classList.toggle('visible', window.scrollY > 300);
   }, { passive: true });
 
-  window.addEventListener('resize', () => { spacer.style.height = fixed.offsetHeight + 'px'; });
-
-  updateHeader(); // état initial (utile si on recharge la page déjà scrollée)
-}
-
-/* 🔥 Bulle loupe compacte → ouvre directement la page de recherche dédiée */
-function initHeaderSearchCompact() {
-  const searchCompact = document.getElementById('searchCompact');
-  if (!searchCompact) return;
-  searchCompact.addEventListener('click', () => {
-    if (!searchCompact.classList.contains('active')) return;
-    switchToSearchView('');
-  });
-}
-
-/* 🔥 Bulle actions (catalogue / profil / panier) → réutilise la logique
-   existante de la bottom nav en simulant un clic sur le nav-item correspondant */
-function initHeaderActionsBubble() {
-  const map = { catalogBtnHeader: 'categories', profileBtnHeader: 'profile', cartBtnHeader: 'cart' };
-  Object.entries(map).forEach(([btnId, navTarget]) => {
-    document.getElementById(btnId)?.addEventListener('click', () => {
-      document.querySelector(`.nav-item[data-nav="${navTarget}"]`)?.click();
-    });
-  });
-
-  // Miroir du badge panier de la bottom nav vers la bulle header
-  const navBadge = document.getElementById('navCartBadge');
-  const headerBadge = document.getElementById('headerCartBadge');
-  if (navBadge && headerBadge) {
-    const syncBadge = () => {
-      headerBadge.textContent = navBadge.textContent;
-      headerBadge.style.display = navBadge.style.display;
-    };
-    syncBadge();
-    new MutationObserver(syncBadge).observe(navBadge, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['style'] });
-  }
+  window.addEventListener('resize', () => { spacer.style.height = wrapper.offsetHeight + 'px'; });
 }
 
 function initServiceWorkerUpdates() {
