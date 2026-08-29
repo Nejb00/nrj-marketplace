@@ -23,7 +23,7 @@
     width: 100%; 
     aspect-ratio: 3 / 4; 
     max-height: 55vh; 
-    background: #111; 
+    background: var(--surface-light); /* modifié : #111 -> var(--surface-light) */
     overflow: hidden; 
     flex-shrink: 0; 
 }
@@ -264,7 +264,7 @@
 
 /* ✅ Squelette de chargement pour les recommandations */
 .rec-card { 
-    background: linear-gradient(90deg, #1a1a1a 25%, #252525 50%, #1a1a1a 75%); 
+    background: linear-gradient(90deg, var(--surface-light) 25%, var(--surface) 50%, var(--surface-light) 75%); /* modifié */
     background-size: 200% 100%; 
     animation: skeleton-loading 1.5s infinite; 
     border-radius: var(--radius); 
@@ -324,4 +324,4 @@
     border-radius: 50px; 
     padding: 0.1rem 0.4rem; 
     white-space: nowrap; 
-        }
+                       }
