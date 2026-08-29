@@ -139,7 +139,10 @@ export function renderCategories() {
     const cats = [...new Set(state.products.map(p => p.category).filter(Boolean))];
     if (!cats.length) { grid.innerHTML = '<p style="text-align:center;color:var(--text-secondary);">Aucune catégorie disponible.</p>'; return; }
     grid.innerHTML = cats.map(cat => {
-        const lp = [...state.products].reverse().find(p => p.category === cat && p.image);
+        // ✅ AMÉLIORATION : on choisit l'image du produit le plus populaire de la catégorie
+        const lp = [...state.products]
+            .filter(p => p.category === cat && p.image)
+            .sort((a, b) => (Number(b.popularity_score) || 0) - (Number(a.popularity_score) || 0))[0];
         return `<div class="category-card" data-category="${escapeHtml(cat)}">${lp ? thumbImg(lp.image, cat, 400, 300, 'category-card-bg') : ''}<div class="category-card-overlay"></div><div class="category-card-content"><div class="category-name">${escapeHtml(cat)}</div><div class="category-count">${state.products.filter(p => p.category === cat).length} article${state.products.filter(p => p.category === cat).length > 1 ? 's' : ''}</div></div></div>`;
     }).join('');
 }
