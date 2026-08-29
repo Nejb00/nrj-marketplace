@@ -6,6 +6,9 @@ import { trackPopularity, fetchProductDetails, trackView, getRelatedProducts } f
 import { toggleFavorite, addToCart } from './cart.js';
 import { signalView } from './reco.js';
 
+// ✅ AMÉLIORATION : cache des détails produits pour éviter les fetch répétés
+const productDetailsCache = new Map();
+
 const _modal = document.getElementById('productModal');
 const _rec = _modal ? _modal.querySelector('.recommendations') : null;
 const _src = _modal ? _modal.querySelector('.sourcing-section') : null;
@@ -57,7 +60,12 @@ export async function openProductModal(pid) {
     signalView(p);
     trackView(pid);
     
-    const fullProduct = await fetchProductDetails(pid);
+    // ✅ AMÉLIORATION : on vérifie d'abord le cache des détails
+    let fullProduct = productDetailsCache.get(pid);
+    if (!fullProduct) {
+        fullProduct = await fetchProductDetails(pid);
+        if (fullProduct) productDetailsCache.set(pid, fullProduct);
+    }
     if (fullProduct) p = fullProduct;
     
     const tailles = (p.tailles || '').split(',').map(s => s.trim()).filter(Boolean);
@@ -71,13 +79,24 @@ export async function openProductModal(pid) {
     document.getElementById('modalDesc').textContent = p.description || '';
     document.getElementById('modalProductIdBadge').textContent = `[ID: ${p.id}]`;
     document.getElementById('modalBadges').innerHTML = generateBadgesHTML(p, true);
-    const favSvg = document.getElementById('modalFavBtn').querySelector('.fav-icon-svg');
-    if (favSvg) favSvg.classList.toggle('faved', state.favorites.includes(p.id));
-    document.getElementById('modalFavBtn').onclick = () => toggleFavorite(p.id);
+    
+    // ✅ AMÉLIORATION : vérification que modalFavBtn existe
+    const modalFavBtn = document.getElementById('modalFavBtn');
+    if (modalFavBtn) {
+        const favSvg = modalFavBtn.querySelector('.fav-icon-svg');
+        if (favSvg) favSvg.classList.toggle('faved', state.favorites.includes(p.id));
+        modalFavBtn.onclick = () => toggleFavorite(p.id);
+    }
+    
     document.getElementById('modalShareBtn').onclick = () => {
         const url = BASE_URL + '?id=' + p.id;
-        const txt = `${formatPrice(uPrice)}\nMinimum d'achat : ${moq} pièce(s)\nDécouvre "${p.name}" sur FLUO ${url}`; // ✅ MIS À JOUR
-        navigator.share ? navigator.share({ title: p.name, text: txt, url }).catch(() => {}) : navigator.clipboard.writeText(txt).then(() => showToast('🔗 Copié !'));
+        const txt = `${formatPrice(uPrice)}\nMinimum d'achat : ${moq} pièce(s)\nDécouvre "${p.name}" sur FLUO ${url}`;
+        // ✅ AMÉLIORATION : vérification robuste de navigator.share
+        if (typeof navigator.share === 'function') {
+            navigator.share({ title: p.name, text: txt, url }).catch(() => {});
+        } else {
+            navigator.clipboard.writeText(txt).then(() => showToast('🔗 Copié !'));
+        }
     };
 
     const imgs = [p.image, p.image2, p.image3, p.image4, p.image5, p.image6].filter(u => u && u.trim());
@@ -120,7 +139,7 @@ export async function openProductModal(pid) {
     document.getElementById('directOrderStickyBtn').onclick = () => {
         if (tailles.length && !sT) return showToast('⚠️ Sélectionnez une taille');
         trackPopularity(p.id, 10);
-        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour FLUO, je souhaite commander : ${p.name} (ID: ${p.id}), Taille: ${sT || 'N/A'}, Quantité: ${moq}`)}`, '_blank'); // ✅ MIS À JOUR
+        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour FLUO, je souhaite commander : ${p.name} (ID: ${p.id}), Taille: ${sT || 'N/A'}, Quantité: ${moq}`)}`, '_blank');
     };
 
     document.getElementById('modalRecCarousel').innerHTML = Array(6).fill(
@@ -155,4 +174,4 @@ export function closeProductModal() {
     document.getElementById('stickyBottomBar').classList.remove('visible');
     state.modalOpen = false;
     history.replaceState({}, '', window.location.pathname);
-            }
+}
