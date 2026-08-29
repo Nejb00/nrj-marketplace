@@ -30,7 +30,7 @@
     overflow: hidden;
     aspect-ratio: 3 / 4;
     cursor: pointer;
-    background: linear-gradient(90deg, #1a1a1a 25%, #252525 50%, #1a1a1a 75%);
+    background: linear-gradient(90deg, var(--surface-light) 25%, var(--surface) 50%, var(--surface-light) 75%); /* modifié */
     background-size: 200% 100%;
     animation: skeleton-loading 1.5s infinite;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
@@ -151,7 +151,7 @@
 
 .skeleton-image { 
     height: 70%; 
-    background: linear-gradient(90deg, #1a1a1a 25%, #252525 50%, #1a1a1a 75%); 
+    background: linear-gradient(90deg, var(--surface-light) 25%, var(--surface) 50%, var(--surface-light) 75%); /* modifié */
     background-size: 200% 100%; 
     animation: skeleton-loading 1.5s infinite; 
 }
@@ -163,7 +163,7 @@
 .skeleton-line { 
     height: 10px; 
     border-radius: 5px; 
-    background: linear-gradient(90deg, #1a1a1a 25%, #252525 50%, #1a1a1a 75%); 
+    background: linear-gradient(90deg, var(--surface-light) 25%, var(--surface) 50%, var(--surface-light) 75%); /* modifié */
     background-size: 200% 100%; 
     animation: skeleton-loading 1.5s infinite; 
     margin-bottom: 0.45rem; 
@@ -306,4 +306,4 @@
     .fav-icon-svg.fav-pop { 
         animation: none !important; 
     }
-  }
+}
