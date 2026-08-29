@@ -1,7 +1,11 @@
 import { state } from './state.js';
 import { supabaseClient } from './config.js';
 import { escapeHtml, showToast } from './utils.js';
-import { insertProduct, deleteProductFromSupabase, fetchProducts } from './api.js';
+import { insertProduct, deleteProductFromSupabase, fetchProducts, fetchCategories } from './api.js';
+
+// Arbre des catégories chargé une fois, réutilisé pour les menus + les stats
+let categoriesTree = [];
+let categoriesById = new Map();
 
 export async function handleAdminLogin() {
   try {
@@ -14,6 +18,7 @@ export async function handleAdminLogin() {
     document.getElementById('adminPanel').classList.add('active');
     document.getElementById('loginPanel').style.display = 'none';
     document.getElementById('logoutBtn').classList.add('visible');
+    await loadCategoryDropdowns();
     renderAdminList();
     renderAdminStats();
     showToast('🔓 Connecté');
@@ -38,10 +43,73 @@ export async function checkAdminSession() {
     document.getElementById('adminPanel').classList.add('active');
     document.getElementById('loginPanel').style.display = 'none';
     document.getElementById('logoutBtn').classList.add('visible');
+    await loadCategoryDropdowns();
     renderAdminList();
     renderAdminStats();
   }
   return state.isAdminLoggedIn;
+}
+
+/**
+ * Charge les catégories depuis Supabase et remplit le menu top-niveau.
+ * À appeler une fois à la connexion (login ou session déjà active).
+ */
+export async function loadCategoryDropdowns() {
+  categoriesTree = await fetchCategories();
+  categoriesById = new Map(categoriesTree.map(c => [c.id, c]));
+
+  const topSelect = document.getElementById('adminCategory');
+  const subSelect = document.getElementById('adminSubcategory');
+  if (!topSelect || !subSelect) return;
+
+  const topCategories = categoriesTree
+    .filter(c => c.parent_id === null)
+    .sort((a, b) => a.display_order - b.display_order);
+
+  topSelect.innerHTML = '<option value="">— Choisir une catégorie —</option>' +
+    topCategories.map(c => `<option value="${c.id}">${c.icon ? c.icon + ' ' : ''}${escapeHtml(c.name)}</option>`).join('');
+
+  subSelect.innerHTML = '<option value="">— Choisir d\'abord une catégorie —</option>';
+  subSelect.disabled = true;
+
+  topSelect.addEventListener('change', () => populateSubcategoryDropdown(topSelect.value));
+}
+
+function populateSubcategoryDropdown(parentId) {
+  const subSelect = document.getElementById('adminSubcategory');
+  if (!subSelect) return;
+
+  if (!parentId) {
+    subSelect.innerHTML = '<option value="">— Choisir d\'abord une catégorie —</option>';
+    subSelect.disabled = true;
+    return;
+  }
+
+  const subs = categoriesTree
+    .filter(c => c.parent_id === parentId)
+    .sort((a, b) => a.display_order - b.display_order);
+
+  if (!subs.length) {
+    // Catégorie sans enfants : elle sert de sous-catégorie elle-même
+    subSelect.innerHTML = `<option value="${parentId}" selected>(catégorie directe, pas de sous-catégorie)</option>`;
+    subSelect.disabled = true;
+    return;
+  }
+
+  subSelect.disabled = false;
+  subSelect.innerHTML = '<option value="">— Choisir une sous-catégorie —</option>' +
+    subs.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+}
+
+// Résout un category_id vers un libellé lisible "Parent > Sous-catégorie"
+function categoryLabel(categoryId) {
+  const cat = categoriesById.get(categoryId);
+  if (!cat) return null;
+  if (cat.parent_id) {
+    const parent = categoriesById.get(cat.parent_id);
+    return parent ? `${parent.name} > ${cat.name}` : cat.name;
+  }
+  return cat.name;
 }
 
 export function renderAdminList() {
@@ -72,13 +140,14 @@ export function renderAdminStats() {
     .slice(0, 5);
   const maxPop = top5[0]?.popularity_score || 1;
 
-  // Top catégories
+  // Top catégories (basé sur category_id désormais, avec repli sur l'ancien texte si absent)
   const catScores = {};
   const catCounts = {};
   state.products.forEach((p) => {
-    if (!p.category) return;
-    catScores[p.category] = (catScores[p.category] || 0) + (p.popularity_score || 0);
-    catCounts[p.category] = (catCounts[p.category] || 0) + 1;
+    const label = p.category_id ? categoryLabel(p.category_id) : p.category;
+    if (!label) return;
+    catScores[label] = (catScores[label] || 0) + (p.popularity_score || 0);
+    catCounts[label] = (catCounts[label] || 0) + 1;
   });
   const topCats = Object.entries(catScores)
     .sort((a, b) => b[1] - a[1])
@@ -145,17 +214,24 @@ export function renderAdminStats() {
 
 export async function addProduct() {
   const name = document.getElementById('adminName').value.trim();
-  const category = document.getElementById('adminCategory').value.trim();
+  const topCategoryId = document.getElementById('adminCategory').value;
+  const subSelect = document.getElementById('adminSubcategory');
+  const subCategoryId = subSelect.value;
   const price = parseInt(document.getElementById('adminPrice').value);
 
-  if (!name || !category || isNaN(price)) {
-    showToast('❌ Remplis nom, catégorie et prix');
+  // La sous-catégorie fait foi si elle est renseignée, sinon on retombe sur la catégorie top
+  // (cas des catégories sans enfants, gérées par populateSubcategoryDropdown)
+  const categoryId = subCategoryId || topCategoryId;
+
+  if (!name || !categoryId || isNaN(price)) {
+    showToast('❌ Remplis nom, catégorie (+ sous-catégorie) et prix');
     return;
   }
 
   const product = {
     name,
-    category,
+    category_id: categoryId,
+    category: categoryLabel(categoryId)?.split(' > ').pop() || null, // pont temporaire pour l'affichage actuel du site
     price,
     image: document.getElementById('adminImage').value.trim(),
     image2: document.getElementById('adminImage2').value.trim(),
@@ -178,6 +254,7 @@ export async function addProduct() {
     // Reset du formulaire
     document.getElementById('adminName').value = '';
     document.getElementById('adminCategory').value = '';
+    populateSubcategoryDropdown('');
     document.getElementById('adminPrice').value = '';
     document.getElementById('adminImage').value = '';
     document.getElementById('adminImage2').value = '';
