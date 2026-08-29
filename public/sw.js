@@ -1,14 +1,22 @@
-const CACHE = 'nrj-v10';
-const SHELL = ['/', '/index.html', '/admin.html', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png', '/placeholder.svg'];
+// ═══════════════════════════════════════════════════════════════════════════
+//  NRJ Marketplace — Service Worker optimisé (v11)
+//  - Assets unifiés dans ASSETS_CACHE
+//  - Cache recherche limité à 20 entrées
+//  - admin.html exclu du SHELL (sécurité)
+// ═══════════════════════════════════════════════════════════════════════════
+
+const CACHE = 'nrj-v11';
+const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png', '/placeholder.svg'];
 const IMAGE_CACHE = 'nrj-images-v2';
-const ASSETS_CACHE = 'nrj-assets-v4';
-const SEARCH_CACHE = 'nrj-search-v1';
+const ASSETS_CACHE = 'nrj-assets-v5';
+const SEARCH_CACHE = 'nrj-search-v2';
 
 // ─── Limites de cache ─────────────────────────────────────
 const MAX_IMAGE_ENTRIES = 300;
 const MAX_IMAGE_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const MAX_IMAGE_CACHE_BYTES = 50 * 1024 * 1024;
 const TARGET_IMAGE_CACHE_BYTES = 40 * 1024 * 1024;
+const MAX_SEARCH_ENTRIES = 20;
 
 // ─── Helpers ──────────────────────────────────────────────
 
@@ -134,14 +142,24 @@ async function precacheImages(urls) {
 // ─── Install ──────────────────────────────────────────────
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open(CACHE).then(async (c) => {
-      c.addAll(SHELL).catch(() => {});
+    (async () => {
+      const cache = await caches.open(CACHE);
+      await cache.addAll(SHELL).catch(() => {});
+
       try {
+        const assetsCache = await caches.open(ASSETS_CACHE);
         const res = await fetch('/precache-manifest.json', { cache: 'no-store' });
-        const assets = await res.json();
-        await Promise.all(assets.map((url) => fetch(url).then((r) => r.ok && c.put(url, r.clone())).catch(() => {})));
+        if (res.ok) {
+          const assets = await res.json();
+          await Promise.all(assets.map(async (url) => {
+            try {
+              const r = await fetch(url);
+              if (r.ok) await assetsCache.put(url, r.clone());
+            } catch {}
+          }));
+        }
       } catch {}
-    })
+    })()
   );
   self.skipWaiting();
 });
@@ -149,9 +167,24 @@ self.addEventListener('install', (e) => {
 // ─── Activate ─────────────────────────────────────────────
 self.addEventListener('activate', (e) => {
   e.waitUntil(
-    caches.keys().then((keys) => Promise.all(
-      keys.filter((k) => k !== CACHE && k !== IMAGE_CACHE && k !== ASSETS_CACHE && k !== SEARCH_CACHE).map((k) => caches.delete(k))
-    ))
+    (async () => {
+      const cacheNames = await caches.keys();
+      await Promise.all(
+        cacheNames
+          .filter((k) => k !== CACHE && k !== IMAGE_CACHE && k !== ASSETS_CACHE && k !== SEARCH_CACHE)
+          .map((k) => caches.delete(k))
+      );
+
+      // ✅ Limite SEARCH_CACHE à MAX_SEARCH_ENTRIES
+      const searchCache = await caches.open(SEARCH_CACHE);
+      const searchKeys = await searchCache.keys();
+      if (searchKeys.length > MAX_SEARCH_ENTRIES) {
+        // Supprime les plus anciennes (elles ne sont pas horodatées précisément,
+        // on prend les premières dans l'ordre du cache, généralement les plus anciennes)
+        const toDelete = searchKeys.slice(0, searchKeys.length - MAX_SEARCH_ENTRIES);
+        await Promise.all(toDelete.map((req) => searchCache.delete(req)));
+      }
+    })()
   );
   self.clientsClaim();
 });
@@ -186,7 +219,6 @@ self.addEventListener('fetch', (e) => {
           const placeholder = await caches.match('/placeholder.svg');
           if (placeholder) return placeholder;
 
-          // ✅ Fallback data:URI si placeholder non disponible
           return new Response(
             'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGZpbGwgZmlsbD0iI0NFRkY2QiIvPjxwYXRoIGQ9Ik0yIDEyTDEyIDJMMjAgMTJMMjAgMjBMMTIgN0wyMCAxOFoiLz48L3N2Zz4=',
             { headers: { 'Content-Type': 'image/svg+xml' } }
@@ -210,7 +242,7 @@ self.addEventListener('fetch', (e) => {
         }).catch(() => cached);
 
         if (cached) {
-          fetchAndCache;
+          fetchAndCache; // en arrière-plan
           return cached;
         }
 
