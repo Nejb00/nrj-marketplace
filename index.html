@@ -18,7 +18,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="src/css/base.css">
     <link rel="stylesheet" href="src/css/main.css">
-    <link rel="stylesheet" href="src/css/catalogue.css">
     <link rel="stylesheet" href="src/css/product-card.css">
     <link rel="stylesheet" href="src/css/product-modal.css">
     <link rel="stylesheet" href="src/css/light-theme-patch.css">
@@ -30,7 +29,8 @@
     <header class="header-fixed" id="headerFixed">
         <div class="header-top-row">
             <!-- Bulle 1 : Logo -->
-            <div class="logo-bubble" id="logoBubble" onclick="location.href='/'" role="button" aria-label="Accueil FLUO">
+            <div class="logo-bubble" id="logoBubble" onclick="location.href='/'" role="button" ari
+a-label="Accueil FLUO">
                 <span class="logo-icon" id="logoIcon" aria-hidden="true"></span>
                 <span class="logo-brand-text" data-text="FLUO">FLUO</span>
             </div>
@@ -56,7 +56,8 @@
         </div>
 
         <!-- Bulle 3 : Recherche complète (disparaît au scroll) -->
-        <div class="search-bubble-full" id="searchBubbleFull">
+        <div class="search-bubb
+le-full" id="searchBubbleFull">
             <div class="search-bar-container" id="searchBarContainer">
                 <div class="search-bar" id="searchBar">
                     <svg class="search-bar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
@@ -91,7 +92,8 @@
                 <a href="#" class="section-link" id="viewAllCategories">Tout voir →</a>
             </div>
             <div class="categories-grid" id="categoriesGrid">
-                <div class="category-skeleton" style="--delay:0"><div class="skeleton-img"></div><div class="skeleton-text"></div></div>
+                <div class="category-skeleton" style="--delay:0"><div class="skeleton-img"></div><div class="skeleton-te
+xt"></div></div>
                 <div class="category-skeleton" style="--delay:0.1s"><div class="skeleton-img"></div><div class="skeleton-text"></div></div>
                 <div class="category-skeleton" style="--delay:0.2s"><div class="skeleton-img"></div><div class="skeleton-text"></div></div>
                 <div class="category-skeleton" style="--delay:0.3s"><div class="skeleton-img"></div><div class="skeleton-text"></div></div>
@@ -119,7 +121,8 @@
                 <a href="#" class="section-link" id="viewAllNew">Tout voir →</a>
             </div>
             <div class="products-grid" id="newGrid">
-                <div class="product-skeleton" style="--delay:0"><div class="skeleton-img"></div><div class="skeleton-text short"></div><div class="skeleton-text"></div></div>
+                <div class="product-skeleton" style="--delay:0"><div class="s
+keleton-img"></div><div class="skeleton-text short"></div><div class="skeleton-text"></div></div>
                 <div class="product-skeleton" style="--delay:0.1s"><div class="skeleton-img"></div><div class="skeleton-text short"></div><div class="skeleton-text"></div></div>
                 <div class="product-skeleton" style="--delay:0.2s"><div class="skeleton-img"></div><div class="skeleton-text short"></div><div class="skeleton-text"></div></div>
                 <div class="product-skeleton" style="--delay:0.3s"><div class="skeleton-img"></div><div class="skeleton-text short"></div><div class="skeleton-text"></div></div>
@@ -144,7 +147,8 @@
     <!-- ═══════════════════════════════════════════════════════════════════
          📦 PAGE CATALOGUE
          ═══════════════════════════════════════════════════════════════════ -->
-    <main id="cataloguePage" class="page">
+    <main id="cataloguePage" class="pa
+ge">
         <div class="catalogue-header">
             <button class="back-btn" id="catalogueBackBtn" aria-label="Retour">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
@@ -171,7 +175,8 @@
 
     <!-- ═══════════════════════════════════════════════════════════════════
          ❤️ PAGE FAVORIS
-         ═══════════════════════════════════════════════════════════════════ -->
+         ════════════════════════════════════════════════════════════
+═══════ -->
     <main id="favoritesPage" class="page">
         <div class="page-header">
             <button class="back-btn" id="favBackBtn" aria-label="Retour">
@@ -206,7 +211,8 @@
                 <div class="empty-icon">🛒</div>
                 <p class="empty-text">Votre panier est vide</p>
                 <p class="empty-sub">Ajoutez des produits pour commencer votre commande</p>
-                <button class="empty-cta" id="cartExploreBtn">Explorer</button>
+                <button class="empty-cta" id="cartExploreBtn">Explo
+rer</button>
             </div>
             <div class="cart-items" id="cartItems" style="display:none"></div>
         </div>
@@ -242,7 +248,8 @@
             </div>
             <form class="auth-form" id="loginForm">
                 <div class="form-group">
-                    <label for="loginEmail">Email</label>
+               
+     <label for="loginEmail">Email</label>
                     <input type="email" id="loginEmail" placeholder="votre@email.com" required>
                 </div>
                 <div class="form-group">
@@ -278,7 +285,8 @@
         <div class="profile-section" id="profileSection" style="display:none">
             <div class="profile-card">
                 <div class="profile-avatar" id="profileAvatar">👤</div>
-                <div class="profile-info">
+  
+              <div class="profile-info">
                     <h2 class="profile-name" id="profileName">Utilisateur</h2>
                     <p class="profile-email" id="profileEmail">email@example.com</p>
                 </div>
@@ -308,7 +316,8 @@
          📦 MODAL PRODUIT
          ═══════════════════════════════════════════════════════════════════ -->
     <div class="product-modal-overlay" id="productModalOverlay">
-        <div class="product-modal" id="productModal">
+        <div class="product-modal" id="productMod
+al">
             <button class="product-modal-close" id="productModalClose" aria-label="Fermer">×</button>
             <div class="product-modal-gallery" id="productModalGallery">
                 <div class="product-modal-img-wrapper">
@@ -333,7 +342,8 @@
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
                     </button>
                     <button class="product-modal-cart" id="productModalCart">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" str
+oke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
                         Ajouter au panier
                     </button>
                 </div>
@@ -364,7 +374,8 @@
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
             <span class="nav-label">Catalogue</span>
         </button>
-        <button class="nav-item" data-page="favorites" aria-label="Favoris">
+        <button class="nav-item" da
+ta-page="favorites" aria-label="Favoris">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
             <span class="nav-label">Favoris</span>
             <span class="nav-badge" id="navFavBadge" style="display:none">0</span>
@@ -391,11 +402,11 @@
     <!-- ═══════════════════════════════════════════════════════════════════
          📜 SCRIPTS
          ═══════════════════════════════════════════════════════════════════ -->
-    <script type="module" src="src/js/config.js"></script>
+   
+ <script type="module" src="src/js/config.js"></script>
     <script type="module" src="src/js/db.js"></script>
     <script type="module" src="src/js/api.js"></script>
     <script type="module" src="src/js/cart.js"></script>
-    <script type="module" src="src/js/favorites.js"></script>
     <script type="module" src="src/js/product-modal.js"></script>
     <script type="module" src="src/js/catalogue.js"></script>
     <script type="module" src="src/js/main.js"></script>
