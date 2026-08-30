@@ -103,6 +103,61 @@ body {
 .logo-bubble {
     display: flex;
     align-items: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    padding: 0.5rem 0.9rem 0.5rem 0.5rem;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.logo-icon {
+    position: relative;
+    overflow: hidden;
+    width: calc(34px - 8px * var(--sp, 0));
+    height: calc(34px - 8px * var(--sp, 0));
+    border-radius: 10px;
+    background: linear-gradient(135deg, #ffb066, var(--primary) 55%, #f97316);
+    box-shadow: 0 4px 14px rgba(255, 140, 66, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    opacity: calc(1 - var(--sp, 0));
+}
+.logo-icon::before {
+    content: '';
+    position: relative;
+    z-index: 1;
+    width: 62%;
+    height: 62%;
+    background: #fff;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.88a3 3 0 10-4.242-4.244 3 3 0 004.242 4.243z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.88a3 3 0 10-4.242-4.244 3 3 0 004.242 4.243z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.logo-icon::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 15%;
+    right: 15%;
+    height: 42%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.45), transparent);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.logo-brand-text {
+    font-weight: 800;
+    font-size: calc(1.05rem - 0.25rem * var(--sp, 0));
+    letter-spacing: -0.5px;
+    color: var(--text);
+    white-space: nowrap;
+    line-height: 1;
+}
+
+.logo-bubble {
+    display: flex;
+    align-items: center;
     gap: 0.6rem;
     border-radius: 999px;
     padding: 0.45rem 1rem 0.45rem 0.45rem;
