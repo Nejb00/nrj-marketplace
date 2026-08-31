@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - main-merged
       - master
   workflow_dispatch:
 
