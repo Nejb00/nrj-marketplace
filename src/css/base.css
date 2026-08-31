@@ -74,6 +74,9 @@ body {
 .actions-bubble,
 .search-bubble-compact,
 .search-bubble-full .search-bar-container {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
     background: rgba(16, 16, 20, 0.72);
     backdrop-filter: blur(24px) saturate(160%);
     -webkit-backdrop-filter: blur(24px) saturate(160%);
@@ -81,16 +84,55 @@ body {
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 
+/* ── Liquid glass iOS (même langage que les product-cards) ─────────────── */
 :root.light-theme .logo-bubble,
 :root.light-theme .actions-bubble,
 :root.light-theme .search-bubble-compact,
 :root.light-theme .search-bubble-full .search-bar-container {
-    background: rgba(255, 255, 255, 0.88);
-    border-color: rgba(0, 0, 0, 0.06);
+    background:
+        linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.22) 0%,
+            rgba(255, 255, 255, 0.10) 100%
+        );
+    backdrop-filter: blur(22px) saturate(170%);
+    -webkit-backdrop-filter: blur(22px) saturate(170%);
+    border: 1px solid rgba(255, 255, 255, 0.62);
+    border-top-color: rgba(255, 255, 255, 0.9);
     box-shadow:
-        0 4px 20px rgba(0, 0, 0, 0.06),
-        0 16px 40px rgba(0, 0, 0, 0.08),
-        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        0 10px 28px rgba(0, 0, 0, 0.10),
+        0 1px 2px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.92),
+        inset 0 -8px 16px rgba(255, 255, 255, 0.12);
+}
+
+/* Reflet spéculaire (même technique que .product-card-info) */
+:root.light-theme .logo-bubble::before,
+:root.light-theme .actions-bubble::before,
+:root.light-theme .search-bubble-compact::before,
+:root.light-theme .search-bubble-full .search-bar-container::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(
+        125deg,
+        rgba(255, 255, 255, 0.38) 0%,
+        rgba(255, 255, 255, 0.10) 28%,
+        transparent 48%,
+        transparent 72%,
+        rgba(255, 255, 255, 0.08) 100%
+    );
+    z-index: 0;
+}
+
+:root.light-theme .logo-bubble > *,
+:root.light-theme .actions-bubble > *,
+:root.light-theme .search-bubble-compact > *,
+:root.light-theme .search-bubble-full .search-bar-container > * {
+    position: relative;
+    z-index: 1;
 }
 
 /* +8px pour compenser le décollement des bulles */
