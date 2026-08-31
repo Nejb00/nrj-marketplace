@@ -118,7 +118,8 @@ export function calculateSearchScore(query, product) {
     const queryWords = normalizedQuery.split(' ').filter(w => w.length > 0);
 
     const name = normalizeString(product.name || '');
-    const category = normalizeString(product.category || '');
+    // Nom de catégorie via jointure client (category_name) — plus de products.category texte
+    const category = normalizeString(product.category_name || '');
     const description = normalizeString(product.description || '');
     const tailles = normalizeString(product.tailles || '');
     const couleurs = normalizeString(product.couleurs || '');
@@ -183,10 +184,6 @@ export function highlightMatch(text, query) {
     return escapedText.replace(regex, '<span class="highlight">$1</span>');
 }
 
-// ============================================================
-//  OPTIMISATION IMAGES — CACHE PWA ROBUSTE
-// ============================================================
-
 const SIZE_TIERS = [100, 150, 200, 300, 400, 500, 600, 800, 1200];
 
 function normalizeSize(size) {
@@ -224,35 +221,24 @@ export function thumbImg(url, alt = '', w = 300, h = 400, cls = '') {
     return `<img${clsAttr} src="${escapeHtml(thumbUrl)}" data-full="${escapeHtml(url)}" data-ts="${Date.now()}" alt="${escapeHtml(alt)}" loading="lazy" referrerpolicy="no-referrer" decoding="async" onload="this.classList.add('loaded')" onerror="${onerr}" width="${w}" height="${h}">`;
 }
 
-/**
- * Genere une balise <img> pour le carousel de la modale produit.
- * CORRECTION: ajout de data-ts pour le watchdog + loading eager
- */
 export function modalImg(url, alt = '') {
     if (!url) return '';
 
     const thumbUrl = thumb(url, 800, 1200, 'contain');
     const onerr = `this.onerror=function(){this.onerror=null;this.src=this.dataset.full;};`;
 
-    // ✅ CORRECTION: data-ts ajoute pour que le watchdog surveille cette image
     return `<img src="${escapeHtml(thumbUrl)}" data-full="${escapeHtml(url)}" data-ts="${Date.now()}" alt="${escapeHtml(alt)}" loading="eager" decoding="async" onload="this.classList.add('loaded')" onerror="${onerr}" style="width:100%;height:100%;object-fit:contain;">`;
 }
 
-/**
- * Genere une balise <img> pour le dropdown de recherche.
- * CORRECTION: ajout de data-ts pour le watchdog
- */
 export function searchThumbImg(url, alt = '') {
     if (!url) return '';
 
     const thumbUrl = thumb(url, 100, 100, 'cover');
     const onerr = `this.onerror=function(){this.onerror=null;this.src=this.dataset.full;};`;
 
-    // ✅ CORRECTION: data-ts ajoute pour que le watchdog surveille cette image
     return `<img src="${escapeHtml(thumbUrl)}" data-full="${escapeHtml(url)}" data-ts="${Date.now()}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async" onerror="${onerr}" style="width:100%;height:100%;object-fit:cover;">`;
 }
 
-// WATCHDOG : une image qui rame plus de 6 s bascule sur l'URL d'origine
 let _watchdogStarted = false;
 function startImgWatchdog() {
     if (_watchdogStarted) return;
