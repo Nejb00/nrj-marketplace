@@ -6,7 +6,6 @@ import { trackPopularity, fetchProductDetails, trackView, getRelatedProducts } f
 import { toggleFavorite, addToCart } from './cart.js';
 import { signalView } from './reco.js';
 
-// ✅ AMÉLIORATION : cache des détails produits pour éviter les fetch répétés
 const productDetailsCache = new Map();
 
 const _modal = document.getElementById('productModal');
@@ -33,10 +32,10 @@ async function buildRecommendations(currentProduct) {
     const needed = TARGET - related.length;
     if (needed > 0) {
         const sameCat = state.products.filter(
-            pr => pr.category === currentProduct.category && pr.id !== currentProduct.id
+            pr => pr.category_id && pr.category_id === currentProduct.category_id && pr.id !== currentProduct.id
         );
         const others = state.products
-            .filter(pr => pr.category !== currentProduct.category && pr.id !== currentProduct.id && !relatedIds.includes(pr.id))
+            .filter(pr => pr.category_id !== currentProduct.category_id && pr.id !== currentProduct.id && !relatedIds.includes(pr.id))
             .sort((a, b) => (Number(b.popularity_score) || 0) - (Number(a.popularity_score) || 0));
         const fallback = [...sameCat, ...others];
         for (const f of fallback) {
@@ -60,7 +59,6 @@ export async function openProductModal(pid) {
     signalView(p);
     trackView(pid);
     
-    // ✅ AMÉLIORATION : on vérifie d'abord le cache des détails
     let fullProduct = productDetailsCache.get(pid);
     if (!fullProduct) {
         fullProduct = await fetchProductDetails(pid);
@@ -80,7 +78,6 @@ export async function openProductModal(pid) {
     document.getElementById('modalProductIdBadge').textContent = `[ID: ${p.id}]`;
     document.getElementById('modalBadges').innerHTML = generateBadgesHTML(p, true);
     
-    // ✅ AMÉLIORATION : vérification que modalFavBtn existe
     const modalFavBtn = document.getElementById('modalFavBtn');
     if (modalFavBtn) {
         const favSvg = modalFavBtn.querySelector('.fav-icon-svg');
@@ -91,7 +88,6 @@ export async function openProductModal(pid) {
     document.getElementById('modalShareBtn').onclick = () => {
         const url = BASE_URL + '?id=' + p.id;
         const txt = `${formatPrice(uPrice)}\nMinimum d'achat : ${moq} pièce(s)\nDécouvre "${p.name}" sur FLUO ${url}`;
-        // ✅ AMÉLIORATION : vérification robuste de navigator.share
         if (typeof navigator.share === 'function') {
             navigator.share({ title: p.name, text: txt, url }).catch(() => {});
         } else {
