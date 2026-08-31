@@ -77,11 +77,27 @@ export async function fetchCategories() {
                 .order('display_order', { ascending: true })
         );
         if (error) throw error;
-        return data || [];
+        const list = data || [];
+        state.categories = list;
+        state.categoriesById = new Map(list.map(c => [c.id, c]));
+        return list;
     } catch (err) {
         console.error('Erreur fetch categories:', err);
+        state.categories = [];
+        state.categoriesById = new Map();
         return [];
     }
+}
+
+/** Enrichit chaque produit avec category_name (jointure client via category_id). */
+function enrichProductsWithCategoryNames(products) {
+    return (products || []).map(p => {
+        const cat = p.category_id ? state.categoriesById.get(p.category_id) : null;
+        return {
+            ...p,
+            category_name: cat ? cat.name : null
+        };
+    });
 }
 
 export async function fetchProducts(forceRefresh = false) {
@@ -94,21 +110,21 @@ export async function fetchProducts(forceRefresh = false) {
     try {
         const cached = await db.getProductsCache();
         if (cached && (now - cached.timestamp) < CACHE_DURATION) {
-            state.products = cached.products;
-            productCache = { data: cached.products, timestamp: now };
+            state.products = enrichProductsWithCategoryNames(cached.products);
+            productCache = { data: state.products, timestamp: now };
             return;
         }
 
         const { data, error } = await fetchWithTimeout(
             supabaseClient
                 .from('products')
-                .select('id, name, price, category, category_id, image, popularity_score, created_at, moq, tailles, couleurs')
+                .select('id, name, price, category_id, image, popularity_score, created_at, moq, tailles, couleurs')
                 .order('created_at', { ascending: false })
                 .limit(500)
         );
         
         if (error) throw error;
-        state.products = data || [];
+        state.products = enrichProductsWithCategoryNames(data || []);
         productCache = { data: state.products, timestamp: now };
         
         try {
@@ -133,8 +149,8 @@ export async function fetchProducts(forceRefresh = false) {
         try {
             const cached = await db.getProductsCache();
             if (cached && cached.products.length) {
-                state.products = cached.products;
-                productCache = { data: cached.products, timestamp: now };
+                state.products = enrichProductsWithCategoryNames(cached.products);
+                productCache = { data: state.products, timestamp: now };
                 showToast('📴 Hors ligne — catalogue mémorisé (IndexedDB)');
                 return;
             }
@@ -143,8 +159,8 @@ export async function fetchProducts(forceRefresh = false) {
         let saved = null;
         try { saved = JSON.parse(localStorage.getItem(PRODUCTS_CACHE_KEY) || 'null'); } catch {}
         if (saved && Array.isArray(saved.data) && saved.data.length) {
-            state.products = saved.data;
-            productCache = { data: saved.data, timestamp: now };
+            state.products = enrichProductsWithCategoryNames(saved.data);
+            productCache = { data: state.products, timestamp: now };
             showToast('📴 Hors ligne — catalogue mémorisé');
             return;
         }
@@ -172,6 +188,10 @@ export async function fetchProductDetails(productId) {
                 .single()
         );
         if (error) throw error;
+        if (data) {
+            const cat = data.category_id ? state.categoriesById.get(data.category_id) : null;
+            data.category_name = cat ? cat.name : null;
+        }
         return data;
     } catch (err) {
         console.error('Erreur fetch product details:', err);

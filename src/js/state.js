@@ -7,9 +7,14 @@ import db from './db.js';
 
 export const state = {
     products: [],
+    /** Arbre complet des catégories (table categories) */
+    categories: [],
+    /** Map id -> catégorie pour lookup O(1) */
+    categoriesById: new Map(),
     cart: [],
     favorites: [],
     orders: [],
+    /** Filtre courant : 'all' | 'favorites' | category_id (uuid) */
     currentFilter: 'all',
     currentQuickFilter: 'all',
     searchQuery: '',
@@ -117,4 +122,37 @@ export function trackViewedItem(name) {
     state.rotationList = state.rotationList.filter((item) => item !== formattedName);
     state.rotationList.unshift(formattedName);
     if (state.rotationList.length > 8) state.rotationList.pop();
+}
+
+/** Libellé affichable d'une catégorie ("Parent > Sous" si sous-cat). */
+export function getCategoryLabel(categoryId) {
+    if (!categoryId) return null;
+    const cat = state.categoriesById.get(categoryId);
+    if (!cat) return null;
+    if (cat.parent_id) {
+        const parent = state.categoriesById.get(cat.parent_id);
+        return parent ? `${parent.name} > ${cat.name}` : cat.name;
+    }
+    return cat.name;
+}
+
+/** Nom court (feuille) pour tags / recherche. */
+export function getCategoryName(categoryId) {
+    if (!categoryId) return null;
+    const cat = state.categoriesById.get(categoryId);
+    return cat ? cat.name : null;
+}
+
+/**
+ * Ids de la catégorie sélectionnée + toutes ses sous-catégories.
+ * Si on filtre sur un top-niveau, on inclut ses enfants.
+ * Si on filtre sur une sous-cat, on ne prend que celle-ci.
+ */
+export function getCategoryFilterIds(categoryId) {
+    if (!categoryId || categoryId === 'all') return null;
+    const ids = [categoryId];
+    state.categories.forEach(c => {
+        if (c.parent_id === categoryId) ids.push(c.id);
+    });
+    return ids;
 }
