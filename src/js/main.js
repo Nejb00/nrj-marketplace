@@ -459,32 +459,72 @@ function handleAccountAction(action) {
 // 🌟 NAVIGATION PAR SWIPE ENTRE LES CATÉGORIES
 function initSwipeCategories() {
     let touchStartX = 0;
-    let touchEndX = 0;
+    let touchStartY = 0;
+    let skipSwipe = false;
     const minSwipeDistance = 60;
+    const blockedSelector = [
+        '.filter-bar',
+        '.quick-filters',
+        '.carousel-scroll',
+        '.rec-carousel',
+        '.modal-overlay',
+        '.search-bar',
+        '.search-dropdown',
+        '.main-nav',
+        'input',
+        'textarea',
+        'select',
+        '[data-no-catalog-swipe]'
+    ].join(',');
+
+    function isHorizontallyScrollable(el) {
+        let node = el instanceof Element ? el : el?.parentElement;
+        while (node && node !== document.body && node !== document.documentElement) {
+            if (node instanceof HTMLElement) {
+                const style = window.getComputedStyle(node);
+                const overflowX = style.overflowX;
+                if ((overflowX === 'auto' || overflowX === 'scroll') && node.scrollWidth > node.clientWidth + 2) {
+                    return true;
+                }
+            }
+            node = node.parentElement;
+        }
+        return false;
+    }
 
     document.addEventListener('touchstart', e => {
-        if (e.target.closest('.carousel-scroll') || e.target.closest('.rec-carousel') || e.target.closest('.modal-overlay')) return;
+        const target = e.target;
+        skipSwipe = !!(target.closest && (target.closest(blockedSelector) || isHorizontallyScrollable(target)));
         touchStartX = e.changedTouches[0].screenX;
+        touchStartY = e.changedTouches[0].screenY;
     }, { passive: true });
 
     document.addEventListener('touchend', e => {
-        touchEndX = e.changedTouches[0].screenX;
-        handleSwipe();
+        if (skipSwipe) {
+            skipSwipe = false;
+            return;
+        }
+        const touchEndX = e.changedTouches[0].screenX;
+        const touchEndY = e.changedTouches[0].screenY;
+        handleSwipe(touchEndX, touchEndY);
     }, { passive: true });
 
-    function handleSwipe() {
-        const diff = touchStartX - touchEndX;
-        if (Math.abs(diff) < minSwipeDistance) return; 
+    function handleSwipe(touchEndX, touchEndY) {
+        const diffX = touchStartX - touchEndX;
+        const diffY = touchStartY - touchEndY;
+        if (Math.abs(diffX) < minSwipeDistance) return;
+        // Scroll vertical de la page : ne pas changer de catalogue
+        if (Math.abs(diffY) > Math.abs(diffX)) return;
 
         const buttons = Array.from(document.querySelectorAll('.filter-btn'));
         if (buttons.length === 0) return;
-        
+
         const activeIndex = buttons.findIndex(btn => btn.classList.contains('active'));
         if (activeIndex === -1) return;
 
         let nextIndex = activeIndex;
 
-        if (diff > 0) {
+        if (diffX > 0) {
             nextIndex = (activeIndex + 1) % buttons.length;
         } else {
             nextIndex = (activeIndex - 1 + buttons.length) % buttons.length;
