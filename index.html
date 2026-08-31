@@ -230,7 +230,18 @@
             <h2 style="text-align:center;margin-bottom:1rem;">✏️ Modifier le produit</h2>
             <input type="hidden" id="editProductId">
             <div class="form-group"><label>Nom</label><input type="text" id="editName"></div>
-            <div class="form-group"><label>Catégorie</label><input type="text" id="editCategory"></div>
+            <div class="form-group">
+                <label>Catégorie</label>
+                <select id="editCategory">
+                    <option value="">— Choisir une catégorie —</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Sous-catégorie</label>
+                <select id="editSubcategory" disabled>
+                    <option value="">— Choisir d'abord une catégorie —</option>
+                </select>
+            </div>
             <div class="form-group"><label>Prix (FCFA)</label><input type="number" id="editPrice"></div>
             <div class="form-group"><label>Image 1 (URL)</label><input type="url" id="editImage"></div>
             <div class="form-group"><label>Image 2 (URL)</label><input type="url" id="editImage2"></div>
@@ -354,4 +365,4 @@
 
     <script type="module" src="/src/js/main.js"></script>
 </body>
-                    </html>
+</html>

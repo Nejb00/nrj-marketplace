@@ -1,4 +1,4 @@
-import { state } from './state.js';
+import { state, getCategoryFilterIds, getCategoryName } from './state.js';
 import { escapeHtml, formatPrice, debounce, calculateSearchScore, generateBadgesHTML, thumbImg } from './utils.js';
 
 export function switchToSearchView(query) {
@@ -23,15 +23,22 @@ export function switchFromSearchView() {
 }
 
 function initializeSearchFilters() {
-  const categories = [...new Set(state.products.map(p => p.category).filter(Boolean))].sort();
+  // Filtres catégories : top-niveau issus de la table categories
+  const topCats = state.categories
+    .filter(c => c.parent_id === null)
+    .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+
   const sizes = [...new Set(state.products.flatMap(p => (p.tailles || '').split(',').map(s => s.trim()).filter(Boolean)))].sort();
   const colors = [...new Set(state.products.flatMap(p => (p.couleurs || '').split(',').map(s => s.trim()).filter(Boolean)))].sort();
 
-  document.getElementById('categoryFilters').innerHTML = categories.map(cat => {
-    const count = state.products.filter(p => p.category === cat).length;
+  document.getElementById('categoryFilters').innerHTML = topCats.map(cat => {
+    const ids = getCategoryFilterIds(cat.id);
+    const idSet = new Set(ids || [cat.id]);
+    const count = state.products.filter(p => p.category_id && idSet.has(p.category_id)).length;
+    const label = (cat.icon ? cat.icon + ' ' : '') + cat.name;
     return `<label class="filter-checkbox">
-      <input type="checkbox" value="${escapeHtml(cat)}" data-filter="category">
-      <span>${escapeHtml(cat)}</span>
+      <input type="checkbox" value="${escapeHtml(cat.id)}" data-filter="category">
+      <span>${escapeHtml(label)}</span>
       <span class="count">${count}</span>
     </label>`;
   }).join('');
@@ -160,7 +167,17 @@ function performAdvancedSearch() {
 
   if (sv.filters.priceMin !== null) results = results.filter(p => p.price >= sv.filters.priceMin);
   if (sv.filters.priceMax !== null) results = results.filter(p => p.price <= sv.filters.priceMax);
-  if (sv.filters.categories.length > 0) results = results.filter(p => sv.filters.categories.includes(p.category));
+
+  // Filtres catégorie : valeurs = category_id top-niveau ; inclure sous-catégories
+  if (sv.filters.categories.length > 0) {
+    const allowed = new Set();
+    sv.filters.categories.forEach(catId => {
+      const ids = getCategoryFilterIds(catId);
+      (ids || [catId]).forEach(id => allowed.add(id));
+    });
+    results = results.filter(p => p.category_id && allowed.has(p.category_id));
+  }
+
   if (sv.filters.sizes.length > 0) {
     results = results.filter(p => {
       const ps = (p.tailles || '').split(',').map(s => s.trim());

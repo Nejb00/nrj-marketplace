@@ -1,4 +1,4 @@
-import { state } from './state.js';
+import { state, getCategoryName } from './state.js';
 import { SEARCH_HISTORY_KEY, MAX_HISTORY_ITEMS, MAX_PLACEHOLDER_SUGGESTIONS } from './config.js';
 import { escapeHtml, formatPrice, fuzzySearch, highlightMatch, getCategoryIcon, showToast, searchThumbImg } from './utils.js';
 import { openProductModal } from './product-modal.js';
@@ -6,7 +6,6 @@ import { switchToSearchView } from './search-view.js';
 
 const TRENDING_COUNT = 10;
 
-// Suggestions intelligentes pour le placeholder
 export function buildSmartRotationList() {
   const max = MAX_PLACEHOLDER_SUGGESTIONS;
   const suggestions = [];
@@ -29,15 +28,10 @@ export function buildSmartRotationList() {
       .forEach(p => { if (suggestions.length < max) push(p.name); });
   }
 
-  if (state.products.length) {
-    const catScores = {};
-    state.products.forEach(p => {
-      if (!p.category) return;
-      catScores[p.category] = (catScores[p.category] || 0) + (p.popularity_score || 0);
-    });
-    Object.entries(catScores)
-      .sort((a, b) => b[1] - a[1])
-      .forEach(([cat]) => { if (suggestions.length < max) push(cat); });
+  // Suggestions à partir des noms de catégories (table categories)
+  if (state.categories.length) {
+    const topCats = state.categories.filter(c => c.parent_id === null);
+    topCats.forEach(c => { if (suggestions.length < max) push(c.name); });
   }
 
   if (suggestions.length > 0) {
@@ -53,7 +47,6 @@ export function initPlaceholderRotation() {
   const input = document.getElementById('searchInput');
   if (!input) return;
 
-  // Enregistre la recherche dans l'historique quand on valide avec Entree
   if (!historyCaptureBound) {
     historyCaptureBound = true;
     input.addEventListener('keydown', (e) => {
@@ -104,7 +97,6 @@ window.clearSearchHistory = function() {
   showSearchDropdown('');
 };
 
-// Panneau de decouverte (historique + tendances)
 function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -131,16 +123,13 @@ function buildTrendingPool() {
       .sort((a, b) => (b.popularity_score || 0) - (a.popularity_score || 0))
       .slice(0, 20)
       .forEach(p => push(p.name));
+  }
 
-    const catScores = {};
-    state.products.forEach(p => {
-      if (!p.category) return;
-      catScores[p.category] = (catScores[p.category] || 0) + (p.popularity_score || 0);
-    });
-    Object.entries(catScores)
-      .sort((a, b) => b[1] - a[1])
+  if (state.categories.length) {
+    state.categories
+      .filter(c => c.parent_id === null)
       .slice(0, 8)
-      .forEach(([c]) => push(c));
+      .forEach(c => push(c.name));
   }
   return pool;
 }
@@ -274,10 +263,10 @@ export function showSearchDropdown(query) {
     let html = `<div class="dropdown-header"><span>${results.length} resultat${results.length > 1 ? 's' : ''}</span></div>`;
 
     results.forEach(p => {
-      // Utilise searchThumbImg() pour passer par wsrv.nl et etre cachable par le SW
-      const img = p.image ? searchThumbImg(p.image, p.name) : `<span>${getCategoryIcon(p.category)}</span>`;
-      const categoryIcon = getCategoryIcon(p.category);
-      html += `<div class="dropdown-item" data-product-id="${p.id}"><div class="dropdown-item-img">${img}</div><div class="dropdown-item-info"><div class="dropdown-item-name">${highlightMatch(p.name, query)}</div><div class="dropdown-item-category">${categoryIcon} ${escapeHtml(p.category || 'Sans categorie')}</div></div><div class="dropdown-item-price">${formatPrice(p.price)}</div></div>`;
+      const catName = p.category_name || getCategoryName(p.category_id) || 'Sans categorie';
+      const img = p.image ? searchThumbImg(p.image, p.name) : `<span>${getCategoryIcon(catName)}</span>`;
+      const categoryIcon = getCategoryIcon(catName);
+      html += `<div class="dropdown-item" data-product-id="${p.id}"><div class="dropdown-item-img">${img}</div><div class="dropdown-item-info"><div class="dropdown-item-name">${highlightMatch(p.name, query)}</div><div class="dropdown-item-category">${categoryIcon} ${escapeHtml(catName)}</div></div><div class="dropdown-item-price">${formatPrice(p.price)}</div></div>`;
     });
 
     dropdown.innerHTML = html;
