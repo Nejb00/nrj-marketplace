@@ -1,11 +1,20 @@
 /* ─── NAVIGATION « LIQUID GLASS » ───────────────────────────────────────── */
+/*
+ * NAV MASQUÉE — on la garde dans le DOM / CSS pour pouvoir la réactiver facilement.
+ * Pour la réafficher : retirer la règle `.main-nav { display: none !important; }`
+ * et rétablir le padding-bottom du body si besoin.
+ */
+.main-nav {
+  display: none !important;
+}
+
 .main-nav {
   position: fixed;
   left: 10px;
   right: 10px;
   bottom: 8px;
   height: var(--nav-height);
-  display: flex;
+  /* display: flex;  ← désactivé tant que la nav est masquée */
   align-items: stretch;
   justify-content: space-evenly;
   z-index: 150;
@@ -100,8 +109,8 @@
 }
 .favorites-badge { background: var(--favorites); color: #fff; }
 
-/* La nav flotte désormais : on réserve l'espace en bas de page */
-body { padding-bottom: calc(var(--nav-height) + 18px); }
+/* Nav masquée → plus besoin de réserver l'espace en bas */
+body { padding-bottom: 1.5rem; }
 
 .categories-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
 @media (min-width: 768px) { .categories-grid { grid-template-columns: repeat(3, 1fr); } }
@@ -121,7 +130,7 @@ body { padding-bottom: calc(var(--nav-height) + 18px); }
   display: none;
   flex-direction: column;
   min-height: 100vh;
-  padding-bottom: calc(var(--nav-height) + 2rem);
+  padding-bottom: 2rem;
 }
 
 .account-back {
