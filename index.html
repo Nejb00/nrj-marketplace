@@ -31,8 +31,7 @@
     <script>
       if ('serviceWorker' in navigator && location.hostname !== 'localhost') {
         addEventListener('load', () => {
-          navigator.serviceWorker.register('
-/sw.js').then(() => {
+          navigator.serviceWorker.register('/sw.js').then(() => {
             if (navigator.storage && navigator.storage.persist) {
               navigator.storage.persist();
             }
@@ -73,8 +72,7 @@
                 </button>
 
                 <div class="actions-bubble" id="actionsBubble">
-                    <button class="action-btn" id="catalogBtnHeader" aria-label="Catégories" title=
-"Catégories">
+                    <button class="action-btn" id="catalogBtnHeader" aria-label="Catégories" title="Catégories">
                         <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 5h18v2H3V5zm0 6h18v2H3v-2zm0 6h18v2H3v-2z"></path></svg>
                     </button>
                     <button class="action-btn" id="profileBtnHeader" aria-label="Mon FLUO" title="Mon FLUO">
@@ -94,8 +92,7 @@
                         <input type="text" id="searchInput" placeholder="Rechercher un produit..." autocomplete="off" aria-label="Rechercher un produit">
                         <button class="search-voice" id="searchVoice" aria-label="Recherche vocale" title="Recherche vocale">
                             <svg viewBox="0 0 24 24" width="18" height="18">
-                                <path fill="currentColor" d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6
-c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.7 5.1 5 5.1s5-2.1 5-5.1h-1.7z"></path>
+                                <path fill="currentColor" d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.7 5.1 5 5.1s5-2.1 5-5.1h-1.7z"></path>
                             </svg>
                         </button>
                         <div class="search-loader" id="searchLoader" style="display:none;"></div>
@@ -130,8 +127,7 @@ c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.7 5.1 5 
         </div>
 
         <div id="categoriesView" style="display: none; padding: 1rem 1rem 2rem;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bott
-om: 1.5rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
                 <h2 style="font-size: 1.5rem; font-weight: 800;">Nos Catégories</h2>
                 <button id="backToHomeBtn" style="background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 1rem; border-radius: 50px; cursor: pointer; font-weight: 600;">← Retour</button>
             </div>
@@ -150,8 +146,7 @@ om: 1.5rem;">
                 <span class="cart-badge" id="navCartBadge" style="display:none;">0</span>
             </a>
             <a href="#" class="nav-item favorites-accent" data-nav="favorites" aria-label="Favoris">
-                <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.5
-4L12 21.35z"></path></svg>
+                <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg>
                 <span class="favorites-badge" id="navFavBadge" style="display:none;">0</span>
             </a>
             <a href="#" class="nav-item" data-nav="profile" aria-label="Mon FLUO">
@@ -184,8 +179,7 @@ om: 1.5rem;">
             <div class="product-detail-moq" id="modalMoq"></div>
             <div class="product-detail-total" id="modalTotal"></div>
             <div class="product-detail-desc" id="modalDesc"></div>
-            <div class="option-group" id="modalTailleGroup" style="di
-splay:none;"><label>Taille</label><div class="option-buttons" id="modalTailleOptions"></div></div>
+            <div class="option-group" id="modalTailleGroup" style="display:none;"><label>Taille</label><div class="option-buttons" id="modalTailleOptions"></div></div>
             <div class="option-group" id="modalCouleurGroup" style="display:none;"><label>Couleur</label><div class="option-buttons" id="modalCouleurOptions"></div></div>
         </div>
         <div class="recommendations">
@@ -214,8 +208,7 @@ splay:none;"><label>Taille</label><div class="option-buttons" id="modalTailleOpt
     <div class="cart-overlay" id="cartOverlay"></div>
     <div class="cart-panel" id="cartPanel">
         <div class="cart-header">Mon Panier <button class="cart-close" id="cartCloseBtn" aria-label="Fermer le panier">&times;</button></div>
-        <di
-v class="cart-items" id="cartItems"></div>
+        <div class="cart-items" id="cartItems"></div>
         <div class="cart-footer">
             <div class="cart-total"><span>Total</span><span id="cartTotal">XAF 0</span></div>
             <button class="checkout-btn" id="checkoutBtn" disabled aria-label="Commander via WhatsApp">Commander via WhatsApp</button>
@@ -241,8 +234,7 @@ v class="cart-items" id="cartItems"></div>
             <div class="form-group"><label>Prix (FCFA)</label><input type="number" id="editPrice"></div>
             <div class="form-group"><label>Image 1 (URL)</label><input type="url" id="editImage"></div>
             <div class="form-group"><label>Image 2 (URL)</label><input type="url" id="editImage2"></div>
-            <div class="form-group"><label>Image 3 (URL)</label><input type="url" id="editImage3
-"></div>
+            <div class="form-group"><label>Image 3 (URL)</label><input type="url" id="editImage3"></div>
             <div class="form-group"><label>Image 4 (URL)</label><input type="url" id="editImage4"></div>
             <div class="form-group"><label>Image 5 (URL)</label><input type="url" id="editImage5"></div>
             <div class="form-group"><label>Image 6 (URL)</label><input type="url" id="editImage6"></div>
@@ -270,8 +262,7 @@ v class="cart-items" id="cartItems"></div>
             </button>
             <div class="search-view-input-wrapper">
                 <span class="search-icon">🔍</span>
-                <input type="text" id="searchViewInput
-" placeholder="Rechercher..." autocomplete="off">
+                <input type="text" id="searchViewInput" placeholder="Rechercher..." autocomplete="off">
                 <button class="search-clear" id="searchViewClear" aria-label="Effacer" style="display:none;">✕</button>
             </div>
         </div>
@@ -308,8 +299,7 @@ v class="cart-items" id="cartItems"></div>
                 </div>
                 <div class="filter-section">
                     <h4>🎨 Couleurs</h4>
-               
-     <div class="filter-checkboxes" id="colorFilters"></div>
+                    <div class="filter-checkboxes" id="colorFilters"></div>
                 </div>
             </aside>
 
@@ -338,8 +328,7 @@ v class="cart-items" id="cartItems"></div>
                             </button>
                             <button class="view-btn" data-view="list" aria-label="Vue liste">
                                 <svg viewBox="0 0 24 24" width="18" height="18">
-                                    <path fill="currentColor" d="M4 14h4v-4H4v4zm0 5h4v
--4H4v4zM4 9h4V5H4v4zm5 5h12v-4H9v4zm0 5h12v-4H9v4zM9 5v4h12V5H9z"></path>
+                                    <path fill="currentColor" d="M4 14h4v-4H4v4zm0 5h4v-4H4v4zM4 9h4V5H4v4zm5 5h12v-4H9v4zm0 5h12v-4H9v4zM9 5v4h12V5H9z"></path>
                                 </svg>
                             </button>
                         </div>
