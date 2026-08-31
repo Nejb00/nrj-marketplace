@@ -1,8 +1,8 @@
 import '../css/main.css';
-import { state, trackViewedItem, loadPersistedState, saveCart, saveFavorites, saveOrders } from './state.js';
+import { state, trackViewedItem, loadPersistedState, saveCart, saveFavorites, saveOrders, getCategoryName } from './state.js';
 import { supabaseClient } from './config.js';
-import { escapeHtml, removeEmojis, formatPrice, showToast, thumb } from './utils.js';
-import { fetchProducts } from './api.js';
+import { escapeHtml, formatPrice, showToast, thumb } from './utils.js';
+import { fetchProducts, fetchCategories } from './api.js';
 import { refreshCatalogue, applyFilter, switchView } from './catalogue.js';
 import { addToCart, changeQty, removeCartItem, refreshCartDisplay, toggleFavorite, updateNavFavBadge, updateNavCartBadge, openOrderModal, sendWhatsAppOrder, loadOrders } from './cart.js';
 import { openProductModal, closeProductModal } from './product-modal.js';
@@ -513,7 +513,6 @@ function initSwipeCategories() {
         const diffX = touchStartX - touchEndX;
         const diffY = touchStartY - touchEndY;
         if (Math.abs(diffX) < minSwipeDistance) return;
-        // Scroll vertical de la page : ne pas changer de catalogue
         if (Math.abs(diffY) > Math.abs(diffX)) return;
 
         const buttons = Array.from(document.querySelectorAll('.filter-btn'));
@@ -595,7 +594,14 @@ document.addEventListener('click', e => {
   const incBtn = e.target.closest('[data-action="cart-increase"]'); if (incBtn) { changeQty(parseInt(incBtn.dataset.index), 1); return; }
   const decBtn = e.target.closest('[data-action="cart-decrease"]'); if (decBtn) { changeQty(parseInt(decBtn.dataset.index), -1); return; }
   const recCard = e.target.closest('.rec-card'); if (recCard) { openProductModal(parseInt(recCard.dataset.productId)); return; }
-  const catCard = e.target.closest('.category-card'); if (catCard) { trackViewedItem(catCard.dataset.category); applyFilter(catCard.dataset.category); switchView('home'); return; }
+  const catCard = e.target.closest('.category-card'); if (catCard) {
+    const catId = catCard.dataset.category;
+    const label = getCategoryName(catId) || catId;
+    trackViewedItem(label);
+    applyFilter(catId);
+    switchView('home');
+    return;
+  }
   const acctAction = e.target.closest('[data-account-action]');
   if (acctAction) { handleAccountAction(acctAction.dataset.accountAction); return; }
   const card = e.target.closest('.product-card');
@@ -680,21 +686,29 @@ document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('clic
   }
 }));
 
+function buildFilterBar() {
+  const topCats = state.categories
+    .filter(c => c.parent_id === null)
+    .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+
+  let html = `<button class="filter-btn active" data-category="all">Tout</button>`;
+  topCats.forEach(c => {
+    const label = (c.icon ? c.icon + ' ' : '') + c.name;
+    html += `<button class="filter-btn" data-category="${escapeHtml(c.id)}">${escapeHtml(label)}</button>`;
+  });
+  const filterBar = document.getElementById('filterBar');
+  if (filterBar) filterBar.innerHTML = html;
+}
+
 async function init() {
   try {
     await loadPersistedState();
+    await fetchCategories();
     await fetchProducts();
     loadOrders();
 
     precachePopularImages();
-
-    const cats = [...new Set(state.products.map(p => removeEmojis(p.category)))];
-    let html = `<button class="filter-btn active" data-category="all">Tout</button>`;
-    cats.forEach(c => {
-      html += `<button class="filter-btn" data-category="${escapeHtml(c)}">${escapeHtml(c)}</button>`;
-    });
-    const filterBar = document.getElementById('filterBar');
-    if (filterBar) filterBar.innerHTML = html;
+    buildFilterBar();
 
     initPlaceholderRotation();
     initVoiceSearch();
@@ -706,7 +720,7 @@ async function init() {
     initOfflineIndicator();
     initServiceWorkerUpdates();
     
-    initSwipeCategories(); // 🌟 INITIALISATION DU SWIPE CATÉGORIES
+    initSwipeCategories();
     
     refreshCatalogue();
     refreshCartDisplay();
