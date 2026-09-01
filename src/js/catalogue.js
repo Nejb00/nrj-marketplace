@@ -350,6 +350,18 @@ function getCategoriesPopularProducts() {
     return list.slice(0, 60);
 }
 
+function revealCardImages(root) {
+    if (!root) return;
+    root.querySelectorAll('img').forEach(img => {
+        const mark = () => img.classList.add('loaded');
+        if (img.complete && img.naturalWidth > 0) mark();
+        else {
+            img.addEventListener('load', mark, { once: true });
+            img.addEventListener('error', mark, { once: true });
+        }
+    });
+}
+
 function renderCategoriesPopularProducts() {
     const grid = document.getElementById('categoriesPopularGrid');
     if (!grid) return;
@@ -358,7 +370,11 @@ function renderCategoriesPopularProducts() {
         grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-secondary);padding:2rem;">Aucun article</div>';
         return;
     }
-    grid.innerHTML = products.map(p => `<div class="product-card" data-product-id="${p.id}" role="listitem">${renderProductCardHTML(p)}</div>`).join('');
+    // Classe "visible" obligatoire : sinon opacity:0 (animation catalogue)
+    grid.innerHTML = products.map(p =>
+        `<div class="product-card visible" data-product-id="${p.id}" role="listitem">${renderProductCardHTML(p)}</div>`
+    ).join('');
+    revealCardImages(grid);
 }
 
 async function loadCategoriesPanel(parentKey) {
