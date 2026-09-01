@@ -119,7 +119,8 @@ def generate_notion_content():
         try:
             with open(filepath, 'r', encoding='utf-8', errors='ignore') as file_obj:
                 content = file_obj.read()
-        except Exception as e:
+  
+      except Exception as e:
             content = f"// Erreur de lecture : {e}"
 
         char_count = len(content)
