@@ -141,29 +141,62 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   📂 PAGE NOS CATÉGORIES — header sticky + colonnes scroll indépendantes
+   📂 PAGE NOS CATÉGORIES
+   - Header (search + chips) reste fixed / sticky, ne scrolle pas
+   - Bloc sidebar + bulles : hauteur = 100vh - header, scroll interne seul
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* Empêche le scroll de page quand on est sur Catégories */
+/* Bloque le scroll de page : seul le panneau / sidebar scrollent */
+html.categories-page-open,
 body.categories-page-open {
-    overflow: hidden;
+    overflow: hidden !important;
     height: 100%;
     overscroll-behavior: none;
+    touch-action: manipulation;
+}
+
+body.categories-page-open #catalogueWrapper {
+    overflow: hidden;
+    height: 100dvh;
+    max-height: 100dvh;
 }
 
 body.categories-page-open #catalogueWrapper > footer {
     display: none;
 }
 
-/* Sur la page catégories : header toujours déployé (search + chips visibles) */
+/* Header search + chips : toujours déployé et figé au-dessus */
 body.categories-page-open .header-fixed {
+    position: fixed !important;
+    top: 8px;
+    left: 10px;
+    right: 10px;
+    z-index: 100;
     --sp: 0 !important;
 }
 
+body.categories-page-open .search-bubble-full {
+    max-height: 68px !important;
+    opacity: 1 !important;
+}
+
 body.categories-page-open .search-bubble-compact {
+    width: 0 !important;
+    opacity: 0 !important;
     pointer-events: none !important;
 }
 
+body.categories-page-open .logo-icon {
+    width: 34px !important;
+    height: 34px !important;
+    opacity: 1 !important;
+}
+
+body.categories-page-open .logo-brand-text {
+    font-size: 1.05rem !important;
+}
+
+/* Vue catégories : hauteur restante sous le header, pas de scroll page */
 #categoriesView {
     --categories-header-h: 160px;
     display: none;
@@ -174,19 +207,20 @@ body.categories-page-open .search-bubble-compact {
     padding: 0;
     margin: 0;
     background: var(--bg);
+    box-sizing: border-box;
 }
 
 #categoriesView.is-open {
-    display: flex;
+    display: flex !important;
 }
 
 .categories-page-header {
-    flex-shrink: 0;
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
-    padding: 0.65rem 1rem 0.55rem;
+    padding: 0.55rem 1rem 0.5rem;
     background: var(--bg);
     border-bottom: 1px solid var(--border);
     z-index: 2;
@@ -217,7 +251,7 @@ body.categories-page-open .search-bubble-compact {
     border-color: var(--primary);
 }
 
-/* Bloc sidebar + bulles : hauteur fixe, scroll uniquement à l'intérieur */
+/* Colonnes : hauteur fixe du layout, overflow indépendant */
 .categories-layout {
     flex: 1 1 auto;
     display: flex;
@@ -225,15 +259,15 @@ body.categories-page-open .search-bubble-compact {
     min-height: 0;
     height: 100%;
     overflow: hidden;
-    border-top: none;
 }
 
 .categories-sidebar {
     width: 32%;
     max-width: 160px;
     min-width: 108px;
-    flex-shrink: 0;
+    flex: 0 0 auto;
     height: 100%;
+    max-height: 100%;
     background: var(--surface);
     border-right: 1px solid var(--border);
     overflow-x: hidden;
@@ -241,8 +275,6 @@ body.categories-page-open .search-bubble-compact {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
     position: relative;
-    top: auto;
-    align-self: stretch;
 }
 
 .categories-sidebar-item {
@@ -276,9 +308,10 @@ body.categories-page-open .search-bubble-compact {
 }
 
 .categories-panel {
-    flex: 1;
+    flex: 1 1 auto;
     min-width: 0;
     height: 100%;
+    max-height: 100%;
     padding: 0.85rem 0.65rem 1.5rem;
     overflow-x: hidden;
     overflow-y: auto;
