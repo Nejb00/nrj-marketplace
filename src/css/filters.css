@@ -57,3 +57,309 @@
 .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 .filter-btn:hover:not(.active) { border-color: #555; }
 .filter-count { font-size: 0.7rem; opacity: 0.7; margin-left: 0.2rem; }
+
+/* ── Bulles sous-catégories (enfants d'un top-niveau) ─────────────────────── */
+.subcategory-bubbles {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.35rem 1rem 0.15rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    background: var(--bg);
+}
+
+.subcategory-bubbles::-webkit-scrollbar { display: none; }
+
+.subcategory-bubbles[hidden] {
+    display: none !important;
+}
+
+.subcat-bubble {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    width: 4.5rem;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--text-secondary);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.subcat-bubble-img {
+    width: 3.6rem;
+    height: 3.6rem;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.subcat-bubble-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.subcat-bubble-fallback {
+    font-size: 1.35rem;
+    line-height: 1;
+}
+
+.subcat-bubble-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-align: center;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
+.subcat-bubble.active .subcat-bubble-img {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 35%, transparent);
+    transform: scale(1.04);
+}
+
+.subcat-bubble.active .subcat-bubble-label {
+    color: var(--primary);
+}
+
+.subcat-bubble:hover .subcat-bubble-img {
+    border-color: var(--primary);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   📂 PAGE NOS CATÉGORIES
+   - Header (search + chips) reste fixed / sticky, ne scrolle pas
+   - Bloc sidebar + bulles : hauteur = 100vh - header, scroll interne seul
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Bloque le scroll de page : seul le panneau / sidebar scrollent */
+html.categories-page-open,
+body.categories-page-open {
+    overflow: hidden !important;
+    height: 100%;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+}
+
+body.categories-page-open #catalogueWrapper {
+    overflow: hidden;
+    height: 100dvh;
+    max-height: 100dvh;
+}
+
+body.categories-page-open #catalogueWrapper > footer {
+    display: none;
+}
+
+/* Header search + chips : toujours déployé et figé au-dessus */
+body.categories-page-open .header-fixed {
+    position: fixed !important;
+    top: 8px;
+    left: 10px;
+    right: 10px;
+    z-index: 100;
+    --sp: 0 !important;
+}
+
+body.categories-page-open .search-bubble-full {
+    max-height: 68px !important;
+    opacity: 1 !important;
+}
+
+body.categories-page-open .search-bubble-compact {
+    width: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+body.categories-page-open .logo-icon {
+    width: 34px !important;
+    height: 34px !important;
+    opacity: 1 !important;
+}
+
+body.categories-page-open .logo-brand-text {
+    font-size: 1.05rem !important;
+}
+
+/* Vue catégories : hauteur restante sous le header, pas de scroll page */
+#categoriesView {
+    --categories-header-h: 160px;
+    display: none;
+    flex-direction: column;
+    height: calc(100dvh - var(--categories-header-h));
+    max-height: calc(100dvh - var(--categories-header-h));
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+    background: var(--bg);
+    box-sizing: border-box;
+}
+
+#categoriesView.is-open {
+    display: flex !important;
+}
+
+.categories-page-header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.55rem 1rem 0.5rem;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    z-index: 2;
+}
+
+.categories-page-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0;
+}
+
+.categories-back-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.4rem 0.9rem;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.82rem;
+    font-family: inherit;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.categories-back-btn:hover {
+    background: var(--surface-light);
+    border-color: var(--primary);
+}
+
+/* Colonnes : hauteur fixe du layout, overflow indépendant */
+.categories-layout {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: stretch;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+.categories-sidebar {
+    width: 32%;
+    max-width: 160px;
+    min-width: 108px;
+    flex: 0 0 auto;
+    height: 100%;
+    max-height: 100%;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    position: relative;
+}
+
+.categories-sidebar-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.85rem 0.65rem 0.85rem 0.75rem;
+    border: none;
+    border-left: 3px solid transparent;
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.25;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.categories-sidebar-item:hover {
+    background: var(--surface-light);
+    color: var(--text);
+}
+
+.categories-sidebar-item.active {
+    background: var(--bg);
+    color: var(--primary);
+    border-left-color: var(--primary);
+    font-weight: 700;
+}
+
+.categories-panel {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100%;
+    max-height: 100%;
+    padding: 0.85rem 0.65rem 1.5rem;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    background: var(--bg);
+}
+
+.categories-panel-status {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 2.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+.categories-bubbles-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.85rem 0.4rem;
+    justify-items: center;
+}
+
+@media (min-width: 420px) {
+    .categories-bubbles-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (min-width: 640px) {
+    .categories-sidebar {
+        max-width: 200px;
+        width: 28%;
+    }
+    .categories-sidebar-item {
+        font-size: 0.85rem;
+        padding: 0.95rem 0.85rem;
+    }
+    .categories-bubbles-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 1rem 0.5rem;
+    }
+    .categories-panel {
+        padding: 1rem 1.25rem 2rem;
+    }
+}
+
+@media (min-width: 900px) {
+    .categories-bubbles-grid {
+        grid-template-columns: repeat(6, 1fr);
+    }
+}

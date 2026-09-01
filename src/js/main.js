@@ -3,7 +3,7 @@ import { state, trackViewedItem, loadPersistedState, saveCart, saveFavorites, sa
 import { supabaseClient } from './config.js';
 import { escapeHtml, formatPrice, showToast, thumb } from './utils.js';
 import { fetchProducts, fetchCategories } from './api.js';
-import { refreshCatalogue, applyFilter, switchView } from './catalogue.js';
+import { refreshCatalogue, applyFilter, switchView, clearSubcategorySelection } from './catalogue.js';
 import { addToCart, changeQty, removeCartItem, refreshCartDisplay, toggleFavorite, updateNavFavBadge, updateNavCartBadge, openOrderModal, sendWhatsAppOrder, loadOrders } from './cart.js';
 import { openProductModal, closeProductModal } from './product-modal.js';
 import { openEditModal, updateProduct } from './product-edit.js';
@@ -386,6 +386,7 @@ function handleAccountAction(action) {
     case 'go-favs': {
       hideAccountView();
       state.currentFilter = 'favorites';
+      clearSubcategorySelection();
       refreshCatalogue();
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
       document.querySelector('.nav-item[data-nav="favorites"]')?.classList.add('active');
@@ -465,6 +466,7 @@ function initSwipeCategories() {
     const blockedSelector = [
         '.filter-bar',
         '.quick-filters',
+        '.subcategory-bubbles',
         '.carousel-scroll',
         '.rec-carousel',
         '.modal-overlay',
@@ -587,6 +589,12 @@ document.addEventListener('click', function(e) {
 
 document.addEventListener('click', e => {
   const fb = e.target.closest('.filter-btn'); if (fb) { applyFilter(fb.dataset.category); return; }
+  const subBubble = e.target.closest('.subcat-bubble');
+  if (subBubble) {
+    const subId = subBubble.dataset.subcategoryId;
+    if (subId) applyFilter(subId);
+    return;
+  }
   const addBtn = e.target.closest('[data-action="add-to-cart"]'); if (addBtn) { e.stopPropagation(); addToCart(parseInt(addBtn.dataset.id), '', '', addBtn); return; }
   const favBtn = e.target.closest('[data-action="toggle-favorite"]'); if (favBtn) { e.stopPropagation(); toggleFavorite(parseInt(favBtn.dataset.id)); return; }
   const editBtn = e.target.closest('[data-action="edit-product"]'); if (editBtn) { e.stopPropagation(); openEditModal(parseInt(editBtn.dataset.id)); return; }
@@ -649,6 +657,7 @@ document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('clic
     state.currentFilter = 'all';
     state.currentQuickFilter = 'all';
     state.searchQuery = '';
+    clearSubcategorySelection();
     const inp = document.getElementById('searchInput');
     if (inp) { 
       inp.value = ''; 
@@ -678,6 +687,7 @@ document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('clic
     if (document.getElementById('accountView').style.display === 'flex') hideAccountView();
     switchView('home');
     state.currentFilter = 'favorites';
+    clearSubcategorySelection();
     refreshCatalogue();
     window.scrollTo(0, 0);
   }

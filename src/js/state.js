@@ -11,6 +11,14 @@ export const state = {
     categories: [],
     /** Map id -> catégorie pour lookup O(1) */
     categoriesById: new Map(),
+    /** Sous-catégories + image latest pour le top actuellement sélectionné */
+    subcategoryBubbles: [],
+    /** Cache RPC : parent_id -> rows */
+    subcategoryBubblesCache: {},
+    /** Top-niveau actuellement affiché pour les bulles (null si all/favorites) */
+    activeTopCategoryId: null,
+    /** Sous-catégorie sélectionnée via bulle (null = tout le top) */
+    activeSubcategoryId: null,
     cart: [],
     favorites: [],
     orders: [],
@@ -155,4 +163,11 @@ export function getCategoryFilterIds(categoryId) {
         if (c.parent_id === categoryId) ids.push(c.id);
     });
     return ids;
+}
+
+/** True si l'id est une catégorie top-niveau (parent_id null). */
+export function isTopLevelCategory(categoryId) {
+    if (!categoryId || categoryId === 'all' || categoryId === 'favorites') return false;
+    const cat = state.categoriesById.get(categoryId);
+    return !!(cat && cat.parent_id === null);
 }

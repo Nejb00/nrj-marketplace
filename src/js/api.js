@@ -89,6 +89,99 @@ export async function fetchCategories() {
     }
 }
 
+/**
+ * Sous-catégories d'un parent + image du produit le plus récent (RPC).
+ * Un seul appel réseau par parent_id (cache dans state.subcategoryBubblesCache).
+ */
+export async function fetchSubcategoriesWithLatestImage(parentId, forceRefresh = false) {
+    if (!parentId) return [];
+
+    if (!forceRefresh && state.subcategoryBubblesCache[parentId]) {
+        return state.subcategoryBubblesCache[parentId];
+    }
+
+    try {
+        const { data, error } = await fetchWithTimeout(
+            supabaseClient.rpc('get_subcategories_with_latest_image', {
+                p_parent_id: parentId
+            })
+        );
+        if (error) throw error;
+        const rows = data || [];
+        state.subcategoryBubblesCache[parentId] = rows;
+        return rows;
+    } catch (err) {
+        console.error('Erreur RPC get_subcategories_with_latest_image:', err);
+        return state.subcategoryBubblesCache[parentId] || [];
+    }
+}
+
+/** Catégories parentes triées par popularité (RPC backend). */
+export async function fetchParentCategoriesRanked() {
+    try {
+        const { data, error } = await fetchWithTimeout(
+            supabaseClient.rpc('get_parent_categories_ranked')
+        );
+        if (error) throw error;
+        return data || [];
+    } catch (err) {
+        console.error('Erreur RPC get_parent_categories_ranked:', err);
+        return state.categories.filter(c => c.parent_id === null);
+    }
+}
+
+/** Top sous-catégories populaires (onglet En vedette). */
+export async function fetchTopPopularSubcategories(limit = 20) {
+    try {
+        const { data, error } = await fetchWithTimeout(
+            supabaseClient.rpc('get_top_popular_subcategories', { lim: limit })
+        );
+        if (error) {
+            // Compat : certains backends utilisent p_limit
+            const retry = await fetchWithTimeout(
+                supabaseClient.rpc('get_top_popular_subcategories', { p_limit: limit })
+            );
+            if (retry.error) throw retry.error;
+            return retry.data || [];
+        }
+        return data || [];
+    } catch (err) {
+        console.error('Erreur RPC get_top_popular_subcategories:', err);
+        try {
+            const { data, error } = await fetchWithTimeout(
+                supabaseClient.rpc('get_top_popular_subcategories', { limit })
+            );
+            if (!error) return data || [];
+        } catch {}
+        return [];
+    }
+}
+
+/** Sous-catégories d'un parent, triées par popularité. */
+export async function fetchSubcategoriesByPopularity(parentId) {
+    if (!parentId) return [];
+    try {
+        const { data, error } = await fetchWithTimeout(
+            supabaseClient.rpc('get_subcategories_by_popularity', {
+                p_parent_id: parentId
+            })
+        );
+        if (error) {
+            const retry = await fetchWithTimeout(
+                supabaseClient.rpc('get_subcategories_by_popularity', {
+                    parent_id: parentId
+                })
+            );
+            if (retry.error) throw retry.error;
+            return retry.data || [];
+        }
+        return data || [];
+    } catch (err) {
+        console.error('Erreur RPC get_subcategories_by_popularity:', err);
+        return [];
+    }
+}
+
 /** Enrichit chaque produit avec category_name (jointure client via category_id). */
 function enrichProductsWithCategoryNames(products) {
     return (products || []).map(p => {

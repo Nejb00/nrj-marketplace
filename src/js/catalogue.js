@@ -1,7 +1,22 @@
-import { state, getCategoryFilterIds, getCategoryName } from './state.js';
+import { state, getCategoryFilterIds, getCategoryName, isTopLevelCategory, trackViewedItem } from './state.js';
 import { PRODUCTS_PER_PAGE } from './config.js';
-import { escapeHtml, formatPrice, generateBadgesHTML, isFresh, thumbImg } from './utils.js';
+import { escapeHtml, formatPrice, generateBadgesHTML, isFresh, thumbImg, thumb } from './utils.js';
 import { forYou } from './reco.js';
+import {
+    fetchSubcategoriesWithLatestImage,
+    fetchParentCategoriesRanked,
+    fetchTopPopularSubcategories,
+    fetchSubcategoriesByPopularity
+} from './api.js';
+
+/** État local de la page Nos Catégories (sidebar Temu). */
+let categoriesPageState = {
+    parents: [],
+    selectedParentId: 'featured',
+    panelItems: [],
+    loading: false,
+    initialized: false
+};
 
 export function getFilteredProducts() {
     let filtered;
@@ -10,7 +25,6 @@ export function getFilteredProducts() {
     } else if (state.currentFilter === 'all') {
         filtered = state.products;
     } else {
-        // Filtre par category_id : catégorie sélectionnée + ses sous-catégories
         const ids = getCategoryFilterIds(state.currentFilter);
         if (ids && ids.length) {
             const idSet = new Set(ids);
@@ -38,20 +52,21 @@ export function getFilteredProducts() {
 export function renderInitialProducts() {
     state.currentFilteredProducts = getFilteredProducts();
     state.displayedCount = 0;
+
     const grid = document.getElementById('productsGrid');
     grid.innerHTML = '';
-    
+
     if (state.currentFilteredProducts.length === 0) {
         grid.innerHTML = '<div style="color:#666;text-align:center;padding:3rem;grid-column:1/-1;">Aucun produit trouvé</div>';
         document.getElementById('loadMoreSentinel').style.display = 'none';
         document.getElementById('loadingMessage').style.display = 'none';
         return;
     }
-    
+
     for (let i = 0; i < PRODUCTS_PER_PAGE; i++) {
         grid.appendChild(createSkeletonCard());
     }
-    
+
     setTimeout(() => appendProducts(0, PRODUCTS_PER_PAGE), 100);
     updateSentinelVisibility();
 }
@@ -69,12 +84,12 @@ function setupScrollObserver() {
 export function appendProducts(start, count) {
     if (!state.scrollObserver) setupScrollObserver();
     const grid = document.getElementById('productsGrid');
-    
+
     if (start === 0) {
         const skeletons = grid.querySelectorAll('.skeleton-card');
         skeletons.forEach(s => s.remove());
     }
-    
+
     const fragment = document.createDocumentFragment();
     const slice = state.currentFilteredProducts.slice(start, start + count);
 
@@ -135,44 +150,340 @@ export function refreshCatalogue() {
     setupObserver();
 }
 
-export function applyFilter(categoryId) {
-    state.currentFilter = categoryId;
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    const btn = document.querySelector(`.filter-btn[data-category="${categoryId}"]`);
-    if (btn) btn.classList.add('active');
-    refreshCatalogue();
+function hideSubcategoryBubbles() {
+    state.subcategoryBubbles = [];
+    state.activeTopCategoryId = null;
+    state.activeSubcategoryId = null;
+    const row = document.getElementById('subcategoryBubbles');
+    if (row) {
+        row.innerHTML = '';
+        row.hidden = true;
+    }
 }
 
-export function switchView(v) {
-    const cv = document.getElementById('categoriesView'), hv = document.getElementById('catalogueView');
-    if (v === 'categories') { renderCategories(); cv.style.display = 'block'; hv.style.display = 'none'; }
-    else { cv.style.display = 'none'; hv.style.display = 'block'; }
-}
+export function renderSubcategoryBubbles() {
+    const row = document.getElementById('subcategoryBubbles');
+    if (!row) return;
 
-export function renderCategories() {
-    const grid = document.getElementById('categoriesGrid');
-    if (!grid) return;
-
-    const topCats = state.categories
-        .filter(c => c.parent_id === null)
-        .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
-
-    if (!topCats.length) {
-        grid.innerHTML = '<p style="text-align:center;color:var(--text-secondary);">Aucune catégorie disponible.</p>';
+    const items = state.subcategoryBubbles || [];
+    if (!items.length) {
+        row.innerHTML = '';
+        row.hidden = true;
         return;
     }
 
-    grid.innerHTML = topCats.map(cat => {
-        const filterIds = getCategoryFilterIds(cat.id);
-        const idSet = new Set(filterIds || [cat.id]);
-        const productsInCat = state.products.filter(p => p.category_id && idSet.has(p.category_id));
-        const count = productsInCat.length;
-        const lp = [...productsInCat]
-            .filter(p => p.image)
-            .sort((a, b) => (Number(b.popularity_score) || 0) - (Number(a.popularity_score) || 0))[0];
-        const icon = cat.icon ? `${escapeHtml(cat.icon)} ` : '';
-        return `<div class="category-card" data-category="${escapeHtml(cat.id)}">${lp ? thumbImg(lp.image, cat.name, 400, 300, 'category-card-bg') : ''}<div class="category-card-overlay"></div><div class="category-card-content"><div class="category-name">${icon}${escapeHtml(cat.name)}</div><div class="category-count">${count} article${count > 1 ? 's' : ''}</div></div></div>`;
+    row.hidden = false;
+    if (!row.dataset.allBound) {
+        row.dataset.allBound = '1';
+        row.addEventListener('click', (e) => {
+            if (e.target.closest('[data-subcategory-all="1"]')) selectSubcategoryAll();
+        });
+    }
+    const allActive = state.activeSubcategoryId === null ? ' active' : '';
+    const allBubble = `<button type="button" class="subcat-bubble subcat-bubble--all${allActive}" data-subcategory-all="1" aria-label="Tout" title="Tout"><span class="subcat-bubble-img"><span class="subcat-bubble-fallback">✨</span></span><span class="subcat-bubble-label">Tout</span></button>`;
+    row.innerHTML = allBubble + items.map(sub => {
+        const active = state.activeSubcategoryId === sub.id ? ' active' : '';
+        const label = escapeHtml(sub.name || '');
+        const fallbackIcon = sub.icon ? escapeHtml(sub.icon) : '📦';
+        const imgSrc = sub.image || sub.latest_image || sub.product_image || sub.img || '';
+        let media;
+        if (imgSrc) {
+            const proxied = escapeHtml(thumb(imgSrc, 120, 120, 'cover'));
+            const direct  = escapeHtml(imgSrc);
+            const onerr =
+                "this.onerror=function(){var s=document.createElement('span');" +
+                "s.className='subcat-bubble-fallback';s.textContent='" + fallbackIcon + "';" +
+                "this.replaceWith(s);};" +
+                "this.src=this.dataset.full;this.removeAttribute('data-full');";
+            media = `<img src="${proxied}" data-full="${direct}" alt="${label}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="${onerr}">`;
+        } else {
+            media = `<span class="subcat-bubble-fallback">${fallbackIcon}</span>`;
+        }
+        return `<button type="button" class="subcat-bubble${active}" data-subcategory-id="${escapeHtml(sub.id)}" aria-label="${label}" title="${label}">
+            <span class="subcat-bubble-img">${media}</span>
+            <span class="subcat-bubble-label">${label}</span>
+        </button>`;
     }).join('');
+}
+
+export function selectSubcategoryAll() {
+    const topId = state.activeTopCategoryId;
+    if (!topId) return;
+    state.currentFilter = topId;
+    state.activeSubcategoryId = null;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    const btn = document.querySelector(`.filter-btn[data-category="${topId}"]`);
+    if (btn) btn.classList.add('active');
+    renderSubcategoryBubbles();
+    refreshCatalogue();
+}
+
+async function loadBubblesForTop(topId) {
+    state.activeTopCategoryId = topId;
+    state.activeSubcategoryId = null;
+    const rows = await fetchSubcategoriesWithLatestImage(topId);
+    if (state.activeTopCategoryId !== topId) return;
+    state.subcategoryBubbles = rows;
+    renderSubcategoryBubbles();
+}
+
+export async function applyFilter(categoryId) {
+    state.currentFilter = categoryId;
+
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+
+    if (categoryId === 'all' || categoryId === 'favorites') {
+        const btn = document.querySelector(`.filter-btn[data-category="${categoryId}"]`);
+        if (btn) btn.classList.add('active');
+        hideSubcategoryBubbles();
+        refreshCatalogue();
+        return;
+    }
+
+    const cat = state.categoriesById.get(categoryId);
+
+    if (isTopLevelCategory(categoryId)) {
+        const btn = document.querySelector(`.filter-btn[data-category="${categoryId}"]`);
+        if (btn) btn.classList.add('active');
+        refreshCatalogue();
+        await loadBubblesForTop(categoryId);
+        return;
+    }
+
+    if (cat && cat.parent_id) {
+        const parentBtn = document.querySelector(`.filter-btn[data-category="${cat.parent_id}"]`);
+        if (parentBtn) parentBtn.classList.add('active');
+
+        state.activeSubcategoryId = categoryId;
+
+        if (state.activeTopCategoryId !== cat.parent_id || !state.subcategoryBubbles.length) {
+            state.activeTopCategoryId = cat.parent_id;
+            const rows = await fetchSubcategoriesWithLatestImage(cat.parent_id);
+            if (state.activeTopCategoryId === cat.parent_id) {
+                state.subcategoryBubbles = rows;
+            }
+        }
+        renderSubcategoryBubbles();
+        refreshCatalogue();
+        return;
+    }
+
+    const btn = document.querySelector(`.filter-btn[data-category="${categoryId}"]`);
+    if (btn) btn.classList.add('active');
+    hideSubcategoryBubbles();
+    refreshCatalogue();
+}
+
+export function clearSubcategorySelection() {
+    hideSubcategoryBubbles();
+}
+
+/**
+ * Mesure le header fixed (search + chips) et fige la hauteur du bloc catégories
+ * à calc(100dvh - headerH). Le scroll page est désactivé : seul sidebar/panel scrollent.
+ */
+function syncCategoriesHeaderOffset() {
+    const fixed = document.getElementById('headerFixed');
+    const spacer = document.getElementById('headerSpacer');
+    const cv = document.getElementById('categoriesView');
+    if (!cv) return;
+
+    // Header toujours déployé (search + filter chips visibles, --sp = 0)
+    if (fixed) {
+        fixed.style.setProperty('--sp', '0');
+        const searchCompact = document.getElementById('searchCompact');
+        if (searchCompact) searchCompact.classList.remove('active');
+    }
+
+    const apply = () => {
+        // top: 8px du header-fixed + hauteur réelle du bloc fixed
+        const topOffset = 8;
+        const headerBox = fixed ? fixed.getBoundingClientRect().height : 152;
+        const headerH = Math.ceil(topOffset + headerBox);
+        if (spacer) spacer.style.height = headerH + 'px';
+        cv.style.setProperty('--categories-header-h', headerH + 'px');
+        cv.style.height = `calc(100dvh - ${headerH}px)`;
+        cv.style.maxHeight = `calc(100dvh - ${headerH}px)`;
+    };
+
+    apply();
+    requestAnimationFrame(apply);
+}
+
+function enterCategoriesPageMode() {
+    document.documentElement.classList.add('categories-page-open');
+    document.body.classList.add('categories-page-open');
+    window.scrollTo(0, 0);
+    syncCategoriesHeaderOffset();
+}
+
+function exitCategoriesPageMode() {
+    document.documentElement.classList.remove('categories-page-open');
+    document.body.classList.remove('categories-page-open');
+    const cv = document.getElementById('categoriesView');
+    if (cv) {
+        cv.classList.remove('is-open');
+        cv.style.height = '';
+        cv.style.maxHeight = '';
+    }
+}
+
+export function switchView(v) {
+    const cv = document.getElementById('categoriesView');
+    const hv = document.getElementById('catalogueView');
+    if (v === 'categories') {
+        enterCategoriesPageMode();
+        if (cv) {
+            cv.style.display = 'flex';
+            cv.classList.add('is-open');
+        }
+        if (hv) hv.style.display = 'none';
+        renderCategories();
+        // 2e mesure après rendu (titre + layout peuvent influer le spacer)
+        requestAnimationFrame(() => syncCategoriesHeaderOffset());
+    } else {
+        exitCategoriesPageMode();
+        if (cv) {
+            cv.style.display = 'none';
+            cv.classList.remove('is-open');
+        }
+        if (hv) hv.style.display = 'block';
+    }
+}
+
+/** HTML d'une bulle (même markup / classes que le catalogue). */
+function buildCategoryPageBubble(sub) {
+    const label = escapeHtml(sub.name || '');
+    const fallbackIcon = sub.icon ? escapeHtml(sub.icon) : '📦';
+    const imgSrc = sub.image || sub.latest_image || sub.product_image || sub.img || '';
+    let media;
+    if (imgSrc) {
+        const proxied = escapeHtml(thumb(imgSrc, 120, 120, 'cover'));
+        const direct = escapeHtml(imgSrc);
+        const onerr =
+            "this.onerror=function(){var s=document.createElement('span');" +
+            "s.className='subcat-bubble-fallback';s.textContent='" + fallbackIcon + "';" +
+            "this.replaceWith(s);};" +
+            "this.src=this.dataset.full;this.removeAttribute('data-full');";
+        media = `<img src="${proxied}" data-full="${direct}" alt="${label}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="${onerr}">`;
+    } else {
+        media = `<span class="subcat-bubble-fallback">${fallbackIcon}</span>`;
+    }
+    return `<button type="button" class="subcat-bubble" data-subcategory-id="${escapeHtml(String(sub.id))}" aria-label="${label}" title="${label}">
+        <span class="subcat-bubble-img">${media}</span>
+        <span class="subcat-bubble-label">${label}</span>
+    </button>`;
+}
+
+function renderCategoriesSidebar() {
+    const sidebar = document.getElementById('categoriesSidebar');
+    if (!sidebar) return;
+
+    const featuredActive = categoriesPageState.selectedParentId === 'featured' ? ' active' : '';
+    let html = `<button type="button" class="categories-sidebar-item${featuredActive}" data-parent-id="featured">✨ En vedette</button>`;
+
+    categoriesPageState.parents.forEach(cat => {
+        const id = String(cat.id);
+        const active = categoriesPageState.selectedParentId === id ? ' active' : '';
+        const icon = cat.icon ? `${escapeHtml(cat.icon)} ` : '';
+        html += `<button type="button" class="categories-sidebar-item${active}" data-parent-id="${escapeHtml(id)}">${icon}${escapeHtml(cat.name || '')}</button>`;
+    });
+
+    sidebar.innerHTML = html;
+}
+
+function renderCategoriesPanel() {
+    const panel = document.getElementById('categoriesPanel');
+    if (!panel) return;
+
+    if (categoriesPageState.loading) {
+        panel.innerHTML = '<div class="categories-panel-status">Chargement…</div>';
+        return;
+    }
+
+    const items = categoriesPageState.panelItems || [];
+    if (!items.length) {
+        panel.innerHTML = '<div class="categories-panel-status">Aucune sous-catégorie</div>';
+        return;
+    }
+
+    panel.innerHTML = `<div class="categories-bubbles-grid">${items.map(buildCategoryPageBubble).join('')}</div>`;
+}
+
+async function loadCategoriesPanel(parentKey) {
+    categoriesPageState.selectedParentId = parentKey;
+    categoriesPageState.loading = true;
+    renderCategoriesSidebar();
+    renderCategoriesPanel();
+
+    let items = [];
+    if (parentKey === 'featured') {
+        items = await fetchTopPopularSubcategories(30);
+    } else {
+        items = await fetchSubcategoriesByPopularity(parentKey);
+    }
+
+    if (categoriesPageState.selectedParentId !== parentKey) return;
+
+    categoriesPageState.panelItems = items || [];
+    categoriesPageState.loading = false;
+    renderCategoriesPanel();
+}
+
+function bindCategoriesPageEvents() {
+    const root = document.getElementById('categoriesView');
+    if (!root || root.dataset.bound === '1') return;
+    root.dataset.bound = '1';
+
+    root.addEventListener('click', (e) => {
+        const sideItem = e.target.closest('.categories-sidebar-item');
+        if (sideItem) {
+            const parentId = sideItem.dataset.parentId;
+            if (parentId && parentId !== categoriesPageState.selectedParentId) {
+                loadCategoriesPanel(parentId);
+            }
+            return;
+        }
+
+        const bubble = e.target.closest('#categoriesPanel .subcat-bubble');
+        if (bubble) {
+            e.preventDefault();
+            e.stopPropagation();
+            const subId = bubble.dataset.subcategoryId;
+            if (!subId) return;
+            const label = getCategoryName(subId) || bubble.getAttribute('title') || subId;
+            trackViewedItem(label);
+            applyFilter(subId);
+            switchView('home');
+            window.scrollTo(0, 0);
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        if (document.body.classList.contains('categories-page-open')) {
+            syncCategoriesHeaderOffset();
+        }
+    });
+}
+
+export async function renderCategories() {
+    bindCategoriesPageEvents();
+    syncCategoriesHeaderOffset();
+
+    const sidebar = document.getElementById('categoriesSidebar');
+    const panel = document.getElementById('categoriesPanel');
+    if (!sidebar || !panel) return;
+
+    if (!categoriesPageState.initialized || !categoriesPageState.parents.length) {
+        categoriesPageState.loading = true;
+        renderCategoriesPanel();
+        const parents = await fetchParentCategoriesRanked();
+        categoriesPageState.parents = parents || [];
+        categoriesPageState.initialized = true;
+    }
+
+    categoriesPageState.selectedParentId = 'featured';
+    await loadCategoriesPanel('featured');
 }
 
 function createSkeletonCard() {
