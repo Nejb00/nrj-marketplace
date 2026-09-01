@@ -127,12 +127,15 @@
             <p id="loadingMessage" style="text-align:center;color:var(--text-secondary);display:none;">⏳ Chargement des produits...</p>
         </div>
 
-        <div id="categoriesView" style="display: none; padding: 1rem 1rem 2rem;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
-                <h2 style="font-size: 1.5rem; font-weight: 800;">Nos Catégories</h2>
-                <button id="backToHomeBtn" style="background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 1rem; border-radius: 50px; cursor: pointer; font-weight: 600;">← Retour</button>
+        <div id="categoriesView" style="display: none;">
+            <div class="categories-page-header">
+                <h2 class="categories-page-title">Nos Catégories</h2>
+                <button type="button" id="backToHomeBtn" class="categories-back-btn" aria-label="Retour">← Retour</button>
             </div>
-            <div class="categories-grid" id="categoriesGrid"></div>
+            <div class="categories-layout">
+                <aside class="categories-sidebar" id="categoriesSidebar" aria-label="Catégories parentes"></aside>
+                <div class="categories-panel" id="categoriesPanel" aria-label="Sous-catégories"></div>
+            </div>
         </div>
 
         <nav class="main-nav">
