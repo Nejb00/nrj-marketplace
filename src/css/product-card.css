@@ -30,7 +30,7 @@
     overflow: hidden;
     aspect-ratio: 3 / 4;
     cursor: pointer;
-    background: linear-gradient(90deg, var(--surface-light) 25%, var(--surface) 50%, var(--surface-light) 75%); /* modifié */
+    background: linear-gradient(90deg, var(--surface-light) 25%, var(--surface) 50%, var(--surface-light) 75%);
     background-size: 200% 100%;
     animation: skeleton-loading 1.5s infinite;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
@@ -71,6 +71,25 @@
 
 .product-card img.loaded { 
     opacity: 1; 
+}
+
+.product-card-video-badge {
+    position: absolute;
+    left: 10px;
+    bottom: 72px;
+    z-index: 4;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    line-height: 1;
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
 .product-card-info { 
@@ -151,7 +170,7 @@
 
 .skeleton-image { 
     height: 70%; 
-    background: linear-gradient(90deg, var(--surface-light) 25%, var(--surface) 50%, var(--surface-light) 75%); /* modifié */
+    background: linear-gradient(90deg, var(--surface-light) 25%, var(--surface) 50%, var(--surface-light) 75%);
     background-size: 200% 100%; 
     animation: skeleton-loading 1.5s infinite; 
 }
@@ -163,7 +182,7 @@
 .skeleton-line { 
     height: 10px; 
     border-radius: 5px; 
-    background: linear-gradient(90deg, var(--surface-light) 25%, var(--surface) 50%, var(--surface-light) 75%); /* modifié */
+    background: linear-gradient(90deg, var(--surface-light) 25%, var(--surface) 50%, var(--surface-light) 75%);
     background-size: 200% 100%; 
     animation: skeleton-loading 1.5s infinite; 
     margin-bottom: 0.45rem; 
