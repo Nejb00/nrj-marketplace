@@ -2,7 +2,21 @@ import { state, getCategoryFilterIds, getCategoryName, isTopLevelCategory } from
 import { PRODUCTS_PER_PAGE } from './config.js';
 import { escapeHtml, formatPrice, generateBadgesHTML, isFresh, thumbImg, thumb } from './utils.js';
 import { forYou } from './reco.js';
-import { fetchSubcategoriesWithLatestImage } from './api.js';
+import {
+    fetchSubcategoriesWithLatestImage,
+    fetchParentCategoriesRanked,
+    fetchTopPopularSubcategories,
+    fetchSubcategoriesByPopularity
+} from './api.js';
+
+/** État local de la page Nos Catégories (sidebar Temu). */
+let categoriesPageState = {
+    parents: [],
+    selectedParentId: 'featured',
+    panelItems: [],
+    loading: false,
+    initialized: false
+};
 
 export function getFilteredProducts() {
     let filtered;
@@ -87,8 +101,7 @@ export function appendProducts(start, count) {
         const couleurs = (p.couleurs || '').split(',').map(s => s.trim()).filter(Boolean);
         let details = [];
         if (tailles.length) details.push(`${tailles.length} taille${tailles.length > 1 ? 's' : ''}`);
-        if (couleurs.length) details.
-push(`${couleurs.length} couleur${couleurs.length > 1 ? 's' : ''}`);
+        if (couleurs.length) details.push(`${couleurs.length} couleur${couleurs.length > 1 ? 's' : ''}`);
         if (details.length) details.push('En stock');
         const detailsHTML = details.length ? `<div class="product-card-details">${details.map(d => `<span class="product-card-detail-item">${escapeHtml(d)}</span>`).join('')}</div>` : '';
         const moq = Number(p.moq) || 1;
@@ -282,30 +295,135 @@ export function switchView(v) {
     else { cv.style.display = 'none'; hv.style.display = 'block'; }
 }
 
-export function renderCategories() {
-    const grid = document.getElementById('categoriesGrid');
-    if (!grid) return;
+/** HTML d'une bulle (même markup / classes que le catalogue). */
+function buildCategoryPageBubble(sub) {
+    const label = escapeHtml(sub.name || '');
+    const fallbackIcon = sub.icon ? escapeHtml(sub.icon) : '📦';
+    const imgSrc = sub.image || sub.latest_image || sub.product_image || sub.img || '';
+    let media;
+    if (imgSrc) {
+        const proxied = escapeHtml(thumb(imgSrc, 120, 120, 'cover'));
+        const direct = escapeHtml(imgSrc);
+        const onerr =
+            "this.onerror=function(){var s=document.createElement('span');" +
+            "s.className='subcat-bubble-fallback';s.textContent='" + fallbackIcon + "';" +
+            "this.replaceWith(s);};" +
+            "this.src=this.dataset.full;this.removeAttribute('data-full');";
+        media = `<img src="${proxied}" data-full="${direct}" alt="${label}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="${onerr}">`;
+    } else {
+        media = `<span class="subcat-bubble-fallback">${fallbackIcon}</span>`;
+    }
+    return `<button type="button" class="subcat-bubble" data-subcategory-id="${escapeHtml(String(sub.id))}" aria-label="${label}" title="${label}">
+        <span class="subcat-bubble-img">${media}</span>
+        <span class="subcat-bubble-label">${label}</span>
+    </button>`;
+}
 
-    const topCats = state.categories
-        .filter(c => c.parent_id === null)
-        .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+function renderCategoriesSidebar() {
+    const sidebar = document.getElementById('categoriesSidebar');
+    if (!sidebar) return;
 
-    if (!topCats.length) {
-        grid.innerHTML = '<p style="text-align:center;color:var(--text-secondary);">Aucune catégorie disponible.</p>';
+    const featuredActive = categoriesPageState.selectedParentId === 'featured' ? ' active' : '';
+    let html = `<button type="button" class="categories-sidebar-item${featuredActive}" data-parent-id="featured">✨ En vedette</button>`;
+
+    categoriesPageState.parents.forEach(cat => {
+        const id = String(cat.id);
+        const active = categoriesPageState.selectedParentId === id ? ' active' : '';
+        const icon = cat.icon ? `${escapeHtml(cat.icon)} ` : '';
+        html += `<button type="button" class="categories-sidebar-item${active}" data-parent-id="${escapeHtml(id)}">${icon}${escapeHtml(cat.name || '')}</button>`;
+    });
+
+    sidebar.innerHTML = html;
+}
+
+function renderCategoriesPanel() {
+    const panel = document.getElementById('categoriesPanel');
+    if (!panel) return;
+
+    if (categoriesPageState.loading) {
+        panel.innerHTML = '<div class="categories-panel-status">Chargement…</div>';
         return;
     }
 
-    grid.innerHTML = topCats.map(cat => {
-        const filterIds = getCategoryFilterIds(cat.id);
-        const idSet = new Set(filterIds || [cat.id]);
-        const productsInCat = state.products.filter(p => p.category_id && idSet.has(p.category_id));
-        const count = productsInCat.length;
-        const lp = [...productsInCat]
-            .filter(p => p.image)
-            .sort((a, b) => (Number(b.popularity_score) || 0) - (Number(a.popularity_score) || 0))[0];
-        const icon = cat.icon ? `${escapeHtml(cat.icon)} ` : '';
-        return `<div class="category-card" data-category="${escapeHtml(cat.id)}">${lp ? thumbImg(lp.image, cat.name, 400, 300, 'category-card-bg') : ''}<div class="category-card-overlay"></div><div class="category-card-content"><div class="category-name">${icon}${escapeHtml(cat.name)}</div><div class="category-count">${count} article${count > 1 ? 's' : ''}</div></div></div>`;
-    }).join('');
+    const items = categoriesPageState.panelItems || [];
+    if (!items.length) {
+        panel.innerHTML = '<div class="categories-panel-status">Aucune sous-catégorie</div>';
+        return;
+    }
+
+    panel.innerHTML = `<div class="categories-bubbles-grid">${items.map(buildCategoryPageBubble).join('')}</div>`;
+}
+
+async function loadCategoriesPanel(parentKey) {
+    categoriesPageState.selectedParentId = parentKey;
+    categoriesPageState.loading = true;
+    renderCategoriesSidebar();
+    renderCategoriesPanel();
+
+    let items = [];
+    if (parentKey === 'featured') {
+        items = await fetchTopPopularSubcategories(20);
+    } else {
+        items = await fetchSubcategoriesByPopularity(parentKey);
+    }
+
+    // Ignore si l'utilisateur a déjà changé d'onglet
+    if (categoriesPageState.selectedParentId !== parentKey) return;
+
+    categoriesPageState.panelItems = items || [];
+    categoriesPageState.loading = false;
+    renderCategoriesPanel();
+}
+
+function bindCategoriesPageEvents() {
+    const root = document.getElementById('categoriesView');
+    if (!root || root.dataset.bound === '1') return;
+    root.dataset.bound = '1';
+
+    root.addEventListener('click', (e) => {
+        const sideItem = e.target.closest('.categories-sidebar-item');
+        if (sideItem) {
+            const parentId = sideItem.dataset.parentId;
+            if (parentId && parentId !== categoriesPageState.selectedParentId) {
+                loadCategoriesPanel(parentId);
+            }
+            return;
+        }
+
+        const bubble = e.target.closest('#categoriesPanel .subcat-bubble');
+        if (bubble) {
+            const subId = bubble.dataset.subcategoryId;
+            if (!subId) return;
+            const label = getCategoryName(subId) || bubble.getAttribute('title') || subId;
+            // trackViewedItem est dans state — importé via main au clic global aussi
+            try {
+                const { trackViewedItem } = require ? null : {};
+            } catch {}
+            applyFilter(subId);
+            switchView('home');
+            window.scrollTo(0, 0);
+        }
+    });
+}
+
+export async function renderCategories() {
+    bindCategoriesPageEvents();
+
+    const sidebar = document.getElementById('categoriesSidebar');
+    const panel = document.getElementById('categoriesPanel');
+    if (!sidebar || !panel) return;
+
+    if (!categoriesPageState.initialized || !categoriesPageState.parents.length) {
+        categoriesPageState.loading = true;
+        renderCategoriesPanel();
+        const parents = await fetchParentCategoriesRanked();
+        categoriesPageState.parents = parents || [];
+        categoriesPageState.initialized = true;
+    }
+
+    // Toujours repartir sur « En vedette » à l'ouverture
+    categoriesPageState.selectedParentId = 'featured';
+    await loadCategoriesPanel('featured');
 }
 
 function createSkeletonCard() {
