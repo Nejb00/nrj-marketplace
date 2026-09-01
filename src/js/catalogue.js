@@ -1,4 +1,4 @@
-import { state, getCategoryFilterIds, getCategoryName, isTopLevelCategory } from './state.js';
+import { state, getCategoryFilterIds, getCategoryName, isTopLevelCategory, trackViewedItem } from './state.js';
 import { PRODUCTS_PER_PAGE } from './config.js';
 import { escapeHtml, formatPrice, generateBadgesHTML, isFresh, thumbImg, thumb } from './utils.js';
 import { forYou } from './reco.js';
@@ -25,7 +25,6 @@ export function getFilteredProducts() {
     } else if (state.currentFilter === 'all') {
         filtered = state.products;
     } else {
-        // Filtre par category_id : catégorie sélectionnée + ses sous-catégories
         const ids = getCategoryFilterIds(state.currentFilter);
         if (ids && ids.length) {
             const idSet = new Set(ids);
@@ -53,21 +52,21 @@ export function getFilteredProducts() {
 export function renderInitialProducts() {
     state.currentFilteredProducts = getFilteredProducts();
     state.displayedCount = 0;
-  
-  const grid = document.getElementById('productsGrid');
+
+    const grid = document.getElementById('productsGrid');
     grid.innerHTML = '';
-    
+
     if (state.currentFilteredProducts.length === 0) {
         grid.innerHTML = '<div style="color:#666;text-align:center;padding:3rem;grid-column:1/-1;">Aucun produit trouvé</div>';
         document.getElementById('loadMoreSentinel').style.display = 'none';
         document.getElementById('loadingMessage').style.display = 'none';
         return;
     }
-    
+
     for (let i = 0; i < PRODUCTS_PER_PAGE; i++) {
         grid.appendChild(createSkeletonCard());
     }
-    
+
     setTimeout(() => appendProducts(0, PRODUCTS_PER_PAGE), 100);
     updateSentinelVisibility();
 }
@@ -85,12 +84,12 @@ function setupScrollObserver() {
 export function appendProducts(start, count) {
     if (!state.scrollObserver) setupScrollObserver();
     const grid = document.getElementById('productsGrid');
-    
+
     if (start === 0) {
         const skeletons = grid.querySelectorAll('.skeleton-card');
         skeletons.forEach(s => s.remove());
     }
-    
+
     const fragment = document.createDocumentFragment();
     const slice = state.currentFilteredProducts.slice(start, start + count);
 
@@ -223,18 +222,11 @@ async function loadBubblesForTop(topId) {
     state.activeTopCategoryId = topId;
     state.activeSubcategoryId = null;
     const rows = await fetchSubcategoriesWithLatestImage(topId);
-    // Ignore si l'utilisateur a déjà changé de top pendant l'attente
     if (state.activeTopCategoryId !== topId) return;
     state.subcategoryBubbles = rows;
     renderSubcategoryBubbles();
 }
 
-/**
- * Applique un filtre catégorie.
- * - top-niveau → filtre parent+enfants + charge les bulles (1 RPC cache)
- * - sous-catégorie (bulle) → filtre exact sur category_id, garde les bulles du top
- * - all / favorites → masque les bulles
- */
 export async function applyFilter(categoryId) {
     state.currentFilter = categoryId;
 
@@ -258,14 +250,12 @@ export async function applyFilter(categoryId) {
         return;
     }
 
-    // Sous-catégorie : highlight le top parent dans la barre, bulle active
     if (cat && cat.parent_id) {
         const parentBtn = document.querySelector(`.filter-btn[data-category="${cat.parent_id}"]`);
         if (parentBtn) parentBtn.classList.add('active');
 
         state.activeSubcategoryId = categoryId;
 
-        // Si les bulles du parent ne sont pas encore chargées, les charger une fois
         if (state.activeTopCategoryId !== cat.parent_id || !state.subcategoryBubbles.length) {
             state.activeTopCategoryId = cat.parent_id;
             const rows = await fetchSubcategoriesWithLatestImage(cat.parent_id);
@@ -278,7 +268,6 @@ export async function applyFilter(categoryId) {
         return;
     }
 
-    // Fallback générique
     const btn = document.querySelector(`.filter-btn[data-category="${categoryId}"]`);
     if (btn) btn.classList.add('active');
     hideSubcategoryBubbles();
@@ -367,7 +356,6 @@ async function loadCategoriesPanel(parentKey) {
         items = await fetchSubcategoriesByPopularity(parentKey);
     }
 
-    // Ignore si l'utilisateur a déjà changé d'onglet
     if (categoriesPageState.selectedParentId !== parentKey) return;
 
     categoriesPageState.panelItems = items || [];
@@ -392,13 +380,12 @@ function bindCategoriesPageEvents() {
 
         const bubble = e.target.closest('#categoriesPanel .subcat-bubble');
         if (bubble) {
+            e.preventDefault();
+            e.stopPropagation();
             const subId = bubble.dataset.subcategoryId;
             if (!subId) return;
             const label = getCategoryName(subId) || bubble.getAttribute('title') || subId;
-            // trackViewedItem est dans state — importé via main au clic global aussi
-            try {
-                const { trackViewedItem } = require ? null : {};
-            } catch {}
+            trackViewedItem(label);
             applyFilter(subId);
             switchView('home');
             window.scrollTo(0, 0);
@@ -421,7 +408,6 @@ export async function renderCategories() {
         categoriesPageState.initialized = true;
     }
 
-    // Toujours repartir sur « En vedette » à l'ouverture
     categoriesPageState.selectedParentId = 'featured';
     await loadCategoriesPanel('featured');
 }
