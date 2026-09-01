@@ -39,7 +39,8 @@ export function getFilteredProducts() {
 export function renderInitialProducts() {
     state.currentFilteredProducts = getFilteredProducts();
     state.displayedCount = 0;
-    const grid = document.getElementById('productsGrid');
+  
+  const grid = document.getElementById('productsGrid');
     grid.innerHTML = '';
     
     if (state.currentFilteredProducts.length === 0) {
@@ -86,7 +87,8 @@ export function appendProducts(start, count) {
         const couleurs = (p.couleurs || '').split(',').map(s => s.trim()).filter(Boolean);
         let details = [];
         if (tailles.length) details.push(`${tailles.length} taille${tailles.length > 1 ? 's' : ''}`);
-        if (couleurs.length) details.push(`${couleurs.length} couleur${couleurs.length > 1 ? 's' : ''}`);
+        if (couleurs.length) details.
+push(`${couleurs.length} couleur${couleurs.length > 1 ? 's' : ''}`);
         if (details.length) details.push('En stock');
         const detailsHTML = details.length ? `<div class="product-card-details">${details.map(d => `<span class="product-card-detail-item">${escapeHtml(d)}</span>`).join('')}</div>` : '';
         const moq = Number(p.moq) || 1;
@@ -111,7 +113,8 @@ export function appendProducts(start, count) {
 export function loadMoreProducts() {
     if (state.displayedCount >= state.currentFilteredProducts.length) return;
     document.getElementById('loadingMessage').style.display = 'block';
-    setTimeout(() => appendProducts(state.displayedCount, PRODUCTS_PER_PAGE), 100);
+    setTimeout(() => appendProducts(state.displayedCount, PRODUCTS_PER_PA
+GE), 100);
 }
 
 function updateSentinelVisibility() {
@@ -162,13 +165,20 @@ export function renderSubcategoryBubbles() {
     row.innerHTML = items.map(sub => {
         const active = state.activeSubcategoryId === sub.id ? ' active' : '';
         const label = escapeHtml(sub.name || '');
-        const icon = sub.icon ? escapeHtml(sub.icon) : '📦';
+        const fallbackIcon = sub.icon ? escapeHtml(sub.icon) : '📦';
+        const imgSrc = sub.image || sub.latest_image || sub.product_image || sub.img || '';
         let media;
-        if (sub.image) {
-            const src = escapeHtml(thumb(sub.image, 120, 120, 'cover'));
-            media = `<img src="${src}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'subcat-bubble-fallback',textContent:'${icon}'}))">`;
+        if (imgSrc) {
+            const proxied = escapeHtml(thumb(imgSrc, 120, 120, 'cover'));
+            const direct  = escapeHtml(imgSrc);
+            const onerr =
+                "this.onerror=function(){var s=document.createElement('span');" +
+                "s.className='subcat-bubble-fallback';s.textContent='" + fallbackIcon + "';" +
+                "this.replaceWith(s);};" +
+                "this.src=this.dataset.full;this.removeAttribute('data-full');";
+            media = `<img src="${proxied}" data-full="${direct}" alt="${label}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="${onerr}">`;
         } else {
-            media = `<span class="subcat-bubble-fallback">${icon}</span>`;
+            media = `<span class="subcat-bubble-fallback">${fallbackIcon}</span>`;
         }
         return `<button type="button" class="subcat-bubble${active}" data-subcategory-id="${escapeHtml(sub.id)}" aria-label="${label}" title="${label}">
             <span class="subcat-bubble-img">${media}</span>
@@ -218,7 +228,8 @@ export async function applyFilter(categoryId) {
 
     // Sous-catégorie : highlight le top parent dans la barre, bulle active
     if (cat && cat.parent_id) {
-        const parentBtn = document.querySelector(`.filter-btn[data-category="${cat.parent_id}"]`);
+        const parentBtn = document.q
+uerySelector(`.filter-btn[data-category="${cat.parent_id}"]`);
         if (parentBtn) parentBtn.classList.add('active');
 
         state.activeSubcategoryId = categoryId;
@@ -269,7 +280,8 @@ export function renderCategories() {
     grid.innerHTML = topCats.map(cat => {
         const filterIds = getCategoryFilterIds(cat.id);
         const idSet = new Set(filterIds || [cat.id]);
-        const productsInCat = state.products.filter(p => p.category_id && idSet.has(p.category_id));
+        const productsInCat = state.products.filter(p => p.category_id && idSet.has(p.ca
+tegory_id));
         const count = productsInCat.length;
         const lp = [...productsInCat]
             .filter(p => p.image)
