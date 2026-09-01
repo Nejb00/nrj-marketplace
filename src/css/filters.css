@@ -375,7 +375,7 @@ body.categories-page-open .logo-brand-text {
     padding: 0;
 }
 
-/* Cartes toujours visibles dans Articles populaires (pas d'IO catalogue) */
+/* Cartes toujours visibles + images qui remplissent la carte */
 .categories-popular-grid .product-card,
 .categories-popular-grid .product-card.visible {
     opacity: 1 !important;
@@ -385,7 +385,17 @@ body.categories-page-open .logo-brand-text {
 }
 
 .categories-popular-grid .product-card img {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: cover !important;
+    object-position: center center !important;
     opacity: 1 !important;
+    display: block !important;
+    z-index: 1;
 }
 
 .categories-panel-status {
