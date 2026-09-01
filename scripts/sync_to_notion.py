@@ -119,8 +119,7 @@ def generate_notion_content():
         try:
             with open(filepath, 'r', encoding='utf-8', errors='ignore') as file_obj:
                 content = file_obj.read()
-  
-      except Exception as e:
+        except Exception as e:
             content = f"// Erreur de lecture : {e}"
 
         char_count = len(content)
@@ -145,12 +144,12 @@ def generate_notion_content():
             "toggle": {
                 "rich_text": [
                     {
-                        "type": "text", 
+                        "type": "text",
                         "text": {"content": f"📄 {filepath} "},
                         "annotations": {"bold": True}
                     },
                     {
-                        "type": "text", 
+                        "type": "text",
                         "text": {"content": f"({char_count:,} caractères)"},
                         "annotations": {"italic": True, "color": "gray"}
                     }
@@ -166,8 +165,7 @@ def generate_notion_content():
         "callout": {
             "rich_text": [{
                 "type": "text",
-                "text": {"content": f"📊 Projet synchronisé : {len(file_list)} fichiers | {total_chars:,} caractères au total.
-Cliquez sur un fichier pour dérouler son code ou laissez Claude lire la page."}
+                "text": {"content": f"📊 Projet synchronisé : {len(file_list)} fichiers | {total_chars:,} caractères au total.\nCliquez sur un fichier pour dérouler son code ou laissez Claude lire la page."}
             }],
             "icon": {"type": "emoji", "emoji": "⚡"}
         }
