@@ -141,23 +141,59 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   📂 PAGE NOS CATÉGORIES — layout type Temu (sidebar + panneau bulles)
+   📂 PAGE NOS CATÉGORIES — header sticky + colonnes scroll indépendantes
    ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Empêche le scroll de page quand on est sur Catégories */
+body.categories-page-open {
+    overflow: hidden;
+    height: 100%;
+    overscroll-behavior: none;
+}
+
+body.categories-page-open #catalogueWrapper > footer {
+    display: none;
+}
+
+/* Sur la page catégories : header toujours déployé (search + chips visibles) */
+body.categories-page-open .header-fixed {
+    --sp: 0 !important;
+}
+
+body.categories-page-open .search-bubble-compact {
+    pointer-events: none !important;
+}
+
 #categoriesView {
-    min-height: 60vh;
-    padding-bottom: 2rem;
+    --categories-header-h: 160px;
+    display: none;
+    flex-direction: column;
+    height: calc(100dvh - var(--categories-header-h));
+    max-height: calc(100dvh - var(--categories-header-h));
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+    background: var(--bg);
+}
+
+#categoriesView.is-open {
+    display: flex;
 }
 
 .categories-page-header {
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
-    padding: 0.75rem 1rem 0.5rem;
+    padding: 0.65rem 1rem 0.55rem;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    z-index: 2;
 }
 
 .categories-page-title {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
     font-weight: 800;
     color: var(--text);
     margin: 0;
@@ -167,11 +203,11 @@
     background: var(--surface);
     border: 1px solid var(--border);
     color: var(--text);
-    padding: 0.45rem 0.95rem;
+    padding: 0.4rem 0.9rem;
     border-radius: 50px;
     cursor: pointer;
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-family: inherit;
     transition: background 0.15s ease, border-color 0.15s ease;
 }
@@ -181,11 +217,15 @@
     border-color: var(--primary);
 }
 
+/* Bloc sidebar + bulles : hauteur fixe, scroll uniquement à l'intérieur */
 .categories-layout {
+    flex: 1 1 auto;
     display: flex;
     align-items: stretch;
-    min-height: calc(100vh - 220px);
-    border-top: 1px solid var(--border);
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+    border-top: none;
 }
 
 .categories-sidebar {
@@ -193,14 +233,16 @@
     max-width: 160px;
     min-width: 108px;
     flex-shrink: 0;
+    height: 100%;
     background: var(--surface);
     border-right: 1px solid var(--border);
+    overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    max-height: calc(100vh - 180px);
-    position: sticky;
-    top: 0;
-    align-self: flex-start;
+    overscroll-behavior: contain;
+    position: relative;
+    top: auto;
+    align-self: stretch;
 }
 
 .categories-sidebar-item {
@@ -236,8 +278,12 @@
 .categories-panel {
     flex: 1;
     min-width: 0;
+    height: 100%;
     padding: 0.85rem 0.65rem 1.5rem;
+    overflow-x: hidden;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
     background: var(--bg);
 }
 
