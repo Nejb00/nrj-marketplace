@@ -22,6 +22,22 @@ function updateCarouselDots(sc, dc, index) {
     dc.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === index));
 }
 
+function pauseModalVideos() {
+    document.querySelectorAll('#modalCarouselScroll video').forEach(v => {
+        try { v.pause(); } catch {}
+    });
+}
+
+function buildModalVideoSlide(videoUrl, posterUrl, alt) {
+    const src = escapeHtml(videoUrl.trim());
+    const poster = posterUrl ? escapeHtml(posterUrl.trim()) : '';
+    const posterAttr = poster ? ` poster="${poster}"` : '';
+    const label = escapeHtml(alt || 'Vidéo produit');
+    return `<div class="carousel-item carousel-item--video">` +
+        `<video class="modal-product-video" controls playsinline preload="metadata"${posterAttr} src="${src}" title="${label}" aria-label="${label}"></video>` +
+        `</div>`;
+}
+
 async function buildRecommendations(currentProduct) {
     const TARGET = 12;
     const relatedIds = await getRelatedProducts(currentProduct.id, TARGET);
@@ -95,21 +111,58 @@ export async function openProductModal(pid) {
         }
     };
 
+    const videoUrl = (p.video_url || '').trim();
     const imgs = [p.image, p.image2, p.image3, p.image4, p.image5, p.image6].filter(u => u && u.trim());
     const sc = document.getElementById('modalCarouselScroll'), dc = document.getElementById('modalCarouselDots');
-    sc.innerHTML = ''; dc.innerHTML = '';
-    if (!imgs.length) {
+    sc.innerHTML = '';
+    dc.innerHTML = '';
+
+    let slideIndex = 0;
+    if (videoUrl) {
+        const poster = imgs[0] || p.image || '';
+        sc.innerHTML += buildModalVideoSlide(videoUrl, poster, p.name);
+        dc.innerHTML += `<span class="carousel-dot active" data-index="${slideIndex}"></span>`;
+        slideIndex++;
+    }
+
+    if (!imgs.length && !videoUrl) {
         sc.innerHTML = '<div class="modal-placeholder">📦</div>';
         dc.innerHTML = '';
     } else {
-        imgs.forEach((u, i) => {
+        imgs.forEach((u) => {
             sc.innerHTML += `<div class="carousel-item">${modalImg(u, p.name)}</div>`;
-            dc.innerHTML += `<span class="carousel-dot ${i === 0 ? 'active' : ''}" data-index="${i}"></span>`;
+            dc.innerHTML += `<span class="carousel-dot ${slideIndex === 0 && !videoUrl ? 'active' : (slideIndex === 0 ? 'active' : '')}" data-index="${slideIndex}"></span>`;
+            // Fix active class: only first overall slide is active
+            slideIndex++;
         });
+        // Ensure only first dot is active
+        dc.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === 0));
     }
 
-    if (!sc.dataset.bound) { sc.addEventListener('scroll', () => updateCarouselDots(sc, dc, Math.round(sc.scrollLeft / sc.offsetWidth))); sc.dataset.bound = '1'; }
-    if (!dc.dataset.bound) { dc.addEventListener('click', e => { if (e.target.classList.contains('carousel-dot')) sc.scrollTo({ left: sc.offsetWidth * parseInt(e.target.dataset.index), behavior: 'smooth' }); }); dc.dataset.bound = '1'; }
+    sc.scrollLeft = 0;
+
+    if (!sc.dataset.bound) {
+        sc.addEventListener('scroll', () => {
+            const idx = Math.round(sc.scrollLeft / Math.max(sc.offsetWidth, 1));
+            updateCarouselDots(sc, dc, idx);
+            // Pause video when user leaves the video slide
+            const videos = sc.querySelectorAll('video');
+            videos.forEach((v, vi) => {
+                if (vi !== idx) {
+                    try { v.pause(); } catch {}
+                }
+            });
+        });
+        sc.dataset.bound = '1';
+    }
+    if (!dc.dataset.bound) {
+        dc.addEventListener('click', e => {
+            if (e.target.classList.contains('carousel-dot')) {
+                sc.scrollTo({ left: sc.offsetWidth * parseInt(e.target.dataset.index, 10), behavior: 'smooth' });
+            }
+        });
+        dc.dataset.bound = '1';
+    }
 
     function renderOptions(ct, opts, sel, ty) {
         ct.innerHTML = '';
@@ -166,6 +219,7 @@ export async function openProductModal(pid) {
 }
 
 export function closeProductModal() {
+    pauseModalVideos();
     document.getElementById('productModal').classList.remove('open');
     document.getElementById('stickyBottomBar').classList.remove('visible');
     state.modalOpen = false;
