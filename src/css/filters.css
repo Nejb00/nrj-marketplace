@@ -140,13 +140,6 @@
     border-color: var(--primary);
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   📂 PAGE NOS CATÉGORIES
-   - Header (search + chips) reste fixed / sticky, ne scrolle pas
-   - Bloc sidebar + bulles : hauteur = 100vh - header, scroll interne seul
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-/* Bloque le scroll de page : seul le panneau / sidebar scrollent */
 html.categories-page-open,
 body.categories-page-open {
     overflow: hidden !important;
@@ -165,7 +158,6 @@ body.categories-page-open #catalogueWrapper > footer {
     display: none;
 }
 
-/* Header search + chips : toujours déployé et figé au-dessus */
 body.categories-page-open .header-fixed {
     position: fixed !important;
     top: 8px;
@@ -196,7 +188,6 @@ body.categories-page-open .logo-brand-text {
     font-size: 1.05rem !important;
 }
 
-/* Vue catégories : hauteur restante sous le header, pas de scroll page */
 #categoriesView {
     --categories-header-h: 160px;
     display: none;
@@ -251,7 +242,6 @@ body.categories-page-open .logo-brand-text {
     border-color: var(--primary);
 }
 
-/* Colonnes : hauteur fixe du layout, overflow indépendant */
 .categories-layout {
     flex: 1 1 auto;
     display: flex;
@@ -307,17 +297,83 @@ body.categories-page-open .logo-brand-text {
     font-weight: 700;
 }
 
-.categories-panel {
+.categories-main {
     flex: 1 1 auto;
     min-width: 0;
     height: 100%;
     max-height: 100%;
-    padding: 0.85rem 0.65rem 1.5rem;
+    display: flex;
+    flex-direction: column;
     overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
     background: var(--bg);
+}
+
+.categories-panel {
+    flex: 0 0 auto;
+    min-width: 0;
+    padding: 0.85rem 0.65rem 0.5rem;
+    overflow: visible;
+    background: var(--bg);
+}
+
+.categories-popular {
+    flex: 0 0 auto;
+    padding: 0.5rem 0.65rem 1.5rem;
+    border-top: 1px solid var(--border);
+}
+
+.categories-popular-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+    flex-wrap: wrap;
+}
+
+.categories-popular-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.categories-sort-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.categories-sort-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    padding: 0.4rem 1.8rem 0.4rem 0.75rem;
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a0a0a0' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.55rem center;
+}
+
+.categories-sort-select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.categories-popular-grid {
+    padding: 0;
 }
 
 .categories-panel-status {
@@ -354,7 +410,10 @@ body.categories-page-open .logo-brand-text {
         gap: 1rem 0.5rem;
     }
     .categories-panel {
-        padding: 1rem 1.25rem 2rem;
+        padding: 1rem 1.25rem 0.5rem;
+    }
+    .categories-popular {
+        padding: 0.75rem 1.25rem 2rem;
     }
 }
 
