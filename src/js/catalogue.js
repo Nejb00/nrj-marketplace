@@ -1,7 +1,8 @@
-import { state, getCategoryFilterIds, getCategoryName } from './state.js';
+import { state, getCategoryFilterIds, getCategoryName, isTopLevelCategory } from './state.js';
 import { PRODUCTS_PER_PAGE } from './config.js';
-import { escapeHtml, formatPrice, generateBadgesHTML, isFresh, thumbImg } from './utils.js';
+import { escapeHtml, formatPrice, generateBadgesHTML, isFresh, thumbImg, thumb } from './utils.js';
 import { forYou } from './reco.js';
+import { fetchSubcategoriesWithLatestImage } from './api.js';
 
 export function getFilteredProducts() {
     let filtered;
@@ -135,12 +136,115 @@ export function refreshCatalogue() {
     setupObserver();
 }
 
-export function applyFilter(categoryId) {
+function hideSubcategoryBubbles() {
+    state.subcategoryBubbles = [];
+    state.activeTopCategoryId = null;
+    state.activeSubcategoryId = null;
+    const row = document.getElementById('subcategoryBubbles');
+    if (row) {
+        row.innerHTML = '';
+        row.hidden = true;
+    }
+}
+
+export function renderSubcategoryBubbles() {
+    const row = document.getElementById('subcategoryBubbles');
+    if (!row) return;
+
+    const items = state.subcategoryBubbles || [];
+    if (!items.length) {
+        row.innerHTML = '';
+        row.hidden = true;
+        return;
+    }
+
+    row.hidden = false;
+    row.innerHTML = items.map(sub => {
+        const active = state.activeSubcategoryId === sub.id ? ' active' : '';
+        const label = escapeHtml(sub.name || '');
+        const icon = sub.icon ? escapeHtml(sub.icon) : '📦';
+        let media;
+        if (sub.image) {
+            const src = escapeHtml(thumb(sub.image, 120, 120, 'cover'));
+            media = `<img src="${src}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'subcat-bubble-fallback',textContent:'${icon}'}))">`;
+        } else {
+            media = `<span class="subcat-bubble-fallback">${icon}</span>`;
+        }
+        return `<button type="button" class="subcat-bubble${active}" data-subcategory-id="${escapeHtml(sub.id)}" aria-label="${label}" title="${label}">
+            <span class="subcat-bubble-img">${media}</span>
+            <span class="subcat-bubble-label">${label}</span>
+        </button>`;
+    }).join('');
+}
+
+async function loadBubblesForTop(topId) {
+    state.activeTopCategoryId = topId;
+    state.activeSubcategoryId = null;
+    const rows = await fetchSubcategoriesWithLatestImage(topId);
+    // Ignore si l'utilisateur a déjà changé de top pendant l'attente
+    if (state.activeTopCategoryId !== topId) return;
+    state.subcategoryBubbles = rows;
+    renderSubcategoryBubbles();
+}
+
+/**
+ * Applique un filtre catégorie.
+ * - top-niveau → filtre parent+enfants + charge les bulles (1 RPC cache)
+ * - sous-catégorie (bulle) → filtre exact sur category_id, garde les bulles du top
+ * - all / favorites → masque les bulles
+ */
+export async function applyFilter(categoryId) {
     state.currentFilter = categoryId;
+
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+
+    if (categoryId === 'all' || categoryId === 'favorites') {
+        const btn = document.querySelector(`.filter-btn[data-category="${categoryId}"]`);
+        if (btn) btn.classList.add('active');
+        hideSubcategoryBubbles();
+        refreshCatalogue();
+        return;
+    }
+
+    const cat = state.categoriesById.get(categoryId);
+
+    if (isTopLevelCategory(categoryId)) {
+        const btn = document.querySelector(`.filter-btn[data-category="${categoryId}"]`);
+        if (btn) btn.classList.add('active');
+        refreshCatalogue();
+        await loadBubblesForTop(categoryId);
+        return;
+    }
+
+    // Sous-catégorie : highlight le top parent dans la barre, bulle active
+    if (cat && cat.parent_id) {
+        const parentBtn = document.querySelector(`.filter-btn[data-category="${cat.parent_id}"]`);
+        if (parentBtn) parentBtn.classList.add('active');
+
+        state.activeSubcategoryId = categoryId;
+
+        // Si les bulles du parent ne sont pas encore chargées, les charger une fois
+        if (state.activeTopCategoryId !== cat.parent_id || !state.subcategoryBubbles.length) {
+            state.activeTopCategoryId = cat.parent_id;
+            const rows = await fetchSubcategoriesWithLatestImage(cat.parent_id);
+            if (state.activeTopCategoryId === cat.parent_id) {
+                state.subcategoryBubbles = rows;
+            }
+        }
+        renderSubcategoryBubbles();
+        refreshCatalogue();
+        return;
+    }
+
+    // Fallback générique
     const btn = document.querySelector(`.filter-btn[data-category="${categoryId}"]`);
     if (btn) btn.classList.add('active');
+    hideSubcategoryBubbles();
     refreshCatalogue();
+}
+
+export function clearSubcategorySelection() {
+    hideSubcategoryBubbles();
 }
 
 export function switchView(v) {
