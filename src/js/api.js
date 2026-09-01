@@ -179,6 +179,8 @@ function enrichProductsWithCategoryNames(products) {
     });
 }
 
+const PRODUCT_SELECT_FULL =
+    'id, name, price, category_id, image, popularity_score, orders_count, created_at, moq, tailles, couleurs, video_url';
 const PRODUCT_SELECT_WITH_ORDERS =
     'id, name, price, category_id, image, popularity_score, orders_count, created_at, moq, tailles, couleurs';
 const PRODUCT_SELECT_BASE =
@@ -208,10 +210,24 @@ export async function fetchProducts(forceRefresh = false) {
         } = await fetchWithTimeout(
             supabaseClient
                 .from('products')
-                .select(PRODUCT_SELECT_WITH_ORDERS)
+                .select(PRODUCT_SELECT_FULL)
                 .order('created_at', { ascending: false })
                 .limit(500)
         ));
+
+        // Fallback si video_url absent
+        if (error) {
+            ({
+                data,
+                error
+            } = await fetchWithTimeout(
+                supabaseClient
+                    .from('products')
+                    .select(PRODUCT_SELECT_WITH_ORDERS)
+                    .order('created_at', { ascending: false })
+                    .limit(500)
+            ));
+        }
 
         // Fallback si orders_count n'existe pas encore en base
         if (error) {
