@@ -58,7 +58,6 @@
 .filter-btn:hover:not(.active) { border-color: #555; }
 .filter-count { font-size: 0.7rem; opacity: 0.7; margin-left: 0.2rem; }
 
-/* ── Bulles sous-catégories (enfants d'un top-niveau) ─────────────────────── */
 .subcategory-bubbles {
     display: flex;
     gap: 0.75rem;
@@ -374,6 +373,19 @@ body.categories-page-open .logo-brand-text {
 
 .categories-popular-grid {
     padding: 0;
+}
+
+/* Cartes toujours visibles dans Articles populaires (pas d'IO catalogue) */
+.categories-popular-grid .product-card,
+.categories-popular-grid .product-card.visible {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    background: var(--surface-light) !important;
+}
+
+.categories-popular-grid .product-card img {
+    opacity: 1 !important;
 }
 
 .categories-panel-status {
