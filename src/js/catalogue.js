@@ -113,8 +113,7 @@ push(`${couleurs.length} couleur${couleurs.length > 1 ? 's' : ''}`);
 export function loadMoreProducts() {
     if (state.displayedCount >= state.currentFilteredProducts.length) return;
     document.getElementById('loadingMessage').style.display = 'block';
-    setTimeout(() => appendProducts(state.displayedCount, PRODUCTS_PER_PA
-GE), 100);
+    setTimeout(() => appendProducts(state.displayedCount, PRODUCTS_PER_PAGE), 100);
 }
 
 function updateSentinelVisibility() {
@@ -228,8 +227,7 @@ export async function applyFilter(categoryId) {
 
     // Sous-catégorie : highlight le top parent dans la barre, bulle active
     if (cat && cat.parent_id) {
-        const parentBtn = document.q
-uerySelector(`.filter-btn[data-category="${cat.parent_id}"]`);
+        const parentBtn = document.querySelector(`.filter-btn[data-category="${cat.parent_id}"]`);
         if (parentBtn) parentBtn.classList.add('active');
 
         state.activeSubcategoryId = categoryId;
@@ -280,8 +278,7 @@ export function renderCategories() {
     grid.innerHTML = topCats.map(cat => {
         const filterIds = getCategoryFilterIds(cat.id);
         const idSet = new Set(filterIds || [cat.id]);
-        const productsInCat = state.products.filter(p => p.category_id && idSet.has(p.ca
-tegory_id));
+        const productsInCat = state.products.filter(p => p.category_id && idSet.has(p.category_id));
         const count = productsInCat.length;
         const lp = [...productsInCat]
             .filter(p => p.image)
