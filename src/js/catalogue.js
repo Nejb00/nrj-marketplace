@@ -350,14 +350,40 @@ function getCategoriesPopularProducts() {
     return list.slice(0, 60);
 }
 
+/** Force le chargement des images dans le panneau scrollable (lazy natif souvent cassé dedans). */
 function revealCardImages(root) {
     if (!root) return;
-    root.querySelectorAll('img').forEach(img => {
-        const mark = () => img.classList.add('loaded');
-        if (img.complete && img.naturalWidth > 0) mark();
-        else {
-            img.addEventListener('load', mark, { once: true });
-            img.addEventListener('error', mark, { once: true });
+    root.querySelectorAll('img').forEach((img, index) => {
+        img.classList.add('loaded');
+        img.style.opacity = '1';
+        // Eager pour les premières cartes visibles ; lazy ok plus bas
+        img.loading = index < 12 ? 'eager' : 'lazy';
+        img.decoding = 'async';
+
+        const markLoaded = () => {
+            img.classList.add('loaded');
+            img.style.opacity = '1';
+        };
+
+        if (img.complete && img.naturalWidth > 0) {
+            markLoaded();
+            return;
+        }
+
+        img.addEventListener('load', markLoaded, { once: true });
+        img.addEventListener('error', () => {
+            // 1er échec proxy → URL directe (déjà géré par onerror inline de thumbImg)
+            // 2e passage : marquer quand même pour ne pas rester invisible
+            markLoaded();
+        }, { once: true });
+
+        // Si le navigateur a bloqué le lazy dans overflow, relancer le src
+        if (!img.complete) {
+            const src = img.currentSrc || img.src;
+            if (src) {
+                // micro-retrigger sans casser le cache
+                img.src = src;
+            }
         }
     });
 }
@@ -370,11 +396,11 @@ function renderCategoriesPopularProducts() {
         grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-secondary);padding:2rem;">Aucun article</div>';
         return;
     }
-    // Classe "visible" obligatoire : sinon opacity:0 (animation catalogue)
     grid.innerHTML = products.map(p =>
         `<div class="product-card visible" data-product-id="${p.id}" role="listitem">${renderProductCardHTML(p)}</div>`
     ).join('');
-    revealCardImages(grid);
+    // Après injection DOM : forcer visibilité + chargement images
+    requestAnimationFrame(() => revealCardImages(grid));
 }
 
 async function loadCategoriesPanel(parentKey) {
