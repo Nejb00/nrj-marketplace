@@ -89,6 +89,33 @@ export async function fetchCategories() {
     }
 }
 
+/**
+ * Sous-catégories d'un parent + image du produit le plus récent (RPC).
+ * Un seul appel réseau par parent_id (cache dans state.subcategoryBubblesCache).
+ */
+export async function fetchSubcategoriesWithLatestImage(parentId, forceRefresh = false) {
+    if (!parentId) return [];
+
+    if (!forceRefresh && state.subcategoryBubblesCache[parentId]) {
+        return state.subcategoryBubblesCache[parentId];
+    }
+
+    try {
+        const { data, error } = await fetchWithTimeout(
+            supabaseClient.rpc('get_subcategories_with_latest_image', {
+                p_parent_id: parentId
+            })
+        );
+        if (error) throw error;
+        const rows = data || [];
+        state.subcategoryBubblesCache[parentId] = rows;
+        return rows;
+    } catch (err) {
+        console.error('Erreur RPC get_subcategories_with_latest_image:', err);
+        return state.subcategoryBubblesCache[parentId] || [];
+    }
+}
+
 /** Enrichit chaque produit avec category_name (jointure client via category_id). */
 function enrichProductsWithCategoryNames(products) {
     return (products || []).map(p => {
