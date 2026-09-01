@@ -47,7 +47,7 @@ export async function trackView(productId) {
             })
         );
     } catch (e) {
-        // Silencieux : la vue anonyme ne doit pas casser l'app
+        // Silencieux
     }
 }
 
@@ -63,11 +63,6 @@ export async function getRelatedProducts(productId, limit = 8) {
     }
 }
 
-/**
- * Récupère l'arbre complet des catégories (top-niveau + sous-catégories).
- * Chaque ligne a : id, name, parent_id, slug, icon, display_order.
- * parent_id === null => catégorie top-niveau.
- */
 export async function fetchCategories() {
     try {
         const { data, error } = await fetchWithTimeout(
@@ -89,10 +84,6 @@ export async function fetchCategories() {
     }
 }
 
-/**
- * Sous-catégories d'un parent + image du produit le plus récent (RPC).
- * Un seul appel réseau par parent_id (cache dans state.subcategoryBubblesCache).
- */
 export async function fetchSubcategoriesWithLatestImage(parentId, forceRefresh = false) {
     if (!parentId) return [];
 
@@ -116,7 +107,6 @@ export async function fetchSubcategoriesWithLatestImage(parentId, forceRefresh =
     }
 }
 
-/** Catégories parentes triées par popularité (RPC backend). */
 export async function fetchParentCategoriesRanked() {
     try {
         const { data, error } = await fetchWithTimeout(
@@ -130,14 +120,12 @@ export async function fetchParentCategoriesRanked() {
     }
 }
 
-/** Top sous-catégories populaires (onglet En vedette). */
 export async function fetchTopPopularSubcategories(limit = 20) {
     try {
         const { data, error } = await fetchWithTimeout(
             supabaseClient.rpc('get_top_popular_subcategories', { lim: limit })
         );
         if (error) {
-            // Compat : certains backends utilisent p_limit
             const retry = await fetchWithTimeout(
                 supabaseClient.rpc('get_top_popular_subcategories', { p_limit: limit })
             );
@@ -157,7 +145,6 @@ export async function fetchTopPopularSubcategories(limit = 20) {
     }
 }
 
-/** Sous-catégories d'un parent, triées par popularité. */
 export async function fetchSubcategoriesByPopularity(parentId) {
     if (!parentId) return [];
     try {
@@ -182,7 +169,6 @@ export async function fetchSubcategoriesByPopularity(parentId) {
     }
 }
 
-/** Enrichit chaque produit avec category_name (jointure client via category_id). */
 function enrichProductsWithCategoryNames(products) {
     return (products || []).map(p => {
         const cat = p.category_id ? state.categoriesById.get(p.category_id) : null;
@@ -192,6 +178,11 @@ function enrichProductsWithCategoryNames(products) {
         };
     });
 }
+
+const PRODUCT_SELECT_WITH_ORDERS =
+    'id, name, price, category_id, image, popularity_score, orders_count, created_at, moq, tailles, couleurs';
+const PRODUCT_SELECT_BASE =
+    'id, name, price, category_id, image, popularity_score, created_at, moq, tailles, couleurs';
 
 export async function fetchProducts(forceRefresh = false) {
     const now = Date.now();
@@ -208,13 +199,33 @@ export async function fetchProducts(forceRefresh = false) {
             return;
         }
 
-        const { data, error } = await fetchWithTimeout(
+        let data = null;
+        let error = null;
+
+        ({
+            data,
+            error
+        } = await fetchWithTimeout(
             supabaseClient
                 .from('products')
-                .select('id, name, price, category_id, image, popularity_score, created_at, moq, tailles, couleurs')
+                .select(PRODUCT_SELECT_WITH_ORDERS)
                 .order('created_at', { ascending: false })
                 .limit(500)
-        );
+        ));
+
+        // Fallback si orders_count n'existe pas encore en base
+        if (error) {
+            ({
+                data,
+                error
+            } = await fetchWithTimeout(
+                supabaseClient
+                    .from('products')
+                    .select(PRODUCT_SELECT_BASE)
+                    .order('created_at', { ascending: false })
+                    .limit(500)
+            ));
+        }
         
         if (error) throw error;
         state.products = enrichProductsWithCategoryNames(data || []);
