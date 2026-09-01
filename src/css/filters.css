@@ -26,7 +26,7 @@
     background: var(--primary);
     color: white;
     border-color: var(--primary);
-    box-shadow: 0 4px 12px rgba(255, 140, 66, se0.3);
+    box-shadow: 0 4px 12px rgba(255, 140, 66, 0.3);
 }
 
 .filter-chip:hover:not(.active) { background: var(--surface-light); color: var(--text); }
