@@ -161,7 +161,15 @@ export function renderSubcategoryBubbles() {
     }
 
     row.hidden = false;
-    row.innerHTML = items.map(sub => {
+    if (!row.dataset.allBound) {
+        row.dataset.allBound = '1';
+        row.addEventListener('click', (e) => {
+            if (e.target.closest('[data-subcategory-all="1"]')) selectSubcategoryAll();
+        });
+    }
+    const allActive = state.activeSubcategoryId === null ? ' active' : '';
+    const allBubble = `<button type="button" class="subcat-bubble subcat-bubble--all${allActive}" data-subcategory-all="1" aria-label="Tout" title="Tout"><span class="subcat-bubble-img"><span class="subcat-bubble-fallback">✨</span></span><span class="subcat-bubble-label">Tout</span></button>`;
+    row.innerHTML = allBubble + items.map(sub => {
         const active = state.activeSubcategoryId === sub.id ? ' active' : '';
         const label = escapeHtml(sub.name || '');
         const fallbackIcon = sub.icon ? escapeHtml(sub.icon) : '📦';
@@ -184,6 +192,18 @@ export function renderSubcategoryBubbles() {
             <span class="subcat-bubble-label">${label}</span>
         </button>`;
     }).join('');
+}
+
+export function selectSubcategoryAll() {
+    const topId = state.activeTopCategoryId;
+    if (!topId) return;
+    state.currentFilter = topId;
+    state.activeSubcategoryId = null;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    const btn = document.querySelector(`.filter-btn[data-category="${topId}"]`);
+    if (btn) btn.classList.add('active');
+    renderSubcategoryBubbles();
+    refreshCatalogue();
 }
 
 async function loadBubblesForTop(topId) {
