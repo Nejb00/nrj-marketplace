@@ -278,38 +278,54 @@ export function clearSubcategorySelection() {
     hideSubcategoryBubbles();
 }
 
-/** Calcule la hauteur réelle du header (search + chips) pour figer le layout catégories. */
+/**
+ * Mesure le header fixed (search + chips) et fige la hauteur du bloc catégories
+ * à calc(100dvh - headerH). Le scroll page est désactivé : seul sidebar/panel scrollent.
+ */
 function syncCategoriesHeaderOffset() {
     const fixed = document.getElementById('headerFixed');
     const spacer = document.getElementById('headerSpacer');
     const cv = document.getElementById('categoriesView');
     if (!cv) return;
 
-    // Header toujours déployé en mode catégories
+    // Header toujours déployé (search + filter chips visibles, --sp = 0)
     if (fixed) {
         fixed.style.setProperty('--sp', '0');
         const searchCompact = document.getElementById('searchCompact');
         if (searchCompact) searchCompact.classList.remove('active');
     }
 
-    // Mesure après layout
-    requestAnimationFrame(() => {
-        const headerH = fixed ? Math.ceil(fixed.getBoundingClientRect().height + 8) : 160;
+    const apply = () => {
+        // top: 8px du header-fixed + hauteur réelle du bloc fixed
+        const topOffset = 8;
+        const headerBox = fixed ? fixed.getBoundingClientRect().height : 152;
+        const headerH = Math.ceil(topOffset + headerBox);
         if (spacer) spacer.style.height = headerH + 'px';
         cv.style.setProperty('--categories-header-h', headerH + 'px');
-    });
+        cv.style.height = `calc(100dvh - ${headerH}px)`;
+        cv.style.maxHeight = `calc(100dvh - ${headerH}px)`;
+    };
+
+    apply();
+    requestAnimationFrame(apply);
 }
 
 function enterCategoriesPageMode() {
+    document.documentElement.classList.add('categories-page-open');
     document.body.classList.add('categories-page-open');
     window.scrollTo(0, 0);
     syncCategoriesHeaderOffset();
 }
 
 function exitCategoriesPageMode() {
+    document.documentElement.classList.remove('categories-page-open');
     document.body.classList.remove('categories-page-open');
     const cv = document.getElementById('categoriesView');
-    if (cv) cv.classList.remove('is-open');
+    if (cv) {
+        cv.classList.remove('is-open');
+        cv.style.height = '';
+        cv.style.maxHeight = '';
+    }
 }
 
 export function switchView(v) {
@@ -323,6 +339,8 @@ export function switchView(v) {
         }
         if (hv) hv.style.display = 'none';
         renderCategories();
+        // 2e mesure après rendu (titre + layout peuvent influer le spacer)
+        requestAnimationFrame(() => syncCategoriesHeaderOffset());
     } else {
         exitCategoriesPageMode();
         if (cv) {
