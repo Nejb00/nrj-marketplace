@@ -1,0 +1,213 @@
+{
+  "files": {
+    ".github/workflows/drive-sync.yml": {
+      "githubSha": "639a87cd7f7bd1f1235aabbe6023396dac65d73a",
+      "driveMd5": "d976f7b8cd027af2af9d7f8f467ac0f1"
+    },
+    ".github/workflows/gdrive-sync.yml": {
+      "githubSha": "ede74b61782f4bee07df70f99d4fae662cdaefed",
+      "driveMd5": "b3df2811b050ebf0affb62ea924eb246"
+    },
+    ".github/workflows/notion-sync.yml": {
+      "githubSha": "7a13aada8e437d76f01f9a56f73aea4a4b139e53",
+      "driveMd5": "8c9bd72d39c67c3052c826eea0f363be"
+    },
+    ".gitignore": {
+      "githubSha": "c073aada3ee933674740fb7b82cf3c7ff0030215",
+      "driveMd5": "ae098edbc720488943dc151f7851b6e6"
+    },
+    "README.md": {
+      "githubSha": "ad07fba4d90879b6448b646f28528b05ee2243ea",
+      "driveMd5": "37bbc19cd507989fd0453c2fb8a00ca9"
+    },
+    "admin.html": {
+      "githubSha": "589fe0c8670c767efae2e6b4fa70ca5044f04e9d",
+      "driveMd5": "d237c3e98953980d99eeb12ec05d14d9"
+    },
+    "index.html": {
+      "githubSha": "527acb5b29f9dfba554d71327f26db3ce81ad035",
+      "driveMd5": "f33acbf76ebbb4f2fa93bb2c9ae58ed5"
+    },
+    "package.json": {
+      "githubSha": "50130f81b74bb2ec64e3b3dd42286e2cdda84947",
+      "driveMd5": "66e6c10934fea093b5a42a8877750ae6"
+    },
+    "public/Hr": {
+      "githubSha": "755d0629ab9b927d669f2476729886bf48958b47",
+      "driveMd5": "437ed0e94114990abbf8f2fe5b0f2c93"
+    },
+    "public/icon-1024.png": {
+      "githubSha": "605fea1dc0fcce17d2bc5eb304c436d3317a5563",
+      "driveMd5": "8634547c5a0af99ef63e83678f80fa7a"
+    },
+    "public/icon-192.png": {
+      "githubSha": "296728de0188468d20778c000b23aa9e7f7445e4",
+      "driveMd5": "c79cba4f9cf7491eb441636f34c74943"
+    },
+    "public/icon-512.png": {
+      "githubSha": "227b6b0ed4c486aae755f06c7cf073321631decb",
+      "driveMd5": "ca7e5cd5dd9ec47946a74e66ace2c9cc"
+    },
+    "public/icon.svg": {
+      "githubSha": "04f8a6f8a9fcee0032b0824507aa2fcb05059a07",
+      "driveMd5": "6fb4079db8e45d734005bf5507445c2e"
+    },
+    "public/manifest.webmanifest": {
+      "githubSha": "d3983f9c38d95191abbf5533bd66f69338dfdc8d",
+      "driveMd5": "f32cf8e252282edb1f774c2e78a6b2a9"
+    },
+    "public/placeholder.svg": {
+      "githubSha": "47fe9f8fa403638fd3ea0ebd55a9447ac8645f6b",
+      "driveMd5": "e389578e57bc63fd76d19400276d4309"
+    },
+    "public/sw.js": {
+      "githubSha": "3715a04dbd9ee2c6f373c23af31cd0fe0837de98",
+      "driveMd5": "8e523d13a225aa110dab3d1c05d7ea1d"
+    },
+    "scripts/drive-sync.mjs": {
+      "githubSha": "d51b092ab918cd8aa58ab5fe9d89930a094037d4",
+      "driveMd5": "47bbfb3f93069edf9ed407290fe514a0"
+    },
+    "scripts/sync_to_gdrive.py": {
+      "githubSha": "d629c590c5e05f3cd32caabbff1a91263b861f1e",
+      "driveMd5": "5708e51bd4db350b2c64ab25716773ae"
+    },
+    "scripts/sync_to_notion.py": {
+      "githubSha": "626a285288320c45f65a21d0ad61d4dc7cdde638",
+      "driveMd5": "d69da65dea0a949b0c2412dece68ddb7"
+    },
+    "src/css/admin.css": {
+      "githubSha": "f58a3cdcff2e9429f550439dbaac6946f47fe3f1",
+      "driveMd5": "2299e3648440891fc99c08bc88ea625f"
+    },
+    "src/css/base.css": {
+      "githubSha": "b96c1f0c6aa71f1e1c7664b0b235cde0d144fde8",
+      "driveMd5": "4ec3c7a204fc9a025991d59e65b09553"
+    },
+    "src/css/cart-admin.css": {
+      "githubSha": "e100a87877b6def8cca31dc83b0affc7124f2cec",
+      "driveMd5": "76331db24a5f86dc5bf13aa9e241ca73"
+    },
+    "src/css/filters.css": {
+      "githubSha": "d9a05d2a365b9d25db7eab209c376e3a5025b33c",
+      "driveMd5": "6306431d5de1624969958f33de3274c6"
+    },
+    "src/css/fluo-theme.css": {
+      "githubSha": "62ce0f319e741ec1644bdac8e7a60815b0f4d3b3",
+      "driveMd5": "fddcaaae7ea01a68d407fbc85ffb9dc6"
+    },
+    "src/css/light-theme-patch.css": {
+      "githubSha": "216ef5e812decdc1ecb1e97f348aa5c842cce28d",
+      "driveMd5": "d8d701d109eb8ad02a2ad0f641a5c774"
+    },
+    "src/css/main.css": {
+      "githubSha": "484cf53d142be6b98162d489b6d93cc758fc80fa",
+      "driveMd5": "470341cf9006f0dee715b3171213a39b"
+    },
+    "src/css/navigation.css": {
+      "githubSha": "30e2ab2b4dcebf9d9eea7d027698f884636a854c",
+      "driveMd5": "01a6fe8cb41ceb8a57cad3daa3a9ef8b"
+    },
+    "src/css/placeholder.css": {
+      "githubSha": "6ce0e38bbd5f91136e492ba59aca71446b6af423",
+      "driveMd5": "fc509d7d9d638f30651cfd4a17c07f7f"
+    },
+    "src/css/product-card.css": {
+      "githubSha": "26081356d3700421b7bc70f9afa670362a391eae",
+      "driveMd5": "599596e8a1b15b66a8b49070b0f9842a"
+    },
+    "src/css/product-modal.css": {
+      "githubSha": "3a495d27da6ed1c963f36b127614d228ce8e21e5",
+      "driveMd5": "70ef26346520c52d4fd4a5a9ad7b5394"
+    },
+    "src/css/search-bar.css": {
+      "githubSha": "237e3acffe244a80da8ddec5251117d1d30ab6bc",
+      "driveMd5": "0928c9f0681111e1c12b18792b6d54cf"
+    },
+    "src/css/search-view.css": {
+      "githubSha": "373cc0c61d1bb0d1516bd3d0557cd1543ce2275f",
+      "driveMd5": "0a9bf115d4f0f369314c1100b5373ef9"
+    },
+    "src/css/skeleton.css": {
+      "githubSha": "10977aa6171382fd8e14817789dace46e4e0c4eb",
+      "driveMd5": "101fe0b4a249c2fc6c214ec3e7f35514"
+    },
+    "src/js/admin-main.js": {
+      "githubSha": "b0e677476dc08f293a0f55f0b95b6471ec3dfee4",
+      "driveMd5": "e736e148dc9732cd2f0f0ee908e41c86"
+    },
+    "src/js/admin.js": {
+      "githubSha": "1f37187c305e05219aa8997be347e3432e2bae92",
+      "driveMd5": "baca0bac86530da83039ff16d2e4d1b4"
+    },
+    "src/js/api.js": {
+      "githubSha": "42e987832abd9648f59834ff3c9695c2f7f68d2c",
+      "driveMd5": "bd414a9bd9ab341276f4a78c872e70ba"
+    },
+    "src/js/cart.js": {
+      "githubSha": "a2ef7e18010ef77855207b4e9a0586da4ef9cf5a",
+      "driveMd5": "cc289f40d3006c5208d78bdfa1006f7c"
+    },
+    "src/js/catalogue.js": {
+      "githubSha": "07ce2f0ba18c500c3035830bbaa3014a6582301b",
+      "driveMd5": "bb70e649043b5e3f8a83aa679de91f93"
+    },
+    "src/js/config.js": {
+      "githubSha": "476e52616eef89fc943ae035eb762a46a22d5383",
+      "driveMd5": "2f903b19526bdfaeb554413b4db19d4b"
+    },
+    "src/js/db.js": {
+      "githubSha": "992453a985f96184b93273818cae44ce0927fb3c",
+      "driveMd5": "291cc0bbb5705d792fdb1dcb10e57cc0"
+    },
+    "src/js/lazy-loading.js": {
+      "githubSha": "dd6ee1e0d664b32a9441b93cff6b21fe28ab9e04",
+      "driveMd5": "ab8cd0e72792bdf247cb66bf9ac67114"
+    },
+    "src/js/main.js": {
+      "githubSha": "9b744e73ad7f6fba32da6689c1ab66837fbfb700",
+      "driveMd5": "eeb4aab5be84a762ceab6fb2d79d0778"
+    },
+    "src/js/product-edit.js": {
+      "githubSha": "42ec1f825a53fa6c35f093a1befe9cf981c75a76",
+      "driveMd5": "81a9a71920c079c1fb38ceb0f3749ccf"
+    },
+    "src/js/product-modal.js": {
+      "githubSha": "1beae1a4926fa945c72188b843f9171e8c24f69f",
+      "driveMd5": "3081ac0f035ddb1441ceeb0ac6255db3"
+    },
+    "src/js/reco.js": {
+      "githubSha": "bc67994a04d2d22477a0e9840287ef337fb1dc81",
+      "driveMd5": "2505795481f914c197d98a7b31bdec7c"
+    },
+    "src/js/search-view.js": {
+      "githubSha": "b7b4b812b28f2eef9a99e3a45cf86ff32d545a4b",
+      "driveMd5": "03a5cf6c5bec79ff054843482d646726"
+    },
+    "src/js/search.js": {
+      "githubSha": "1ca6fb6c800a413b793228cfda974ed145feeb98",
+      "driveMd5": "3eed44ea1fef4309f400d19a8117d2ff"
+    },
+    "src/js/state.js": {
+      "githubSha": "929257061c1111dd02ee9e9f2b3f6cbeb132fd50",
+      "driveMd5": "8b7d8a159104591810c442eb55272746"
+    },
+    "src/js/sync.js": {
+      "githubSha": "f0b38b81f47d89dd5a3bf2e1a44843c4ffa4897a",
+      "driveMd5": "c3ca469c4179217cd0b552061bad3306"
+    },
+    "src/js/utils.js": {
+      "githubSha": "1589cdfda12d4c9ca18c931c4b9d599b266f5e45",
+      "driveMd5": "c4db0059694dba690b2b9423e3601d26"
+    },
+    "src/js/visual-search.js": {
+      "githubSha": "32c9d5abf31ae0f613ce15ae0b3a3d1c5896672e",
+      "driveMd5": "f4c61c8d1c6e232db75fce73894c24ae"
+    },
+    "vite.config.js": {
+      "githubSha": "610c4be52446afa97857f6a11b16f6ebb15c2d3d",
+      "driveMd5": "ba96d156f4f2282a5e0fe5b742620aaf"
+    }
+  },
+  "updatedAt": "2026-09-03T01:12:16.818Z"
+}
