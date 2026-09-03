@@ -227,15 +227,7 @@
     "vite.config.js": {
       "githubSha": "610c4be52446afa97857f6a11b16f6ebb15c2d3d",
       "driveMd5": "ba96d156f4f2282a5e0fe5b742620aaf"
-    },
-    "src/css/base.drive-version.css": {
-      "githubSha": "35f95fffd2e78fba9238d6bded7069d618278aae",
-      "driveMd5": "807a9a8b9fab2c1c5f3f37d825152b27"
-    },
-    ".github/workflows/drive-sync.drive-version.yml": {
-      "githubSha": "e87a8073e38174448cd4dd9dd1f2211d4076b861",
-      "driveMd5": "f99281934fdca8d0930cef584c4f6992"
     }
   },
-  "updatedAt": "2026-09-03T21:51:51.995Z"
+  "updatedAt": "2026-09-03T23:55:21.728Z"
 }
