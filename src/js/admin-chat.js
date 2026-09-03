@@ -162,15 +162,10 @@ async function openConv(sessionId) {
     subscribeChannel();
 }
 
-async function markAdminRead(sessionId) {
-    const isActive = sessionId === activeConvId;
-    await supabaseClient
-        .from('chat_messages')
-        .update({ read_by_admin: true })
-        .eq('session_id', sessionId)
-        .eq('sender', 'client')
-        .eq('read_by_admin', false);
-    if (unreadMap[sessionId]) { unreadMap[sessionId] = 0; renderList(); }
+async function markAdminRead(sid) {
+    // RPC SECURITY DEFINER (évite la récursion RLS) — no-op si l'appelant n'est pas admin
+    await supabaseClient.rpc('mark_admin_read', { p_session: sid });
+    if (unreadMap[sid]) { unreadMap[sid] = 0; renderList(); }
 }
 
 function setConvStatus(text) {

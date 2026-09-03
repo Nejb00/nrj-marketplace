@@ -338,6 +338,9 @@ async function sendMessage() {
 
         el.dataset.id = data.id;
         el.classList.remove('pending');
+        // ✓ (envoi) → ✓✓ (stocké) ; passera au bleu via onMessageUpdate quand lu
+        const tk = el.querySelector('.ticks');
+        if (tk) { tk.textContent = '✓✓'; tk.classList.toggle('read', !!data.read_by_admin); }
         pendingProduct = null;
 
         // Met à jour l'aperçu côté boîte de réception vendeur.
@@ -372,12 +375,8 @@ async function markCustomerRead() {
     if (!sessionId) return;
     unread = 0;
     updateBadge();
-    await supabaseClient
-        .from('chat_messages')
-        .update({ read_by_customer: true })
-        .eq('session_id', sessionId)
-        .neq('sender', 'client')
-        .eq('read_by_customer', false);
+    // RPC SECURITY DEFINER (évite la récursion RLS chat_messages → chat_messages)
+    await supabaseClient.rpc('mark_customer_read');
 }
 
 // ── Rendu ───────────────────────────────────────────────────────────────────
