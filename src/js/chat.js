@@ -198,7 +198,8 @@ async function loadMessages() {
     if (error) throw error;
 
     const box = $('chatMessages');
-    box.querySelectorAll('.msg:not(.offline-note)').forEach((el) => el.remove());
+    // Nettoye tout, y compris une éventuelle note « offline » d'une tentative précédente
+    box.querySelectorAll('.msg').forEach((el) => el.remove());
     (data || []).forEach((m) => box.appendChild(buildBubble(m, 'customer')));
     scrollDown();
 }
