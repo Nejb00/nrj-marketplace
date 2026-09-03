@@ -34,6 +34,29 @@
             <!-- Tableau de bord (rempli par renderAdminStats) -->
             <section id="adminStats"></section>
 
+            <!-- 💬 Boîte de réception du chat FLUO -->
+            <section id="adminChatSection" style="display:none;">
+                <h2 style="margin-bottom:0.8rem;color:var(--primary);">💬 Messages clients</h2>
+                <div class="admin-chat-wrap">
+                    <div class="ac-list" id="acList"></div>
+                    <div class="ac-conv" id="acConv" style="display:none;">
+                        <div class="ac-conv-header">
+                            <button class="ac-back-btn" id="acBackBtn" aria-label="Retour à la liste">←</button>
+                            <div class="chat-avatar" id="acConvAvatar">👤</div>
+                            <div class="ac-conv-title">
+                                <div class="chat-header-name" id="acConvName">Client</div>
+                                <div class="chat-header-status" id="acConvStatus"></div>
+                            </div>
+                        </div>
+                        <div class="chat-messages" id="acConvMessages"></div>
+                        <div class="chat-input-bar">
+                            <input type="text" id="acMsgInput" placeholder="Répondre au client…" maxlength="1000" autocomplete="off">
+                            <button class="chat-send-btn" id="acSendBtn" aria-label="Envoyer"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <h2 style="margin-bottom:1rem;color:var(--primary);">Ajouter un nouveau produit</h2>
             <div class="form-group"><label>Nom</label><input type="text" id="adminName" placeholder="Ex: Écouteurs Pro"></div>
 

@@ -5,6 +5,7 @@ import { escapeHtml, formatPrice, generateBadgesHTML, showToast, thumbImg, modal
 import { trackPopularity, fetchProductDetails, trackView, getRelatedProducts } from './api.js';
 import { toggleFavorite, addToCart } from './cart.js';
 import { signalView } from './reco.js';
+import { openChat } from './chat.js';
 
 const productDetailsCache = new Map();
 
@@ -189,6 +190,15 @@ export async function openProductModal(pid) {
         if (tailles.length && !sT) return showToast('⚠️ Sélectionnez une taille');
         trackPopularity(p.id, 10);
         window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour FLUO, je souhaite commander : ${p.name} (ID: ${p.id}), Taille: ${sT || 'N/A'}, Quantité: ${moq}`)}`, '_blank');
+    };
+    // 💬 Chat FLUO : ouvre le chat du site avec le contexte produit
+    document.getElementById('chatStickyBtn').onclick = () => {
+        trackPopularity(p.id, 3);
+        openChat({
+            product: { id: p.id, name: p.name, price: p.price, image: p.image },
+            taille: sT,
+            couleur: sC
+        });
     };
 
     document.getElementById('modalRecCarousel').innerHTML = Array(6).fill(

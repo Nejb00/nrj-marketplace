@@ -1,6 +1,8 @@
 import '../css/admin.css';
+import '../css/chat.css';
 import { fetchProducts } from './api.js';
 import { handleAdminLogin, handleLogout, checkAdminSession, addProduct, deleteProduct } from './admin.js';
+import { initAdminChat } from './admin-chat.js';
 
 document.getElementById('adminLoginBtn').addEventListener('click', handleAdminLogin);
 document.getElementById('logoutBtn').addEventListener('click', handleLogout);
@@ -14,6 +16,7 @@ document.addEventListener('click', e => {
 async function init() {
     await fetchProducts();
     await checkAdminSession();
+    await initAdminChat();
 }
 
 init();

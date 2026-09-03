@@ -9,6 +9,7 @@ import { openProductModal, closeProductModal } from './product-modal.js';
 import { openEditModal, updateProduct } from './product-edit.js';
 import { initPlaceholderRotation, initVoiceSearch, showSearchDropdown, hideSearchDropdown } from './search.js';
 import { switchToSearchView, switchFromSearchView } from './search-view.js';
+import { initChat } from './chat.js';
 import { setupAutoSync } from './sync.js';
 
 let searchDebounceTimer = null;
@@ -728,6 +729,7 @@ async function init() {
     initLogoLongPress();
     initThemeToggle();
     initOfflineIndicator();
+    initChat();
     initServiceWorkerUpdates();
     
     initSwipeCategories();
