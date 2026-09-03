@@ -33,6 +33,6 @@ jobs:
           DRIVE_FOLDER_ID: ${{ secrets.DRIVE_FOLDER_ID }}
           GH_OWNER: Nejb00
           GH_REPO: nrj-marketplace
-          GH_MAIN_BRANCH: main-merged
+          GH_MAIN_BRANCH: main
           GH_SYNC_BRANCH: drive-sync
         run: npm run sync
