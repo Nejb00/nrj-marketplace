@@ -3,7 +3,7 @@
  *
  * - Identité : utilisateur ANONYME Supabase (auth.uid() = id de la session
  *   de chat) → RLS : chaque visiteur ne voit que SA conversation.
- * - Messages dans chat_messages (sender: 'customer' | 'admin' | 'bot').
+ * - Messages dans chat_messages (sender: 'client' | 'admin' | 'bot').
  * - Temps réel via postgres_changes : les réponses du vendeur arrivent seules.
  * - Bulles à la WhatsApp : ticks ✓/✓✓, indicateur « saisie… », carte produit
  *   quand le chat est ouvert depuis la modale d'un article.
@@ -144,7 +144,7 @@ async function restoreSession() {
         .from('chat_messages')
         .select('sender, read_by_customer')
         .eq('session_id', id)
-        .neq('sender', 'customer')
+        .neq('sender', 'client')
         .limit(500);
     unread = (msgs || []).filter((m) => !m.read_by_customer).length;
     updateBadge();
@@ -178,6 +178,7 @@ async function ensureSession() {
     if (!existing) {
         const { error } = await supabaseClient.from('chat_sessions').insert({
             id,
+            customer_user_id: id, // colonne NOT NULL (lien auth.users)
             customer_name: localStorage.getItem(NAME_KEY) || null,
             status: 'open',
             last_message_preview: '',
@@ -200,7 +201,7 @@ async function loadMessages() {
     const box = $('chatMessages');
     // Nettoye tout, y compris une éventuelle note « offline » d'une tentative précédente
     box.querySelectorAll('.msg').forEach((el) => el.remove());
-    (data || []).forEach((m) => box.appendChild(buildBubble(m, 'customer')));
+    (data || []).forEach((m) => box.appendChild(buildBubble(m, 'client')));
     scrollDown();
 }
 
@@ -231,7 +232,7 @@ function startChannel() {
 }
 
 function onNewMessage(m) {
-    if (m.sender === 'customer') {
+    if (m.sender === 'client') {
         const box = $('chatMessages');
         if (!box) return;
         // Adopte la bulle optimiste en attente (race temps réel vs réponse INSERT)
@@ -249,14 +250,14 @@ function onNewMessage(m) {
             return;
         }
         // Message envoyé depuis un autre onglet/appareil
-        box.appendChild(buildBubble(m, 'customer'));
+        box.appendChild(buildBubble(m, 'client'));
         scrollDown();
         return;
     }
 
     // Réponse du vendeur (ou de l'IA) → bulle entrante.
     $('chatMessages')?.querySelector('.offline-note')?.remove();
-    $('chatMessages').appendChild(buildBubble(m, 'customer'));
+    $('chatMessages').appendChild(buildBubble(m, 'client'));
     clearTyping();
     scrollDown();
     if (isOpen) markCustomerRead();
@@ -265,7 +266,7 @@ function onNewMessage(m) {
 
 function onMessageUpdate(m) {
     // Passe les ✓✓ au bleu quand le vendeur lit notre message
-    if (m.sender !== 'customer') return;
+    if (m.sender !== 'client') return;
     const el = $('chatMessages')?.querySelector(`[data-id="${m.id}"]`);
     const tk = el?.querySelector('.ticks');
     if (tk) tk.classList.toggle('read', !!m.read_by_admin);
@@ -305,7 +306,7 @@ async function sendMessage() {
     const meta = pendingProduct ? { product: pendingProduct } : null;
     const temp = {
         id: `tmp-${Date.now()}`,
-        sender: 'customer',
+        sender: 'client',
         content: text,
         metadata: meta,
         created_at: new Date().toISOString(),
@@ -314,7 +315,7 @@ async function sendMessage() {
     };
 
     const box = $('chatMessages');
-    const el = buildBubble(temp, 'customer');
+    const el = buildBubble(temp, 'client');
     el.classList.add('pending');
     box.appendChild(el);
     scrollDown();
@@ -325,7 +326,7 @@ async function sendMessage() {
             .from('chat_messages')
             .insert({
                 session_id: sessionId,
-                sender: 'customer',
+                sender: 'client',
                 content: text,
                 metadata: meta,
                 read_by_customer: true,
@@ -375,7 +376,7 @@ async function markCustomerRead() {
         .from('chat_messages')
         .update({ read_by_customer: true })
         .eq('session_id', sessionId)
-        .neq('sender', 'customer')
+        .neq('sender', 'client')
         .eq('read_by_customer', false);
 }
 

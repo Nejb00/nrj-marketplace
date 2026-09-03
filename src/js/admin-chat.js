@@ -111,7 +111,7 @@ async function refreshSessions() {
     const { data: unread } = await supabaseClient
         .from('chat_messages')
         .select('session_id')
-        .eq('sender', 'customer')
+        .eq('sender', 'client')
         .eq('read_by_admin', false)
         .limit(2000);
     unreadMap = {};
@@ -168,7 +168,7 @@ async function markAdminRead(sessionId) {
         .from('chat_messages')
         .update({ read_by_admin: true })
         .eq('session_id', sessionId)
-        .eq('sender', 'customer')
+        .eq('sender', 'client')
         .eq('read_by_admin', false);
     if (unreadMap[sessionId]) { unreadMap[sessionId] = 0; renderList(); }
 }
@@ -254,7 +254,7 @@ function subscribeChannel() {
         .channel('admin-inbox')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (payload) => {
             const m = payload.new;
-            if (m.sender !== 'customer') return;
+            if (m.sender !== 'client') return;
             const convOpen = (m.session_id === activeConvId && $('acConv') && $('acConv').style.display !== 'none');
             if (convOpen) {
                 appendMsg(m, { container: $('acConvMessages') });
