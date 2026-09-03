@@ -375,7 +375,7 @@ body {
 .logout-btn.visible { display: flex; }
 
 /* ✅ Toast discret : petit, translucide, disparaît vite */
-.toast { position: fixed; bottom: calc(var(--nav-height) + 25px); left: 50%; transform: translateX(-50%) translateY(100px); background: rgba(51, 51, 51, 0.85); backdrop-filter: blur(8px); color: #fff; padding: 0.4rem 1rem; border-radius: 50px; font-size: 0.75rem; font-weight: 600; transition: transform 0.3s ease, opacity 0.3s ease; z-index: 99; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+.toast { position: fixed; bottom: calc(var(--nav-height) + 25px); left: 50%; transform: translateX(-50%) translateY(100px); background: rgba(51, 51, 51, 0.85); backdrop-filter: blur(8px); color: #fff; padding: 0.4rem 1rem; border-radius: 50px; font-size: 0.75rem; font-weight: 600; transition: transform 0.3s ease, opacity 0.3s ease; z-index: 1500; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
 .toast.show { transform: translateX(-50%) translateY(0); }
 
 :root.light-theme .toast {
