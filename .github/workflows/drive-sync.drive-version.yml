@@ -1,0 +1,39 @@
+name: Synchro GitHub <-> Google Drive
+
+on:
+  schedule:
+    # Toutes les 15 minutes (les crons trop fréquents type */5 sont
+    # silencieusement ignorés par GitHub sur les repos actifs)
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {} # permet aussi de le lancer manuellement depuis l'onglet Actions
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout du repo
+        uses: actions/checkout@v4
+
+      - name: Installation de Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Installation des dépendances
+        run: npm install
+
+      - name: Lancer la synchronisation
+        env:
+          GITHUB_TOKEN: ${{ secrets.SYNC_GITHUB_TOKEN }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+          DRIVE_FOLDER_ID: ${{ secrets.DRIVE_FOLDER_ID }}
+          GH_OWNER: Nejb00
+          GH_REPO: nrj-marketplace
+          GH_MAIN_BRANCH: main
+          GH_SYNC_BRANCH: drive-sync
+        run: npm run sync
