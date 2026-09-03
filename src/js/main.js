@@ -740,10 +740,10 @@ async function init() {
     setupAutoSync();
 
     const { data: { session } } = await supabaseClient.auth.getSession();
-    // NB : les visiteurs du chat ont une session ANONYME — ce n'est pas l'admin.
+    // Admin = compte marqué role 'admin' (app_metadata). Les visiteurs du chat
+    // (sessions anonymes) et d'éventuels comptes créés ne sont PAS admin.
     const user = session?.user;
-    const isAnon = !user || user.is_anonymous === true || user.app_metadata?.provider === 'anonymous';
-    if (session && !isAnon) {
+    if (user && user.app_metadata?.role === 'admin') {
       state.isAdminLoggedIn = true;
       refreshCatalogue();
     }

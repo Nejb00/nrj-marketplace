@@ -156,7 +156,7 @@ async function ensureSession() {
 
     // Identité anonyme Supabase : chaque visiteur possède SA conversation
     // (RLS : personne d'autre ne peut la lire). Si une session existe déjà
-    // (anonyme ou compte réel — ex. le vendeur testant son site), on l'utilise.
+    // (anonyme ou compte réel), on l'utilise.
     const { data: { session: authSession } } = await supabaseClient.auth.getSession();
     let user = authSession?.user;
     if (!user) {

@@ -296,10 +296,9 @@ function subscribeChannel() {
 
 export async function initAdminChat() {
     const { data: { session } } = await supabaseClient.auth.getSession();
-    // Les visiteurs du chat ont une session anonyme — pas l'admin.
+    // Admin = compte marqué role 'admin' (app_metadata) uniquement.
     const user = session?.user;
-    const isAnon = !user || user.is_anonymous === true || user.app_metadata?.provider === 'anonymous';
-    if (!session || isAnon) return; // pas connecté : la section reste cachée
+    if (!user || user.app_metadata?.role !== 'admin') return; // sinon : section cachée
 
     const section = $('adminChatSection');
     if (section) section.style.display = 'block';
