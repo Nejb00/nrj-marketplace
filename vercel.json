@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/p/:id", "destination": "/api/og-product?id=:id" }
+  ]
+}
