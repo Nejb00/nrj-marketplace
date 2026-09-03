@@ -27,7 +27,9 @@ jobs:
 
       - name: Synchronisation vers Google Drive
         env:
-          GDRIVE_SERVICE_ACCOUNT: ${{ secrets.GDRIVE_SERVICE_ACCOUNT }}
-          GDRIVE_PARENT_FOLDER_ID: ${{ secrets.GDRIVE_PARENT_FOLDER_ID }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+          GDRIVE_PARENT_FOLDER_ID: ${{ secrets.DRIVE_FOLDER_ID }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: python scripts/sync_to_gdrive.py

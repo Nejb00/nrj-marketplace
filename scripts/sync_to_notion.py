@@ -22,6 +22,15 @@ else:
 
 print(f"ID Notion ciblé : {PAGE_ID}")
 
+# Headers communs à toutes les requêtes.
+# Un User-Agent explicite est INDISPENSABLE : Cloudflare bloque les requêtes
+# urllib qui envoient l'User-Agent par défaut "Python-urllib/3.x" (403).
+BASE_HEADERS = {
+    "Authorization": f"Bearer {NOTION_TOKEN}",
+    "Notion-Version": "2022-06-28",
+    "User-Agent": "nrj-marketplace-notion-sync/1.0 (+https://github.com/Nejb00/nrj-marketplace)",
+}
+
 EXCLUDE_DIRS = {'.git', 'node_modules', 'dist', 'build', '.next', '.cache'}
 EXCLUDE_FILES = {'package-lock.json', 'yarn.lock'}
 
@@ -51,10 +60,7 @@ def chunk_text(text, max_len=1900):
 def clear_existing_blocks():
     """Supprime les anciens blocs de la page Notion pour repartir à zéro"""
     url = f"https://api.notion.com/v1/blocks/{PAGE_ID}/children?page_size=100"
-    headers = {
-        "Authorization": f"Bearer {NOTION_TOKEN}",
-        "Notion-Version": "2022-06-28"
-    }
+    headers = dict(BASE_HEADERS)
     req = urllib.request.Request(url, headers=headers, method='GET')
     try:
         with urllib.request.urlopen(req) as resp:
@@ -73,11 +79,7 @@ def clear_existing_blocks():
 def push_blocks_in_batches(blocks):
     """Envoie les blocs à Notion par paquets de 100 (limite API)"""
     url = f"https://api.notion.com/v1/blocks/{PAGE_ID}/children"
-    headers = {
-        "Authorization": f"Bearer {NOTION_TOKEN}",
-        "Content-Type": "application/json",
-        "Notion-Version": "2022-06-28"
-    }
+    headers = {**BASE_HEADERS, "Content-Type": "application/json"}
 
     batch_size = 80
     for i in range(0, len(blocks), batch_size):

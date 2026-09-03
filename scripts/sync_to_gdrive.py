@@ -10,9 +10,12 @@ Fonctionnement :
   - Compare un hash MD5 pour ne renvoyer que les fichiers modifiés.
   - Supprime les fichiers Drive qui n'existent plus dans le dépôt.
 
-Secrets GitHub requis (dans Settings -> Secrets -> Actions) :
-  - GDRIVE_SERVICE_ACCOUNT : contenu JSON de la clé du compte de service Google.
-  - GDRIVE_PARENT_FOLDER_ID : ID du dossier Drive racine (partagé avec le compte de service).
+Secrets GitHub requis (les MÊMES que le workflow Node drive-sync.mjs) :
+  - GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / GOOGLE_REFRESH_TOKEN : OAuth Google.
+  - GDRIVE_PARENT_FOLDER_ID (ou DRIVE_FOLDER_ID) : ID du dossier Drive racine du miroir.
+
+Note : le miroir écrit directement dans ce dossier racine (comme drive-sync.mjs)
+pour que les deux workflows entretiennent le MÊME miroir Drive.
 """
 
 import os
@@ -21,20 +24,26 @@ import hashlib
 import mimetypes
 
 try:
-    from google.oauth2 import service_account
+    from google.oauth2.credentials import Credentials
     from googleapiclient.discovery import build
     from googleapiclient.http import MediaInMemoryUpload
 except ImportError:
     print("ERREUR : installe les dépendances avec : pip install google-api-python-client google-auth")
     raise
 
-# Configuration
-SERVICE_ACCOUNT_JSON = os.environ.get("GDRIVE_SERVICE_ACCOUNT", "").strip()
-PARENT_FOLDER_ID = os.environ.get("GDRIVE_PARENT_FOLDER_ID", "").strip()
+# Configuration — OAuth identique au script Node (aucun compte de service requis)
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "").strip()
+GOOGLE_REFRESH_TOKEN = os.environ.get("GOOGLE_REFRESH_TOKEN", "").strip()
+PARENT_FOLDER_ID = (os.environ.get("GDRIVE_PARENT_FOLDER_ID")
+                    or os.environ.get("DRIVE_FOLDER_ID") or "").strip()
 REPO_NAME = os.environ.get("GITHUB_REPOSITORY", os.path.basename(os.getcwd())).split("/")[-1]
 
-EXCLUDE_DIRS = {".git", "node_modules", "dist", "build", ".next", ".cache"}
-EXCLUDE_FILES = {"package-lock.json", "yarn.lock"}
+# Aligné sur drive-sync.mjs (isIgnored) pour ne pas entrer en conflit avec lui :
+# le Node ne supprime pas, ce script si — les filtres doivent coïncider,
+# sinon ping-pong de suppressions/créations entre les deux workflows.
+EXCLUDE_DIRS = {".git", "node_modules", "dist", "build", ".next", ".cache", ".drive-sync"}
+EXCLUDE_FILES = set()
 
 TEXT_MIME_OVERRIDES = {
     ".js":   "application/javascript",
@@ -53,16 +62,17 @@ TEXT_MIME_OVERRIDES = {
 }
 
 def get_drive_service():
-    if not SERVICE_ACCOUNT_JSON:
-        raise SystemExit("GDRIVE_SERVICE_ACCOUNT manquant.")
+    if not (GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET and GOOGLE_REFRESH_TOKEN):
+        raise SystemExit("GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / GOOGLE_REFRESH_TOKEN manquants.")
     if not PARENT_FOLDER_ID:
-        raise SystemExit("GDRIVE_PARENT_FOLDER_ID manquant.")
-    try:
-        info = json.loads(SERVICE_ACCOUNT_JSON)
-    except json.JSONDecodeError as e:
-        raise SystemExit(f"GDRIVE_SERVICE_ACCOUNT n'est pas du JSON valide : {e}")
-    scopes = ["https://www.googleapis.com/auth/drive"]
-    creds = service_account.Credentials.from_service_account_info(info, scopes=scopes)
+        raise SystemExit("GDRIVE_PARENT_FOLDER_ID (ou DRIVE_FOLDER_ID) manquant.")
+    creds = Credentials(
+        token=None,
+        refresh_token=GOOGLE_REFRESH_TOKEN,
+        token_uri="https://oauth2.googleapis.com/token",
+        client_id=GOOGLE_CLIENT_ID,
+        client_secret=GOOGLE_CLIENT_SECRET,
+    )
     return build("drive", "v3", credentials=creds, cache_discovery=False)
 
 def md5_of_file(filepath):
@@ -142,7 +152,7 @@ def collect_local_files():
     for root, dirs, files in os.walk("."):
         dirs[:] = [d for d in dirs if d not in EXCLUDE_DIRS]
         for f in sorted(files):
-            if f.startswith(".") or f in EXCLUDE_FILES:
+            if f in EXCLUDE_FILES:
                 continue
             rel = os.path.relpath(os.path.join(root, f), ".")
             file_list.append(os.path.normpath(rel))
@@ -150,10 +160,11 @@ def collect_local_files():
     return file_list
 
 def sync():
-    print(f"Dossier racine : {REPO_NAME}")
     service = get_drive_service()
-    root_folder_id = ensure_folder(service, REPO_NAME, PARENT_FOLDER_ID)
-    print(f"Dossier racine Drive : {REPO_NAME} ({root_folder_id})")
+    # Racine = PARENT_FOLDER_ID directement (même miroir que drive-sync.mjs,
+    # pas de sous-dossier <repo-name>) pour éviter deux miroirs divergents.
+    root_folder_id = PARENT_FOLDER_ID
+    print(f"Dossier racine Drive : {root_folder_id}")
     local_files = collect_local_files()
     print(f"Fichiers locaux a synchroniser : {len(local_files)}")
     created_count = 0; updated_count = 0; skipped_count = 0
