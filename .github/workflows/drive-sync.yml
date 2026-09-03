@@ -3,7 +3,7 @@ name: Synchro GitHub <-> Google Drive
 on:
   schedule:
     # Toutes les 15 minutes
-    - cron: "*/15 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch: {} # permet aussi de le lancer manuellement depuis l'onglet Actions
 
 jobs:
