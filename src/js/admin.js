@@ -38,7 +38,10 @@ export async function handleLogout() {
 
 export async function checkAdminSession() {
   const { data: { session } } = await supabaseClient.auth.getSession();
-  if (session) {
+  // NB : les visiteurs du chat ont une session ANONYME — pas l'admin.
+  const user = session?.user;
+  const isAnon = !user || user.is_anonymous === true || user.app_metadata?.provider === 'anonymous';
+  if (session && !isAnon) {
     state.isAdminLoggedIn = true;
     document.getElementById('adminPanel').classList.add('active');
     document.getElementById('loginPanel').style.display = 'none';

@@ -1,8 +1,8 @@
 /**
  * 💬 CHAT FLUO — chat client style WhatsApp
  *
- * - Session identifiée par un UUID stocké en localStorage (fluo_chat_session_id)
- *   → liée à la table chat_sessions (créée côté Supabase).
+ * - Identité : utilisateur ANONYME Supabase (auth.uid() = id de la session
+ *   de chat) → RLS : chaque visiteur ne voit que SA conversation.
  * - Messages dans chat_messages (sender: 'customer' | 'admin' | 'bot').
  * - Temps réel via postgres_changes : les réponses du vendeur arrivent seules.
  * - Bulles à la WhatsApp : ticks ✓/✓✓, indicateur « saisie… », carte produit
@@ -124,15 +124,21 @@ export function isChatOpen() {
 // ── Session & données ───────────────────────────────────────────────────────
 
 async function restoreSession() {
-    const id = localStorage.getItem(SESSION_KEY);
-    if (!id) return;
+    // L'identité anonyme est restaurée automatiquement par supabase-js
+    // (persistée en localStorage). uid = propriétaire de la session de chat.
+    const { data: { session: authSession } } = await supabaseClient.auth.getSession();
+    const user = authSession?.user;
+    if (!user) return;
+
+    const id = user.id;
     const { data } = await supabaseClient
         .from('chat_sessions')
         .select('id, customer_name')
         .eq('id', id)
         .maybeSingle();
-    if (!data) { localStorage.removeItem(SESSION_KEY); return; }
+    if (!data) { localStorage.setItem(SESSION_KEY, id); return; } // conversation créée à la première ouverture
     sessionId = id;
+    localStorage.setItem(SESSION_KEY, id);
     if (data.customer_name) localStorage.setItem(NAME_KEY, data.customer_name);
     const { data: msgs } = await supabaseClient
         .from('chat_messages')
@@ -147,13 +153,21 @@ async function restoreSession() {
 
 async function ensureSession() {
     if (sessionId) return sessionId;
-    let id = localStorage.getItem(SESSION_KEY);
-    const name = localStorage.getItem(NAME_KEY) || null;
 
-    if (!id) {
-        id = crypto.randomUUID();
-        localStorage.setItem(SESSION_KEY, id);
+    // Identité anonyme Supabase : chaque visiteur possède SA conversation
+    // (RLS : personne d'autre ne peut la lire). Si une session existe déjà
+    // (anonyme ou compte réel — ex. le vendeur testant son site), on l'utilise.
+    const { data: { session: authSession } } = await supabaseClient.auth.getSession();
+    let user = authSession?.user;
+    if (!user) {
+        const { data: authData, error: authError } = await supabaseClient.auth.signInAnonymously();
+        if (authError) throw authError;
+        user = authData.user;
     }
+
+    const id = user.id;
+    sessionId = id;
+    localStorage.setItem(SESSION_KEY, id);
 
     const { data: existing } = await supabaseClient
         .from('chat_sessions')
@@ -164,14 +178,13 @@ async function ensureSession() {
     if (!existing) {
         const { error } = await supabaseClient.from('chat_sessions').insert({
             id,
-            customer_name: name,
+            customer_name: localStorage.getItem(NAME_KEY) || null,
             status: 'open',
             last_message_preview: '',
             last_message_at: new Date().toISOString(),
         });
         if (error) throw error;
     }
-    sessionId = id;
     return id;
 }
 
