@@ -1,8 +1,8 @@
 {
   "files": {
     ".github/workflows/drive-sync.yml": {
-      "githubSha": "639a87cd7f7bd1f1235aabbe6023396dac65d73a",
-      "driveMd5": "d976f7b8cd027af2af9d7f8f467ac0f1"
+      "githubSha": "7c2723c95fe0c4d35e3452a27cda82d8ba6a616b",
+      "driveMd5": "14db718848543a339bf7da04f33db90f"
     },
     ".github/workflows/gdrive-sync.yml": {
       "githubSha": "ede74b61782f4bee07df70f99d4fae662cdaefed",
@@ -209,5 +209,5 @@
       "driveMd5": "ba96d156f4f2282a5e0fe5b742620aaf"
     }
   },
-  "updatedAt": "2026-09-03T01:12:16.818Z"
+  "updatedAt": "2026-09-03T01:39:08.275Z"
 }
