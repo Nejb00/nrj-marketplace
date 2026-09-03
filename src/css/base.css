@@ -53,7 +53,7 @@ body {
 .header-fixed {
     position: fixed;
     top: 8px;
-    left: 6px;
+    left: 2px;
     right: 6px;
     z-index: 100;
     display: flex;
@@ -66,10 +66,11 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    gap: 4px;
 }
 
-/* ── Style commun "verre" pour les 3 bulles ─────────────────────────────── */
+/* ── Style commun "verre" pour les 3 bulles ─────
+────────────────────────── */
 .logo-bubble,
 .actions-bubble,
 .search-bubble-compact,
@@ -129,7 +130,8 @@ body {
 
 :root.light-theme .logo-bubble > *,
 :root.light-theme .actions-bubble > *,
-:root.light-theme .search-bubble-compact > *,
+:root.light-th
+eme .search-bubble-compact > *,
 :root.light-theme .search-bubble-full .search-bar-container > * {
     position: relative;
     z-index: 1;
@@ -148,7 +150,7 @@ body {
     align-items: center;
     gap: 0.5rem;
     border-radius: 999px;
-    padding: 0.5rem 0.9rem 0.5rem 0.35rem;
+    padding: 0.5rem 0.9rem 0.5rem 0.1rem;
     cursor: pointer;
     flex-shrink: 0;
 }
@@ -177,7 +179,8 @@ body {
     height: 62%;
     background: #fff;
     -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.88a3 3 0 10-4.242-4.244 3 3 0 004.242 4.243z'/%3E%3C/svg%3E") center / contain no-repeat;
-    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.88a3 3 0 10-4.242-4.244 3 3 0 004.242 4.243z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33
+-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.88a3 3 0 10-4.242-4.244 3 3 0 004.242 4.243z'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 /* reflet glossy en haut de la tuile */
 .logo-icon::after {
@@ -245,7 +248,8 @@ body {
     z-index: 1;
 }
 
-/* ── Bulle compacte recherche (loupe seule, apparaît en fin de scroll) ──── */
+/* ── Bulle compacte recherche (loupe seule, apparaît en fin de sc
+roll) ──── */
 .search-bubble-compact {
     width: calc(46px * var(--sp, 0));
     height: 46px;
@@ -304,7 +308,8 @@ body {
     position: absolute;
     top: 2px;
     right: 2px;
-    background: var(--favorites);
+    background
+: var(--favorites);
     color: #fff;
     font-size: 0.62rem;
     font-weight: 800;
@@ -324,6 +329,8 @@ body {
     overflow: hidden;
     max-height: calc(68px * (1 - var(--sp, 0)));
     opacity: calc(1 - var(--sp, 0) * 1.6);
+    flex: 1;
+    max-width: 280px;
 }
 .search-bubble-full .search-bar-container {
     border-radius: 22px;
@@ -365,7 +372,8 @@ body {
     border-color: rgba(0, 0, 0, 0.1);
 }
 :root.light-theme .theme-toggle-btn::before {
-    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41'/%3E%3C/svg%3E") center / contain no-repeat;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http
+://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41'/%3E%3C/svg%3E") center / contain no-repeat;
     mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 .theme-toggle-btn:hover { background: rgba(255, 255, 255, 0.12); transform: scale(1.05); }
@@ -388,7 +396,8 @@ body {
 
 footer { text-align: center; padding: 1.5rem 1rem 5rem; color: var(--text-secondary); font-size: 0.75rem; }
 
-.scroll-to-top { position: fixed; bottom: calc(var(--nav-height) + 20px); right: 20px; width: 50px; height: 50px; background: var(--primary); color: white; border: none; border-radius: 50%; font-size: 1.2rem; cursor: pointer; opacity: 0; transform: translateY(20px); transition: all 0.3s ease; z-index: 99; pointer-events: none; }
+.scroll-to-top { position: fixed; bott
+om: calc(var(--nav-height) + 20px); right: 20px; width: 50px; height: 50px; background: var(--primary); color: white; border: none; border-radius: 50%; font-size: 1.2rem; cursor: pointer; opacity: 0; transform: translateY(20px); transition: all 0.3s ease; z-index: 99; pointer-events: none; }
 .scroll-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
 .scroll-to-top:active { transform: scale(0.9); }
 
@@ -440,7 +449,8 @@ footer { text-align: center; padding: 1.5rem 1rem 5rem; color: var(--text-second
     border-color: rgba(255, 140, 66, 0.5);
     box-shadow:
         0 0 0 3px rgba(255, 140, 66, 0.12),
-        0 4px 12px rgba(255, 140, 66, 0.08),
+        0 4px 12px rgba(255, 
+140, 66, 0.08),
         inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
