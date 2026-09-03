@@ -227,7 +227,75 @@
     "vite.config.js": {
       "githubSha": "610c4be52446afa97857f6a11b16f6ebb15c2d3d",
       "driveMd5": "ba96d156f4f2282a5e0fe5b742620aaf"
+    },
+    "vercel.drive-version.json": {
+      "githubSha": "b16eb60657eb498912d183f20230eb5401ace826",
+      "driveMd5": "b8658470ca689642450ef625326f37f2"
+    },
+    "index.drive-version.html": {
+      "githubSha": "bfe7497b999b09674d63e9ee3ce44688ad5fbb62",
+      "driveMd5": "bd7f4c704a8723ee49ff6b42c03a5073"
+    },
+    "admin.drive-version.html": {
+      "githubSha": "006496bdba6efe171472c6e9b9f119466c3b223a",
+      "driveMd5": "a9b30859c9e4e0acfa3d7006383a727c"
+    },
+    "api/og-product.drive-version.js": {
+      "githubSha": "6a376c88314d1442be679037326bd25a7d364e6c",
+      "driveMd5": "93a38528578f88aaa5a8d08f7161b9a7"
+    },
+    "src/js/product-modal.drive-version.js": {
+      "githubSha": "e8afd61f525538ad57208931c14b35812730b56a",
+      "driveMd5": "5f767c17916060d214e079964c0ac59d"
+    },
+    "src/js/main.drive-version.js": {
+      "githubSha": "312d0b4d9f78698623237b473f6025548b9fa6c5",
+      "driveMd5": "2f19de3e7f6ce92886a5779ff6a00be0"
+    },
+    "src/js/chat.drive-version.js": {
+      "githubSha": "e74f0eb452cd97eb70b70f122948b354b428e2c5",
+      "driveMd5": "39bf6fc1e856f861fe663d915f788ac9"
+    },
+    "src/js/admin.drive-version.js": {
+      "githubSha": "880bf8e562071dba3b195f33e3c677a55fcf2cf3",
+      "driveMd5": "75543689c78e127007eda710392d2275"
+    },
+    "src/js/admin-main.drive-version.js": {
+      "githubSha": "6876309591d10e6314a9f17f037266392d7c1f64",
+      "driveMd5": "7cf53a389026074531c2c3fa6012bf03"
+    },
+    "src/js/admin-chat.drive-version.js": {
+      "githubSha": "ae2632c143f8fd43e3eb8844917bb9d5c660f34c",
+      "driveMd5": "969288264bb2e2cf04600476a07c42c2"
+    },
+    "src/css/product-modal.drive-version.css": {
+      "githubSha": "e936a431dbbe79d87f513d0db52e58402336883b",
+      "driveMd5": "25a13db2d2cf2260c8c9503a9861bd5f"
+    },
+    "src/css/main.drive-version.css": {
+      "githubSha": "059f4e933cd2b9f9cff678389b8cc47327f6c5e3",
+      "driveMd5": "2d2d6775e6980dc297c9ef943ff681ed"
+    },
+    "src/css/chat.drive-version.css": {
+      "githubSha": "ba27742356b5d3e4636841bfc76c68476ff2d54f",
+      "driveMd5": "10d6d3ec16bd78f71142e2eea1d63904"
+    },
+    "src/css/base.drive-version.css": {
+      "githubSha": "bf3f823e3d322bdea7a41fcd346999f328cec38b",
+      "driveMd5": "e0ebc088481a9f58413e863ce848c556"
+    },
+    "scripts/sync_to_notion.drive-version.py": {
+      "githubSha": "d8fae9cb75a12480057868d4af31c0d31337f504",
+      "driveMd5": "c76fe38bac07b62293acc7974badaf17"
+    },
+    "scripts/sync_to_gdrive.drive-version.py": {
+      "githubSha": "9d43e41e7a90148c44dad49486cab825e475bfe6",
+      "driveMd5": "8b085f087095fe2df782e3f84b5959b4"
+    },
+    ".github/workflows/gdrive-sync.drive-version.yml": {
+      "githubSha": "4df2e4a889d7225df2fc54a3d6c64a048141c85d",
+      "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-09-03T11:24:32.331Z"
+  "updatedAt": "2026-09-03T15:08:42.299Z"
 }
