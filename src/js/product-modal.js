@@ -85,12 +85,21 @@ export async function openProductModal(pid) {
     
     const tailles = (p.tailles || '').split(',').map(s => s.trim()).filter(Boolean);
     const couleurs = (p.couleurs || '').split(',').map(s => s.trim()).filter(Boolean);
+    // image / image2 / image3… map to couleur[0] / couleur[1] / couleur[2]…
+    const allImgs = [p.image, p.image2, p.image3, p.image4, p.image5, p.image6].map(u => (u || '').trim()).filter(Boolean);
     let sT = tailles.length ? tailles[0] : '', sC = couleurs.length ? couleurs[0] : '';
     const moq = Number(p.moq) || 1, uPrice = Number(p.price);
+    let currentQty = moq;
 
     document.getElementById('modalPrice').textContent = formatPrice(uPrice);
-    document.getElementById('modalMoq').textContent = `Minimum d'achat : ${moq} pièce(s)`;
-    document.getElementById('modalTotal').textContent = `Total minimum : ${formatPrice(uPrice * moq)}`;
+    document.getElementById('modalMoq').textContent = moq > 1 ? `Minimum d'achat : ${moq} pièce(s)` : '';
+    const totalEl = document.getElementById('modalTotal');
+    function updateTotal() {
+        totalEl.textContent = `Total : ${formatPrice(uPrice * currentQty)}`;
+        const minus = document.getElementById('modalQtyMinus');
+        if (minus) minus.disabled = currentQty <= moq;
+    }
+    updateTotal();
     document.getElementById('modalDesc').textContent = p.description || '';
     document.getElementById('modalProductIdBadge').textContent = `[ID: ${p.id}]`;
     document.getElementById('modalBadges').innerHTML = generateBadgesHTML(p, true);
@@ -113,8 +122,10 @@ export async function openProductModal(pid) {
     };
 
     const videoUrl = (p.video_url || '').trim();
-    const imgs = [p.image, p.image2, p.image3, p.image4, p.image5, p.image6].filter(u => u && u.trim());
+    const imgs = allImgs;
     const sc = document.getElementById('modalCarouselScroll'), dc = document.getElementById('modalCarouselDots');
+    // Offset: if there's a video, image slides start at index 1
+    const imageSlideOffset = videoUrl ? 1 : 0;
     sc.innerHTML = '';
     dc.innerHTML = '';
 
@@ -133,10 +144,8 @@ export async function openProductModal(pid) {
         imgs.forEach((u) => {
             sc.innerHTML += `<div class="carousel-item">${modalImg(u, p.name)}</div>`;
             dc.innerHTML += `<span class="carousel-dot ${slideIndex === 0 && !videoUrl ? 'active' : (slideIndex === 0 ? 'active' : '')}" data-index="${slideIndex}"></span>`;
-            // Fix active class: only first overall slide is active
             slideIndex++;
         });
-        // Ensure only first dot is active
         dc.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === 0));
     }
 
@@ -146,7 +155,6 @@ export async function openProductModal(pid) {
         sc.addEventListener('scroll', () => {
             const idx = Math.round(sc.scrollLeft / Math.max(sc.offsetWidth, 1));
             updateCarouselDots(sc, dc, idx);
-            // Pause video when user leaves the video slide
             const videos = sc.querySelectorAll('video');
             videos.forEach((v, vi) => {
                 if (vi !== idx) {
@@ -180,18 +188,77 @@ export async function openProductModal(pid) {
         });
     }
 
+    function updateCouleurLabel() {
+        const lbl = document.getElementById('modalCouleurLabel');
+        if (!lbl) return;
+        if (sC) {
+            lbl.innerHTML = `Couleur (${couleurs.length}) : <span class="selected-color-name">${escapeHtml(sC)}</span>`;
+        } else {
+            lbl.textContent = couleurs.length ? `Couleur (${couleurs.length})` : 'Couleur';
+        }
+    }
+
+    /** Couleur i → image i (image, image2, image3…) — clic change la grande photo */
+    function renderColorSwatches(ct) {
+        ct.innerHTML = '';
+        couleurs.forEach((name, i) => {
+            const imgUrl = allImgs[i] || allImgs[0] || '';
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'color-swatch' + (name === sC ? ' selected' : '');
+            btn.setAttribute('aria-label', name);
+            btn.title = name;
+            if (imgUrl) {
+                btn.innerHTML = thumbImg(imgUrl, name, 112, 112);
+            } else {
+                btn.innerHTML = `<span class="swatch-fallback">${escapeHtml(name)}</span>`;
+            }
+            btn.onclick = () => {
+                ct.querySelectorAll('.color-swatch').forEach(x => x.classList.remove('selected'));
+                btn.classList.add('selected');
+                sC = name;
+                updateCouleurLabel();
+                const slideIdx = imageSlideOffset + Math.min(i, Math.max(0, imgs.length - 1));
+                sc.scrollTo({ left: sc.offsetWidth * slideIdx, behavior: 'smooth' });
+            };
+            ct.appendChild(btn);
+        });
+        updateCouleurLabel();
+    }
+
     document.getElementById('modalTailleGroup').style.display = tailles.length ? 'block' : 'none';
     if (tailles.length) renderOptions(document.getElementById('modalTailleOptions'), tailles, sT, 'taille');
-    document.getElementById('modalCouleurGroup').style.display = couleurs.length ? 'block' : 'none';
-    if (couleurs.length) renderOptions(document.getElementById('modalCouleurOptions'), couleurs, sC, 'couleur');
 
-    document.getElementById('addToCartStickyBtn').onclick = (e) => addToCart(p.id, sT, sC, e.currentTarget);
+    document.getElementById('modalCouleurGroup').style.display = couleurs.length ? 'block' : 'none';
+    if (couleurs.length) renderColorSwatches(document.getElementById('modalCouleurOptions'));
+
+    // Quantity stepper
+    const qtyValueEl = document.getElementById('modalQtyValue');
+    const qtyMinus = document.getElementById('modalQtyMinus');
+    const qtyPlus = document.getElementById('modalQtyPlus');
+    if (qtyValueEl) qtyValueEl.textContent = String(currentQty);
+    if (qtyMinus) {
+        qtyMinus.onclick = () => {
+            if (currentQty <= moq) return;
+            currentQty = Math.max(moq, currentQty - 1);
+            qtyValueEl.textContent = String(currentQty);
+            updateTotal();
+        };
+    }
+    if (qtyPlus) {
+        qtyPlus.onclick = () => {
+            currentQty += 1;
+            qtyValueEl.textContent = String(currentQty);
+            updateTotal();
+        };
+    }
+
+    document.getElementById('addToCartStickyBtn').onclick = (e) => addToCart(p.id, sT, sC, e.currentTarget, currentQty);
     document.getElementById('directOrderStickyBtn').onclick = () => {
         if (tailles.length && !sT) return showToast('⚠️ Sélectionnez une taille');
         trackPopularity(p.id, 10);
-        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour FLUO, je souhaite commander : ${p.name} (ID: ${p.id}), Taille: ${sT || 'N/A'}, Quantité: ${moq}`)}`, '_blank');
+        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour FLUO, je souhaite commander : ${p.name} (ID: ${p.id}), Taille: ${sT || 'N/A'}, Couleur: ${sC || 'N/A'}, Quantité: ${currentQty}`)}`, '_blank');
     };
-    // 💬 Chat FLUO : ouvre le chat du site avec le contexte produit
     document.getElementById('chatStickyBtn').onclick = () => {
         trackPopularity(p.id, 3);
         openChat({
