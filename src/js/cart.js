@@ -50,8 +50,12 @@ export async function addToCart(pid, t = '', c = '', sourceEl = null, qty = null
     const moq = Number(p.moq) || 1;
     const amount = Math.max(moq, Number(qty) || moq);
     const exist = state.cart.find(i => i.productId === pid && i.taille === t && i.couleur === c);
-    if (exist) exist.quantity = Number(exist.quantity) + amount;
-    else state.cart.push({ productId: pid, quantity: amount, taille: t, couleur: c, moq });
+    if (exist) {
+        exist.quantity = Number(exist.quantity) + amount;
+        exist.selected = true; // re-sélectionne si on rajoute
+    } else {
+        state.cart.push({ productId: pid, quantity: amount, taille: t, couleur: c, moq, selected: true });
+    }
     trackPopularity(pid, 5);
     await saveCart();
     refreshCartDisplay();
@@ -74,6 +78,34 @@ export async function removeCartItem(idx) {
     await saveCart();
     refreshCartDisplay();
     syncSoon();
+}
+
+/** Coche / décoche un article */
+export async function toggleSelectItem(idx) {
+    const it = state.cart[idx];
+    if (!it) return;
+    it.selected = !it.selected;
+    await saveCart();
+    refreshCartDisplay();
+}
+
+/** Coche / décoche tous les articles */
+export async function toggleSelectAll() {
+    const allSelected = state.cart.length > 0 && state.cart.every(i => i.selected !== false);
+    state.cart.forEach(i => { i.selected = !allSelected; });
+    await saveCart();
+    refreshCartDisplay();
+}
+
+function getSelectedItems() {
+    return state.cart.filter(i => i.selected !== false);
+}
+
+function getSelectedTotal() {
+    return getSelectedItems().reduce((sum, it) => {
+        const p = state.products.find(pr => pr.id === it.productId);
+        return p ? sum + p.price * Number(it.quantity) : sum;
+    }, 0);
 }
 
 export function updateNavCartBadge() {
@@ -102,8 +134,23 @@ export function refreshCartDisplay() {
         return;
     }
 
-    let tot = 0;
-    body.innerHTML = `<div class="cart-items">` + state.cart.map((it, idx) => {
+    const selectedItems = getSelectedItems();
+    const selectedCount = selectedItems.length;
+    const allSelected = selectedCount === state.cart.length;
+    const tot = getSelectedTotal();
+
+    // Barre de sélection en haut
+    const selectBar = `
+        <div class="cart-select-bar">
+            <label class="cart-select-all">
+                <input type="checkbox" id="cartSelectAll" ${allSelected ? 'checked' : ''}>
+                <span>Tout</span>
+            </label>
+            <span class="cart-selected-count">Articles sélectionnés (${selectedCount})</span>
+        </div>
+    `;
+
+    const itemsHtml = state.cart.map((it, idx) => {
         const p = state.products.find(pr => pr.id === it.productId);
         if (!p) return '';
         const img = p.image ? thumbImg(p.image, p.name, 80, 80) : '📦';
@@ -111,8 +158,12 @@ export function refreshCartDisplay() {
         if (it.couleur) vars.push(`Couleur: ${it.couleur}`);
         if (it.taille) vars.push(`Taille: ${it.taille}`);
         const dis = Number(it.quantity) <= (Number(it.moq) || 1);
-        tot += p.price * Number(it.quantity);
-        return `<div class="cart-item">
+        const isSelected = it.selected !== false;
+
+        return `<div class="cart-item ${isSelected ? 'is-selected' : 'is-deselected'}">
+            <label class="cart-item-check">
+                <input type="checkbox" data-action="cart-select" data-index="${idx}" ${isSelected ? 'checked' : ''}>
+            </label>
             <div class="cart-item-img">${img}</div>
             <div class="cart-item-info">
                 <h4>${escapeHtml(p.name)}</h4>
@@ -126,20 +177,33 @@ export function refreshCartDisplay() {
             </div>
             <button class="remove-item-btn" data-action="cart-remove" data-index="${idx}">🗑️</button>
         </div>`;
-    }).join('') + `</div>`;
+    }).join('');
+
+    body.innerHTML = selectBar + `<div class="cart-items">${itemsHtml}</div>`;
+
+    // Listeners sélection
+    document.getElementById('cartSelectAll')?.addEventListener('change', () => toggleSelectAll());
+    body.querySelectorAll('[data-action="cart-select"]').forEach(el => {
+        el.addEventListener('change', (e) => {
+            const idx = parseInt(e.currentTarget.dataset.index, 10);
+            toggleSelectItem(idx);
+        });
+    });
 
     if (footer) {
+        const disabled = selectedCount === 0;
         footer.innerHTML = `
             <div class="cart-total">
-                <span>Total</span>
+                <span>Total${selectedCount < state.cart.length ? ' (sélection)' : ''}</span>
                 <span id="cartTotal">${formatPrice(tot)}</span>
             </div>
-            <button class="checkout-btn" id="checkoutBtn">
-                Commander via WhatsApp
+            <button class="checkout-btn" id="checkoutBtn" ${disabled ? 'disabled' : ''}>
+                Commander via WhatsApp${selectedCount > 0 ? ` (${selectedCount})` : ''}
             </button>
         `;
-        // Attacher le listener à chaque refresh (le bouton est recréé)
-        document.getElementById('checkoutBtn')?.addEventListener('click', openOrderModal);
+        if (!disabled) {
+            document.getElementById('checkoutBtn')?.addEventListener('click', openOrderModal);
+        }
     }
 
     updateNavCartBadge();
@@ -150,8 +214,14 @@ export function openOrderModal() {
     const summary = document.getElementById('orderSummary');
     if (!overlay || !summary) return;
 
+    const selected = getSelectedItems();
+    if (selected.length === 0) {
+        showToast('⚠️ Sélectionnez au moins un article');
+        return;
+    }
+
     let tot = 0;
-    const lines = state.cart.map(i => {
+    const lines = selected.map(i => {
         const p = state.products.find(pr => pr.id === i.productId);
         if (!p) return '';
         tot += p.price * Number(i.quantity);
@@ -164,7 +234,6 @@ export function openOrderModal() {
 
     summary.innerHTML = lines.join('<br>') + `<br><br><strong>Total : ${formatPrice(tot)}</strong>`;
 
-    // Pré-remplir le nom si déjà connu
     const nameInput = document.getElementById('customerName');
     if (nameInput && !nameInput.value) {
         nameInput.value = localStorage.getItem('fluo_customer_name') || '';
@@ -178,10 +247,13 @@ export async function sendWhatsAppOrder() {
     if (!name) return showToast('⚠️ Indiquez votre nom');
     localStorage.setItem('fluo_customer_name', name);
 
+    const selected = getSelectedItems();
+    if (selected.length === 0) return showToast('⚠️ Sélectionnez au moins un article');
+
     let tot = 0;
     let msg = `🛒 *Nouvelle commande FLUO*\n\n👤 Client : ${name}\n\n`;
     const orderItems = [];
-    for (const i of state.cart) {
+    for (const i of selected) {
         const p = state.products.find(pr => pr.id === i.productId);
         if (!p) continue;
         let d = p.name;
@@ -205,7 +277,9 @@ export async function sendWhatsAppOrder() {
 
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
     document.getElementById('orderModalOverlay')?.classList.remove('open');
-    state.cart = [];
+
+    // Ne retire que les articles qui ont été commandés
+    state.cart = state.cart.filter(i => i.selected === false);
     await saveCart();
     refreshCartDisplay();
     showToast('✅ Commande envoyée sur WhatsApp');

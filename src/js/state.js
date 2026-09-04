@@ -82,7 +82,9 @@ function normalizeCart(raw) {
             quantity: Number(item.quantity) || 1,
             taille: item.taille || '',
             couleur: item.couleur || item.color || '',
-            moq: Number(item.moq) || 1
+            moq: Number(item.moq) || 1,
+            // Par défaut sélectionné (comportement Temu)
+            selected: item.selected !== false
         };
     }).filter(Boolean);
 }
