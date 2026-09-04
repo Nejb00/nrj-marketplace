@@ -3,13 +3,21 @@ import { escapeHtml, formatPrice, showToast, thumbImg } from './utils.js';
 import { trackPopularity } from './api.js';
 import { WHATSAPP_NUMBER, BASE_URL } from './config.js';
 import { refreshCatalogue } from './catalogue.js';
-import { signalCart } from './reco.js';
-import { syncSoon } from './sync.js';
+import { signalFavorite, signalCart, signalOrder } from './reco.js';
+import { syncAllOfflineData } from './sync.js';
+
+function syncSoon() {
+    if (navigator.onLine) syncAllOfflineData().catch(() => {});
+}
+
+export function loadOrders() {
+    if (!Array.isArray(state.orders)) state.orders = [];
+}
 
 function flyToCart(sourceEl) {
-    if (!sourceEl) return;
-    const target = document.getElementById('cartBtnHeader') || document.getElementById('navCartBadge');
-    if (!target) return;
+    const target = document.getElementById('navCartBadge');
+    if (!sourceEl || !target || target.style.display === 'none') return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const rect = sourceEl.getBoundingClientRect();
     const tRect = target.getBoundingClientRect();
@@ -87,8 +95,10 @@ export function refreshCartDisplay() {
     if (!container) return;
     if (state.cart.length === 0) {
         container.innerHTML = '<div class="cart-empty">Votre panier est vide</div>';
-        document.getElementById('checkoutBtn').disabled = true;
-        document.getElementById('cartTotal').textContent = formatPrice(0);
+        const checkout = document.getElementById('checkoutBtn');
+        if (checkout) checkout.disabled = true;
+        const totalEl = document.getElementById('cartTotal');
+        if (totalEl) totalEl.textContent = formatPrice(0);
         updateNavCartBadge();
         return;
     }
@@ -104,8 +114,10 @@ export function refreshCartDisplay() {
         tot += p.price * Number(it.quantity);
         return `<div class="cart-item"><div class="cart-item-img">${img}</div><div class="cart-item-info"><h4>${escapeHtml(p.name)}</h4>${vars.length ? `<div class="cart-item-variants">${escapeHtml(vars.join(', '))}</div>` : ''}<span class="cart-item-price">${formatPrice(p.price)}</span><div class="cart-item-qty"><button class="qty-btn" data-action="cart-decrease" data-index="${idx}" ${dis ? 'disabled' : ''}>−</button><span>${Number(it.quantity)}</span><button class="qty-btn" data-action="cart-increase" data-index="${idx}">+</button></div></div><button class="remove-item-btn" data-action="cart-remove" data-index="${idx}">🗑️</button></div>`;
     }).join('');
-    document.getElementById('cartTotal').textContent = formatPrice(tot);
-    document.getElementById('checkoutBtn').disabled = false;
+    const totalEl = document.getElementById('cartTotal');
+    if (totalEl) totalEl.textContent = formatPrice(tot);
+    const checkout = document.getElementById('checkoutBtn');
+    if (checkout) checkout.disabled = false;
     updateNavCartBadge();
 }
 
@@ -152,6 +164,7 @@ export async function sendWhatsAppOrder() {
         recipient: name
     });
     await saveOrders();
+    signalOrder && signalOrder();
 
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
     document.getElementById('orderModalOverlay')?.classList.remove('open');
@@ -159,10 +172,6 @@ export async function sendWhatsAppOrder() {
     await saveCart();
     refreshCartDisplay();
     showToast('✅ Commande envoyée sur WhatsApp');
-}
-
-export async function loadOrders() {
-    // already loaded via state
 }
 
 export async function toggleFavorite(pid, btn) {
@@ -173,6 +182,7 @@ export async function toggleFavorite(pid, btn) {
     } else {
         state.favorites.push(pid);
         showToast('❤️ Ajouté aux favoris');
+        signalFavorite && signalFavorite(state.products.find(p => p.id === pid));
     }
     await saveFavorites();
     updateNavFavBadge();
