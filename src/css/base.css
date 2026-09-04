@@ -148,9 +148,10 @@ body {
     align-items: center;
     gap: 0.5rem;
     border-radius: 999px;
-    padding: 0.5rem 0.9rem 0.5rem 0.35rem;
+    padding: 0.5rem 0.85rem 0.5rem 0.5rem;
     cursor: pointer;
     flex-shrink: 0;
+    margin-left: 0; /* alignée flush avec la marge gauche du header */
 }
 
 /* ✅ Flamme glossy/3D dégradé — masque SVG sur tuile orange (façon FLUO) */
@@ -247,8 +248,8 @@ body {
 
 /* ── Bulle compacte recherche (loupe seule, apparaît en fin de scroll) ──── */
 .search-bubble-compact {
-    width: calc(46px * var(--sp, 0));
-    height: 46px;
+    width: calc(48px * var(--sp, 0));
+    height: 48px;
     min-width: 0;
     border-radius: 50%;
     padding: 0;
@@ -260,12 +261,13 @@ body {
     opacity: var(--sp, 0);
     cursor: pointer;
     pointer-events: none;
+    /* Touch target >= 44×44px pour usage mobile confortable au pouce */
 }
 .search-bubble-compact.active { pointer-events: auto; }
 .search-bubble-compact .search-icon {
     font-size: 0;
-    width: 17px;
-    height: 17px;
+    width: 22px;
+    height: 22px;
     flex-shrink: 0;
     background: var(--text-secondary);
     -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") center / contain no-repeat;
