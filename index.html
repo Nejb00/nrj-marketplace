@@ -169,7 +169,17 @@
     <div class="cart-panel" id="cartPanel" role="dialog" aria-label="Panier">
         <div class="cart-header">
             <h2>Mon panier</h2>
-            <button class="cart-close" id="cartCloseBtn" aria-label="Fermer">&times;</button>
+            <div class="cart-header-actions">
+                <div class="cart-menu-wrap">
+                    <button class="cart-menu-btn" id="cartMenuBtn" aria-label="Options du panier" aria-haspopup="true" aria-expanded="false">⋯</button>
+                    <div class="cart-menu" id="cartMenu" role="menu" hidden>
+                        <button class="cart-menu-item" data-cart-action="share" role="menuitem">📤 Partager le panier</button>
+                        <button class="cart-menu-item" data-cart-action="remove-selected" role="menuitem" id="cartMenuRemoveSelected">🗑️ Supprimer la sélection</button>
+                        <button class="cart-menu-item danger" data-cart-action="clear" role="menuitem">🧹 Vider le panier</button>
+                    </div>
+                </div>
+                <button class="cart-close" id="cartCloseBtn" aria-label="Fermer">&times;</button>
+            </div>
         </div>
         <div class="cart-panel-body" id="cartPanelBody"></div>
         <div class="cart-footer" id="cartPanelFooter"></div>

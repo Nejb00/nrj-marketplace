@@ -52,7 +52,7 @@ export async function addToCart(pid, t = '', c = '', sourceEl = null, qty = null
     const exist = state.cart.find(i => i.productId === pid && i.taille === t && i.couleur === c);
     if (exist) {
         exist.quantity = Number(exist.quantity) + amount;
-        exist.selected = true; // re-sélectionne si on rajoute
+        exist.selected = true;
     } else {
         state.cart.push({ productId: pid, quantity: amount, taille: t, couleur: c, moq, selected: true });
     }
@@ -80,7 +80,6 @@ export async function removeCartItem(idx) {
     syncSoon();
 }
 
-/** Coche / décoche un article */
 export async function toggleSelectItem(idx) {
     const it = state.cart[idx];
     if (!it) return;
@@ -89,7 +88,6 @@ export async function toggleSelectItem(idx) {
     refreshCartDisplay();
 }
 
-/** Coche / décoche tous les articles */
 export async function toggleSelectAll() {
     const allSelected = state.cart.length > 0 && state.cart.every(i => i.selected !== false);
     state.cart.forEach(i => { i.selected = !allSelected; });
@@ -106,6 +104,102 @@ function getSelectedTotal() {
         const p = state.products.find(pr => pr.id === it.productId);
         return p ? sum + p.price * Number(it.quantity) : sum;
     }, 0);
+}
+
+/** Vider tout le panier */
+export async function clearCart() {
+    if (state.cart.length === 0) return showToast('🛒 Panier déjà vide');
+    if (!confirm('Vider tout le panier ?')) return;
+    state.cart = [];
+    await saveCart();
+    refreshCartDisplay();
+    closeCartMenu();
+    showToast('🧹 Panier vidé');
+}
+
+/** Supprimer uniquement les articles sélectionnés */
+export async function removeSelectedItems() {
+    const selected = getSelectedItems();
+    if (selected.length === 0) return showToast('⚠️ Aucun article sélectionné');
+    if (!confirm(`Supprimer ${selected.length} article${selected.length > 1 ? 's' : ''} sélectionné${selected.length > 1 ? 's' : ''} ?`)) return;
+    state.cart = state.cart.filter(i => i.selected === false);
+    await saveCart();
+    refreshCartDisplay();
+    closeCartMenu();
+    showToast('🗑️ Sélection supprimée');
+}
+
+/** Partager le panier (sélection ou tout) via WhatsApp */
+export function shareCart() {
+    const items = getSelectedItems().length > 0 ? getSelectedItems() : state.cart;
+    if (items.length === 0) return showToast('🛒 Panier vide');
+
+    let tot = 0;
+    let msg = `🛒 *Mon panier FLUO*\n\n`;
+    for (const i of items) {
+        const p = state.products.find(pr => pr.id === i.productId);
+        if (!p) continue;
+        let d = p.name;
+        if (i.couleur || i.taille) d += ` (${[i.couleur, i.taille].filter(Boolean).join(', ')})`;
+        msg += `• ${d} x${Number(i.quantity)} — ${formatPrice(p.price * Number(i.quantity))}\n  🔗 ${BASE_URL}?id=${p.id}\n`;
+        tot += p.price * Number(i.quantity);
+    }
+    msg += `\n💰 *Total : ${formatPrice(tot)}*\n\n👉 ${BASE_URL}`;
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    closeCartMenu();
+    showToast('📤 Lien de partage ouvert');
+}
+
+function closeCartMenu() {
+    const menu = document.getElementById('cartMenu');
+    const btn = document.getElementById('cartMenuBtn');
+    if (menu) menu.hidden = true;
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+
+function openCartMenu() {
+    const menu = document.getElementById('cartMenu');
+    const btn = document.getElementById('cartMenuBtn');
+    if (!menu || !btn) return;
+    menu.hidden = false;
+    btn.setAttribute('aria-expanded', 'true');
+
+    // Désactiver « Supprimer la sélection » si rien n'est coché
+    const removeBtn = document.getElementById('cartMenuRemoveSelected');
+    if (removeBtn) {
+        const hasSelected = getSelectedItems().length > 0;
+        removeBtn.disabled = !hasSelected;
+        removeBtn.classList.toggle('disabled', !hasSelected);
+    }
+}
+
+export function initCartMenu() {
+    const btn = document.getElementById('cartMenuBtn');
+    const menu = document.getElementById('cartMenu');
+    if (!btn || !menu) return;
+
+    btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (menu.hidden) openCartMenu();
+        else closeCartMenu();
+    });
+
+    menu.addEventListener('click', (e) => {
+        const item = e.target.closest('[data-cart-action]');
+        if (!item || item.disabled) return;
+        const action = item.dataset.cartAction;
+        if (action === 'clear') clearCart();
+        else if (action === 'remove-selected') removeSelectedItems();
+        else if (action === 'share') shareCart();
+    });
+
+    // Fermer en cliquant ailleurs
+    document.addEventListener('click', (e) => {
+        if (!menu.hidden && !e.target.closest('.cart-menu-wrap')) {
+            closeCartMenu();
+        }
+    });
 }
 
 export function updateNavCartBadge() {
@@ -139,7 +233,6 @@ export function refreshCartDisplay() {
     const allSelected = selectedCount === state.cart.length;
     const tot = getSelectedTotal();
 
-    // Barre de sélection en haut
     const selectBar = `
         <div class="cart-select-bar">
             <label class="cart-select-all">
@@ -181,7 +274,6 @@ export function refreshCartDisplay() {
 
     body.innerHTML = selectBar + `<div class="cart-items">${itemsHtml}</div>`;
 
-    // Listeners sélection
     document.getElementById('cartSelectAll')?.addEventListener('change', () => toggleSelectAll());
     body.querySelectorAll('[data-action="cart-select"]').forEach(el => {
         el.addEventListener('change', (e) => {
@@ -278,7 +370,6 @@ export async function sendWhatsAppOrder() {
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
     document.getElementById('orderModalOverlay')?.classList.remove('open');
 
-    // Ne retire que les articles qui ont été commandés
     state.cart = state.cart.filter(i => i.selected === false);
     await saveCart();
     refreshCartDisplay();
