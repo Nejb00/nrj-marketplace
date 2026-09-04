@@ -186,6 +186,22 @@
     </div>
     <div class="cart-overlay" id="cartOverlay"></div>
 
+    <!-- SÉLECTEUR QUANTITÉ -->
+    <div class="qty-sheet-overlay" id="qtySheetOverlay" hidden>
+        <div class="qty-sheet" role="dialog" aria-label="Sélectionner une quantité">
+            <div class="qty-sheet-header">
+                <h3>Sélectionner une quantité</h3>
+                <button type="button" class="qty-sheet-close" id="qtySheetClose" aria-label="Fermer">&times;</button>
+            </div>
+            <div class="qty-sheet-input-row">
+                <label for="qtySheetInput">Quantité</label>
+                <input type="number" id="qtySheetInput" min="1" inputmode="numeric" placeholder="Saisir une quantité">
+                <button type="button" class="qty-sheet-apply" id="qtySheetApply">OK</button>
+            </div>
+            <div class="qty-sheet-list" id="qtySheetList"></div>
+        </div>
+    </div>
+
     <!-- MODAL COMMANDE -->
     <div class="modal-overlay" id="orderModalOverlay">
         <div class="modal">

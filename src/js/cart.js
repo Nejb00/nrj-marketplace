@@ -73,6 +73,98 @@ export async function changeQty(idx, d) {
     syncSoon();
 }
 
+/** Fixe une quantité exacte (respecte le MOQ). qty <= 0 → supprimer. */
+export async function setCartQty(idx, qty) {
+    const it = state.cart[idx];
+    if (!it) return;
+    const n = Number(qty);
+    if (!Number.isFinite(n) || n <= 0) {
+        await removeCartItem(idx);
+        return;
+    }
+    const moq = Number(it.moq) || 1;
+    it.quantity = Math.max(moq, Math.floor(n));
+    await saveCart();
+    refreshCartDisplay();
+    syncSoon();
+}
+
+let qtyPickerIndex = null;
+
+export function openQtyPicker(idx) {
+    const it = state.cart[idx];
+    if (!it) return;
+    qtyPickerIndex = idx;
+    const moq = Number(it.moq) || 1;
+    const current = Number(it.quantity);
+
+    const overlay = document.getElementById('qtySheetOverlay');
+    const list = document.getElementById('qtySheetList');
+    const input = document.getElementById('qtySheetInput');
+    if (!overlay || !list || !input) return;
+
+    input.min = String(moq);
+    input.value = String(current);
+    input.placeholder = `Min. ${moq}`;
+
+    // Liste : supprimer + MOQ → max(current+15, MOQ+24)
+    const maxOpt = Math.max(current + 15, moq + 24);
+    let html = `<button type="button" class="qty-option qty-option-remove" data-qty="0">0 (Supprimer)</button>`;
+    for (let q = moq; q <= maxOpt; q++) {
+        const active = q === current ? ' is-active' : '';
+        html += `<button type="button" class="qty-option${active}" data-qty="${q}">${q}${active ? ' <span class="qty-check">✓</span>' : ''}</button>`;
+    }
+    list.innerHTML = html;
+
+    list.querySelectorAll('[data-qty]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const q = parseInt(btn.dataset.qty, 10);
+            closeQtyPicker();
+            await setCartQty(idx, q);
+        });
+    });
+
+    overlay.hidden = false;
+    requestAnimationFrame(() => overlay.classList.add('open'));
+    setTimeout(() => input.focus(), 200);
+}
+
+export function closeQtyPicker() {
+    const overlay = document.getElementById('qtySheetOverlay');
+    if (!overlay) return;
+    overlay.classList.remove('open');
+    setTimeout(() => { overlay.hidden = true; }, 220);
+    qtyPickerIndex = null;
+}
+
+let qtySheetInited = false;
+function initQtySheet() {
+    if (qtySheetInited) return;
+    const overlay = document.getElementById('qtySheetOverlay');
+    const closeBtn = document.getElementById('qtySheetClose');
+    const applyBtn = document.getElementById('qtySheetApply');
+    const input = document.getElementById('qtySheetInput');
+    if (!overlay) return;
+    qtySheetInited = true;
+
+    closeBtn?.addEventListener('click', closeQtyPicker);
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeQtyPicker();
+    });
+    applyBtn?.addEventListener('click', async () => {
+        if (qtyPickerIndex == null) return;
+        const val = parseInt(input?.value, 10);
+        closeQtyPicker();
+        await setCartQty(qtyPickerIndex, val);
+    });
+    input?.addEventListener('keydown', async (e) => {
+        if (e.key !== 'Enter' || qtyPickerIndex == null) return;
+        const val = parseInt(input.value, 10);
+        closeQtyPicker();
+        await setCartQty(qtyPickerIndex, val);
+    });
+}
+
 export async function removeCartItem(idx) {
     state.cart.splice(idx, 1);
     await saveCart();
@@ -106,7 +198,6 @@ function getSelectedTotal() {
     }, 0);
 }
 
-/** Vider tout le panier */
 export async function clearCart() {
     if (state.cart.length === 0) return showToast('🛒 Panier déjà vide');
     if (!confirm('Vider tout le panier ?')) return;
@@ -117,7 +208,6 @@ export async function clearCart() {
     showToast('🧹 Panier vidé');
 }
 
-/** Supprimer uniquement les articles sélectionnés */
 export async function removeSelectedItems() {
     const selected = getSelectedItems();
     if (selected.length === 0) return showToast('⚠️ Aucun article sélectionné');
@@ -129,7 +219,6 @@ export async function removeSelectedItems() {
     showToast('🗑️ Sélection supprimée');
 }
 
-/** Partager le panier (sélection ou tout) via WhatsApp */
 export function shareCart() {
     const items = getSelectedItems().length > 0 ? getSelectedItems() : state.cart;
     if (items.length === 0) return showToast('🛒 Panier vide');
@@ -203,12 +292,15 @@ export function initCartMenu() {
     });
 }
 
-// Auto-init quand le module est chargé
 if (typeof document !== 'undefined') {
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initCartMenu);
+        document.addEventListener('DOMContentLoaded', () => {
+            initCartMenu();
+            initQtySheet();
+        });
     } else {
         initCartMenu();
+        initQtySheet();
     }
 }
 
@@ -232,6 +324,7 @@ export function refreshCartDisplay() {
     if (!body) return;
 
     initCartMenu();
+    initQtySheet();
 
     if (state.cart.length === 0) {
         body.innerHTML = '<div class="cart-empty">Votre panier est vide</div>';
@@ -264,6 +357,7 @@ export function refreshCartDisplay() {
         if (it.taille) vars.push(`Taille: ${it.taille}`);
         const dis = Number(it.quantity) <= (Number(it.moq) || 1);
         const isSelected = it.selected !== false;
+        const qty = Number(it.quantity);
 
         return `<div class="cart-item ${isSelected ? 'is-selected' : 'is-deselected'}">
             <label class="cart-item-check">
@@ -275,9 +369,9 @@ export function refreshCartDisplay() {
                 ${vars.length ? `<div class="cart-item-variants">${escapeHtml(vars.join(', '))}</div>` : ''}
                 <span class="cart-item-price">${formatPrice(p.price)}</span>
                 <div class="cart-item-qty">
-                    <button class="qty-btn" data-action="cart-decrease" data-index="${idx}" ${dis ? 'disabled' : ''}>−</button>
-                    <span>${Number(it.quantity)}</span>
-                    <button class="qty-btn" data-action="cart-increase" data-index="${idx}">+</button>
+                    <button class="qty-btn" data-action="cart-decrease" data-index="${idx}" ${dis ? 'disabled' : ''} aria-label="Diminuer">−</button>
+                    <button type="button" class="qty-value-btn" data-action="cart-qty-pick" data-index="${idx}" aria-label="Choisir la quantité">${qty} <span class="qty-chevron">▼</span></button>
+                    <button class="qty-btn" data-action="cart-increase" data-index="${idx}" aria-label="Augmenter">+</button>
                 </div>
             </div>
             <button class="remove-item-btn" data-action="cart-remove" data-index="${idx}">🗑️</button>
@@ -291,6 +385,13 @@ export function refreshCartDisplay() {
         el.addEventListener('change', (e) => {
             const idx = parseInt(e.currentTarget.dataset.index, 10);
             toggleSelectItem(idx);
+        });
+    });
+    body.querySelectorAll('[data-action="cart-qty-pick"]').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const idx = parseInt(e.currentTarget.dataset.index, 10);
+            openQtyPicker(idx);
         });
     });
 
