@@ -29,8 +29,8 @@
       "driveMd5": "93a38528578f88aaa5a8d08f7161b9a7"
     },
     "index.html": {
-      "githubSha": "bfe7497b999b09674d63e9ee3ce44688ad5fbb62",
-      "driveMd5": "bd7f4c704a8723ee49ff6b42c03a5073"
+      "githubSha": "289df2de5d4c5e4d658699e5553116870dd11087",
+      "driveMd5": "656d760acbb704494345cb7c2b5f8dcf"
     },
     "package.json": {
       "githubSha": "50130f81b74bb2ec64e3b3dd42286e2cdda84947",
@@ -85,8 +85,8 @@
       "driveMd5": "2299e3648440891fc99c08bc88ea625f"
     },
     "src/css/base.css": {
-      "githubSha": "35f95fffd2e78fba9238d6bded7069d618278aae",
-      "driveMd5": "807a9a8b9fab2c1c5f3f37d825152b27"
+      "githubSha": "6267c8fd45988e1fd9b66ec6195e9a9801b1916c",
+      "driveMd5": "c052fd49477faf274e1250c66151e039"
     },
     "src/css/cart-admin.css": {
       "githubSha": "e100a87877b6def8cca31dc83b0affc7124f2cec",
@@ -125,8 +125,8 @@
       "driveMd5": "599596e8a1b15b66a8b49070b0f9842a"
     },
     "src/css/product-modal.css": {
-      "githubSha": "e936a431dbbe79d87f513d0db52e58402336883b",
-      "driveMd5": "25a13db2d2cf2260c8c9503a9861bd5f"
+      "githubSha": "74ed9a8aaf7d314e74f19117b8892fbe9280b28f",
+      "driveMd5": "68c0196a05e94b841657835a1e531bff"
     },
     "src/css/search-bar.css": {
       "githubSha": "237e3acffe244a80da8ddec5251117d1d30ab6bc",
@@ -157,8 +157,8 @@
       "driveMd5": "bd414a9bd9ab341276f4a78c872e70ba"
     },
     "src/js/cart.js": {
-      "githubSha": "a2ef7e18010ef77855207b4e9a0586da4ef9cf5a",
-      "driveMd5": "cc289f40d3006c5208d78bdfa1006f7c"
+      "githubSha": "dfa30bb630bae824b17491f38b4ca8f8bacd5319",
+      "driveMd5": "95094fc9f2c2fbad694a31767ce4d789"
     },
     "src/js/catalogue.js": {
       "githubSha": "07ce2f0ba18c500c3035830bbaa3014a6582301b",
@@ -189,8 +189,8 @@
       "driveMd5": "81a9a71920c079c1fb38ceb0f3749ccf"
     },
     "src/js/product-modal.js": {
-      "githubSha": "e8afd61f525538ad57208931c14b35812730b56a",
-      "driveMd5": "5f767c17916060d214e079964c0ac59d"
+      "githubSha": "50849d8902460ea7f60cbdbd1ea740bb5ad1ae61",
+      "driveMd5": "64b2ac50eb300dca13745493a61da5dc"
     },
     "src/js/reco.js": {
       "githubSha": "bc67994a04d2d22477a0e9840287ef337fb1dc81",
@@ -229,5 +229,5 @@
       "driveMd5": "ba96d156f4f2282a5e0fe5b742620aaf"
     }
   },
-  "updatedAt": "2026-09-03T23:55:21.728Z"
+  "updatedAt": "2026-09-04T04:02:20.897Z"
 }
