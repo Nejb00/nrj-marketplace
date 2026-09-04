@@ -9,7 +9,8 @@
 .cart-panel.open { transform: translateX(0); }
 .cart-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem; font-weight: 700; border-bottom: 1px solid var(--border); color: var(--text); flex-shrink: 0; }
 .cart-header h2 { font-size: 1.1rem; margin: 0; }
-.cart-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary); }
+.cart-header-actions { display: flex; align-items: center; gap: 0.25rem; }
+.cart-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary); line-height: 1; padding: 0.25rem; }
 .cart-panel-body { flex: 1; overflow-y: auto; min-height: 0; background: var(--bg); }
 .cart-items { padding: 0 1rem 1rem; display: flex; flex-direction: column; gap: 0.8rem; }
 .cart-empty { text-align: center; color: var(--text-secondary); padding: 3rem 1rem; font-size: 0.9rem; }
@@ -71,6 +72,69 @@
   justify-content: center;
   flex-shrink: 0;
   cursor: pointer;
+}
+
+/* ── Menu ⋯ du panier ───────────────────────────────────────────────────── */
+.cart-menu-wrap {
+  position: relative;
+}
+.cart-menu-btn {
+  background: none;
+  border: none;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 0.2rem 0.45rem;
+  border-radius: 8px;
+  transition: background 0.15s, color 0.15s;
+}
+.cart-menu-btn:hover,
+.cart-menu-btn[aria-expanded="true"] {
+  background: var(--surface-light);
+  color: var(--text);
+}
+.cart-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 200px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.35);
+  padding: 0.35rem;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.cart-menu[hidden] {
+  display: none;
+}
+.cart-menu-item {
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.cart-menu-item:hover:not(:disabled) {
+  background: var(--surface-light);
+}
+.cart-menu-item.danger {
+  color: #ef4444;
+}
+.cart-menu-item.disabled,
+.cart-menu-item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .form-group { margin-bottom: 1rem; }
