@@ -294,7 +294,7 @@
     cursor: pointer;
 }
 
-/* ── Color swatches (miniatures liées aux images) ─────────────────────── */
+/* Color swatches */
 .color-swatches {
     display: flex;
     flex-wrap: nowrap;
@@ -305,7 +305,6 @@
     scrollbar-width: none;
 }
 .color-swatches::-webkit-scrollbar { display: none; }
-
 .color-swatch {
     flex-shrink: 0;
     width: 56px;
@@ -344,15 +343,12 @@
     transform: scale(1.04);
 }
 .color-swatch:active { transform: scale(0.96); }
-
 #modalCouleurLabel .selected-color-name {
     font-weight: 500;
     color: var(--text-secondary);
     text-transform: none;
     letter-spacing: 0;
 }
-
-/* ── Quantity stepper ─────────────────────────────────────────────────── */
 .qty-group {
     display: flex;
     align-items: center;
