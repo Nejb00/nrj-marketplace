@@ -22,9 +22,27 @@
 .cart-item-info h4 { font-size: 0.8rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
 .cart-item-variants { font-size: 0.7rem; color: var(--text-secondary); }
 .cart-item-price { font-weight: 700; color: var(--primary); font-size: 0.85rem; }
-.cart-item-qty { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.2rem; }
-.qty-btn { background: var(--surface-light); border: 1px solid var(--border); width: 24px; height: 24px; border-radius: 50%; font-weight: 700; cursor: pointer; color: var(--text); }
+.cart-item-qty { display: flex; align-items: center; gap: 0.35rem; margin-top: 0.25rem; }
+.qty-btn { background: var(--surface); border: 1px solid var(--border); width: 26px; height: 26px; border-radius: 50%; font-weight: 700; cursor: pointer; color: var(--text); flex-shrink: 0; }
 .qty-btn:disabled { opacity: 0.4; }
+.qty-value-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.2rem 0.45rem;
+  min-width: 42px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+}
+.qty-value-btn:hover { border-color: var(--primary); color: var(--primary); }
+.qty-chevron { font-size: 0.55rem; opacity: 0.7; }
 .remove-item-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-secondary); }
 .cart-footer { padding: 1rem; border-top: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
 .cart-total { display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 1rem; color: var(--text); }
@@ -137,6 +155,142 @@
   cursor: not-allowed;
 }
 
+/* ── Bottom sheet quantité ──────────────────────────────────────────────── */
+.qty-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 320;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.qty-sheet-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.qty-sheet-overlay[hidden] {
+  display: none;
+}
+.qty-sheet-overlay.open[hidden] {
+  display: flex;
+}
+.qty-sheet {
+  width: 100%;
+  max-width: 420px;
+  max-height: 70vh;
+  background: var(--surface);
+  border-radius: 16px 16px 0 0;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.25s ease-out;
+  color: var(--text);
+}
+.qty-sheet-overlay.open .qty-sheet {
+  transform: translateY(0);
+}
+.qty-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.1rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.qty-sheet-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.qty-sheet-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  line-height: 1;
+  padding: 0.2rem;
+}
+.qty-sheet-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.qty-sheet-input-row label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.qty-sheet-input-row input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-light);
+  color: var(--text);
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+.qty-sheet-input-row input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+.qty-sheet-apply {
+  background: var(--primary);
+  color: #111;
+  border: none;
+  border-radius: 10px;
+  padding: 0.55rem 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+.qty-sheet-list {
+  overflow-y: auto;
+  flex: 1;
+  padding: 0.35rem 0;
+  -webkit-overflow-scrolling: touch;
+}
+.qty-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  padding: 0.85rem 1.2rem;
+  font-size: 1rem;
+  color: var(--text);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+.qty-option:active {
+  background: var(--surface-light);
+}
+.qty-option.is-active {
+  color: var(--primary);
+  font-weight: 700;
+}
+.qty-option-remove {
+  color: #ef4444;
+}
+.qty-check {
+  color: var(--primary);
+  font-weight: 700;
+}
+
 .form-group { margin-bottom: 1rem; }
 .form-group label { font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.4rem; color: var(--text); }
 .form-group input, .form-group textarea { width: 100%; padding: 0.7rem 1rem; border: 1px solid var(--border); border-radius: 40px; font-family: inherit; font-size: 0.9rem; background: var(--surface-light); color: var(--text); transition: var(--transition); }
@@ -187,7 +341,6 @@
  color: white;
 }
 
-/* ── Tableau de bord admin ─────────────────────────────────────────────── */
 #adminStats { margin-bottom: 2rem; }
 
 .admin-stats-grid {
@@ -294,7 +447,6 @@
  .admin-stat-value { font-size: 1.5rem; }
 }
 
-/* ── Panier volant : pulse du badge à l'arrivée ────────────────────────── */
 @keyframes badge-pop {
  0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgba(255, 140, 66, 0.6); }
  40%  { transform: scale(1.35); box-shadow: 0 0 0 10px rgba(255, 140, 66, 0); }
