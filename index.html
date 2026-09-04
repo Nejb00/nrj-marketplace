@@ -164,15 +164,34 @@
             <button class="chat-send-btn" id="chatSendBtn" aria-label="Envoyer">➤</button>
         </div>
     </div>
+
+    <!-- PANIER -->
     <div class="cart-panel" id="cartPanel" role="dialog" aria-label="Panier">
-        <div class="cart-panel-header">
+        <div class="cart-header">
             <h2>Mon panier</h2>
-            <button class="cart-close-btn" id="cartCloseBtn" aria-label="Fermer">&times;</button>
+            <button class="cart-close" id="cartCloseBtn" aria-label="Fermer">&times;</button>
         </div>
         <div class="cart-panel-body" id="cartPanelBody"></div>
-        <div class="cart-panel-footer" id="cartPanelFooter"></div>
+        <div class="cart-footer" id="cartPanelFooter"></div>
     </div>
     <div class="cart-overlay" id="cartOverlay"></div>
+
+    <!-- MODAL COMMANDE -->
+    <div class="modal-overlay" id="orderModalOverlay">
+        <div class="modal">
+            <h2 style="margin-bottom:1rem;font-size:1.2rem;">Finaliser la commande</h2>
+            <div id="orderSummary" style="font-size:0.9rem;margin-bottom:1.2rem;line-height:1.5;color:var(--text-secondary);"></div>
+            <div class="form-group">
+                <label for="customerName">Votre nom</label>
+                <input type="text" id="customerName" placeholder="Ex: Jean Dupont" autocomplete="name">
+            </div>
+            <div style="display:flex;gap:0.6rem;margin-top:1.2rem;">
+                <button class="checkout-btn" id="sendWhatsAppBtn" style="flex:1;">Envoyer sur WhatsApp</button>
+                <button id="cancelOrderBtn" style="background:var(--surface-light);border:1px solid var(--border);color:var(--text);padding:0.8rem 1.2rem;border-radius:50px;font-weight:600;cursor:pointer;">Annuler</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="/src/js/main.js"></script>
 </body>
 </html>

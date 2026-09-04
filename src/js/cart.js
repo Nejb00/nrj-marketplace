@@ -91,19 +91,19 @@ export function updateNavFavBadge() {
 }
 
 export function refreshCartDisplay() {
-    const container = document.getElementById('cartItems');
-    if (!container) return;
+    const body = document.getElementById('cartPanelBody');
+    const footer = document.getElementById('cartPanelFooter');
+    if (!body) return;
+
     if (state.cart.length === 0) {
-        container.innerHTML = '<div class="cart-empty">Votre panier est vide</div>';
-        const checkout = document.getElementById('checkoutBtn');
-        if (checkout) checkout.disabled = true;
-        const totalEl = document.getElementById('cartTotal');
-        if (totalEl) totalEl.textContent = formatPrice(0);
+        body.innerHTML = '<div class="cart-empty">Votre panier est vide</div>';
+        if (footer) footer.innerHTML = '';
         updateNavCartBadge();
         return;
     }
+
     let tot = 0;
-    container.innerHTML = state.cart.map((it, idx) => {
+    body.innerHTML = `<div class="cart-items">` + state.cart.map((it, idx) => {
         const p = state.products.find(pr => pr.id === it.productId);
         if (!p) return '';
         const img = p.image ? thumbImg(p.image, p.name, 80, 80) : '📦';
@@ -112,12 +112,36 @@ export function refreshCartDisplay() {
         if (it.taille) vars.push(`Taille: ${it.taille}`);
         const dis = Number(it.quantity) <= (Number(it.moq) || 1);
         tot += p.price * Number(it.quantity);
-        return `<div class="cart-item"><div class="cart-item-img">${img}</div><div class="cart-item-info"><h4>${escapeHtml(p.name)}</h4>${vars.length ? `<div class="cart-item-variants">${escapeHtml(vars.join(', '))}</div>` : ''}<span class="cart-item-price">${formatPrice(p.price)}</span><div class="cart-item-qty"><button class="qty-btn" data-action="cart-decrease" data-index="${idx}" ${dis ? 'disabled' : ''}>−</button><span>${Number(it.quantity)}</span><button class="qty-btn" data-action="cart-increase" data-index="${idx}">+</button></div></div><button class="remove-item-btn" data-action="cart-remove" data-index="${idx}">🗑️</button></div>`;
-    }).join('');
-    const totalEl = document.getElementById('cartTotal');
-    if (totalEl) totalEl.textContent = formatPrice(tot);
-    const checkout = document.getElementById('checkoutBtn');
-    if (checkout) checkout.disabled = false;
+        return `<div class="cart-item">
+            <div class="cart-item-img">${img}</div>
+            <div class="cart-item-info">
+                <h4>${escapeHtml(p.name)}</h4>
+                ${vars.length ? `<div class="cart-item-variants">${escapeHtml(vars.join(', '))}</div>` : ''}
+                <span class="cart-item-price">${formatPrice(p.price)}</span>
+                <div class="cart-item-qty">
+                    <button class="qty-btn" data-action="cart-decrease" data-index="${idx}" ${dis ? 'disabled' : ''}>−</button>
+                    <span>${Number(it.quantity)}</span>
+                    <button class="qty-btn" data-action="cart-increase" data-index="${idx}">+</button>
+                </div>
+            </div>
+            <button class="remove-item-btn" data-action="cart-remove" data-index="${idx}">🗑️</button>
+        </div>`;
+    }).join('') + `</div>`;
+
+    if (footer) {
+        footer.innerHTML = `
+            <div class="cart-total">
+                <span>Total</span>
+                <span id="cartTotal">${formatPrice(tot)}</span>
+            </div>
+            <button class="checkout-btn" id="checkoutBtn">
+                Commander via WhatsApp
+            </button>
+        `;
+        // Attacher le listener à chaque refresh (le bouton est recréé)
+        document.getElementById('checkoutBtn')?.addEventListener('click', openOrderModal);
+    }
+
     updateNavCartBadge();
 }
 
@@ -125,14 +149,27 @@ export function openOrderModal() {
     const overlay = document.getElementById('orderModalOverlay');
     const summary = document.getElementById('orderSummary');
     if (!overlay || !summary) return;
+
     let tot = 0;
     const lines = state.cart.map(i => {
         const p = state.products.find(pr => pr.id === i.productId);
         if (!p) return '';
         tot += p.price * Number(i.quantity);
-        return `• ${escapeHtml(p.name)} [ID: ${p.id}] x${Number(i.quantity)}`;
+        let line = `• ${escapeHtml(p.name)} [ID: ${p.id}] x${Number(i.quantity)}`;
+        if (i.couleur || i.taille) {
+            line += ` (${[i.couleur, i.taille].filter(Boolean).join(', ')})`;
+        }
+        return line;
     }).filter(Boolean);
+
     summary.innerHTML = lines.join('<br>') + `<br><br><strong>Total : ${formatPrice(tot)}</strong>`;
+
+    // Pré-remplir le nom si déjà connu
+    const nameInput = document.getElementById('customerName');
+    if (nameInput && !nameInput.value) {
+        nameInput.value = localStorage.getItem('fluo_customer_name') || '';
+    }
+
     overlay.classList.add('open');
 }
 
