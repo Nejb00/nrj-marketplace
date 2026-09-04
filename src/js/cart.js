@@ -165,7 +165,6 @@ function openCartMenu() {
     menu.hidden = false;
     btn.setAttribute('aria-expanded', 'true');
 
-    // Désactiver « Supprimer la sélection » si rien n'est coché
     const removeBtn = document.getElementById('cartMenuRemoveSelected');
     if (removeBtn) {
         const hasSelected = getSelectedItems().length > 0;
@@ -174,10 +173,13 @@ function openCartMenu() {
     }
 }
 
+let cartMenuInited = false;
 export function initCartMenu() {
+    if (cartMenuInited) return;
     const btn = document.getElementById('cartMenuBtn');
     const menu = document.getElementById('cartMenu');
     if (!btn || !menu) return;
+    cartMenuInited = true;
 
     btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -194,12 +196,20 @@ export function initCartMenu() {
         else if (action === 'share') shareCart();
     });
 
-    // Fermer en cliquant ailleurs
     document.addEventListener('click', (e) => {
         if (!menu.hidden && !e.target.closest('.cart-menu-wrap')) {
             closeCartMenu();
         }
     });
+}
+
+// Auto-init quand le module est chargé
+if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initCartMenu);
+    } else {
+        initCartMenu();
+    }
 }
 
 export function updateNavCartBadge() {
@@ -220,6 +230,8 @@ export function refreshCartDisplay() {
     const body = document.getElementById('cartPanelBody');
     const footer = document.getElementById('cartPanelFooter');
     if (!body) return;
+
+    initCartMenu();
 
     if (state.cart.length === 0) {
         body.innerHTML = '<div class="cart-empty">Votre panier est vide</div>';
