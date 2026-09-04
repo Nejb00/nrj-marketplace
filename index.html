@@ -172,7 +172,67 @@
         <div class="cart-panel-body" id="cartPanelBody"></div>
         <div class="cart-panel-footer" id="cartPanelFooter"></div>
     </div>
-    <div class="cart-overlay" id="cartOverlay"></div>
+    <div class="cart-overlay" id="cartOverlay">
+    <!-- =====================================================================
+         SECTIONS OPTIONS STYLE TEMU (M/S/XL/L)
+         ===================================================================== -->
+    
+    <div class="product-options-temu" id="productOptionsTemu" style="display:none;">
+        <div class="option-group-temu" id="colorGroupTemu" style="display:none;">
+            <div class="option-header-temu">
+                <span class="option-label-temu">Couleur:</span>
+                <span class="selected-value-temu" id="selectedColorNameTemu">Rouge</span>
+            </div>
+            <div class="option-thumbnails-temu" id="colorThumbnailsTemu"></div>
+        </div>
+        <div class="option-group-temu" id="sizeGroupTemu" style="display:none;">
+            <div class="option-header-temu">
+                <span class="option-label-temu">Taille</span>
+                <span class="error-message-temu" id="sizeErrorTemu">Veuillez sélectionner une taille !</span>
+            </div>
+            <div class="option-buttons-temu" id="sizeButtonsTemu"></div>
+        </div>
+        <div class="qty-group-temu">
+            <span class="qty-label-temu">Qté</span>
+            <div class="qty-stepper-temu">
+                <button type="button" class="qty-btn-temu" id="qtyMinusTemu">−</button>
+                <span class="qty-value-temu" id="qtyValueTemu">1</span>
+                <button type="button" class="qty-btn-temu" id="qtyPlusTemu">+</button>
+            </div>
+        </div>
+        <button class="btn-select-option-temu" id="selectOptionBtnTemu">Sélectionner une option</button>
+    </div>
+    
+    <div class="options-popup-overlay" id="optionsPopupOverlay" style="display:none;">
+        <div class="options-popup">
+            <div class="popup-header">
+                <h3>Sélectionner une option</h3>
+                <button class="popup-close-btn" id="popupCloseBtn">×</button>
+            </div>
+            <div class="popup-color-preview" id="popupColorPreview"></div>
+            <div class="popup-body">
+                <div class="popup-section">
+                    <h4>Couleur:</h4>
+                    <div class="popup-thumbnails" id="popupColorThumbnails"></div>
+                </div>
+                <div class="popup-section" id="popupSizeSection" style="display:none;">
+                    <h4>Taille</h4>
+                    <div class="popup-size-buttons" id="popupSizeButtons"></div>
+                </div>
+                <div class="popup-section">
+                    <h4>Qté</h4>
+                    <div class="popup-qty-stepper">
+                        <button class="popup-qty-btn" id="popupQtyMinus">−</button>
+                        <span class="popup-qty-value" id="popupQtyValue">1</span>
+                        <button class="popup-qty-btn" id="popupQtyPlus">+</button>
+                    </div>
+                </div>
+            </div>
+            <div class="popup-footer">
+                <button class="btn-confirm-popup" id="confirmPopupBtn">Confirmer</button>
+            </div>
+        </div>
+    </div></div>
     <script type="module" src="/src/js/main.js"></script>
 </body>
 </html>
