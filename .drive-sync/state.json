@@ -1,0 +1,237 @@
+{
+  "files": {
+    ".github/test-branch-marker-temp": {
+      "githubSha": "3602361dafeea2cbec159128f5166a8428c0795c",
+      "driveMd5": "3d801aa532c1cec3ee82d87a99fdf63f"
+    },
+    ".github/workflows/drive-sync.yml": {
+      "githubSha": "e87a8073e38174448cd4dd9dd1f2211d4076b861",
+      "driveMd5": "f99281934fdca8d0930cef584c4f6992"
+    },
+    ".github/workflows/gdrive-sync.yml": {
+      "githubSha": "4df2e4a889d7225df2fc54a3d6c64a048141c85d",
+      "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
+    },
+    ".github/workflows/notion-sync.yml": {
+      "githubSha": "7a13aada8e437d76f01f9a56f73aea4a4b139e53",
+      "driveMd5": "8c9bd72d39c67c3052c826eea0f363be"
+    },
+    ".gitignore": {
+      "githubSha": "c073aada3ee933674740fb7b82cf3c7ff0030215",
+      "driveMd5": "ae098edbc720488943dc151f7851b6e6"
+    },
+    "README.md": {
+      "githubSha": "ad07fba4d90879b6448b646f28528b05ee2243ea",
+      "driveMd5": "37bbc19cd507989fd0453c2fb8a00ca9"
+    },
+    "admin.html": {
+      "githubSha": "006496bdba6efe171472c6e9b9f119466c3b223a",
+      "driveMd5": "a9b30859c9e4e0acfa3d7006383a727c"
+    },
+    "api/og-product.js": {
+      "githubSha": "6a376c88314d1442be679037326bd25a7d364e6c",
+      "driveMd5": "93a38528578f88aaa5a8d08f7161b9a7"
+    },
+    "index.html": {
+      "githubSha": "289df2de5d4c5e4d658699e5553116870dd11087",
+      "driveMd5": "656d760acbb704494345cb7c2b5f8dcf"
+    },
+    "package.json": {
+      "githubSha": "50130f81b74bb2ec64e3b3dd42286e2cdda84947",
+      "driveMd5": "66e6c10934fea093b5a42a8877750ae6"
+    },
+    "public/Hr": {
+      "githubSha": "755d0629ab9b927d669f2476729886bf48958b47",
+      "driveMd5": "437ed0e94114990abbf8f2fe5b0f2c93"
+    },
+    "public/icon-1024.png": {
+      "githubSha": "605fea1dc0fcce17d2bc5eb304c436d3317a5563",
+      "driveMd5": "8634547c5a0af99ef63e83678f80fa7a"
+    },
+    "public/icon-192.png": {
+      "githubSha": "296728de0188468d20778c000b23aa9e7f7445e4",
+      "driveMd5": "c79cba4f9cf7491eb441636f34c74943"
+    },
+    "public/icon-512.png": {
+      "githubSha": "227b6b0ed4c486aae755f06c7cf073321631decb",
+      "driveMd5": "ca7e5cd5dd9ec47946a74e66ace2c9cc"
+    },
+    "public/icon.svg": {
+      "githubSha": "04f8a6f8a9fcee0032b0824507aa2fcb05059a07",
+      "driveMd5": "6fb4079db8e45d734005bf5507445c2e"
+    },
+    "public/manifest.webmanifest": {
+      "githubSha": "d3983f9c38d95191abbf5533bd66f69338dfdc8d",
+      "driveMd5": "f32cf8e252282edb1f774c2e78a6b2a9"
+    },
+    "public/placeholder.svg": {
+      "githubSha": "47fe9f8fa403638fd3ea0ebd55a9447ac8645f6b",
+      "driveMd5": "e389578e57bc63fd76d19400276d4309"
+    },
+    "public/sw.js": {
+      "githubSha": "3715a04dbd9ee2c6f373c23af31cd0fe0837de98",
+      "driveMd5": "8e523d13a225aa110dab3d1c05d7ea1d"
+    },
+    "scripts/drive-sync.mjs": {
+      "githubSha": "d51b092ab918cd8aa58ab5fe9d89930a094037d4",
+      "driveMd5": "47bbfb3f93069edf9ed407290fe514a0"
+    },
+    "scripts/sync_to_gdrive.py": {
+      "githubSha": "9d43e41e7a90148c44dad49486cab825e475bfe6",
+      "driveMd5": "8b085f087095fe2df782e3f84b5959b4"
+    },
+    "scripts/sync_to_notion.py": {
+      "githubSha": "d8fae9cb75a12480057868d4af31c0d31337f504",
+      "driveMd5": "c76fe38bac07b62293acc7974badaf17"
+    },
+    "src/css/admin.css": {
+      "githubSha": "f58a3cdcff2e9429f550439dbaac6946f47fe3f1",
+      "driveMd5": "2299e3648440891fc99c08bc88ea625f"
+    },
+    "src/css/base.css": {
+      "githubSha": "6267c8fd45988e1fd9b66ec6195e9a9801b1916c",
+      "driveMd5": "c052fd49477faf274e1250c66151e039"
+    },
+    "src/css/cart-admin.css": {
+      "githubSha": "e100a87877b6def8cca31dc83b0affc7124f2cec",
+      "driveMd5": "76331db24a5f86dc5bf13aa9e241ca73"
+    },
+    "src/css/chat.css": {
+      "githubSha": "ba27742356b5d3e4636841bfc76c68476ff2d54f",
+      "driveMd5": "10d6d3ec16bd78f71142e2eea1d63904"
+    },
+    "src/css/filters.css": {
+      "githubSha": "d9a05d2a365b9d25db7eab209c376e3a5025b33c",
+      "driveMd5": "6306431d5de1624969958f33de3274c6"
+    },
+    "src/css/fluo-theme.css": {
+      "githubSha": "62ce0f319e741ec1644bdac8e7a60815b0f4d3b3",
+      "driveMd5": "fddcaaae7ea01a68d407fbc85ffb9dc6"
+    },
+    "src/css/light-theme-patch.css": {
+      "githubSha": "216ef5e812decdc1ecb1e97f348aa5c842cce28d",
+      "driveMd5": "d8d701d109eb8ad02a2ad0f641a5c774"
+    },
+    "src/css/main.css": {
+      "githubSha": "059f4e933cd2b9f9cff678389b8cc47327f6c5e3",
+      "driveMd5": "2d2d6775e6980dc297c9ef943ff681ed"
+    },
+    "src/css/navigation.css": {
+      "githubSha": "30e2ab2b4dcebf9d9eea7d027698f884636a854c",
+      "driveMd5": "01a6fe8cb41ceb8a57cad3daa3a9ef8b"
+    },
+    "src/css/placeholder.css": {
+      "githubSha": "6ce0e38bbd5f91136e492ba59aca71446b6af423",
+      "driveMd5": "fc509d7d9d638f30651cfd4a17c07f7f"
+    },
+    "src/css/product-card.css": {
+      "githubSha": "26081356d3700421b7bc70f9afa670362a391eae",
+      "driveMd5": "599596e8a1b15b66a8b49070b0f9842a"
+    },
+    "src/css/product-modal.css": {
+      "githubSha": "665ff0dac8cfcd5de8ab3271dbd76a911971f21a",
+      "driveMd5": "cfcee1a4222017da798f6295a9b6f0de"
+    },
+    "src/css/search-bar.css": {
+      "githubSha": "237e3acffe244a80da8ddec5251117d1d30ab6bc",
+      "driveMd5": "0928c9f0681111e1c12b18792b6d54cf"
+    },
+    "src/css/search-view.css": {
+      "githubSha": "373cc0c61d1bb0d1516bd3d0557cd1543ce2275f",
+      "driveMd5": "0a9bf115d4f0f369314c1100b5373ef9"
+    },
+    "src/css/skeleton.css": {
+      "githubSha": "10977aa6171382fd8e14817789dace46e4e0c4eb",
+      "driveMd5": "101fe0b4a249c2fc6c214ec3e7f35514"
+    },
+    "src/js/admin-chat.js": {
+      "githubSha": "ae2632c143f8fd43e3eb8844917bb9d5c660f34c",
+      "driveMd5": "969288264bb2e2cf04600476a07c42c2"
+    },
+    "src/js/admin-main.js": {
+      "githubSha": "6876309591d10e6314a9f17f037266392d7c1f64",
+      "driveMd5": "7cf53a389026074531c2c3fa6012bf03"
+    },
+    "src/js/admin.js": {
+      "githubSha": "880bf8e562071dba3b195f33e3c677a55fcf2cf3",
+      "driveMd5": "75543689c78e127007eda710392d2275"
+    },
+    "src/js/api.js": {
+      "githubSha": "42e987832abd9648f59834ff3c9695c2f7f68d2c",
+      "driveMd5": "bd414a9bd9ab341276f4a78c872e70ba"
+    },
+    "src/js/cart.js": {
+      "githubSha": "dfa30bb630bae824b17491f38b4ca8f8bacd5319",
+      "driveMd5": "95094fc9f2c2fbad694a31767ce4d789"
+    },
+    "src/js/catalogue.js": {
+      "githubSha": "07ce2f0ba18c500c3035830bbaa3014a6582301b",
+      "driveMd5": "bb70e649043b5e3f8a83aa679de91f93"
+    },
+    "src/js/chat.js": {
+      "githubSha": "e74f0eb452cd97eb70b70f122948b354b428e2c5",
+      "driveMd5": "39bf6fc1e856f861fe663d915f788ac9"
+    },
+    "src/js/config.js": {
+      "githubSha": "476e52616eef89fc943ae035eb762a46a22d5383",
+      "driveMd5": "2f903b19526bdfaeb554413b4db19d4b"
+    },
+    "src/js/db.js": {
+      "githubSha": "992453a985f96184b93273818cae44ce0927fb3c",
+      "driveMd5": "291cc0bbb5705d792fdb1dcb10e57cc0"
+    },
+    "src/js/lazy-loading.js": {
+      "githubSha": "dd6ee1e0d664b32a9441b93cff6b21fe28ab9e04",
+      "driveMd5": "ab8cd0e72792bdf247cb66bf9ac67114"
+    },
+    "src/js/main.js": {
+      "githubSha": "312d0b4d9f78698623237b473f6025548b9fa6c5",
+      "driveMd5": "2f19de3e7f6ce92886a5779ff6a00be0"
+    },
+    "src/js/product-edit.js": {
+      "githubSha": "42ec1f825a53fa6c35f093a1befe9cf981c75a76",
+      "driveMd5": "81a9a71920c079c1fb38ceb0f3749ccf"
+    },
+    "src/js/product-modal.js": {
+      "githubSha": "76ca9f7ee72bb2378fd4286deba988e31b5a81ef",
+      "driveMd5": "9a19ab7a3ffe6bc06300e208f8dd3e7e"
+    },
+    "src/js/reco.js": {
+      "githubSha": "bc67994a04d2d22477a0e9840287ef337fb1dc81",
+      "driveMd5": "2505795481f914c197d98a7b31bdec7c"
+    },
+    "src/js/search-view.js": {
+      "githubSha": "b7b4b812b28f2eef9a99e3a45cf86ff32d545a4b",
+      "driveMd5": "03a5cf6c5bec79ff054843482d646726"
+    },
+    "src/js/search.js": {
+      "githubSha": "1ca6fb6c800a413b793228cfda974ed145feeb98",
+      "driveMd5": "3eed44ea1fef4309f400d19a8117d2ff"
+    },
+    "src/js/state.js": {
+      "githubSha": "929257061c1111dd02ee9e9f2b3f6cbeb132fd50",
+      "driveMd5": "8b7d8a159104591810c442eb55272746"
+    },
+    "src/js/sync.js": {
+      "githubSha": "f0b38b81f47d89dd5a3bf2e1a44843c4ffa4897a",
+      "driveMd5": "c3ca469c4179217cd0b552061bad3306"
+    },
+    "src/js/utils.js": {
+      "githubSha": "1589cdfda12d4c9ca18c931c4b9d599b266f5e45",
+      "driveMd5": "c4db0059694dba690b2b9423e3601d26"
+    },
+    "src/js/visual-search.js": {
+      "githubSha": "32c9d5abf31ae0f613ce15ae0b3a3d1c5896672e",
+      "driveMd5": "f4c61c8d1c6e232db75fce73894c24ae"
+    },
+    "vercel.json": {
+      "githubSha": "b16eb60657eb498912d183f20230eb5401ace826",
+      "driveMd5": "b8658470ca689642450ef625326f37f2"
+    },
+    "vite.config.js": {
+      "githubSha": "610c4be52446afa97857f6a11b16f6ebb15c2d3d",
+      "driveMd5": "ba96d156f4f2282a5e0fe5b742620aaf"
+    }
+  },
+  "updatedAt": "2026-09-05T16:17:12.927Z"
+}

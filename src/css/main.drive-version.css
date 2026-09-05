@@ -1,0 +1,25 @@
+@import './base.css';
+@import './search-bar.css';
+@import './filters.css';
+@import './product-card.css';
+@import './product-modal.css';
+@import './navigation.css';
+@import './cart-admin.css';
+@import './search-view.css';
+@import './placeholder.css';
+@import './chat.css';
+@import url('light-theme-patch.css');
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🌍 ACCESSIBILITÉ : Réduction des animations pour les utilisateurs sensibles
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
