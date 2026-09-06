@@ -130,7 +130,8 @@ l="Rechercher un produit">
             <a href="#" class="nav-item favorites-accent" data-nav="favorites" aria-label="Favoris"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg><span class="favorites-badge" id="navFavBadge" style="display:none;">0</span></a>
             <a href="#" class="nav-item" data-nav="profile" aria-label="Mon FLUO"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg></a>
       
-  </nav>
+  </
+nav>
         <footer><p>© 2026 FLUO — Chine • France • Turquie → Congo Brazzaville 🔥</p></footer>
     </div>
     <div class="product-modal" id="productModal">
@@ -218,3 +219,56 @@ ton class="chat-quick-chip" type="button">👕 Tailles dispo ?</button>
             <button class="btn btn-outline" id="cancelOrderBtn" style="margin-top:0.5rem;background:transparent;border:1px solid var(--border);color:var(--text);">Annuler</button>
         </div>
     </div>
+    <div class="modal-overlay"
+ id="edi
+tProductModalOverlay">
+        <div class="modal modal-edit">
+            <h2 style="text-align:center;margin-bottom:1rem;">✏️ Modifier le produit</h2>
+            <input type="hidden" id="editProductId">
+            <div class="form-group"><label>Nom</label><input type="text" id="editName"></div>
+            <div class="form-group"><label>Catégorie</label><select id="editCategory"><option value="">— Choisir une catégorie —</option></select></div>
+            <div class="form-group"><label>Sous-catégorie</label><select id="editSubcategory" disabled><option value="">— Choisir d'abord une catégorie —</option></select></div>
+            <div class="form-group"><label>Prix (FCFA)</label><input type="number" id="editPrice"></div>
+            <div class="form-group"><label>Image 1 (URL)</label><input type="url" id="editImage"></div>
+            <div class="form-group"><label>Image 2 (URL)</label><input type="url" id="editImage2"></div>
+            <div class="form-group"><label>Image 3 (URL)</label><input type="url" id="editImage3"></div>
+            <div class="form-group"><label>Image 4 (URL)</label><input type="url" id="editImage4"></div>
+            <div class="form-group"><label>Image 5 (URL)</label><input type="url" id="editImage5"></div>
+            <div class="form-group"><label>Image 6 (URL)</label><input type="url" id="editImage6"></div>
+            <div class="form-group"><label>Tailles (séparées par virgules)</label><input type="text" id="editTailles"></div>
+            <div class="form-group"><label>Couleurs (séparées par virgules)</label><input type="text" id="editCouleurs"></div>
+            <div class="form-group"><label>Quantité minimale (MOQ)</label><input type="number" id="editMoq" min="1"></div>
+            <div class="form-group"><label>Description</label><input type="text" id="editDesc"></div>
+            <div style="display:flex;gap:0.5rem;margin-top:1rem;">
+                <button class="btn btn-primary" id="saveEditBtn" style="flex:1;back
+ground:va
+r(--primary);">💾 Sauvegarder</button>
+                <button class="btn btn-outline" id="cancelEditBtn" style="flex:1;background:transparent;border:1px solid var(--border);color:var(--text);">Annuler</button>
+            </div>
+            <div id="editError" style="color:#fca5a5;text-align:center;font-size:0.8rem;margin-top:0.5rem;"></div>
+        </div>
+    </div>
+    <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
+    <div id="searchView" style="display:none;">
+        <div class="search-view-header">
+            <button class="back-btn" id="backFromSearchBtn" aria-label="Retour"><span>Retour</span></button>
+            <div class="search-view-input-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchViewInput" placeholder="Rechercher..." autocomplete="off">
+                <button class="search-clear" id="searchViewClear" aria-label="Effacer" style="display:none;">✕</button>
+            </div>
+        </div>
+        <div class="search-view-content">
+            <aside class="search-filters-sidebar" id="searchFiltersSidebar"></aside>
+            <main class="search-results-main">
+                <div class="search-results-container" id="searchResultsContainer">
+                    <div class="search-results-grid" id="searchResultsGrid"></div>
+                </div>
+            </main>
+        </div>
+        <div class="filters-overlay" id="filtersOverlay"></div>
+    </div>
+    <div id="accountView"><div id="accountContent"></div></div>
+    <script type="module" src="/src/js/main.js"></script>
+</body>
+</html>
