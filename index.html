@@ -155,8 +155,7 @@ l="Rechercher un produit">
         </div>
         <div class="recommendations"><h3>Vous aimerez aussi</h3><div class="rec-carousel" id="modalRecCarousel"></div></div>
         <div class="sourcing-section">
-            <h3>🔍 Vous ne trouvez pas votre bonheur ?</h
-3>
+            <h3>🔍 Vous ne trouvez pas votre bonheur ?</h3>
   
           <p>Envoyez-nous une photo ou décrivez votre recherche.</p>
             <button class="sourcing-btn" id="modalSourcingBtn">📸 Photo</button>
@@ -219,56 +218,3 @@ ton class="chat-quick-chip" type="button">👕 Tailles dispo ?</button>
             <button class="btn btn-outline" id="cancelOrderBtn" style="margin-top:0.5rem;background:transparent;border:1px solid var(--border);color:var(--text);">Annuler</button>
         </div>
     </div>
-    <div class="modal-overlay"
- id="edi
-tProductModalOverlay">
-        <div class="modal modal-edit">
-            <h2 style="text-align:center;margin-bottom:1rem;">✏️ Modifier le produit</h2>
-            <input type="hidden" id="editProductId">
-            <div class="form-group"><label>Nom</label><input type="text" id="editName"></div>
-            <div class="form-group"><label>Catégorie</label><select id="editCategory"><option value="">— Choisir une catégorie —</option></select></div>
-            <div class="form-group"><label>Sous-catégorie</label><select id="editSubcategory" disabled><option value="">— Choisir d'abord une catégorie —</option></select></div>
-            <div class="form-group"><label>Prix (FCFA)</label><input type="number" id="editPrice"></div>
-            <div class="form-group"><label>Image 1 (URL)</label><input type="url" id="editImage"></div>
-            <div class="form-group"><label>Image 2 (URL)</label><input type="url" id="editImage2"></div>
-            <div class="form-group"><label>Image 3 (URL)</label><input type="url" id="editImage3"></div>
-            <div class="form-group"><label>Image 4 (URL)</label><input type="url" id="editImage4"></div>
-            <div class="form-group"><label>Image 5 (URL)</label><input type="url" id="editImage5"></div>
-            <div class="form-group"><label>Image 6 (URL)</label><input type="url" id="editImage6"></div>
-            <div class="form-group"><label>Tailles (séparées par virgules)</label><input type="text" id="editTailles"></div>
-            <div class="form-group"><label>Couleurs (séparées par virgules)</label><input type="text" id="editCouleurs"></div>
-            <div class="form-group"><label>Quantité minimale (MOQ)</label><input type="number" id="editMoq" min="1"></div>
-            <div class="form-group"><label>Description</label><input type="text" id="editDesc"></div>
-            <div style="display:flex;gap:0.5rem;margin-top:1rem;">
-                <button class="btn btn-primary" id="saveEditBtn" style="flex:1;back
-ground:va
-r(--primary);">💾 Sauvegarder</button>
-                <button class="btn btn-outline" id="cancelEditBtn" style="flex:1;background:transparent;border:1px solid var(--border);color:var(--text);">Annuler</button>
-            </div>
-            <div id="editError" style="color:#fca5a5;text-align:center;font-size:0.8rem;margin-top:0.5rem;"></div>
-        </div>
-    </div>
-    <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
-    <div id="searchView" style="display:none;">
-        <div class="search-view-header">
-            <button class="back-btn" id="backFromSearchBtn" aria-label="Retour"><span>Retour</span></button>
-            <div class="search-view-input-wrapper">
-                <span class="search-icon">🔍</span>
-                <input type="text" id="searchViewInput" placeholder="Rechercher..." autocomplete="off">
-                <button class="search-clear" id="searchViewClear" aria-label="Effacer" style="display:none;">✕</button>
-            </div>
-        </div>
-        <div class="search-view-content">
-            <aside class="search-filters-sidebar" id="searchFiltersSidebar"></aside>
-            <main class="search-results-main">
-                <div class="search-results-container" id="searchResultsContainer">
-                    <div class="search-results-grid" id="searchResultsGrid"></div>
-                </div>
-            </main>
-        </div>
-        <div class="filters-overlay" id="filtersOverlay"></div>
-    </div>
-    <div id="accountView"><div id="accountContent"></div></div>
-    <script type="module" src="/src/js/main.js"></script>
-</body>
-</html>
