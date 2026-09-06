@@ -1,6 +1,6 @@
 # NRJ Marketplace — projet Vite
 
-## Structure
+## Structure  
 
 ```
 index.html          → catalogue (public)
