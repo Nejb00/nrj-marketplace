@@ -69,7 +69,8 @@ body {
     gap: 8px;
 }
 
-/* ── Style commun "verre" pour les 3 bulles ─────────────────────────────── */
+/* ── Style commun "verre" pour les 3 bulles ─────
+────────────────────────── */
 .logo-bubble,
 .actions-bubble,
 .search-bubble-compact,
