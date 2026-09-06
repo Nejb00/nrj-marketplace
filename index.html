@@ -37,6 +37,7 @@
                     <span class="logo-brand-text">FLUO</span>
                 </div>
   
+
               <button class="search-bubble-compact" id="searchCompact" aria-label="Rechercher">
                     <span class="search-icon" aria-hidden="true"></span>
                 </button>
@@ -57,7 +58,8 @@
                 <div class="search-bar-container">
                     <div class="search-bar">
                         <span class="search-icon">🔍</span>
-                        <input type="text" id="searchInput" placeholder="Rechercher un produit..." autocomplete="off" aria-labe
+                        <input type="text" id="searchInput" placeholder="Rechercher un produit..." autocomplete="off" aria-lab
+e
 l="Rechercher un produit">
                         <button class="search-voice" id="searchVoice" aria-label="Recherche vocale" title="Recherche vocale">
                             <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.7 5.1 5 5.1s5-2.1 5-5.1h-1.7z"></path></svg>
@@ -85,7 +87,8 @@ l="Rechercher un produit">
             <section class="products-section" aria-live="polite">
                 <div class="products-grid" id="productsGrid" role="list"></div>
             </section>
-          
+        
+  
   <div id="loadMoreSentinel" style="height: 20px;"></div>
             <p id="loadingMessage" style="text-align:center;color:var(--text-secondary);display:none;">⏳ Chargement des produits...</p>
         </div>
@@ -113,7 +116,8 @@ l="Rechercher un produit">
                                 </select>
                             </label>
                         </div>
-                  
+               
+   
       <div class="products-grid categories-popular-grid" id="categoriesPopularGrid" role="list"></div>
                     </section>
                 </div>
@@ -125,8 +129,8 @@ l="Rechercher un produit">
             <a href="#" class="nav-item cart-accent" data-nav="cart" aria-label="Panier"><svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"></path></svg><span class="cart-badge" id="navCartBadge" style="display:none;">0</span></a>
             <a href="#" class="nav-item favorites-accent" data-nav="favorites" aria-label="Favoris"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg><span class="favorites-badge" id="navFavBadge" style="display:none;">0</span></a>
             <a href="#" class="nav-item" data-nav="profile" aria-label="Mon FLUO"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg></a>
-        </
-nav>
+      
+  </nav>
         <footer><p>© 2026 FLUO — Chine • France • Turquie → Congo Brazzaville 🔥</p></footer>
     </div>
     <div class="product-modal" id="productModal">
@@ -151,7 +155,8 @@ nav>
         </div>
         <div class="recommendations"><h3>Vous aimerez aussi</h3><div class="rec-carousel" id="modalRecCarousel"></div></div>
         <div class="sourcing-section">
-            <h3>🔍 Vous ne trouvez pas votre bonheur ?</h3>
+            <h3>🔍 Vous ne trouvez pas votre bonheur ?</h
+3>
   
           <p>Envoyez-nous une photo ou décrivez votre recherche.</p>
             <button class="sourcing-btn" id="modalSourcingBtn">📸 Photo</button>
@@ -173,7 +178,8 @@ nav>
     <div class="chat-panel" id="chatPanel" role="dialog" aria-label="Chat FLUO">
         <div class="chat-header">
             <div class="chat-avatar">🔥</div>
-            <d
+        
+    <d
 iv class="chat-header-info">
                 <div class="chat-header-name">FLUO Support</div>
                 <div class="chat-header-status" id="chatHeaderStatus"><span class="status-online">●</span> En ligne — réponse rapide</div>
@@ -185,7 +191,8 @@ iv class="chat-header-info">
         <div class="chat-quick" id="chatQuick">
             <button class="chat-quick-chip" type="button">📦 Livraison ?</button>
             <button class="chat-quick-chip" type="button">💰 Négocier un prix</button>
-            <but
+         
+   <but
 ton class="chat-quick-chip" type="button">👕 Tailles dispo ?</button>
             <button class="chat-quick-chip" type="button">🛒 Suivi commande</button>
         </div>
@@ -212,7 +219,8 @@ ton class="chat-quick-chip" type="button">👕 Tailles dispo ?</button>
             <button class="btn btn-outline" id="cancelOrderBtn" style="margin-top:0.5rem;background:transparent;border:1px solid var(--border);color:var(--text);">Annuler</button>
         </div>
     </div>
-    <div class="modal-overlay" id="edi
+    <div class="modal-overlay"
+ id="edi
 tProductModalOverlay">
         <div class="modal modal-edit">
             <h2 style="text-align:center;margin-bottom:1rem;">✏️ Modifier le produit</h2>
@@ -232,7 +240,8 @@ tProductModalOverlay">
             <div class="form-group"><label>Quantité minimale (MOQ)</label><input type="number" id="editMoq" min="1"></div>
             <div class="form-group"><label>Description</label><input type="text" id="editDesc"></div>
             <div style="display:flex;gap:0.5rem;margin-top:1rem;">
-                <button class="btn btn-primary" id="saveEditBtn" style="flex:1;background:va
+                <button class="btn btn-primary" id="saveEditBtn" style="flex:1;back
+ground:va
 r(--primary);">💾 Sauvegarder</button>
                 <button class="btn btn-outline" id="cancelEditBtn" style="flex:1;background:transparent;border:1px solid var(--border);color:var(--text);">Annuler</button>
             </div>
