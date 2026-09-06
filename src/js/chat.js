@@ -9,7 +9,7 @@
  *   quand le chat est ouvert depuis la modale d'un article.
  */
 
-import { supabaseClient, WHATSAPP_NUMBER } from './config.js';
+import { supabaseClient, WHATSAPP_NUMBER, CHAT_AI_ENDPOINT } from './config.js';
 import { escapeHtml, thumb, showToast } from './utils.js';
 
 const SESSION_KEY = 'fluochat_sid';
@@ -23,6 +23,8 @@ let unread = 0;
 let lastTypingSent = 0;
 let typingTimer = null;
 let pendingProduct = null; // contexte produit quand ouvert depuis la modale
+let aiTimer = null;
+let aiSettings = { ai_enabled: true, admin_away: false, ai_delay_seconds: 120 };
 
 const $ = (id) => document.getElementById(id);
 
@@ -95,6 +97,7 @@ export function openChat(ctx) {
 
     (async () => {
         try {
+            loadAISettings(); // non bloquant
             await ensureSession();
             await loadMessages();
             startChannel();
@@ -255,7 +258,8 @@ function onNewMessage(m) {
         return;
     }
 
-    // Réponse du vendeur (ou de l'IA) → bulle entrante.
+    // Réponse du vendeur (ou de l'IA) → bulle entrante + l'humain/IA reprend la main
+    clearAIRelay();
     $('chatMessages')?.querySelector('.offline-note')?.remove();
     $('chatMessages').appendChild(buildBubble(m, 'client'));
     clearTyping();
@@ -353,6 +357,9 @@ async function sendMessage() {
             })
             .eq('id', sessionId)
             .then(() => {});
+
+        // 🤖 Si personne ne répond d'ici {delay}, l'Assistant NRJ prend le relais
+        scheduleAIReply();
     } catch {
         el.classList.add('failed');
         showToast('⚠️ Message non envoyé — vérifiez la connexion.');
@@ -379,13 +386,68 @@ async function markCustomerRead() {
     await supabaseClient.rpc('mark_customer_read');
 }
 
+// ── IA de secours (Assistant NRJ 🤖) ───────────────────────────────────────
+
+async function loadAISettings() {
+    try {
+        const { data } = await supabaseClient
+            .from('chat_settings')
+            .select('*')
+            .eq('id', 1)
+            .maybeSingle();
+        if (data) aiSettings = { ...aiSettings, ...data };
+    } catch { /* table absente : valeurs par défaut */ }
+    // Échapatoire de test (dev) : localStorage 'fluochat_ai_debug'
+    try {
+        const dbg = JSON.parse(localStorage.getItem('fluochat_ai_debug') || 'null');
+        if (dbg) aiSettings = { ...aiSettings, ...dbg };
+    } catch { /* ignoré */ }
+}
+
+async function triggerAIReply() {
+    if (!sessionId) return;
+    try {
+        window.__aiAttempted = Date.now(); // observabilité/debug
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        await fetch(CHAT_AI_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+            },
+            body: JSON.stringify({ sessionId }),
+        });
+    } catch { /* silencieux : l'IA retentera au prochain message */ }
+}
+
+function scheduleAIReply() {
+    clearTimeout(aiTimer);
+    if (!aiSettings.ai_enabled) return;
+    const delay = aiSettings.admin_away
+        ? 12000
+        : Math.max(15, (aiSettings.ai_delay_seconds || 120) * 1000);
+    aiTimer = setTimeout(triggerAIReply, delay);
+}
+
+function clearAIRelay() {
+    // Le vendeur (ou l'IA) a répondu : l'humain reprend la main
+    clearTimeout(aiTimer);
+}
+
 // ── Rendu ───────────────────────────────────────────────────────────────────
 
 function buildBubble(m, perspective) {
     const own = (m.sender === perspective);
     const el = document.createElement('div');
-    el.className = `msg ${own ? 'out' : 'in'}`;
+    el.className = `msg ${own ? 'out' : 'in'}` + (m.sender === 'bot' ? ' bot' : '');
     if (m.id) el.dataset.id = m.id;
+
+    if (m.sender === 'bot') {
+        const tag = document.createElement('div');
+        tag.className = 'msg-bot-tag';
+        tag.textContent = '🤖 Assistant NRJ';
+        el.appendChild(tag);
+    }
 
     const meta = m.metadata || {};
     if (meta.product && meta.product.name) {
@@ -441,6 +503,7 @@ function renderWelcomeIfEmpty() {
     hello.innerHTML =
         `👋 ${name ? `Bonjour ${escapeHtml(name)} !` : 'Bonjour et bienvenue chez'} <b>NRJ-MARKETPLACE</b> !<br>` +
         `Posez votre question ici — nous répondons rapidement (Chine 🇨🇳 / Congo 🇨🇬).<br>` +
+        `Occupés ? Notre assistant IA 🤖 vous répond en attendant.<br>` +
         `Vous préférez WhatsApp ? Touchez l'icône en haut à droite ✆`;
     box.appendChild(hello);
 

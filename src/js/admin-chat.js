@@ -59,12 +59,13 @@ function appendMsg(m, { container }) {
     if (!box || box.querySelector(`[data-id="${m.id}"]`)) return;
     const out = m.sender === 'admin';
     const div = document.createElement('div');
-    div.className = 'msg ' + (out ? 'out' : 'in');
+    div.className = 'msg ' + (out ? 'out' : 'in') + (m.sender === 'bot' ? ' bot' : '');
     div.dataset.id = m.id;
+    const botTag = m.sender === 'bot' ? '<div class="msg-bot-tag">🤖 Assistant NRJ</div>' : '';
     const ticks = m.sender === 'admin'
         ? (m.read_by_customer ? '<span class="ticks read">✓✓</span>' : '<span class="ticks">✓✓</span>')
         : '';
-    div.innerHTML = `${productCardHTML(m.metadata)}<div class="msg-text"></div><div class="msg-meta">${fmtTime(m.created_at)} ${ticks}</div>`;
+    div.innerHTML = `${botTag}${productCardHTML(m.metadata)}<div class="msg-text"></div><div class="msg-meta">${fmtTime(m.created_at)} ${ticks}</div>`;
     div.querySelector('.msg-text').textContent = m.content || '';
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
@@ -249,8 +250,14 @@ function subscribeChannel() {
         .channel('admin-inbox')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (payload) => {
             const m = payload.new;
-            if (m.sender !== 'client') return;
+            if (m.sender === 'admin') return; // bulle optimiste déjà affichée
             const convOpen = (m.session_id === activeConvId && $('acConv') && $('acConv').style.display !== 'none');
+            if (m.sender === 'bot') {
+                // L'IA a répondu : visible si la conversation est ouverte, sans badge
+                if (convOpen) appendMsg(m, { container: $('acConvMessages') });
+                return;
+            }
+            if (m.sender !== 'client') return;
             if (convOpen) {
                 appendMsg(m, { container: $('acConvMessages') });
                 markAdminRead(m.session_id);
@@ -322,4 +329,52 @@ export async function initAdminChat() {
 
     await refreshSessions();
     subscribeChannel();
+    initAIToggles();
+}
+
+// ─── Réglages IA (🤖 activée / 🌙 mode absent) ──────────────────────────────
+
+let aiToggles = { ai_enabled: true, admin_away: false };
+
+async function initAIToggles() {
+    const aiBtn = $('acAiToggle');
+    const awayBtn = $('acAwayToggle');
+    if (!aiBtn || !awayBtn) return;
+
+    const { data } = await supabaseClient
+        .from('chat_settings')
+        .select('ai_enabled, admin_away')
+        .eq('id', 1)
+        .maybeSingle();
+    if (data) aiToggles = { ...aiToggles, ...data };
+    renderToggles();
+
+    aiBtn.addEventListener('click', () => persistToggle({ ai_enabled: !aiToggles.ai_enabled }));
+    awayBtn.addEventListener('click', () => persistToggle({ admin_away: !aiToggles.admin_away }));
+}
+
+async function persistToggle(patch) {
+    const prev = { ...aiToggles };
+    aiToggles = { ...aiToggles, ...patch };
+    renderToggles();
+    const { error } = await supabaseClient
+        .from('chat_settings')
+        .update({ ...patch, updated_at: new Date().toISOString() })
+        .eq('id', 1);
+    if (error) { aiToggles = prev; renderToggles(); console.warn('chat_settings:', error.message); }
+}
+
+function renderToggles() {
+    const aiBtn = $('acAiToggle');
+    const awayBtn = $('acAwayToggle');
+    if (aiBtn) {
+        aiBtn.classList.toggle('on', !!aiToggles.ai_enabled);
+        aiBtn.setAttribute('aria-pressed', aiToggles.ai_enabled ? 'true' : 'false');
+        aiBtn.textContent = aiToggles.ai_enabled ? '🤖 IA activée' : '🤖 IA en pause';
+    }
+    if (awayBtn) {
+        awayBtn.classList.toggle('on', !!aiToggles.admin_away);
+        awayBtn.setAttribute('aria-pressed', aiToggles.admin_away ? 'true' : 'false');
+        awayBtn.textContent = aiToggles.admin_away ? '🌙 Absent — IA immédiate' : '☀️ Disponible';
+    }
 }
