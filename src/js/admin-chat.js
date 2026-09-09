@@ -1,5 +1,5 @@
 /**
- * 💬 ADMIN — boîte de réception du Chat FLUO
+ * 💬 ADMIN — boîte de réception du Chat NRJ-MARKETPLACE
  *
  * - Liste des conversations (chat_sessions) avec badge messages non lus
  * - Vue conversation + réponse en direct (temps réel postgres_changes)

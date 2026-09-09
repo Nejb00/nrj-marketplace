@@ -225,7 +225,7 @@ export function shareCart() {
     if (items.length === 0) return showToast('🛒 Panier vide');
 
     let tot = 0;
-    let msg = `🛒 *Mon panier FLUO*\n\n`;
+    let msg = `🛒 *Mon panier NRJ-MARKETPLACE*\n\n`;
     for (const i of items) {
         const p = state.products.find(pr => pr.id === i.productId);
         if (!p) continue;
@@ -457,7 +457,7 @@ export async function sendWhatsAppOrder() {
     if (selected.length === 0) return showToast('⚠️ Sélectionnez au moins un article');
 
     let tot = 0;
-    let msg = `🛒 *Nouvelle commande FLUO*\n\n👤 Client : ${name}\n\n`;
+    let msg = `🛒 *Nouvelle commande NRJ-MARKETPLACE*\n\n👤 Client : ${name}\n\n`;
     const orderItems = [];
     for (const i of selected) {
         const p = state.products.find(pr => pr.id === i.productId);

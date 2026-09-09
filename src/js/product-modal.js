@@ -111,7 +111,7 @@ export async function openProductModal(pid) {
     
     document.getElementById('modalShareBtn').onclick = () => {
         const url = BASE_URL + '?id=' + p.id;
-        const txt = `${formatPrice(uPrice)}\nMinimum d'achat : ${moq} pièce(s)\nDécouvre "${p.name}" sur FLUO ${url}`;
+        const txt = `${formatPrice(uPrice)}\nMinimum d'achat : ${moq} pièce(s)\nDécouvre "${p.name}" sur NRJ-MARKETPLACE ${url}`;
         if (typeof navigator.share === 'function') {
             navigator.share({ title: p.name, text: txt, url }).catch(() => {});
         } else {
@@ -326,7 +326,7 @@ export async function openProductModal(pid) {
     document.getElementById('directOrderStickyBtn').onclick = () => {
         if (tailles.length && !sT) return showToast('⚠️ Sélectionnez une taille');
 
-        let msg = `Bonjour FLUO, je souhaite commander :\n${p.name} (ID: ${p.id})`;
+        let msg = `Bonjour NRJ-MARKETPLACE, je souhaite commander :\n${p.name} (ID: ${p.id})`;
         if (sT) msg += `\nTaille: ${sT}`;
 
         if (couleurs.length) {
