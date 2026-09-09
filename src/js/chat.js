@@ -1,5 +1,5 @@
 /**
- * 💬 CHAT NRJ-MARKETPLACE — chat client style WhatsApp
+ * 💬 CHAT NRJ — chat client style WhatsApp
  *
  * - Identité : utilisateur ANONYME Supabase (auth.uid() = id de la session
  *   de chat) → RLS : chaque visiteur ne voit que SA conversation.
@@ -55,8 +55,8 @@ export function initChat() {
     $('chatWaBtn').addEventListener('click', () => {
         const p = pendingProduct;
         const txt = p
-            ? `Bonjour NRJ-MARKETPLACE 👋, je vous contacte depuis le chat du site au sujet de « ${p.name} » (ID: ${p.id}).`
-            : 'Bonjour NRJ-MARKETPLACE 👋, je vous contacte depuis le chat du site NRJ-MARKETPLACE.';
+            ? `Bonjour NRJ Marketplace 👋, je vous contacte depuis le chat du site au sujet de « ${p.name} » (ID: ${p.id}).`
+            : 'Bonjour NRJ Marketplace 👋, je vous contacte depuis le chat du site NRJ Marketplace.';
         window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(txt)}`, '_blank');
     });
 
@@ -501,7 +501,7 @@ function renderWelcomeIfEmpty() {
     hello.className = 'msg in';
     const name = localStorage.getItem(NAME_KEY);
     hello.innerHTML =
-        `👋 ${name ? `Bonjour ${escapeHtml(name)} !` : 'Bonjour et bienvenue chez'} <b>NRJ-MARKETPLACE</b> !<br>` +
+        `👋 ${name ? `Bonjour ${escapeHtml(name)} !` : 'Bonjour et bienvenue chez'} <b>NRJ Marketplace</b> !<br>` +
         `Posez votre question ici — nous répondons rapidement (Chine 🇨🇳 / Congo 🇨🇬).<br>` +
         `Occupés ? Notre assistant IA 🤖 vous répond en attendant.<br>` +
         `Vous préférez WhatsApp ? Touchez l'icône en haut à droite ✆`;

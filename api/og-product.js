@@ -68,7 +68,7 @@ async function fetchProduct(id) {
 }
 
 function buildOgHtml(product, siteUrl, id) {
-  const title = escapeHtml(product.name || "NRJ-MARKETPLACE");
+  const title = escapeHtml(product.name || "NRJ Marketplace");
   const price = formatPrice(product.price);
   const description = escapeHtml(
     product.description
@@ -84,13 +84,13 @@ function buildOgHtml(product, siteUrl, id) {
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>${title} — NRJ-MARKETPLACE</title>
+<title>${title} — NRJ Marketplace</title>
 <meta property="og:type" content="product">
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="${description}">
 <meta property="og:image" content="${image}">
 <meta property="og:url" content="${pageUrl}">
-<meta property="og:site_name" content="NRJ-MARKETPLACE">
+<meta property="og:site_name" content="NRJ Marketplace">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${title}">
 <meta name="twitter:description" content="${description}">

@@ -272,7 +272,7 @@ function renderAccount() {
         <div class="account-avatar">${escapeHtml(initials)}</div>
         <div class="account-greet">
           <div class="account-greet-hello">${greeting}</div>
-          <div class="account-greet-sub">Voici votre espace NRJ-MARKETPLACE</div>
+          <div class="account-greet-sub">Voici votre espace NRJ</div>
         </div>
       </div>
       ${isAdmin ? '<span class="account-admin-badge">Admin</span>' : ''}
@@ -416,14 +416,14 @@ function handleAccountAction(action) {
       break;
     }
     case 'contact': {
-      window.open(`https://wa.me/242066271882?text=${encodeURIComponent("Bonjour NRJ-MARKETPLACE, j'ai besoin d'assistance 🙏")}`, '_blank');
+      window.open(`https://wa.me/242066271882?text=${encodeURIComponent("Bonjour NRJ Marketplace, j'ai besoin d'assistance 🙏")}`, '_blank');
       break;
     }
     case 'install-app': {
       if (window.deferredInstallPrompt) {
         window.deferredInstallPrompt.prompt();
       } else {
-        alert("Pour installer l'app NRJ-MARKETPLACE :\n\n• Chrome Android : menu ⋮ → « Installer l'application »\n• iOS Safari : bouton Partager → « Sur l'écran d'accueil »");
+        alert("Pour installer l'app NRJ :\n\n• Chrome Android : menu ⋮ → « Installer l'application »\n• iOS Safari : bouton Partager → « Sur l'écran d'accueil »");
       }
       break;
     }
@@ -624,8 +624,8 @@ window.addEventListener('popstate', (e) => {
   else if (state.modalOpen) closeProductModal();
 });
 
-document.getElementById('modalSourcingBtn')?.addEventListener('click', () => window.open(`https://wa.me/242066271882?text=${encodeURIComponent('Bonjour NRJ-MARKETPLACE, je recherche un produit. Je peux vous envoyer une photo')}`));
-document.getElementById('modalDescSourcingBtn')?.addEventListener('click', () => window.open(`https://wa.me/242066271882?text=${encodeURIComponent('Bonjour NRJ-MARKETPLACE, je recherche un produit spécifique...')}`));
+document.getElementById('modalSourcingBtn')?.addEventListener('click', () => window.open(`https://wa.me/242066271882?text=${encodeURIComponent('Bonjour NRJ Marketplace, je recherche un produit. Je peux vous envoyer une photo')}`));
+document.getElementById('modalDescSourcingBtn')?.addEventListener('click', () => window.open(`https://wa.me/242066271882?text=${encodeURIComponent('Bonjour NRJ Marketplace, je recherche un produit spécifique...')}`));
 
 document.getElementById('cartCloseBtn')?.addEventListener('click', () => {
   document.getElementById('cartPanel').classList.remove('open');
