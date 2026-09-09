@@ -47,7 +47,7 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   🔥 HEADER FLUO — 3 bulles liquid-glass indépendantes, scroll-linked (option B)
+   ⚡ HEADER NRJ — 3 bulles liquid-glass indépendantes, scroll-linked (option B)
    --sp = "scroll progress" (0 → 1), piloté par JS à chaque frame de scroll
    ═══════════════════════════════════════════════════════════════════════════ */
 .header-fixed {
@@ -154,7 +154,7 @@ body {
     flex-shrink: 0;
 }
 
-/* ✅ Flamme glossy/3D dégradé — masque SVG sur tuile orange (façon FLUO) */
+/* ✅ Éclair glossy/3D dégradé — masque SVG sur tuile orange (façon NRJ) */
 .logo-icon {
     position: relative;
     overflow: hidden;
@@ -169,16 +169,16 @@ body {
     flex-shrink: 0;
     opacity: calc(1 - var(--sp, 0));
 }
-/* silhouette flamme blanche */
+/* silhouette éclair blanc */
 .logo-icon::before {
     content: '';
     position: relative;
     z-index: 1;
-    width: 62%;
-    height: 62%;
+    width: 68%;
+    height: 68%;
     background: #fff;
-    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.88a3 3 0 10-4.242-4.244 3 3 0 004.242 4.243z'/%3E%3C/svg%3E") center / contain no-repeat;
-    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.88a3 3 0 10-4.242-4.244 3 3 0 004.242 4.243z'/%3E%3C/svg%3E") center / contain no-repeat;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 /* reflet glossy en haut de la tuile */
 .logo-icon::after {
@@ -203,7 +203,7 @@ body {
     line-height: 1;
 }
 
-/* 🔥 Texte FLUO — verre orange liquid-glass (thème clair) */
+/* ⚡ Texte NRJ — verre orange liquid-glass (thème clair) */
 :root.light-theme .logo-brand-text {
     background: linear-gradient(
         165deg,
@@ -216,7 +216,7 @@ body {
     background-clip: text;
     color: transparent;
 
-    /* Profondeur + glow FLUO */
+    /* Profondeur + glow NRJ */
     text-shadow:
         0 1px 0 rgba(255, 255, 255, 0.5),
         0 2px 10px rgba(255, 140, 66, 0.35),
@@ -225,7 +225,7 @@ body {
 
 /* Reflet verre spéculaire sur les lettres */
 :root.light-theme .logo-brand-text::before {
-    content: "FLUO";
+    content: "NRJ";
     position: absolute;
     left: 0;
     top: 0;
