@@ -1,13 +1,14 @@
 // ═══════════════════════════════════════════════════════════════════════════
-//  NRJ Marketplace — Service Worker optimisé (v11)
+//  NRJ Marketplace — Service Worker optimisé (v12)
 //  - Assets unifiés dans ASSETS_CACHE
 //  - Cache recherche limité à 20 entrées
 //  - admin.html exclu du SHELL (sécurité)
+//  - Cache images : clé = URL complète (sans _nrj_ts), plus de collision wsrv.nl
 // ═══════════════════════════════════════════════════════════════════════════
 
-const CACHE = 'nrj-v11';
+const CACHE = 'nrj-v12';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png', '/placeholder.svg'];
-const IMAGE_CACHE = 'nrj-images-v2';
+const IMAGE_CACHE = 'nrj-images-v3';
 const ASSETS_CACHE = 'nrj-assets-v5';
 const SEARCH_CACHE = 'nrj-search-v2';
 
@@ -89,6 +90,12 @@ async function cleanupImageCache() {
   console.log('[SW] Cleanup images:', toDelete.length, 'supprimees. Reste:', (await cache.keys()).length, 'entrees, ~' + Math.round((await getImageCacheSize()) / 1024 / 1024) + ' MB');
 }
 
+function imageCacheIdentity(url) {
+  const u = new URL(url);
+  u.searchParams.delete('_nrj_ts');
+  return u.toString();
+}
+
 async function cacheImage(request, response) {
   if (!response || !response.ok) return;
   const cache = await caches.open(IMAGE_CACHE);
@@ -100,14 +107,14 @@ async function cacheImage(request, response) {
 
 async function getCachedImage(request) {
   const cache = await caches.open(IMAGE_CACHE);
-  const baseUrl = request.url.split('?')[0];
+  const wanted = imageCacheIdentity(request.url);
   const keys = await cache.keys();
   for (const key of keys) {
-    if (key.url.startsWith(baseUrl)) {
+    if (imageCacheIdentity(key.url) === wanted) {
       return cache.match(key);
     }
   }
-  return null;
+  return cache.match(request);
 }
 
 async function precacheImages(urls) {

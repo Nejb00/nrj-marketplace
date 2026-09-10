@@ -1,5 +1,6 @@
 import { state, getCategoryFilterIds, getCategoryName } from './state.js';
 import { escapeHtml, formatPrice, debounce, calculateSearchScore, generateBadgesHTML, thumbImg } from './utils.js';
+import { imageLoadOpts, injectLcpPreloads, preloadProductThumbs } from './lazy-loading.js';
 
 export function switchToSearchView(query) {
   document.getElementById('catalogueWrapper').style.display = 'none';
@@ -231,7 +232,7 @@ function displaySearchResults(results) {
   noResults.style.display = 'none';
 
   grid.innerHTML = results.map((p, idx) => {
-    const img = p.image ? thumbImg(p.image, p.name, 300, 400) : '';
+    const img = p.image ? thumbImg(p.image, p.name, 300, 400, '', imageLoadOpts(idx)) : '';
     const isFav = state.favorites.includes(p.id);
     const editBtn = state.isAdminLoggedIn
       ? `<button class="product-edit-btn" data-action="edit-product" data-id="${p.id}" aria-label="Modifier le produit">✏️</button>`
@@ -258,4 +259,7 @@ function displaySearchResults(results) {
         ${editBtn}
       </div>`;
   }).join('');
+
+  injectLcpPreloads(results);
+  preloadProductThumbs(results);
 }

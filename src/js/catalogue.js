@@ -1,6 +1,7 @@
 import { state, getCategoryFilterIds, getCategoryName, isTopLevelCategory, trackViewedItem } from './state.js';
-import { PRODUCTS_PER_PAGE } from './config.js';
+import { PRODUCTS_PER_PAGE, INITIAL_PRODUCTS, EAGER_IMAGE_COUNT, PRELOAD_IMAGE_COUNT } from './config.js';
 import { escapeHtml, formatPrice, generateBadgesHTML, isFresh, thumbImg, thumb } from './utils.js';
+import { imageLoadOpts, injectLcpPreloads, preloadProductThumbs } from './lazy-loading.js';
 import { forYou } from './reco.js';
 import {
     fetchSubcategoriesWithLatestImage,
@@ -66,9 +67,11 @@ export function renderInitialProducts() {
         if (wrap) wrap.style.display = 'none';
         return;
     }
-    for (let i = 0; i < PRODUCTS_PER_PAGE; i++) grid.appendChild(createSkeletonCard());
+    for (let i = 0; i < INITIAL_PRODUCTS; i++) grid.appendChild(createSkeletonCard());
+    injectLcpPreloads(state.currentFilteredProducts);
+    preloadProductThumbs(state.currentFilteredProducts, { start: 0, count: PRELOAD_IMAGE_COUNT });
     setTimeout(() => {
-        appendProducts(0, PRODUCTS_PER_PAGE);
+        appendProducts(0, INITIAL_PRODUCTS);
         setupObserver();
     }, 100);
     updateSentinelVisibility();
@@ -81,8 +84,8 @@ function setupScrollObserver() {
     }, { rootMargin: '50px' });
 }
 
-export function renderProductCardHTML(p) {
-    const img = p.image ? thumbImg(p.image, p.name, 300, 400) : '';
+export function renderProductCardHTML(p, index = 0) {
+    const img = p.image ? thumbImg(p.image, p.name, 300, 400, '', imageLoadOpts(index)) : '';
     const hasVideo = !!(p.video_url && String(p.video_url).trim());
     const videoBadge = hasVideo
         ? '<span class="product-card-video-badge" aria-hidden="true" title="Vidéo disponible">▶️</span>'
@@ -108,14 +111,15 @@ export function appendProducts(start, count) {
     if (start === 0) grid.querySelectorAll('.skeleton-card').forEach(s => s.remove());
     const fragment = document.createDocumentFragment();
     const slice = state.currentFilteredProducts.slice(start, start + count);
-    slice.forEach(p => {
+    slice.forEach((p, i) => {
+        const index = start + i;
         const card = document.createElement('div');
-        card.className = 'product-card';
+        card.className = 'product-card' + (index < EAGER_IMAGE_COUNT ? ' visible' : '');
         card.dataset.productId = p.id;
         card.setAttribute('role', 'listitem');
-        card.innerHTML = renderProductCardHTML(p);
+        card.innerHTML = renderProductCardHTML(p, index);
         fragment.appendChild(card);
-        if (state.scrollObserver) state.scrollObserver.observe(card);
+        if (state.scrollObserver && index >= EAGER_IMAGE_COUNT) state.scrollObserver.observe(card);
     });
     grid.appendChild(fragment);
     state.displayedCount += slice.length;
@@ -123,6 +127,10 @@ export function appendProducts(start, count) {
     const msg = document.getElementById('loadingMessage');
     if (msg) msg.style.display = 'none';
     updateSentinelVisibility();
+    preloadProductThumbs(state.currentFilteredProducts, {
+        start: state.displayedCount,
+        count: PRODUCTS_PER_PAGE
+    });
 }
 
 export function loadMoreProducts() {
@@ -427,8 +435,8 @@ function renderCategoriesPopularProducts() {
         grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-secondary);padding:2rem;">Aucun article</div>';
         return;
     }
-    grid.innerHTML = products.map(p =>
-        `<div class="product-card visible" data-product-id="${p.id}" role="listitem">${renderProductCardHTML(p)}</div>`
+    grid.innerHTML = products.map((p, i) =>
+        `<div class="product-card visible" data-product-id="${p.id}" role="listitem">${renderProductCardHTML(p, i)}</div>`
     ).join('');
     requestAnimationFrame(() => revealCardImages(grid));
 }
