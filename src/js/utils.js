@@ -211,14 +211,16 @@ export function thumb(url, w = 300, h = 400, fit = 'cover') {
     return `https://wsrv.nl/?${params.toString()}`;
 }
 
-export function thumbImg(url, alt = '', w = 300, h = 400, cls = '') {
+export function thumbImg(url, alt = '', w = 300, h = 400, cls = '', opts = {}) {
     if (!url) return '';
 
     const thumbUrl = thumb(url, w, h);
     const onerr = `this.onerror=function(){this.onerror=null;this.src=this.dataset.full;this.removeAttribute('data-full');this.removeAttribute('data-ts');}`;
     const clsAttr = cls ? ` class="${escapeHtml(cls)}"` : '';
+    const loading = opts.loading || 'lazy';
+    const pri = opts.fetchpriority ? ` fetchpriority="${escapeHtml(opts.fetchpriority)}"` : '';
 
-    return `<img${clsAttr} src="${escapeHtml(thumbUrl)}" data-full="${escapeHtml(url)}" data-ts="${Date.now()}" alt="${escapeHtml(alt)}" loading="lazy" referrerpolicy="no-referrer" decoding="async" onload="this.classList.add('loaded')" onerror="${onerr}" width="${w}" height="${h}">`;
+    return `<img${clsAttr} src="${escapeHtml(thumbUrl)}" data-full="${escapeHtml(url)}" data-ts="${Date.now()}" alt="${escapeHtml(alt)}" loading="${loading}"${pri} referrerpolicy="no-referrer" decoding="async" onload="this.classList.add('loaded')" onerror="${onerr}" width="${w}" height="${h}">`;
 }
 
 export function modalImg(url, alt = '') {

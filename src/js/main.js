@@ -1,6 +1,6 @@
 import '../css/main.css';
 import { state, trackViewedItem, loadPersistedState, saveCart, saveFavorites, saveOrders, getCategoryName } from './state.js';
-import { supabaseClient } from './config.js';
+import { supabaseClient, PRELOAD_IMAGE_COUNT } from './config.js';
 import { escapeHtml, formatPrice, showToast, thumb } from './utils.js';
 import { fetchProducts, fetchCategories } from './api.js';
 import { refreshCatalogue, applyFilter, switchView, clearSubcategorySelection } from './catalogue.js';
@@ -139,20 +139,15 @@ function initOfflineIndicator() {
   addEventListener('offline', update);
 }
 
-async function precachePopularImages() {
+async function precacheCatalogueImages() {
   if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) return;
-  if (!state.products || state.products.length === 0) return;
+  const list = (state.currentFilteredProducts?.length ? state.currentFilteredProducts : state.products) || [];
+  if (list.length === 0) return;
 
-  const popular = [...state.products]
-    .sort((a, b) => (Number(b.popularity_score) || 0) - (Number(a.popularity_score) || 0))
-    .slice(0, 30);
-
-  const imageUrls = [];
-  for (const p of popular) {
-    for (const img of [p.image, p.image2, p.image3, p.image4, p.image5, p.image6]) {
-      if (img && img.trim()) imageUrls.push(thumb(img.trim(), 300, 400));
-    }
-  }
+  const imageUrls = list
+    .slice(0, PRELOAD_IMAGE_COUNT)
+    .map((p) => (p.image && String(p.image).trim() ? thumb(p.image.trim(), 300, 400) : ''))
+    .filter(Boolean);
   if (imageUrls.length === 0) return;
 
   try {
@@ -718,7 +713,6 @@ async function init() {
     await fetchProducts();
     loadOrders();
 
-    precachePopularImages();
     buildFilterBar();
 
     initPlaceholderRotation();
@@ -735,6 +729,7 @@ async function init() {
     initSwipeCategories();
     
     refreshCatalogue();
+    precacheCatalogueImages();
     refreshCartDisplay();
     updateNavFavBadge();
     setupAutoSync();

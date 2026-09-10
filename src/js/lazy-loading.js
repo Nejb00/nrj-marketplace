@@ -1,60 +1,93 @@
 /**
- * Lazy Loading System - Charge les images à la demande
+ * Préchargement agressif des images produits.
+ * Visibles d'abord (LCP + fetchpriority=high), puis jusqu'à PRELOAD_IMAGE_COUNT
+ * via une file limitée pour ne pas saturer le réseau mobile.
  */
+import { thumb } from './utils.js';
+import {
+    EAGER_IMAGE_COUNT,
+    PRELOAD_IMAGE_COUNT,
+    PRELOAD_CONCURRENCY,
+    LCP_PRELOAD_COUNT
+} from './config.js';
 
-/**
- * Initialise l'Intersection Observer pour le lazy loading
- */
-export function initLazyLoading() {
-    const imageObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const img = entry.target;
-                const src = img.dataset.src;
-                
-                if (src) {
-                    img.src = src;
-                    img.removeAttribute('data-src');
-                    img.classList.add('loaded');
-                    imageObserver.unobserve(img);
-                }
-            }
-        });
-    }, {
-        rootMargin: '50px' // Charger 50px avant que l'image soit visible
-    });
+const warmed = new Set();
+/** @type {{ url: string, priority: number }[]} */
+const queue = [];
+let inflight = 0;
+/** @type {HTMLLinkElement[]} */
+let lcpLinks = [];
 
-    return imageObserver;
+function preloadBudget() {
+    try {
+        const c = navigator.connection;
+        if (c?.saveData) return EAGER_IMAGE_COUNT;
+        if (c?.effectiveType === 'slow-2g' || c?.effectiveType === '2g') return EAGER_IMAGE_COUNT;
+    } catch {}
+    return PRELOAD_IMAGE_COUNT;
 }
 
-/**
- * Observe une image pour le lazy loading
- */
-export function observeImage(imageElement, observer) {
-    if (imageElement && observer) {
-        observer.observe(imageElement);
+export function imageLoadOpts(index) {
+    if (index < EAGER_IMAGE_COUNT) return { loading: 'eager', fetchpriority: 'high' };
+    return { loading: 'lazy' };
+}
+
+export function preloadUrl(url, priority = 1) {
+    if (!url || warmed.has(url)) return;
+    warmed.add(url);
+    queue.push({ url, priority });
+    queue.sort((a, b) => a.priority - b.priority);
+    pump();
+}
+
+function pump() {
+    while (inflight < PRELOAD_CONCURRENCY && queue.length) {
+        const item = queue.shift();
+        if (!item) break;
+        inflight++;
+        const img = new Image();
+        img.decoding = 'async';
+        img.referrerPolicy = 'no-referrer';
+        const done = () => {
+            inflight--;
+            pump();
+        };
+        img.onload = done;
+        img.onerror = done;
+        img.src = item.url;
     }
 }
 
-/**
- * Crée une image avec placeholder
- */
-export function createLazyImage(src, alt, width, height, className = '') {
-    const img = document.createElement('img');
-    img.dataset.src = src;
-    img.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + width + ' ' + height + '"%3E%3Crect fill="%23f0f0f0" width="' + width + '" height="' + height + '"/%3E%3C/svg%3E';
-    img.alt = alt;
-    img.width = width;
-    img.height = height;
-    img.className = `lazy-image ${className}`;
-    img.loading = 'lazy';
-    
-    return img;
+export function preloadProductThumbs(products, { start = 0, count = PRELOAD_IMAGE_COUNT, w = 300, h = 400 } = {}) {
+    const budget = preloadBudget();
+    const slice = (products || []).slice(start, start + count);
+    slice.forEach((p, i) => {
+        if (!p?.image) return;
+        const absIndex = start + i;
+        if (absIndex >= budget && absIndex >= EAGER_IMAGE_COUNT) return;
+        const url = thumb(p.image, w, h);
+        const priority = absIndex < EAGER_IMAGE_COUNT ? 0 : 1;
+        preloadUrl(url, priority);
+    });
 }
 
-/**
- * Crée un skeleton loader
- */
+export function injectLcpPreloads(products, count = LCP_PRELOAD_COUNT) {
+    lcpLinks.forEach((el) => el.remove());
+    lcpLinks = [];
+    (products || []).slice(0, count).forEach((p) => {
+        if (!p?.image) return;
+        const href = thumb(p.image, 300, 400);
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'image';
+        link.href = href;
+        link.setAttribute('fetchpriority', 'high');
+        document.head.appendChild(link);
+        lcpLinks.push(link);
+        warmed.add(href);
+    });
+}
+
 export function createSkeletonCard() {
     const skeleton = document.createElement('div');
     skeleton.className = 'product-card skeleton-card';
@@ -69,13 +102,10 @@ export function createSkeletonCard() {
     return skeleton;
 }
 
-/**
- * Affiche les skeletons en attendant le chargement
- */
 export function showSkeletonLoaders(gridId, count = 12) {
     const grid = document.getElementById(gridId);
     if (!grid) return;
-    
+
     grid.innerHTML = '';
     for (let i = 0; i < count; i++) {
         grid.appendChild(createSkeletonCard());
