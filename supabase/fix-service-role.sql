@@ -20,3 +20,12 @@ union all
 select 'chat_messages INSERT', has_table_privilege('service_role', 'public.chat_messages', 'INSERT')
 union all
 select 'chat_sessions UPDATE', has_table_privilege('service_role', 'public.chat_sessions', 'UPDATE');
+
+-- ⚡ CORRECTIF 2 — Contrainte sender pour l'Assistant NRJ
+-- La contrainte d'origine (phase 1) n'autorisait que client/admin/ai ;
+-- la fonction Edge écrit sender='bot' → rejet CHECK.
+-- (Peut être relancé sans risque.)
+
+alter table public.chat_messages drop constraint if exists chat_messages_sender_check;
+alter table public.chat_messages add constraint chat_messages_sender_check
+    check (sender = any (array['client', 'admin', 'ai', 'bot']));
