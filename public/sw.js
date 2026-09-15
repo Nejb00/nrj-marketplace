@@ -1,14 +1,16 @@
 // ═══════════════════════════════════════════════════════════════════════════
-//  NRJ Marketplace — Service Worker optimisé (v12)
+//  NRJ Marketplace — Service Worker optimisé (v13)
 //  - Assets unifiés dans ASSETS_CACHE
 //  - Cache recherche limité à 20 entrées
 //  - admin.html exclu du SHELL (sécurité)
 //  - Cache images : clé = URL complète (sans _nrj_ts), plus de collision wsrv.nl
+//  - v13 : ne plus intercepter postimg.cc (wsrv bloque ce domaine ; le SW
+//    faisait hang les fallbacks d'images produit)
 // ═══════════════════════════════════════════════════════════════════════════
 
-const CACHE = 'nrj-v12';
+const CACHE = 'nrj-v13';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png', '/placeholder.svg'];
-const IMAGE_CACHE = 'nrj-images-v3';
+const IMAGE_CACHE = 'nrj-images-v4';
 const ASSETS_CACHE = 'nrj-assets-v5';
 const SEARCH_CACHE = 'nrj-search-v2';
 
@@ -203,9 +205,13 @@ self.addEventListener('fetch', (e) => {
   if (url.hostname.includes('supabase.co')) return;
 
   // ── IMAGES ──────────────────────────────────────────────
-  const isImage = url.hostname.includes('wsrv.nl') ||
-                  url.pathname.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp|ico)$/i) ||
-                  (url.searchParams.has('output') && url.searchParams.get('output') === 'webp');
+  // Uniquement wsrv + images same-origin. postimg.cc (et autres CDN
+  // produit) doivent aller au navigateur : wsrv les bloque, et un fetch
+  // SW no-cors les faisait rester en opacity:0.
+  const isWsrv = url.hostname.includes('wsrv.nl') || url.hostname.includes('weserv.nl');
+  const isSameOriginImage = url.origin === self.location.origin &&
+    url.pathname.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp|ico|avif)$/i);
+  const isImage = isWsrv || isSameOriginImage;
 
   if (isImage) {
     e.respondWith(

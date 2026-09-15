@@ -73,6 +73,14 @@
     opacity: 1; 
 }
 
+/* Filet de sécurité : une carte visible ne reste jamais photo-vide. */
+.product-card.visible img {
+    animation: product-img-failsafe 0s linear 2.8s forwards;
+}
+@keyframes product-img-failsafe {
+    to { opacity: 1; }
+}
+
 .product-card-video-badge {
     position: absolute;
     left: 10px;
