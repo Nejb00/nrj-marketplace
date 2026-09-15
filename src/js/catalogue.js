@@ -111,17 +111,23 @@ export function appendProducts(start, count) {
     if (start === 0) grid.querySelectorAll('.skeleton-card').forEach(s => s.remove());
     const fragment = document.createDocumentFragment();
     const slice = state.currentFilteredProducts.slice(start, start + count);
+    const toObserve = [];
     slice.forEach((p, i) => {
         const index = start + i;
         const card = document.createElement('div');
-        card.className = 'product-card' + (index < EAGER_IMAGE_COUNT ? ' visible' : '');
+        // Observer les cartes hors viewport APRÈS insertion dans le DOM
+        // (observer un nœud encore dans le fragment ne déclenche jamais l'IO).
+        card.className = 'product-card visible';
         card.dataset.productId = p.id;
         card.setAttribute('role', 'listitem');
         card.innerHTML = renderProductCardHTML(p, index);
         fragment.appendChild(card);
-        if (state.scrollObserver && index >= EAGER_IMAGE_COUNT) state.scrollObserver.observe(card);
+        toObserve.push(card);
     });
     grid.appendChild(fragment);
+    if (state.scrollObserver) {
+        toObserve.forEach((card) => state.scrollObserver.observe(card));
+    }
     state.displayedCount += slice.length;
     state.isLoadingMore = false;
     const msg = document.getElementById('loadingMessage');
