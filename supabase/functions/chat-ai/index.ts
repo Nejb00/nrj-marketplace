@@ -183,7 +183,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
                 role: "user",
                 parts: [{ text: transcript + "\n\nRéponds uniquement au dernier message du Client." }],
             }],
-            generationConfig: { temperature: 0.7, maxOutputTokens: 300 },
+            // thinkingBudget:0 → le modèle « thinking » (2.5-flash) ne doit pas
+            // consumer les tokens de sortie en raisonnement (réponses tronquées).
+            generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 500,
+                thinkingConfig: { thinkingBudget: 0 },
+            },
         };
 
         const r = await fetch(
