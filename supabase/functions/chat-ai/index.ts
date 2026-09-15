@@ -8,19 +8,23 @@
 // 4. Appelle Gemini avec un prompt boutique
 // 5. Insère la réponse en sender='bot' → temps réel côté client
 //
-// DÉPLOIEMENT (dashboard Supabase) :
-//   Edge Functions → Create function → nom « chat-ai » → coller CE code → Deploy
+// DÉPLOIEMENT (dashboard Supabase OU API Management) :
 //   Secrets (Edge Functions → Secrets) : GEMINI_API_KEY
 //   Optionnel : GEMINI_MODEL (défaut : gemini-flash-latest)
 //   Garde « Verify JWT » ACTIVÉE (le client envoie son token de session).
 //
-// Le rôle service (SUPABASE_SERVICE_ROLE_KEY) est injecté automatiquement
-// par Supabase dans l'environnement de la fonction — il contourne la RLS,
-// c'est lui qui insère les messages 'bot' (jamais le navigateur).
+// ⚙️ ZÉRO DÉPENDANCE EXTERNE : plus d'import esm.sh (source de pannes
+// « Module not found » au démarrage à froid). Toutes les lectures/écritures
+// passent par des appels REST natifs avec le rôle service
+// (SUPABASE_SERVICE_ROLE_KEY, injecté par Supabase, contourne la RLS —
+// c'est lui qui insère les messages 'bot', jamais le navigateur).
 // ═══════════════════════════════════════════════════════════════════════════
 
 const MODEL = Deno.env.get("GEMINI_MODEL") || "gemini-flash-latest";
 const GEMINI_KEY = Deno.env.get("GEMINI_API_KEY");
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 const CORS: Record<string, string> = {
     "Access-Control-Allow-Origin": "*",
@@ -46,6 +50,16 @@ interface ChatMsg {
     created_at: string;
 }
 
+interface ProductRow {
+    id: number;
+    name: string;
+    price: number | string;
+    description?: string | null;
+    moq?: string | number | null;
+    tailles?: string | null;
+    couleurs?: string | null;
+}
+
 function json(data: unknown, status = 200): Response {
     return new Response(JSON.stringify(data), { status, headers: CORS });
 }
@@ -59,6 +73,44 @@ function jwtSub(token: string): string {
         return JSON.parse(new TextDecoder().decode(Uint8Array.from(b, (c) => c.charCodeAt(0)))).sub || "";
     } catch {
         return "";
+    }
+}
+
+// ── Couche REST native (remplace supabase-js / esm.sh) ──────────────────────
+interface RestResult<T> {
+    data: T | null;
+    error: string | null;
+}
+
+async function rest<T>(path: string, init?: RequestInit): Promise<RestResult<T>> {
+    try {
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+            ...init,
+            headers: {
+                "apikey": SERVICE_KEY,
+                "Authorization": `Bearer ${SERVICE_KEY}`,
+                "Content-Type": "application/json",
+                ...(init?.headers as Record<string, string> | undefined),
+            },
+        });
+        const txt = await r.text();
+        let parsed: unknown = null;
+        if (txt) {
+            try {
+                parsed = JSON.parse(txt);
+            } catch {
+                parsed = txt;
+            }
+        }
+        if (!r.ok) {
+            const msg = parsed && typeof parsed === "object"
+                ? ((parsed as { message?: string }).message || `HTTP ${r.status}`)
+                : `HTTP ${r.status}`;
+            return { data: null, error: msg };
+        }
+        return { data: parsed as T, error: null };
+    } catch (e) {
+        return { data: null, error: String((e as Error)?.message || e) };
     }
 }
 
@@ -84,15 +136,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
         const sub = jwtSub(req.headers.get("Authorization") || "");
         if (sub && sub !== sessionId) return json({ error: "session non autorisée" }, 403);
 
-        const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
-        const supa = createClient(
-            Deno.env.get("SUPABASE_URL")!,
-            Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-        );
-
         // ── 1. Réglages IA ────────────────────────────────────────────────
-        const { data: settings } = await supa
-            .from("chat_settings").select("*").eq("id", 1).maybeSingle();
+        const settingsRes = await rest<Array<Record<string, unknown>>>(
+            "chat_settings?select=*&limit=1",
+        );
+        const settings = settingsRes.data?.[0] || null;
         if (settings && settings.ai_enabled === false) {
             return json({ ok: true, skipped: "ai_disabled" });
         }
@@ -101,12 +149,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
         const minDelaySec = away ? 0 : 45;
 
         // ── 2. Derniers messages + gardes ─────────────────────────────────
-        const { data: msgs } = await supa
-            .from("chat_messages")
-            .select("id, session_id, sender, content, metadata, created_at")
-            .eq("session_id", sessionId)
-            .order("created_at", { ascending: false })
-            .limit(12) as { data: ChatMsg[] | null };
+        const msgsRes = await rest<ChatMsg[]>(
+            `chat_messages?select=id,session_id,sender,content,metadata,created_at` +
+                `&session_id=eq.${sessionId}&order=created_at.desc&limit=12`,
+        );
+        const msgs = msgsRes.data;
         if (!msgs || msgs.length === 0) return json({ ok: true, skipped: "no_messages" });
 
         const last = msgs[0];
@@ -117,9 +164,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
         if (ageSec > 1800) return json({ ok: true, skipped: "too_late" });
 
         // Anti-spam : 1 réponse IA max toutes les 30 s, 40 max par conversation
-        const { data: botMsgs } = await supa
-            .from("chat_messages").select("created_at")
-            .eq("session_id", sessionId).eq("sender", "bot");
+        const botRes = await rest<Array<{ created_at: string }>>(
+            `chat_messages?select=created_at&session_id=eq.${sessionId}&sender=eq.bot`,
+        );
+        const botMsgs = botRes.data;
         if (botMsgs && botMsgs.length > 0) {
             if (botMsgs.length >= 40) return json({ ok: true, skipped: "bot_limit" });
             const lastBot = Math.max(...botMsgs.map((m) => new Date(m.created_at).getTime()));
@@ -133,12 +181,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
         const contextProduct = history.filter((m) => m.sender === "client")
             .map((m) => m.metadata?.product).filter(Boolean).pop();
 
-        const { data: products } = await supa
-            .from("products")
-            .select("id, name, price, description, moq, tailles, couleurs")
-            .limit(500);
+        const productsRes = await rest<ProductRow[]>(
+            "products?select=id,name,price,description,moq,tailles,couleurs&limit=500",
+        );
 
-        const scored = (products || []).map((p) => {
+        const scored = (productsRes.data || []).map((p) => {
             const hay = `${p.name} ${p.description || ""} ${p.couleurs || ""}`.toLowerCase();
             let score = 0;
             for (const w of clientTexts.split(/[^a-zà-ÿ0-9]+/)) {
@@ -151,9 +198,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
             .sort((a, b) => b.score - a.score)
             .slice(0, 5);
 
-        const catalogue: Array<Record<string, unknown>> = scored.map((x) => x.p);
+        const catalogue: Array<Record<string, unknown>> = scored.map((x) => x.p as unknown as Record<string, unknown>);
         if (contextProduct && !catalogue.some((p) => p.id === contextProduct.id)) {
-            catalogue.unshift(contextProduct as Record<string, unknown>);
+            catalogue.unshift(contextProduct as unknown as Record<string, unknown>);
         }
 
         const catalogueTxt = catalogue.length > 0
@@ -211,20 +258,29 @@ Deno.serve(async (req: Request): Promise<Response> => {
         if (!reply) return json({ ok: false, error: "reponse_gemini_vide" }, 502);
 
         // ── 5. Insertion message bot + aperçu session ─────────────────────
-        const { error: insErr } = await supa.from("chat_messages").insert({
-            session_id: sessionId,
-            sender: "bot",
-            content: reply,
-            metadata: { model: MODEL },
-            read_by_customer: false,
-            read_by_admin: true, // l'IA « sait » ce qu'elle a écrit
+        const insRes = await rest<null>("chat_messages", {
+            method: "POST",
+            headers: { "Prefer": "return=minimal" },
+            body: JSON.stringify({
+                session_id: sessionId,
+                sender: "bot",
+                content: reply,
+                metadata: { model: MODEL },
+                read_by_customer: false,
+                read_by_admin: true, // l'IA « sait » ce qu'elle a écrit
+            }),
         });
-        if (insErr) return json({ ok: false, error: insErr.message }, 500);
+        if (insRes.error) return json({ ok: false, error: insRes.error }, 500);
 
-        await supa.from("chat_sessions").update({
-            last_message_preview: reply.slice(0, 90),
-            last_message_at: new Date().toISOString(),
-        }).eq("id", sessionId);
+        // Aperçu de conversation (best effort, silencieux si échec)
+        await rest<null>(`chat_sessions?id=eq.${sessionId}`, {
+            method: "PATCH",
+            headers: { "Prefer": "return=minimal" },
+            body: JSON.stringify({
+                last_message_preview: reply.slice(0, 90),
+                last_message_at: new Date().toISOString(),
+            }),
+        });
 
         return json({ ok: true, reply });
     } catch (e) {
