@@ -2,11 +2,18 @@ import { state, getCategoryFilterIds, getCategoryName } from './state.js';
 import { escapeHtml, formatPrice, debounce, calculateSearchScore, generateBadgesHTML, thumbImg } from './utils.js';
 import { imageLoadOpts, injectLcpPreloads, preloadProductThumbs } from './lazy-loading.js';
 
+let searchViewStaticBound = false;
+
 export function switchToSearchView(query) {
-  document.getElementById('catalogueWrapper').style.display = 'none';
-  document.getElementById('searchView').style.display = 'flex';
-  document.getElementById('searchViewInput').value = query || '';
-  document.getElementById('searchViewClear').style.display = query ? 'block' : 'none';
+  const wrap = document.getElementById('catalogueWrapper');
+  const view = document.getElementById('searchView');
+  if (!wrap || !view) return;
+  wrap.style.display = 'none';
+  view.style.display = 'flex';
+  const input = document.getElementById('searchViewInput');
+  const clear = document.getElementById('searchViewClear');
+  if (input) input.value = query || '';
+  if (clear) clear.style.display = query ? 'block' : 'none';
   state.searchViewState.query = query || '';
 
   if (query) {
@@ -18,8 +25,10 @@ export function switchToSearchView(query) {
 }
 
 export function switchFromSearchView() {
-  document.getElementById('searchView').style.display = 'none';
-  document.getElementById('catalogueWrapper').style.display = 'block';
+  const view = document.getElementById('searchView');
+  const wrap = document.getElementById('catalogueWrapper');
+  if (view) view.style.display = 'none';
+  if (wrap) wrap.style.display = 'block';
   window.history.replaceState({}, '', window.location.pathname);
 }
 
@@ -32,7 +41,8 @@ function initializeSearchFilters() {
   const sizes = [...new Set(state.products.flatMap(p => (p.tailles || '').split(',').map(s => s.trim()).filter(Boolean)))].sort();
   const colors = [...new Set(state.products.flatMap(p => (p.couleurs || '').split(',').map(s => s.trim()).filter(Boolean)))].sort();
 
-  document.getElementById('categoryFilters').innerHTML = topCats.map(cat => {
+  const catEl = document.getElementById('categoryFilters');
+  if (catEl) catEl.innerHTML = topCats.map(cat => {
     const ids = getCategoryFilterIds(cat.id);
     const idSet = new Set(ids || [cat.id]);
     const count = state.products.filter(p => p.category_id && idSet.has(p.category_id)).length;
@@ -44,7 +54,8 @@ function initializeSearchFilters() {
     </label>`;
   }).join('');
 
-  document.getElementById('sizeFilters').innerHTML = sizes.map(size => {
+  const sizeEl = document.getElementById('sizeFilters');
+  if (sizeEl) sizeEl.innerHTML = sizes.map(size => {
     const count = state.products.filter(p => (p.tailles || '').includes(size)).length;
     return `<label class="filter-checkbox">
       <input type="checkbox" value="${escapeHtml(size)}" data-filter="size">
@@ -53,7 +64,8 @@ function initializeSearchFilters() {
     </label>`;
   }).join('');
 
-  document.getElementById('colorFilters').innerHTML = colors.map(color => {
+  const colorEl = document.getElementById('colorFilters');
+  if (colorEl) colorEl.innerHTML = colors.map(color => {
     const count = state.products.filter(p => (p.couleurs || '').includes(color)).length;
     return `<label class="filter-checkbox">
       <input type="checkbox" value="${escapeHtml(color)}" data-filter="color">
@@ -66,12 +78,38 @@ function initializeSearchFilters() {
 }
 
 function attachFilterListeners() {
+  const bindCheckboxFilters = () => {
+    document.querySelectorAll('[data-filter]').forEach(checkbox => {
+      checkbox.addEventListener('change', () => {
+        const filterType = checkbox.dataset.filter;
+        const value = checkbox.value;
+        const f = state.searchViewState.filters;
+        if (filterType === 'category') {
+          if (checkbox.checked) f.categories.push(value);
+          else f.categories = f.categories.filter(c => c !== value);
+        } else if (filterType === 'size') {
+          if (checkbox.checked) f.sizes.push(value);
+          else f.sizes = f.sizes.filter(s => s !== value);
+        } else if (filterType === 'color') {
+          if (checkbox.checked) f.colors.push(value);
+          else f.colors = f.colors.filter(c => c !== value);
+        }
+        performAdvancedSearch();
+      });
+    });
+  };
+
+  bindCheckboxFilters();
+  if (searchViewStaticBound) return;
+  if (!document.getElementById('priceMin')) return;
+  searchViewStaticBound = true;
+
   document.getElementById('priceMin').addEventListener('input', debounce(() => {
     state.searchViewState.filters.priceMin = parseFloat(document.getElementById('priceMin').value) || null;
     performAdvancedSearch();
   }, 500));
 
-  document.getElementById('priceMax').addEventListener('input', debounce(() => {
+  document.getElementById('priceMax')?.addEventListener('input', debounce(() => {
     state.searchViewState.filters.priceMax = parseFloat(document.getElementById('priceMax').value) || null;
     performAdvancedSearch();
   }, 500));
@@ -80,8 +118,10 @@ function attachFilterListeners() {
     btn.addEventListener('click', () => {
       const min = btn.dataset.min;
       const max = btn.dataset.max;
-      document.getElementById('priceMin').value = min;
-      document.getElementById('priceMax').value = max;
+      const priceMin = document.getElementById('priceMin');
+      const priceMax = document.getElementById('priceMax');
+      if (priceMin) priceMin.value = min;
+      if (priceMax) priceMax.value = max;
       state.searchViewState.filters.priceMin = parseFloat(min) || null;
       state.searchViewState.filters.priceMax = parseFloat(max) || null;
       document.querySelectorAll('.price-preset').forEach(b => b.classList.remove('active'));
@@ -90,68 +130,55 @@ function attachFilterListeners() {
     });
   });
 
-  document.querySelectorAll('[data-filter]').forEach(checkbox => {
-    checkbox.addEventListener('change', () => {
-      const filterType = checkbox.dataset.filter;
-      const value = checkbox.value;
-      const f = state.searchViewState.filters;
-      if (filterType === 'category') {
-        if (checkbox.checked) f.categories.push(value);
-        else f.categories = f.categories.filter(c => c !== value);
-      } else if (filterType === 'size') {
-        if (checkbox.checked) f.sizes.push(value);
-        else f.sizes = f.sizes.filter(s => s !== value);
-      } else if (filterType === 'color') {
-        if (checkbox.checked) f.colors.push(value);
-        else f.colors = f.colors.filter(c => c !== value);
-      }
-      performAdvancedSearch();
-    });
-  });
-
-  document.getElementById('sortBy').addEventListener('change', (e) => {
+  document.getElementById('sortBy')?.addEventListener('change', (e) => {
     state.searchViewState.sortBy = e.target.value;
     performAdvancedSearch();
   });
 
-  document.getElementById('backFromSearchBtn').addEventListener('click', switchFromSearchView);
+  document.getElementById('backFromSearchBtn')?.addEventListener('click', switchFromSearchView);
 
-  document.getElementById('searchViewInput').addEventListener('input', debounce((e) => {
+  document.getElementById('searchViewInput')?.addEventListener('input', debounce((e) => {
     state.searchViewState.query = e.target.value;
-    document.getElementById('searchViewClear').style.display = e.target.value ? 'block' : 'none';
+    const clear = document.getElementById('searchViewClear');
+    if (clear) clear.style.display = e.target.value ? 'block' : 'none';
     performAdvancedSearch();
   }, 300));
 
-  document.getElementById('searchViewClear').addEventListener('click', () => {
-    document.getElementById('searchViewInput').value = '';
+  document.getElementById('searchViewClear')?.addEventListener('click', () => {
+    const input = document.getElementById('searchViewInput');
+    if (input) input.value = '';
     state.searchViewState.query = '';
-    document.getElementById('searchViewClear').style.display = 'none';
+    const clear = document.getElementById('searchViewClear');
+    if (clear) clear.style.display = 'none';
     performAdvancedSearch();
   });
 
-  document.getElementById('clearAllFilters').addEventListener('click', () => {
+  document.getElementById('clearAllFilters')?.addEventListener('click', () => {
     state.searchViewState.filters = { priceMin: null, priceMax: null, categories: [], sizes: [], colors: [] };
-    document.getElementById('priceMin').value = '';
-    document.getElementById('priceMax').value = '';
+    const priceMin = document.getElementById('priceMin');
+    const priceMax = document.getElementById('priceMax');
+    if (priceMin) priceMin.value = '';
+    if (priceMax) priceMax.value = '';
     document.querySelectorAll('[data-filter]').forEach(cb => cb.checked = false);
     document.querySelectorAll('.price-preset').forEach(b => b.classList.remove('active'));
     performAdvancedSearch();
   });
 
-  document.getElementById('resetSearchBtn').addEventListener('click', () => {
-    document.getElementById('searchViewInput').value = '';
+  document.getElementById('resetSearchBtn')?.addEventListener('click', () => {
+    const input = document.getElementById('searchViewInput');
+    if (input) input.value = '';
     state.searchViewState.query = '';
-    document.getElementById('clearAllFilters').click();
+    document.getElementById('clearAllFilters')?.click();
   });
 
-  document.getElementById('mobileFilterToggle').addEventListener('click', () => {
-    document.getElementById('searchFiltersSidebar').classList.add('active');
-    document.getElementById('filtersOverlay').classList.add('active');
+  document.getElementById('mobileFilterToggle')?.addEventListener('click', () => {
+    document.getElementById('searchFiltersSidebar')?.classList.add('active');
+    document.getElementById('filtersOverlay')?.classList.add('active');
   });
 
-  document.getElementById('filtersOverlay').addEventListener('click', () => {
-    document.getElementById('searchFiltersSidebar').classList.remove('active');
-    document.getElementById('filtersOverlay').classList.remove('active');
+  document.getElementById('filtersOverlay')?.addEventListener('click', () => {
+    document.getElementById('searchFiltersSidebar')?.classList.remove('active');
+    document.getElementById('filtersOverlay')?.classList.remove('active');
   });
 }
 
@@ -219,6 +246,7 @@ function displaySearchResults(results) {
   const grid = document.getElementById('searchResultsGrid');
   const noResults = document.getElementById('searchNoResults');
   const countEl = document.getElementById('searchResultsCount');
+  if (!grid || !noResults || !countEl) return;
 
   countEl.textContent = `${results.length} résultat${results.length !== 1 ? 's' : ''}`;
 

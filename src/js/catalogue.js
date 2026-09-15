@@ -503,17 +503,20 @@ export async function renderCategories() {
     syncCategoriesHeaderOffset();
     const sidebar = document.getElementById('categoriesSidebar');
     const panel = document.getElementById('categoriesPanel');
-    if (!sidebar || !panel) return;
-    if (!categoriesPageState.initialized || !categoriesPageState.parents.length) {
-        categoriesPageState.loading = true;
-        renderCategoriesPanel();
-        categoriesPageState.parents = (await fetchParentCategoriesRanked()) || [];
-        categoriesPageState.initialized = true;
-    }
-    categoriesPageState.selectedParentId = 'featured';
     const sortSelect = document.getElementById('categoriesSortSelect');
     if (sortSelect) sortSelect.value = categoriesPageState.sortBy || 'relevance';
-    await loadCategoriesPanel('featured');
+    categoriesPageState.selectedParentId = 'featured';
+    if (sidebar && panel) {
+        if (!categoriesPageState.initialized || !categoriesPageState.parents.length) {
+            categoriesPageState.loading = true;
+            renderCategoriesPanel();
+            categoriesPageState.parents = (await fetchParentCategoriesRanked()) || [];
+            categoriesPageState.initialized = true;
+        }
+        await loadCategoriesPanel('featured');
+        return;
+    }
+    renderCategoriesPopularProducts();
 }
 
 function createSkeletonCard() {

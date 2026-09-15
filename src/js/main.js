@@ -86,13 +86,52 @@ function initHeaderSearchCompact() {
   });
 }
 
+function isFlexOpen(id) {
+  const n = document.getElementById(id);
+  return !!(n && n.style.display === 'flex');
+}
+
+function closeSearchAndAccount() {
+  if (isFlexOpen('searchView')) switchFromSearchView();
+  if (isFlexOpen('accountView')) hideAccountView();
+}
+
+function closeCartPanel() {
+  document.getElementById('cartPanel')?.classList.remove('open');
+  document.getElementById('cartOverlay')?.classList.remove('open');
+}
+
+function markNavActive(navTarget) {
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.nav-item[data-nav="${navTarget}"]`)?.classList.add('active');
+}
+
+function openHeaderCategories() {
+  closeSearchAndAccount();
+  closeCartPanel();
+  if (state.modalOpen) closeProductModal();
+  switchView('categories');
+  markNavActive('categories');
+  window.scrollTo(0, 0);
+}
+
+function openHeaderProfile() {
+  if (isFlexOpen('searchView')) switchFromSearchView();
+  closeCartPanel();
+  if (state.modalOpen) closeProductModal();
+  showAccountView();
+}
+
+function openHeaderCart() {
+  document.getElementById('cartPanel')?.classList.add('open');
+  document.getElementById('cartOverlay')?.classList.add('open');
+  refreshCartDisplay();
+}
+
 function initHeaderActionsBubble() {
-  const map = { catalogBtnHeader: 'categories', profileBtnHeader: 'profile', cartBtnHeader: 'cart' };
-  Object.entries(map).forEach(([btnId, navTarget]) => {
-    document.getElementById(btnId)?.addEventListener('click', () => {
-      document.querySelector(`.nav-item[data-nav="${navTarget}"]`)?.click();
-    });
-  });
+  document.getElementById('catalogBtnHeader')?.addEventListener('click', openHeaderCategories);
+  document.getElementById('profileBtnHeader')?.addEventListener('click', openHeaderProfile);
+  document.getElementById('cartBtnHeader')?.addEventListener('click', openHeaderCart);
 
   const navBadge = document.getElementById('navCartBadge');
   const headerBadge = document.getElementById('headerCartBadge');
@@ -209,19 +248,21 @@ function initLogoLongPress() {
 }
 
 export function showAccountView() {
-  document.getElementById('catalogueWrapper').style.display = 'none';
   const av = document.getElementById('accountView');
+  const wrap = document.getElementById('catalogueWrapper');
+  if (!av || !wrap) return;
+  wrap.style.display = 'none';
   av.style.display = 'flex';
   renderAccount();
   window.scrollTo(0, 0);
-  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-  document.querySelector('.nav-item[data-nav="profile"]')?.classList.add('active');
+  markNavActive('profile');
 }
 
 export function hideAccountView() {
   const av = document.getElementById('accountView');
   if (av) av.style.display = 'none';
-  document.getElementById('catalogueWrapper').style.display = 'block';
+  const wrap = document.getElementById('catalogueWrapper');
+  if (wrap) wrap.style.display = 'block';
 }
 
 function renderAccount() {
@@ -647,8 +688,8 @@ document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('clic
 
   if (nav === 'home') {
     if (state.modalOpen) closeProductModal();
-    if (document.getElementById('searchView').style.display === 'flex') switchFromSearchView();
-    if (document.getElementById('accountView').style.display === 'flex') hideAccountView();
+    if (isFlexOpen('searchView')) switchFromSearchView();
+    if (isFlexOpen('accountView')) hideAccountView();
     switchView('home');
     state.currentFilter = 'all';
     state.currentQuickFilter = 'all';
@@ -668,19 +709,19 @@ document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('clic
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
   if (nav === 'categories') {
-    if (document.getElementById('searchView').style.display === 'flex') switchFromSearchView();
-    if (document.getElementById('accountView').style.display === 'flex') hideAccountView();
+    if (isFlexOpen('searchView')) switchFromSearchView();
+    if (isFlexOpen('accountView')) hideAccountView();
     switchView('categories');
     window.scrollTo(0, 0);
   }
   if (nav === 'cart') {
-    document.getElementById('cartPanel').classList.add('open');
-    document.getElementById('cartOverlay').classList.add('open');
+    document.getElementById('cartPanel')?.classList.add('open');
+    document.getElementById('cartOverlay')?.classList.add('open');
     refreshCartDisplay();
   }
   if (nav === 'favorites') {
-    if (document.getElementById('searchView').style.display === 'flex') switchFromSearchView();
-    if (document.getElementById('accountView').style.display === 'flex') hideAccountView();
+    if (isFlexOpen('searchView')) switchFromSearchView();
+    if (isFlexOpen('accountView')) hideAccountView();
     switchView('home');
     state.currentFilter = 'favorites';
     clearSubcategorySelection();
