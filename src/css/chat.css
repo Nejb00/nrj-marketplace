@@ -35,7 +35,7 @@
 .chat-fab {
     position: fixed;
     right: 16px;
-    bottom: calc(var(--bottom-bar-height, 70px) + 12px);
+    bottom: calc(84px + env(safe-area-inset-bottom, 0px)); /* au-dessus de la pill nav */
     width: 54px;
     height: 54px;
     border-radius: 50%;

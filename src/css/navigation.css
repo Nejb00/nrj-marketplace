@@ -1,30 +1,46 @@
-/* ─── NAVIGATION « LIQUID GLASS » ───────────────────────────────────────── */
-/*
- * NAV MASQUÉE — on la garde dans le DOM / CSS pour pouvoir la réactiver facilement.
- * Pour la réafficher : retirer la règle `.main-nav { display: none !important; }`
- * et rétablir le padding-bottom du body si besoin.
- */
-.main-nav {
-  display: none !important;
-}
-
+/* ─── NAVIGATION « LIQUID GLASS » — pill flottante iPhone (Phase 2) ─────── */
 .main-nav {
   position: fixed;
-  left: 10px;
-  right: 10px;
-  bottom: 8px;
-  height: var(--nav-height);
-  /* display: flex;  ← désactivé tant que la nav est masquée */
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  width: min(430px, calc(100% - 24px));
+  height: 62px;
+  display: flex;
   align-items: stretch;
   justify-content: space-evenly;
   z-index: 150;
-  padding: 4px 6px;
-  background: rgba(16, 16, 20, 0.62);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 22px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  padding: 5px 8px;
+  background: rgba(18, 18, 26, 0.55);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-top-color: rgba(255, 255, 255, 0.20);
+  border-radius: 26px;
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.55),
+    0 2px 8px rgba(0, 0, 0, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09);
+  animation: nav-rise 0.55s cubic-bezier(0.22, 1.2, 0.36, 1) both;
+}
+
+/* Version claire : même verre que les bulles du header */
+:root.light-theme .main-nav {
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.24) 0%,
+    rgba(255, 255, 255, 0.12) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-top-color: rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* Entrée : la pill monte et se pose, ressort léger (signature iOS) */
+@keyframes nav-rise {
+  from { transform: translateX(-50%) translateY(90px); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0);    opacity: 1; }
 }
 
 .main-nav .nav-item {
@@ -67,21 +83,53 @@
 .main-nav .nav-item[data-nav="favorites"]::after { content: 'Favoris'; }
 .main-nav .nav-item[data-nav="profile"]::after { content: 'Mon NRJ'; }
 
-/* ✅ Halo « liquide » derrière l'icône active */
+/* ✅ Pastille « magique » derrière l'icône active — verre teinté NRJ + pop */
 .main-nav .nav-item.active::before {
   content: '';
   position: absolute;
-  top: 5px;
+  top: 6px;
   left: 50%;
   transform: translateX(-50%);
-  width: 36px;
-  height: 24px;
+  width: 46px;
+  height: 30px;
   border-radius: 999px;
-  background: radial-gradient(closest-side, rgba(255, 140, 66, 0.3), transparent 72%);
+  background:
+    linear-gradient(180deg,
+      rgba(255, 140, 66, 0.28) 0%,
+      rgba(255, 140, 66, 0.14) 100%);
+  border: 1px solid rgba(255, 140, 66, 0.35);
+  border-top-color: rgba(255, 183, 128, 0.55);
+  box-shadow:
+    0 4px 14px rgba(255, 140, 66, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(6px) saturate(150%);
+  -webkit-backdrop-filter: blur(6px) saturate(150%);
+  animation: pill-pop 0.42s cubic-bezier(0.22, 1.6, 0.36, 1) both;
+}
+
+@keyframes pill-pop {
+  0%   { transform: translateX(-50%) scale(0.55); opacity: 0; }
+  60%  { transform: translateX(-50%) scale(1.08); opacity: 1; }
+  100% { transform: translateX(-50%) scale(1); }
 }
 
 .main-nav .nav-item.active { color: var(--primary); }
-.main-nav .nav-item.active svg { transform: translateY(-1px) scale(1.08); filter: drop-shadow(0 0 8px rgba(255, 140, 66, 0.5)); }
+.main-nav .nav-item.active svg {
+  transform: translateY(-1px) scale(1.12);
+  filter: drop-shadow(0 0 9px rgba(255, 140, 66, 0.55));
+  animation: icon-spring 0.42s cubic-bezier(0.22, 1.6, 0.36, 1) both;
+}
+
+@keyframes icon-spring {
+  0%   { transform: translateY(-1px) scale(0.7); }
+  60%  { transform: translateY(-1px) scale(1.22); }
+  100% { transform: translateY(-1px) scale(1.12); }
+}
+
+/* Ressort sur le retour d'icône inactive */
+.main-nav .nav-item svg {
+  transition: transform 0.3s cubic-bezier(0.22, 1.4, 0.36, 1), filter 0.25s ease;
+}
 
 /* ✅ Anciens globes colorés neutralisés (les classes restent au HTML, sans effet) */
 .main-nav .categories-accent,
@@ -109,8 +157,8 @@
 }
 .favorites-badge { background: var(--favorites); color: #fff; }
 
-/* Nav masquée → plus besoin de réserver l'espace en bas */
-body { padding-bottom: 1.5rem; }
+/* Nav flottante → réserver la hauteur de la pill + marge (safe-area incluse) */
+body { padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
 
 .categories-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
 @media (min-width: 768px) { .categories-grid { grid-template-columns: repeat(3, 1fr); } }
