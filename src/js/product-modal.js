@@ -12,7 +12,7 @@ const productDetailsCache = new Map();
 const _modal = document.getElementById('productModal');
 const _rec = _modal ? _modal.querySelector('.recommendations') : null;
 const _src = _modal ? _modal.querySelector('.sourcing-section') : null;
-if (_modal && _rec && _src) _modal.insertBefore(_src, _rec);
+if (_modal && _rec && _src) _rec.parentNode.insertBefore(_src, _rec);
 
 const _backBtn = document.getElementById('modalCloseBtn');
 if (_backBtn) _backBtn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
@@ -394,3 +394,50 @@ export function closeProductModal() {
     state.modalOpen = false;
     history.replaceState({}, '', window.location.pathname);
 }
+
+/* ═══ iOS sheet : glisser la poignée vers le bas pour fermer ═════════════
+   Amélioration progressive : sans tactile (desktop), le bouton retour reste. */
+(function setupSheetDrag() {
+    const modal = document.getElementById('productModal');
+    const sheet = modal ? modal.querySelector('.modal-sheet') : null;
+    const handle = document.getElementById('sheetHandle');
+    if (!modal || !sheet || !handle) return;
+
+    let dragging = false;
+    let startY = 0;
+    let dy = 0;
+
+    handle.addEventListener('touchstart', (e) => {
+        if (!modal.classList.contains('open')) return;
+        dragging = true;
+        startY = e.touches[0].clientY;
+        dy = 0;
+        sheet.style.transition = 'none';   // contrôle manuel pendant le drag
+    }, { passive: true });
+
+    handle.addEventListener('touchmove', (e) => {
+        if (!dragging) return;
+        dy = Math.max(0, e.touches[0].clientY - startY);
+        // Léger frein : les 60 premiers px suivent 1:1, ensuite amorti
+        const eased = dy <= 60 ? dy : 60 + (dy - 60) * 0.55;
+        sheet.style.transform = `translateY(${eased}px)`;
+    }, { passive: true });
+
+    handle.addEventListener('touchend', () => {
+        if (!dragging) return;
+        dragging = false;
+        sheet.style.transition = '';
+        if (dy > 110) {
+            sheet.style.transform = '';    // glisse vers le bas (transition CSS)
+            closeProductModal();
+        } else {
+            sheet.style.transform = '';    // rebond retour position
+        }
+    }, { passive: true });
+
+    // Sécurité : si la modale se ferme autrement, réinitialiser la feuille
+    const mo = new MutationObserver(() => {
+        if (!modal.classList.contains('open')) sheet.style.transform = '';
+    });
+    mo.observe(modal, { attributes: true, attributeFilter: ['class'] });
+})();
