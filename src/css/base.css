@@ -42,6 +42,7 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    padding-top: env(safe-area-inset-top, 0px); /* app standalone : sous l'horloge */
     padding-bottom: var(--nav-height);
     transition: background-color var(--transition), color var(--transition);
 }
@@ -52,7 +53,7 @@ body {
    ═══════════════════════════════════════════════════════════════════════════ */
 .header-fixed {
     position: fixed;
-    top: 8px;
+    top: calc(8px + env(safe-area-inset-top, 0px));
     left: 6px;
     right: 6px;
     z-index: 100;

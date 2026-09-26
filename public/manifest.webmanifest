@@ -34,14 +34,12 @@
     {
       "src": "/apple-touch-icon.png",
       "sizes": "180x180",
-      "type": "image/png",
-      "purpose": "apple touch icon"
+      "type": "image/png"
     },
     {
       "src": "/apple-touch-icon-167.png",
       "sizes": "167x167",
-      "type": "image/png",
-      "purpose": "apple touch icon"
+      "type": "image/png"
     }
   ],
   "screenshots": [
@@ -63,13 +61,5 @@
   "handle_links": ["https"],
   "launch_handler": {
     "client_mode": "navigate-existing"
-  },
-  "shortcuts": [
-    {
-      "name": "Rechercher",
-      "short_name": "Recherche",
-      "description": "Rechercher un produit dans le catalogue",
-      "url": "/search"
-    }
-  ]
+  }
 }

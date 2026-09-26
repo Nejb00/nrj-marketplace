@@ -21,7 +21,7 @@
 /* La feuille : verre épais, coins supérieurs arrondis, monte avec ressort */
 .modal-sheet {
     position: relative;
-    margin-top: max(3.5vh, 22px);
+    margin-top: calc(max(3.5vh, 22px) + env(safe-area-inset-top, 0px));
     max-height: calc(100vh - max(3.5vh, 22px));
     display: flex;
     flex-direction: column;
