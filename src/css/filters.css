@@ -202,6 +202,26 @@ body.categories-page-open .logo-brand-text {
 
 #categoriesView.is-open {
     display: flex !important;
+    /* Phase glass-fix : ancrée sous le header, insensible au flux de la page
+       (la grille produits vit dans .hero-section, le clamp #catalogueWrapper
+       d'origine ne servait plus à rien → la vue s'ouvrait à 4000px sous l'écran) */
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: var(--categories-header-h, 160px);
+    height: auto;
+    max-height: none;
+    z-index: 90;
+    background: rgba(14, 14, 20, 0.86);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    backdrop-filter: blur(24px) saturate(160%);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+:root.light-theme #categoriesView.is-open {
+    background: rgba(248, 246, 242, 0.92);
+    border-top-color: rgba(0, 0, 0, 0.06);
 }
 
 .categories-page-header {
