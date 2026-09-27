@@ -1,5 +1,5 @@
-import '../css/admin.css';
-import '../css/chat.css';
+import '../css/components/admin.css';
+import '../css/components/chat.css';
 import { fetchProducts } from './api.js';
 import { handleAdminLogin, handleLogout, checkAdminSession, addProduct, deleteProduct } from './admin.js';
 import { initAdminChat } from './admin-chat.js';

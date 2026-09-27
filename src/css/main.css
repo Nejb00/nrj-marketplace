@@ -1,15 +1,15 @@
-@import './base.css';
-@import './glass.css';
-@import './search-bar.css';
-@import './filters.css';
-@import './product-card.css';
-@import './product-modal.css';
-@import './navigation.css';
-@import './cart-admin.css';
-@import './search-view.css';
-@import './placeholder.css';
-@import './chat.css';
-@import url('light-theme-patch.css');
+@import './base/base.css';
+@import './components/glass.css';
+@import './components/search-bar.css';
+@import './components/filters.css';
+@import './components/product-card.css';
+@import './components/product-modal.css';
+@import './layout/navigation.css';
+@import './components/cart-admin.css';
+@import './components/search-view.css';
+@import './components/placeholder.css';
+@import './components/chat.css';
+@import url('themes/light-theme-patch.css');
 
 /* ═══════════════════════════════════════════════════════════════════════════
    🌍 ACCESSIBILITÉ : Réduction des animations pour les utilisateurs sensibles
