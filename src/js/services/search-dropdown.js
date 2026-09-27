@@ -1,101 +1,12 @@
-import { state, getCategoryName } from './state.js';
-import { SEARCH_HISTORY_KEY, MAX_HISTORY_ITEMS, MAX_PLACEHOLDER_SUGGESTIONS } from './config.js';
-import { escapeHtml, formatPrice, fuzzySearch, highlightMatch, getCategoryIcon, showToast, searchThumbImg } from './utils.js';
-import { openProductModal } from './product-modal.js';
-import { switchToSearchView } from './search-view.js';
+// ═══ Recherche — dropdown (résultats + découverte/historique/tendances) ═══
+// Éclaté de search.js (refacto-archi).
+import { state, getCategoryName } from '../core/state.js';
+import { escapeHtml, formatPrice, fuzzySearch, highlightMatch, getCategoryIcon, searchThumbImg } from '../utils.js';
+import { openProductModal } from '../product-modal.js';
+import { switchToSearchView } from '../search-view.js';
+import { getSearchHistory, saveSearchToHistory, clearSearchHistory } from './search-history.js';
 
 const TRENDING_COUNT = 10;
-
-export function buildSmartRotationList() {
-  const max = MAX_PLACEHOLDER_SUGGESTIONS;
-  const suggestions = [];
-  const seen = new Set();
-
-  const push = (term) => {
-    const t = (term || '').trim();
-    if (!t) return;
-    const key = t.toLowerCase();
-    if (seen.has(key)) return;
-    seen.add(key);
-    suggestions.push(t);
-  };
-
-  getSearchHistory().slice(0, max).forEach(push);
-
-  if (state.products.length) {
-    [...state.products]
-      .sort((a, b) => (b.popularity_score || 0) - (a.popularity_score || 0))
-      .forEach(p => { if (suggestions.length < max) push(p.name); });
-  }
-
-  // Suggestions à partir des noms de catégories (table categories)
-  if (state.categories.length) {
-    const topCats = state.categories.filter(c => c.parent_id === null);
-    topCats.forEach(c => { if (suggestions.length < max) push(c.name); });
-  }
-
-  if (suggestions.length > 0) {
-    state.rotationList = suggestions;
-    state.currentPlaceholderIndex = 0;
-  }
-}
-
-let historyCaptureBound = false;
-
-export function initPlaceholderRotation() {
-  buildSmartRotationList();
-  const input = document.getElementById('searchInput');
-  if (!input) return;
-
-  if (!historyCaptureBound) {
-    historyCaptureBound = true;
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        const v = input.value.trim();
-        if (v) saveSearchToHistory(v);
-      }
-    });
-  }
-
-  setInterval(() => {
-    if (document.activeElement !== input && input.value === '') {
-      state.currentPlaceholderIndex = (state.currentPlaceholderIndex + 1) % state.rotationList.length;
-      input.placeholder = state.rotationList[state.currentPlaceholderIndex];
-    }
-  }, 3500);
-}
-
-function getSearchHistory() {
-  try {
-    return JSON.parse(localStorage.getItem(SEARCH_HISTORY_KEY) || '[]');
-  } catch (e) {
-    return [];
-  }
-}
-
-function saveSearchToHistory(query) {
-  if (!query || query.trim().length < 2) return;
-  let history = getSearchHistory();
-  history = history.filter(h => h.toLowerCase() !== query.toLowerCase());
-  history.unshift(query.trim());
-  if (history.length > MAX_HISTORY_ITEMS) history = history.slice(0, MAX_HISTORY_ITEMS);
-  try {
-    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(history));
-  } catch (e) {
-    console.warn("Impossible de sauvegarder l'historique:", e);
-  }
-}
-
-function clearSearchHistory() {
-  try {
-    localStorage.removeItem(SEARCH_HISTORY_KEY);
-  } catch (e) {}
-}
-
-window.clearSearchHistory = function() {
-  clearSearchHistory();
-  showSearchDropdown('');
-};
 
 function shuffle(arr) {
   const a = [...arr];
@@ -173,67 +84,6 @@ function renderDiscovery(dropdown) {
   if (refreshBtn) refreshBtn.addEventListener('click', () => showSearchDropdown(''));
 }
 
-export function initVoiceSearch() {
-  const voiceBtn = document.getElementById('searchVoice');
-  const searchInput = document.getElementById('searchInput');
-
-  if (!voiceBtn || !searchInput) return;
-
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-  if (!SpeechRecognition) {
-    voiceBtn.style.display = 'none';
-    return;
-  }
-
-  const recognition = new SpeechRecognition();
-  recognition.lang = 'fr-FR';
-  recognition.continuous = false;
-  recognition.interimResults = false;
-
-  recognition.onstart = () => {
-    state.isVoiceListening = true;
-    voiceBtn.classList.add('listening');
-    searchInput.placeholder = '🎤 Parlez maintenant...';
-  };
-
-  recognition.onresult = (event) => {
-    const transcript = event.results[0][0].transcript;
-    searchInput.value = transcript;
-    searchInput.dispatchEvent(new Event('input'));
-    showToast(`🎤 "${transcript}"`);
-  };
-
-  recognition.onerror = (event) => {
-    console.warn('Erreur reconnaissance vocale:', event.error);
-    if (event.error === 'no-speech') {
-      showToast('❌ Aucune parole detectee');
-    } else if (event.error === 'not-allowed') {
-      showToast('❌ Acces au microphone refuse');
-    } else {
-      showToast('❌ Erreur de reconnaissance vocale');
-    }
-  };
-
-  recognition.onend = () => {
-    state.isVoiceListening = false;
-    voiceBtn.classList.remove('listening');
-    searchInput.placeholder = state.rotationList[state.currentPlaceholderIndex];
-  };
-
-  voiceBtn.addEventListener('click', () => {
-    if (state.isVoiceListening) {
-      recognition.stop();
-    } else {
-      try {
-        recognition.start();
-      } catch (e) {
-        console.warn('Impossible de demarrer la reconnaissance vocale:', e);
-      }
-    }
-  });
-}
-
 export function showSearchDropdown(query) {
   const dropdown = document.getElementById('searchDropdown');
   const clearBtn = document.getElementById('searchClear');
@@ -287,5 +137,3 @@ export function hideSearchDropdown() {
   const dropdown = document.getElementById('searchDropdown');
   if (dropdown) dropdown.style.display = 'none';
 }
-
-export { saveSearchToHistory, getSearchHistory };

@@ -1,5 +1,5 @@
-import { NEW_PRODUCT_DAYS, POPULAR_THRESHOLD, MAX_SEARCH_RESULTS } from './config.js';
-import { state } from './state.js';
+import { NEW_PRODUCT_DAYS, POPULAR_THRESHOLD, MAX_SEARCH_RESULTS } from './core/config.js';
+import { state } from './core/state.js';
 
 export function debounce(func, wait) {
     let timeout;

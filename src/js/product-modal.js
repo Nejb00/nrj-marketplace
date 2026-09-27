@@ -1,10 +1,11 @@
-import { state } from './state.js';
-import { trackViewedItem } from './state.js';
-import { WHATSAPP_NUMBER, BASE_URL } from './config.js';
+import { state } from './core/state.js';
+import { trackViewedItem } from './core/state.js';
+import { WHATSAPP_NUMBER, BASE_URL } from './core/config.js';
 import { escapeHtml, formatPrice, generateBadgesHTML, showToast, thumbImg, modalImg, thumb } from './utils.js';
-import { trackPopularity, fetchProductDetails, trackView, getRelatedProducts } from './api.js';
-import { toggleFavorite, addToCart } from './cart.js';
-import { signalView } from './reco.js';
+import { trackPopularity, fetchProductDetails, trackView, getRelatedProducts } from './api/api.js';
+import { toggleFavorite } from './services/favorites.js';
+import { addToCart } from './services/cart-actions.js';
+import { signalView } from './services/reco.js';
 import { openChat } from './chat.js';
 
 const productDetailsCache = new Map();

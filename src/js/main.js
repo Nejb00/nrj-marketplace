@@ -1,16 +1,25 @@
 import '../css/main.css';
-import { state, trackViewedItem, loadPersistedState, saveCart, saveFavorites, saveOrders, getCategoryName } from './state.js';
-import { supabaseClient, PRELOAD_IMAGE_COUNT } from './config.js';
+import { state, trackViewedItem, loadPersistedState, saveCart, saveFavorites, saveOrders, getCategoryName } from './core/state.js';
+import { supabaseClient, PRELOAD_IMAGE_COUNT } from './core/config.js';
 import { escapeHtml, formatPrice, showToast, thumb } from './utils.js';
-import { fetchProducts, fetchCategories } from './api.js';
+import { fetchProducts, fetchCategories } from './api/api.js';
 import { refreshCatalogue, applyFilter, switchView, clearSubcategorySelection } from './catalogue.js';
-import { addToCart, changeQty, removeCartItem, refreshCartDisplay, toggleFavorite, updateNavFavBadge, updateNavCartBadge, openOrderModal, sendWhatsAppOrder, loadOrders } from './cart.js';
+import { addToCart, changeQty, removeCartItem } from './services/cart-actions.js';
+import { loadOrders } from './services/cart-storage.js';
+import { refreshCartDisplay } from './services/cart-panel.js';
+import { initCartMenu } from './services/cart-menu.js';
+import { initQtySheet } from './services/cart-qty-picker.js';
+import { updateNavCartBadge } from './services/cart-badge.js';
+import { toggleFavorite, updateNavFavBadge } from './services/favorites.js';
+import { openOrderModal, sendWhatsAppOrder } from './services/checkout.js';
 import { openProductModal, closeProductModal } from './product-modal.js';
 import { openEditModal, updateProduct } from './product-edit.js';
-import { initPlaceholderRotation, initVoiceSearch, showSearchDropdown, hideSearchDropdown } from './search.js';
+import { initPlaceholderRotation } from './services/search-rotation.js';
+import { initVoiceSearch } from './services/search-voice.js';
+import { showSearchDropdown, hideSearchDropdown } from './services/search-dropdown.js';
 import { switchToSearchView, switchFromSearchView } from './search-view.js';
 import { initChat } from './chat.js';
-import { setupAutoSync } from './sync.js';
+import { setupAutoSync } from './services/sync.js';
 
 let searchDebounceTimer = null;
 
@@ -799,6 +808,12 @@ async function init() {
     showToast('⚠️ Erreur de chargement. Veuillez réessayer.');
   }
 }
+
+// Boot du panier (historiquement dans cart.js à l'éval du module) :
+// ici main.js est l'entry → tous les modules services/ sont déjà évalués,
+// donc initCartMenu/initQtySheet peuvent être appelés sans TDZ.
+initCartMenu();
+initQtySheet();
 
 init().catch(err => {
   console.error('Init échoué:', err);

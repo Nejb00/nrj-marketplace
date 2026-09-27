@@ -1,14 +1,14 @@
-import { state, getCategoryFilterIds, getCategoryName, isTopLevelCategory, trackViewedItem } from './state.js';
-import { PRODUCTS_PER_PAGE, INITIAL_PRODUCTS, EAGER_IMAGE_COUNT, PRELOAD_IMAGE_COUNT } from './config.js';
+import { state, getCategoryFilterIds, getCategoryName, isTopLevelCategory, trackViewedItem } from './core/state.js';
+import { PRODUCTS_PER_PAGE, INITIAL_PRODUCTS, EAGER_IMAGE_COUNT, PRELOAD_IMAGE_COUNT } from './core/config.js';
 import { escapeHtml, formatPrice, generateBadgesHTML, isFresh, thumbImg, thumb } from './utils.js';
-import { imageLoadOpts, injectLcpPreloads, preloadProductThumbs } from './lazy-loading.js';
-import { forYou } from './reco.js';
+import { imageLoadOpts, injectLcpPreloads, preloadProductThumbs } from './services/lazy-loading.js';
+import { forYou } from './services/reco.js';
 import {
     fetchSubcategoriesWithLatestImage,
     fetchParentCategoriesRanked,
     fetchTopPopularSubcategories,
     fetchSubcategoriesByPopularity
-} from './api.js';
+} from './api/api.js';
 
 let categoriesPageState = {
     parents: [],

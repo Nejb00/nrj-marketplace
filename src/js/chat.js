@@ -9,7 +9,7 @@
  *   quand le chat est ouvert depuis la modale d'un article.
  */
 
-import { supabaseClient, WHATSAPP_NUMBER, CHAT_AI_ENDPOINT } from './config.js';
+import { supabaseClient, WHATSAPP_NUMBER, CHAT_AI_ENDPOINT } from './core/config.js';
 import { escapeHtml, thumb, showToast } from './utils.js';
 
 const SESSION_KEY = 'fluochat_sid';

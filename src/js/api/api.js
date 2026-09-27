@@ -1,7 +1,7 @@
-import { supabaseClient } from './config.js';
-import { state } from './state.js';
-import { showToast } from './utils.js';
-import db from './db.js';
+import { supabaseClient } from '../core/config.js';
+import { state } from '../core/state.js';
+import { showToast } from '../utils.js';
+import db from '../services/db.js';
 
 const PRODUCTS_CACHE_KEY = 'nrj_products_cache';
 const CACHE_DURATION = 5 * 60 * 1000;

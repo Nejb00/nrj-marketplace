@@ -1,7 +1,7 @@
-import { state } from './state.js';
-import { supabaseClient } from './config.js';
+import { state } from './core/state.js';
+import { supabaseClient } from './core/config.js';
 import { escapeHtml, showToast } from './utils.js';
-import { insertProduct, deleteProductFromSupabase, fetchProducts, fetchCategories } from './api.js';
+import { insertProduct, deleteProductFromSupabase, fetchProducts, fetchCategories } from './api/api.js';
 
 // Arbre des catégories chargé une fois, réutilisé pour les menus + les stats
 let categoriesTree = [];

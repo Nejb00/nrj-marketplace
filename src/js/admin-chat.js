@@ -6,7 +6,7 @@
  * - Indicateur « le client est en train d'écrire… »
  */
 
-import { supabaseClient } from './config.js';
+import { supabaseClient } from './core/config.js';
 import { escapeHtml, thumb, formatPrice } from './utils.js';
 
 let sessions = [];

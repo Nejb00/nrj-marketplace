@@ -1,6 +1,6 @@
-import { state } from './state.js';
+import { state } from './core/state.js';
 import { escapeHtml, showToast } from './utils.js';
-import { updateProductInSupabase, fetchProducts } from './api.js';
+import { updateProductInSupabase, fetchProducts } from './api/api.js';
 import { refreshCatalogue } from './catalogue.js';
 
 let categoryListenersBound = false;

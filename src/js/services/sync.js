@@ -4,7 +4,7 @@
  * Les commandes restent locales (WhatsApp est le canal réel).
  */
 
-import { supabaseClient } from './config.js';
+import { supabaseClient } from '../core/config.js';
 import db from './db.js';
 
 let isSyncing = false;

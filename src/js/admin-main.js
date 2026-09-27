@@ -1,6 +1,6 @@
 import '../css/components/admin.css';
 import '../css/components/chat.css';
-import { fetchProducts } from './api.js';
+import { fetchProducts } from './api/api.js';
 import { handleAdminLogin, handleLogout, checkAdminSession, addProduct, deleteProduct } from './admin.js';
 import { initAdminChat } from './admin-chat.js';
 

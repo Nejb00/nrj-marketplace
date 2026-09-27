@@ -3,7 +3,7 @@
  * Panier / favoris / commandes : IndexedDB + fallback localStorage.
  */
 
-import db from './db.js';
+import db from '../services/db.js';
 
 export const state = {
     products: [],
