@@ -2,8 +2,8 @@
 // Éclaté de search.js (refacto-archi).
 import { state, getCategoryName } from '../core/state.js';
 import { escapeHtml, formatPrice, fuzzySearch, highlightMatch, getCategoryIcon, searchThumbImg } from '../utils.js';
-import { openProductModal } from '../product-modal.js';
-import { switchToSearchView } from '../search-view.js';
+import { openProductModal } from '../features/product/modal-render.js';
+import { switchToSearchView } from '../features/search/search-view.js';
 import { getSearchHistory, saveSearchToHistory, clearSearchHistory } from './search-history.js';
 
 const TRENDING_COUNT = 10;

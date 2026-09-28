@@ -1,6 +1,6 @@
-import { state, getCategoryFilterIds, getCategoryName } from './core/state.js';
-import { escapeHtml, formatPrice, debounce, calculateSearchScore, generateBadgesHTML, thumbImg } from './utils.js';
-import { imageLoadOpts, injectLcpPreloads, preloadProductThumbs } from './services/lazy-loading.js';
+import { state, getCategoryFilterIds, getCategoryName } from '../../core/state.js';
+import { escapeHtml, formatPrice, debounce, calculateSearchScore, generateBadgesHTML, thumbImg } from '../../utils.js';
+import { imageLoadOpts, injectLcpPreloads, preloadProductThumbs } from '../../services/lazy-loading.js';
 
 let searchViewStaticBound = false;
 
