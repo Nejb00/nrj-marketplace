@@ -1,6 +1,6 @@
 // ═══ Fiche produit — total dynamique (quantités × prix unitaire) ═══
 // Éclaté de product-modal.js (refacto-archi) — logique strictement identique.
-import { formatPrice } from '../../utils.js';
+import { formatPrice } from '../../utils/format.js';
 import { modalCtx } from './modal-state.js';
 
 export function getTotalColorQty() {

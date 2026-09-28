@@ -1,6 +1,6 @@
 // ═══ Édition produit — sauvegarde (Supabase + refresh catalogue) ═══
 // Éclaté de product-edit.js (refacto-archi) — logique strictement identique.
-import { showToast } from '../../utils.js';
+import { showToast } from '../../utils/dom-helpers.js';
 import { updateProductInSupabase, fetchProducts } from '../../api/api.js';
 import { refreshCatalogue } from '../catalogue/catalogue-init.js';
 

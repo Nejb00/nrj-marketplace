@@ -1,7 +1,8 @@
 // ═══ Fiche produit — recommandations (fallback popularité) ═══
 // Éclaté de product-modal.js (refacto-archi) — logique strictement identique.
 import { state } from '../../core/state.js';
-import { escapeHtml, thumbImg } from '../../utils.js';
+import { escapeHtml } from '../../utils/escape-html.js';
+import { thumbImg } from '../../utils/images.js';
 import { getRelatedProducts } from '../../api/api.js';
 
 async function buildRecommendations(currentProduct) {

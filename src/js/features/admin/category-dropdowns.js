@@ -1,7 +1,7 @@
 // ═══ Admin — dropdowns catégories + libellés ═══
 // Éclaté de admin.js (refacto-archi) — logique strictement identique.
 // categoriesTree/categoriesById restent encapsulés ici (état partagé du module).
-import { escapeHtml } from '../../utils.js';
+import { escapeHtml } from '../../utils/escape-html.js';
 import { fetchCategories } from '../../api/api.js';
 
 // Arbre des catégories chargé une fois, réutilisé pour les menus + les stats

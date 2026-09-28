@@ -2,7 +2,8 @@
 // Éclaté de main.js (refacto-archi) — logique strictement identique.
 import { state } from '../../core/state.js';
 import { PRELOAD_IMAGE_COUNT } from '../../core/config.js';
-import { showToast, thumb } from '../../utils.js';
+import { showToast } from '../../utils/dom-helpers.js';
+import { thumb } from '../../utils/images.js';
 
 export function initServiceWorkerUpdates() {
   if (!('serviceWorker' in navigator)) return;

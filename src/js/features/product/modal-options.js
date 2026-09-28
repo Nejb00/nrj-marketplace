@@ -1,6 +1,7 @@
 // ═══ Fiche produit — options (tailles + couleurs avec steppers) ═══
 // Éclaté de product-modal.js (refacto-archi) — logique strictement identique.
-import { escapeHtml, thumbImg } from '../../utils.js';
+import { escapeHtml } from '../../utils/escape-html.js';
+import { thumbImg } from '../../utils/images.js';
 import { modalCtx } from './modal-state.js';
 import { goToImageForColor } from './modal-carousel.js';
 import { getTotalColorQty, updateTotal } from './modal-total.js';

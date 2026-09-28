@@ -1,7 +1,7 @@
 // ═══ Catalogue — filtrage & tri (favoris, nouveautés, best-sellers, pour toi) ═══
 // Éclaté de catalogue.js (refacto-archi) — logique strictement identique.
 import { state, getCategoryFilterIds, getCategoryName } from '../../core/state.js';
-import { isFresh } from '../../utils.js';
+import { isFresh } from '../../utils/badges.js';
 import { forYou } from '../../services/reco.js';
 
 export function getFilteredProducts() {

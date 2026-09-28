@@ -1,7 +1,7 @@
 // ═══ Admin — liste produits + statistiques ═══
 // Éclaté de admin.js (refacto-archi) — logique strictement identique.
 import { state } from '../../core/state.js';
-import { escapeHtml } from '../../utils.js';
+import { escapeHtml } from '../../utils/escape-html.js';
 import { categoryLabel } from './category-dropdowns.js';
 
 export function renderAdminList() {

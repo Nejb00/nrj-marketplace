@@ -1,7 +1,7 @@
 // ═══ Édition produit — dropdowns catégorie/sous-catégorie ═══
 // Éclaté de product-edit.js (refacto-archi) — logique strictement identique.
 import { state } from '../../core/state.js';
-import { escapeHtml } from '../../utils.js';
+import { escapeHtml } from '../../utils/escape-html.js';
 
 let categoryListenersBound = false;
 

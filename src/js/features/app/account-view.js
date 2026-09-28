@@ -1,7 +1,9 @@
 // ═══ App — espace compte client (vue plein écran) ═══
 // Éclaté de main.js (refacto-archi) — logique strictement identique.
 import { state, saveCart, saveFavorites, saveOrders } from '../../core/state.js';
-import { escapeHtml, formatPrice, showToast } from '../../utils.js';
+import { escapeHtml } from '../../utils/escape-html.js';
+import { formatPrice } from '../../utils/format.js';
+import { showToast } from '../../utils/dom-helpers.js';
 import { refreshCatalogue } from '../catalogue/catalogue-init.js';
 import { clearSubcategorySelection } from '../catalogue/category-bubbles.js';
 import { refreshCartDisplay } from '../../services/cart-panel.js';

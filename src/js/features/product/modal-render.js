@@ -3,7 +3,8 @@
 // modalCtx puis délègue aux modules carousel/options/actions/recommendations.
 // Les importateurs historiques importent openProductModal/closeProductModal ici.
 import { state, trackViewedItem } from '../../core/state.js';
-import { formatPrice, generateBadgesHTML } from '../../utils.js';
+import { formatPrice } from '../../utils/format.js';
+import { generateBadgesHTML } from '../../utils/badges.js';
 import { trackPopularity, fetchProductDetails, trackView } from '../../api/api.js';
 import { signalView } from '../../services/reco.js';
 import { productDetailsCache, modalCtx } from './modal-state.js';

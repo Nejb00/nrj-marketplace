@@ -1,6 +1,6 @@
 // ═══ Admin — formulaire d'ajout produit ═══
 // Éclaté de admin.js (refacto-archi) — logique strictement identique.
-import { showToast } from '../../utils.js';
+import { showToast } from '../../utils/dom-helpers.js';
 import { insertProduct, fetchProducts } from '../../api/api.js';
 import { categoryLabel, populateSubcategoryDropdown } from './category-dropdowns.js';
 import { renderAdminList, renderAdminStats } from './admin-list.js';

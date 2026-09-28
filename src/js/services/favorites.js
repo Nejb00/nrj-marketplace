@@ -1,6 +1,6 @@
 // ═══ Favoris — logique séparée du panier (refacto-archi) ═══
 import { state, saveFavorites } from '../core/state.js';
-import { showToast } from '../utils.js';
+import { showToast } from '../utils/dom-helpers.js';
 import { signalFavorite } from './reco.js';
 
 export async function toggleFavorite(pid, btn) {

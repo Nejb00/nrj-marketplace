@@ -1,5 +1,5 @@
 // ─── CERVEAU NRJ 🧠 — personnalisation locale (niveau 1) ──────────
-import { isFresh } from '../utils.js';
+import { isFresh } from '../utils/badges.js';
 import './visual-search.js'; // 📷 Phase 3 : le module visuel s'auto-démarre
 
 const KEY = 'nrj_affinity';

@@ -1,6 +1,9 @@
 // ─── PHASE 3 📷 v3 — « Montre-moi, je trouve » (triple relais anti-CORS) ──
 import { state } from '../core/state.js';
-import { escapeHtml, formatPrice, thumbImg, showToast, thumb } from '../utils.js';
+import { escapeHtml } from '../utils/escape-html.js';
+import { formatPrice } from '../utils/format.js';
+import { thumbImg, thumb } from '../utils/images.js';
+import { showToast } from '../utils/dom-helpers.js';
 
 const INDEX_KEY = 'nrj_visual_index';
 const TF_CDNS = [

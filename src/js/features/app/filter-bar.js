@@ -1,7 +1,7 @@
 // ═══ App — barre de filtres catégories ═══
 // Éclaté de main.js (refacto-archi) — logique strictement identique.
 import { state } from '../../core/state.js';
-import { escapeHtml } from '../../utils.js';
+import { escapeHtml } from '../../utils/escape-html.js';
 
 export function buildFilterBar() {
   const topCats = state.categories

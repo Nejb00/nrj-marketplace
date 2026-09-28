@@ -1,7 +1,10 @@
 // ═══ Catalogue — rendu d'une carte produit (HTML) + squelette de chargement ═══
 // Éclaté de catalogue.js (refacto-archi) — logique strictement identique.
 import { state } from '../../core/state.js';
-import { escapeHtml, formatPrice, generateBadgesHTML, thumbImg } from '../../utils.js';
+import { escapeHtml } from '../../utils/escape-html.js';
+import { formatPrice } from '../../utils/format.js';
+import { generateBadgesHTML } from '../../utils/badges.js';
+import { thumbImg } from '../../utils/images.js';
 import { imageLoadOpts } from '../../services/lazy-loading.js';
 
 export function renderProductCardHTML(p, index = 0) {

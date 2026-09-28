@@ -3,7 +3,7 @@
  * Visibles d'abord (LCP + fetchpriority=high), puis jusqu'à PRELOAD_IMAGE_COUNT
  * via une file limitée pour ne pas saturer le réseau mobile.
  */
-import { thumb } from '../utils.js';
+import { thumb } from '../utils/images.js';
 import {
     EAGER_IMAGE_COUNT,
     PRELOAD_IMAGE_COUNT,

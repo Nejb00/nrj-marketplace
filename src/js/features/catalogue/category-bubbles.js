@@ -1,7 +1,8 @@
 // ═══ Catalogue — bulles de sous-catégories + filtres ═══
 // Éclaté de catalogue.js (refacto-archi) — logique strictement identique.
 import { state, isTopLevelCategory } from '../../core/state.js';
-import { escapeHtml, thumb } from '../../utils.js';
+import { escapeHtml } from '../../utils/escape-html.js';
+import { thumb } from '../../utils/images.js';
 import { fetchSubcategoriesWithLatestImage } from '../../api/api.js';
 import { refreshCatalogue } from './catalogue-init.js';
 

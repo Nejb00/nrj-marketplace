@@ -1,7 +1,7 @@
 // ═══ Panier — actions (ajout / suppression / quantités) ═══
 // Éclaté de cart.js (refacto-archi) — logique strictement identique.
 import { state, saveCart } from '../core/state.js';
-import { showToast } from '../utils.js';
+import { showToast } from '../utils/dom-helpers.js';
 import { trackPopularity } from '../api/api.js';
 import { signalCart } from './reco.js';
 import { syncAllOfflineData } from './sync.js';

@@ -7,7 +7,9 @@
  */
 
 import { supabaseClient } from '../../core/config.js';
-import { escapeHtml, thumb, formatPrice } from '../../utils.js';
+import { escapeHtml } from '../../utils/escape-html.js';
+import { thumb } from '../../utils/images.js';
+import { formatPrice } from '../../utils/format.js';
 
 let sessions = [];
 let unreadMap = {};

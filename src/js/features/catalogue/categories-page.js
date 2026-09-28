@@ -1,7 +1,8 @@
 // ═══ Catalogue — vue Catégories (page plein écran : sidebar + panel) ═══
 // Éclaté de catalogue.js (refacto-archi) — logique strictement identique.
 import { state, getCategoryName, trackViewedItem } from '../../core/state.js';
-import { escapeHtml, thumb } from '../../utils.js';
+import { escapeHtml } from '../../utils/escape-html.js';
+import { thumb } from '../../utils/images.js';
 import { fetchParentCategoriesRanked, fetchTopPopularSubcategories, fetchSubcategoriesByPopularity } from '../../api/api.js';
 import { applyFilter } from './category-bubbles.js';
 import { renderCategoriesPopularProducts } from './categories-popular.js';

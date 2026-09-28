@@ -2,7 +2,8 @@
 // Éclaté de main.js (refacto-archi) — logique strictement identique.
 import { state, loadPersistedState } from '../../core/state.js';
 import { supabaseClient } from '../../core/config.js';
-import { escapeHtml, showToast } from '../../utils.js';
+import { escapeHtml } from '../../utils/escape-html.js';
+import { showToast } from '../../utils/dom-helpers.js';
 import { fetchProducts, fetchCategories } from '../../api/api.js';
 import { refreshCatalogue } from '../catalogue/catalogue-init.js';
 import { loadOrders } from '../../services/cart-storage.js';

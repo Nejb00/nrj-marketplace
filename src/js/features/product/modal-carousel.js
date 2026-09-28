@@ -1,6 +1,7 @@
 // ═══ Fiche produit — carrousel (images + vidéo + points) ═══
 // Éclaté de product-modal.js (refacto-archi) — logique strictement identique.
-import { escapeHtml, modalImg } from '../../utils.js';
+import { escapeHtml } from '../../utils/escape-html.js';
+import { modalImg } from '../../utils/images.js';
 import { modalCtx } from './modal-state.js';
 
 export function updateCarouselDots(sc, dc, index) {

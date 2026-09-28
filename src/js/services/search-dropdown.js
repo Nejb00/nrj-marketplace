@@ -1,7 +1,11 @@
 // ═══ Recherche — dropdown (résultats + découverte/historique/tendances) ═══
 // Éclaté de search.js (refacto-archi).
 import { state, getCategoryName } from '../core/state.js';
-import { escapeHtml, formatPrice, fuzzySearch, highlightMatch, getCategoryIcon, searchThumbImg } from '../utils.js';
+import { escapeHtml } from '../utils/escape-html.js';
+import { formatPrice } from '../utils/format.js';
+import { fuzzySearch, highlightMatch } from '../utils/fuzzy-search.js';
+import { getCategoryIcon } from '../utils/category-icon.js';
+import { searchThumbImg } from '../utils/images.js';
 import { openProductModal } from '../features/product/modal-render.js';
 import { switchToSearchView } from '../features/search/search-view.js';
 import { getSearchHistory, saveSearchToHistory, clearSearchHistory } from './search-history.js';

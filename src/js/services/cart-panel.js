@@ -3,7 +3,9 @@
 // initQtySheet au chargement) a déménagé dans main.js (entry point, évalué
 // après tous les modules → évite le TDZ du cycle cart-menu ↔ cart-actions).
 import { state } from '../core/state.js';
-import { escapeHtml, formatPrice, thumbImg } from '../utils.js';
+import { escapeHtml } from '../utils/escape-html.js';
+import { formatPrice } from '../utils/format.js';
+import { thumbImg } from '../utils/images.js';
 import { getSelectedItems, getSelectedTotal } from './cart-storage.js';
 import { toggleSelectAll, toggleSelectItem } from './cart-actions.js';
 import { openQtyPicker, initQtySheet } from './cart-qty-picker.js';

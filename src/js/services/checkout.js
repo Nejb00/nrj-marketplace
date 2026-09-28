@@ -1,7 +1,9 @@
 // ═══ Commande — partage panier, modale de commande, envoi WhatsApp ═══
 // Éclaté de cart.js (refacto-archi) — logique strictement identique.
 import { state, saveCart, saveOrders } from '../core/state.js';
-import { escapeHtml, formatPrice, showToast } from '../utils.js';
+import { escapeHtml } from '../utils/escape-html.js';
+import { formatPrice } from '../utils/format.js';
+import { showToast } from '../utils/dom-helpers.js';
 import { WHATSAPP_NUMBER, BASE_URL } from '../core/config.js';
 import { signalOrder } from './reco.js';
 import { getSelectedItems } from './cart-storage.js';

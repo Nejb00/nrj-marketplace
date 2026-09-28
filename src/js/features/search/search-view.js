@@ -1,5 +1,10 @@
 import { state, getCategoryFilterIds, getCategoryName } from '../../core/state.js';
-import { escapeHtml, formatPrice, debounce, calculateSearchScore, generateBadgesHTML, thumbImg } from '../../utils.js';
+import { escapeHtml } from '../../utils/escape-html.js';
+import { formatPrice } from '../../utils/format.js';
+import { debounce } from '../../utils/dom-helpers.js';
+import { calculateSearchScore } from '../../utils/fuzzy-search.js';
+import { generateBadgesHTML } from '../../utils/badges.js';
+import { thumbImg } from '../../utils/images.js';
 import { imageLoadOpts, injectLcpPreloads, preloadProductThumbs } from '../../services/lazy-loading.js';
 
 let searchViewStaticBound = false;

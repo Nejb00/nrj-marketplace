@@ -2,7 +2,7 @@
 // Éclaté de chat.js (refacto-archi) — logique strictement identique.
 import { supabaseClient } from '../../core/config.js';
 import { NAME_KEY, chatCtx, $ } from './chat-state.js';
-import { showToast } from '../../utils.js';
+import { showToast } from '../../utils/dom-helpers.js';
 import { ensureSession } from './chat-session.js';
 import { buildBubble } from './chat-bubbles.js';
 import { scrollDown, updateBadge } from './chat-display.js';

@@ -1,6 +1,6 @@
 import { supabaseClient } from '../core/config.js';
 import { state } from '../core/state.js';
-import { showToast } from '../utils.js';
+import { showToast } from '../utils/dom-helpers.js';
 import db from '../services/db.js';
 
 const PRODUCTS_CACHE_KEY = 'nrj_products_cache';

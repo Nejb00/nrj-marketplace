@@ -2,7 +2,8 @@
 // Éclaté de product-modal.js (refacto-archi) — logique strictement identique.
 import { state } from '../../core/state.js';
 import { WHATSAPP_NUMBER, BASE_URL } from '../../core/config.js';
-import { formatPrice, showToast } from '../../utils.js';
+import { formatPrice } from '../../utils/format.js';
+import { showToast } from '../../utils/dom-helpers.js';
 import { trackPopularity } from '../../api/api.js';
 import { toggleFavorite } from '../../services/favorites.js';
 import { addToCart } from '../../services/cart-actions.js';

@@ -2,7 +2,7 @@
 // Éclaté de admin.js (refacto-archi) — logique strictement identique.
 import { state } from '../../core/state.js';
 import { supabaseClient } from '../../core/config.js';
-import { showToast } from '../../utils.js';
+import { showToast } from '../../utils/dom-helpers.js';
 import { loadCategoryDropdowns } from './category-dropdowns.js';
 import { renderAdminList, renderAdminStats } from './admin-list.js';
 

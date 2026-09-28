@@ -1,7 +1,7 @@
 // ═══ Recherche — vocale (SpeechRecognition) ═══
 // Éclaté de search.js (refacto-archi).
 import { state } from '../core/state.js';
-import { showToast } from '../utils.js';
+import { showToast } from '../utils/dom-helpers.js';
 
 export function initVoiceSearch() {
   const voiceBtn = document.getElementById('searchVoice');

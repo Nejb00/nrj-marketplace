@@ -1,6 +1,6 @@
 // ═══ Admin — suppression produit ═══
 // Éclaté de admin.js (refacto-archi) — logique strictement identique.
-import { showToast } from '../../utils.js';
+import { showToast } from '../../utils/dom-helpers.js';
 import { deleteProductFromSupabase, fetchProducts } from '../../api/api.js';
 import { renderAdminList, renderAdminStats } from './admin-list.js';
 

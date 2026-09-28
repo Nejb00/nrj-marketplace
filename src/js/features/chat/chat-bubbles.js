@@ -1,7 +1,8 @@
 // ═══ Chat — bulles (rendu des messages + carte produit) ═══
 // Éclaté de chat.js (refacto-archi) — logique strictement identique.
 // NB : import dynamique de la modale produit → recâblé vers features/product/.
-import { escapeHtml, thumb } from '../../utils.js';
+import { escapeHtml } from '../../utils/escape-html.js';
+import { thumb } from '../../utils/images.js';
 import { NAME_KEY, chatCtx, $, fmtTime } from './chat-state.js';
 import { scrollDown } from './chat-display.js';
 import { saveNameFromPrompt } from './chat-session.js';
