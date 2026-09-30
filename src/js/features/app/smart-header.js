@@ -25,7 +25,10 @@ export function initSmartHeader() {
     // l'état replié — .is-collapsed — ne change RIEN au spacer).
     let total = h;
     const row = bubblesRow();
-    if (row && !row.hidden) total += row.offsetHeight;
+    if (row && !row.hidden) {
+      const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bubbles-gap')) || 6;
+      total += row.offsetHeight + gap;
+    }
     spacer.style.height = total + 'px';
   }
 
