@@ -85,7 +85,6 @@ body {
 }
 
 .header-fixed {
-    position: relative;
     isolation: isolate;
     border-radius: var(--header-radius);
     background: var(--lg-tint);

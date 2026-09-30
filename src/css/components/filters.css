@@ -66,7 +66,7 @@
    hauteur ni de layout → pas de sauts de scroll, pas de boucle
    repli/ré-affichage). z-index:0 < .header-category-row (z-index:1) : les
    bulles glissent DERRIÈRE la rangée des parents. */
-.subcategory-bubbles {
+.header-fixed .subcategory-bubbles {
     display: flex;
     gap: 0.75rem;
     padding: 0.45rem 1rem 0.3rem;
@@ -100,7 +100,7 @@
     display: none !important;
 }
 
-.subcategory-bubbles.is-collapsed {
+.header-fixed .subcategory-bubbles.is-collapsed {
     transform: translateY(-100%);
     opacity: 0;
     pointer-events: none;
@@ -108,10 +108,10 @@
 
 /* prefers-reduced-motion : pas d'animation ; on coupe aussi le glissement visuel */
 @media (prefers-reduced-motion: reduce) {
-    .subcategory-bubbles {
+    .header-fixed .subcategory-bubbles {
         transition: none;
     }
-    .subcategory-bubbles.no-collapse-motion {
+    .header-fixed .subcategory-bubbles.no-collapse-motion {
         transform: none;
         opacity: 1;
     }
