@@ -13,6 +13,7 @@ export function buildFilterBar() {
     const label = (c.icon ? c.icon + ' ' : '') + c.name;
     html += `<button class="filter-btn" data-category="${escapeHtml(c.id)}">${escapeHtml(label)}</button>`;
   });
-  const filterBar = document.getElementById('filterBar');
+  // id harmonisé avec index.html : #filtersBar (classe CSS .filters-bar)
+  const filterBar = document.getElementById('filtersBar');
   if (filterBar) filterBar.innerHTML = html;
 }
