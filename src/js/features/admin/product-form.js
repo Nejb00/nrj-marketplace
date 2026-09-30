@@ -4,6 +4,17 @@ import { showToast } from '../../utils/dom-helpers.js';
 import { insertProduct, fetchProducts } from '../../api/api.js';
 import { categoryLabel, populateSubcategoryDropdown } from './category-dropdowns.js';
 import { renderAdminList, renderAdminStats } from './admin-list.js';
+import { initMultiSelect, getMultiSelect } from './multi-select.js';
+
+// ═══ Sélecteurs multi-choix Tailles / Couleurs (initialisation unique) ═══
+let multiSelectsReady = false;
+function ensureMultiSelects() {
+  if (multiSelectsReady) return;
+  initMultiSelect('adminTailles', 'tailles');
+  initMultiSelect('adminCouleurs', 'couleurs');
+  multiSelectsReady = true;
+}
+ensureMultiSelects();
 
 export async function addProduct() {
   const name = document.getElementById('adminName').value.trim();
@@ -32,8 +43,8 @@ export async function addProduct() {
     image4: document.getElementById('adminImage4').value.trim(),
     image5: document.getElementById('adminImage5').value.trim(),
     image6: document.getElementById('adminImage6').value.trim(),
-    tailles: document.getElementById('adminTailles').value.trim(),
-    couleurs: document.getElementById('adminCouleurs').value.trim(),
+    tailles: getMultiSelect('adminTailles')?.getValue() || '',
+    couleurs: getMultiSelect('adminCouleurs')?.getValue() || '',
     moq: parseInt(document.getElementById('adminMoq').value) || 1,
     description: document.getElementById('adminDesc').value.trim()
   };
@@ -55,8 +66,8 @@ export async function addProduct() {
     document.getElementById('adminImage4').value = '';
     document.getElementById('adminImage5').value = '';
     document.getElementById('adminImage6').value = '';
-    document.getElementById('adminTailles').value = '';
-    document.getElementById('adminCouleurs').value = '';
+    getMultiSelect('adminTailles')?.reset();
+    getMultiSelect('adminCouleurs')?.reset();
     document.getElementById('adminMoq').value = '1';
     document.getElementById('adminDesc').value = '';
     

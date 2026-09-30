@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" fill="none">
+  <rect width="300" height="300" fill="#1a1a1a" rx="16"/>
+  <rect x="30" y="30" width="240" height="240" stroke="#2a2a2a" stroke-width="2" stroke-dasharray="10 8" rx="12"/>
+  <rect x="90" y="90" width="120" height="120" stroke="#333" stroke-width="2" rx="8"/>
+  <circle cx="125" cy="125" r="12" stroke="#444" stroke-width="2"/>
+  <path d="M105 175l20-20 15 15 25-25 30 30" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="150" y="245" text-anchor="middle" fill="#555" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">Image indisponible</text>
+  <text x="150" y="263" text-anchor="middle" fill="#3a3a3a" font-family="system-ui, -apple-system, sans-serif" font-size="10">Hors ligne</text>
+</svg>
