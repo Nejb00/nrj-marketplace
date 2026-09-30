@@ -3,6 +3,9 @@
 // puces (tags) sous le bouton, option "＋ Autre…" pour les valeurs personnalisées.
 // Valeur exposée = chaîne "A, B, C" (format identique au stockage Supabase).
 
+// Registry to track all open menus for single-menu-at-a-time behavior
+const openMenus = new Set();
+
 /** Nettoyage d'une valeur saisie manuellement : trim, suppression des virgules. */
 function cleanValue(raw) {
   return String(raw || '').replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
@@ -258,6 +261,11 @@ export class MultiSelect {
   }
 
   _show() {
+    // Close all other open menus first
+    openMenus.forEach(menu => { if (menu !== this) menu._close(); });
+    openMenus.clear();
+    openMenus.add(this);
+    
     this._open = true;
     this.menu.hidden = false;
     this.container.classList.add('open');
@@ -274,6 +282,7 @@ export class MultiSelect {
     this.btn.setAttribute('aria-expanded', 'false');
     this.customRow.hidden = true;
     this.otherBtn.hidden = false;
+    openMenus.delete(this);
   }
 }
 
