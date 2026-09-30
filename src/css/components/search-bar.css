@@ -100,6 +100,73 @@
 
 .search-clear:hover { color: var(--text); }
 
+/* ─── Header Temu : barre de recherche pleine largeur ────────────────────── */
+/* Façade « tap-to-search » : le tap ouvre la page de recherche dédiée. */
+.tap-to-search {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: none;
+    border: none;
+    padding: 0.35rem 0;
+    margin: 0;
+    min-width: 0;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    color: var(--text-secondary);
+    -webkit-tap-highlight-color: transparent;
+}
+/* La loupe de la façade hérite du masque vectoriel .search-icon */
+.tap-to-search .search-icon { margin-right: 0; }
+.search-tap-placeholder {
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-secondary);
+}
+#searchInput[hidden] { display: none; }
+
+/* Caméra (recherche par photo) — à gauche du bouton loupe */
+.search-camera {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.3rem;
+    margin-left: 0.3rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+    -webkit-tap-highlight-color: transparent;
+}
+.search-camera:hover { color: var(--primary); }
+
+/* Bouton loupe rond noir (façon Temu) */
+.search-go {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: #111114;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-left: 0.45rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    transition: transform 0.15s ease, opacity 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+.search-go:active { transform: scale(0.9); }
+:root.light-theme .search-go { background: #111114; color: #fff; }
+
 /* ✅ Dropdown en verre dépoli */
 .search-dropdown {
     position: absolute;

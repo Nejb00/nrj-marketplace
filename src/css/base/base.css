@@ -48,8 +48,9 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   ⚡ HEADER NRJ — 3 bulles liquid-glass indépendantes, scroll-linked (option B)
-   --sp = "scroll progress" (0 → 1), piloté par JS à chaque frame de scroll
+   ⚡ HEADER NRJ — Temu : 2 couches fixes (recherche pleine largeur + catégories
+   parentes). --sp est figé à 0 (plus de repli scroll-linked) ; la hauteur réelle
+   est exposée via --header-height (ResizeObserver dans smart-header.js).
    ═══════════════════════════════════════════════════════════════════════════ */
 .header-fixed {
     position: fixed;
@@ -59,9 +60,13 @@ body {
     z-index: 100;
     display: flex;
     flex-direction: column;
-    gap: calc(8px * (1 - var(--sp, 0)));
+    gap: 0; /* couches collées (recherche + catégories parentes) */
     --sp: 0;
 }
+
+/* Hauteur réelle du header, synchronisée par smart-header.js (ResizeObserver).
+   Utilisée notamment par la page Catégories (--categories-header-h). */
+:root { --header-height: 132px; }
 
 .header-top-row {
     display: flex;
@@ -321,21 +326,105 @@ body {
 }
 :root.light-theme .header-cart-badge { border-color: rgba(255, 255, 255, 0.88); }
 
-/* ── Bulle 3 : recherche complète (se replie au scroll) ─────────────────── */
+/* ── Couche 1 header Temu : recherche PLEINE LARGEUR, toujours visible ────
+   Plus de version compacte qui rétrécit en loupe : --sp ne plie plus rien. */
 .search-bubble-full {
-    overflow: hidden;
-    max-height: calc(68px * (1 - var(--sp, 0)));
-    opacity: calc(1 - var(--sp, 0) * 1.6);
+    overflow: visible;
+    max-height: none;
+    opacity: 1;
+    transition: none; /* neutralise tout ancien repli scroll-linked */
 }
 .search-bubble-full .search-bar-container {
-    border-radius: 22px;
-    padding: 0;
+    /* pleine largeur (marge latérale portée par .header-fixed) */
+    padding: 0.45rem 0.6rem;
+    border-radius: 999px;
 }
 .search-bubble-full .search-bar {
     background: transparent;
     border: none;
     box-shadow: none;
 }
+
+/* Rangée des catégories parentes (couche 2 du header), collée sous la recherche */
+.header-category-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.15rem 0.55rem 0.45rem;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x;
+    color: var(--text-secondary);
+}
+/* Fond liquid-glass de la couche 2 (sombre + thème clair) */
+.header-fixed .header-category-row {
+    position: relative;
+    isolation: isolate;
+    background: rgba(18, 18, 26, 0.50);
+    backdrop-filter: blur(var(--lg-blur, 24px)) saturate(var(--lg-saturate, 160%));
+    -webkit-backdrop-filter: blur(var(--lg-blur, 24px)) saturate(var(--lg-saturate, 160%));
+    border-radius: 0 0 20px 20px;
+    margin-top: -16px; /* recouvre le bas de la bulle recherche → couches collées */
+    padding-top: 0.55rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: none;
+}
+:root.light-theme .header-fixed .header-category-row {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.30) 0%, rgba(255, 255, 255, 0.14) 100%);
+    backdrop-filter: blur(22px) saturate(170%);
+    -webkit-backdrop-filter: blur(22px) saturate(170%);
+    border-color: rgba(255, 255, 255, 0.62);
+    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.6), 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+.header-category-row::-webkit-scrollbar { display: none; }
+
+.header-category-row .filter-btn {
+    position: relative;
+    flex: 0 0 auto;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-weight: 700;
+    font-size: 0.8rem;
+    padding: 0.45rem 0.55rem 0.5rem;
+    border-radius: 0;
+    transition: color 0.2s ease;
+}
+.header-category-row .filter-btn:hover:not(.active) {
+    border-color: transparent;
+    color: var(--text);
+}
+.header-category-row .filter-btn.active {
+    background: transparent;
+    border-color: transparent;
+    color: var(--text);
+}
+/* Soulignement de l'onglet actif (façon Temu) */
+.header-category-row .filter-btn::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 0.1rem;
+    width: 55%;
+    height: 3px;
+    border-radius: 3px;
+    background: var(--primary);
+    transform: translateX(-50%) scaleX(0);
+    transition: transform 0.2s ease;
+}
+.header-category-row .filter-btn.active::after {
+    transform: translateX(-50%) scaleX(1);
+}
+
+/* ── Legacy header 3 bulles : retirées du header Temu (redondantes avec la
+   bottom nav). Rendu neutralisé ; handlers JS conservés et null-safe. ────── */
+.header-top-row,
+.logo-bubble,
+.actions-bubble,
+.search-bubble-compact { display: none !important; }
 
 /* ✅ Bouton thème : hublot glass + lune/soleil vectoriels */
 .theme-toggle-btn {

@@ -31,6 +31,8 @@ export function openHeaderCart() {
 }
 
 export function initHeaderActionsBubble() {
+  // Header Temu : les boutons ☰ 👤 🛒 sont retirés du header (redondants avec la
+  // bottom nav). Handlers conservés mais null-safe (?.) : no-op si absents.
   document.getElementById('catalogBtnHeader')?.addEventListener('click', openHeaderCategories);
   document.getElementById('profileBtnHeader')?.addEventListener('click', openHeaderProfile);
   document.getElementById('cartBtnHeader')?.addEventListener('click', openHeaderCart);

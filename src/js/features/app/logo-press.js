@@ -1,6 +1,8 @@
 // ═══ App — long-press logo → espace admin ═══
 // Éclaté de main.js (refacto-archi) — logique strictement identique.
 export function initLogoLongPress() {
+  // Header Temu : la bulle logo est retirée du header (redondante avec l'onglet
+  // Accueil de la bottom nav). Handler conservé mais null-safe : no-op si absent.
   const logo = document.querySelector('.logo-bubble');
   if (!logo) return;
 

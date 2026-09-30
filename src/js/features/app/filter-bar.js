@@ -13,7 +13,8 @@ export function buildFilterBar() {
     const label = (c.icon ? c.icon + ' ' : '') + c.name;
     html += `<button class="filter-btn" data-category="${escapeHtml(c.id)}">${escapeHtml(label)}</button>`;
   });
-  // id harmonisé avec index.html : #filtersBar (classe CSS .filters-bar)
-  const filterBar = document.getElementById('filtersBar');
+  // Header Temu : la rangée des catégories parentes vit dans le header fixe (#filterBar).
+  // Repli historique sur #filtersBar si l'ancien id est encore présent.
+  const filterBar = document.getElementById('filterBar') || document.getElementById('filtersBar');
   if (filterBar) filterBar.innerHTML = html;
 }

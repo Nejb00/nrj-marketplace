@@ -1,44 +1,47 @@
-// ═══ App — header intelligent (compact au scroll) ═══
-// Éclaté de main.js (refacto-archi) — logique strictement identique.
+// ═══ App — header Temu fixe en 2 couches ═══
+// Couche 1 : recherche pleine largeur, toujours visible (plus de repli compact).
+// Couche 2 : catégories parentes (#filterBar), collée sous la recherche.
+// Le #headerSpacer suit la hauteur RÉELLE du header : variable CSS + ResizeObserver.
+// Les handlers des bulles retirées (logo ☰ 👤 🛒 / loupe compacte) sont conservés
+// mais null-safe : ils ne plantent plus si les éléments n'existent plus.
+
 import { switchToSearchView } from '../search/search-view.js';
 
 export function initSmartHeader() {
   const fixed = document.getElementById('headerFixed');
   const spacer = document.getElementById('headerSpacer');
-  const searchCompact = document.getElementById('searchCompact');
   if (!fixed || !spacer) return;
 
-  const THRESHOLD = 90;
-  let ticking = false;
-
-  function updateHeader() {
-    const rawProgress = Math.min(1, Math.max(0, window.scrollY / THRESHOLD));
-    const progress = 1 - Math.pow(1 - rawProgress, 3);
-    
-    fixed.style.setProperty('--sp', progress);
-    if (searchCompact) searchCompact.classList.toggle('active', rawProgress > 0.92);
-    spacer.style.height = fixed.offsetHeight + 'px';
-    ticking = false;
+  // Synchronise le spacer (et la variable CSS --header-height) sur la hauteur réelle.
+  function syncHeaderHeight() {
+    const h = fixed.offsetHeight;
+    document.documentElement.style.setProperty('--header-height', h + 'px');
+    spacer.style.height = h + 'px';
   }
 
-  window.addEventListener('scroll', () => {
-    if (!ticking) { requestAnimationFrame(updateHeader); ticking = true; }
-  }, { passive: true });
+  // Plus de --sp : le header ne se replie pas, il reste fixe en 2 couches.
+  fixed.style.setProperty('--sp', 0);
 
+  if ('ResizeObserver' in window) {
+    new ResizeObserver(syncHeaderHeight).observe(fixed);
+  }
+  window.addEventListener('resize', syncHeaderHeight);
+  // Scroll : seule la rangée enfant (#subcategoryBubbles) se masque — voir
+  // subcategory-collapse.js. Ici on garde uniquement le bouton « retour en haut ».
   window.addEventListener('scroll', () => {
     const btn = document.getElementById('scrollToTopBtn');
     if (btn) btn.classList.toggle('visible', window.scrollY > 300);
   }, { passive: true });
 
-  window.addEventListener('resize', () => { spacer.style.height = fixed.offsetHeight + 'px'; });
-  updateHeader();
+  syncHeaderHeight();
 }
 
+// Legacy : la loupe compacte n'existe plus dans le header Temu.
+// Handler conservé mais null-safe (no-op si l'élément est absent).
 export function initHeaderSearchCompact() {
   const searchCompact = document.getElementById('searchCompact');
   if (!searchCompact) return;
   searchCompact.addEventListener('click', () => {
-    if (!searchCompact.classList.contains('active')) return;
     switchToSearchView('');
   });
 }
