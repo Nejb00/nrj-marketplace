@@ -75,71 +75,68 @@ body {
     gap: 8px;
 }
 
-/* ── Style commun "verre" pour les 3 bulles ─────
-────────────────────────── */
-.logo-bubble,
-.actions-bubble,
-.search-bubble-compact,
-.search-bubble-full .search-bar-container {
-    position: relative;
-    overflow: hidden;
-    isolation: isolate;
-    background: rgba(16, 16, 20, 0.72);
-    backdrop-filter: blur(24px) saturate(160%);
-    -webkit-backdrop-filter: blur(24px) saturate(160%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+/* ══ FEUILLE LIQUID-GLASS UNIQUE DU HEADER (PROMPT 3A) ════════════════════
+   Le header Temu (recherche + catégories parentes) est UNE seule surface de
+   verre : matériaux pilotés par les tokens --lg-* (glass.css, comme .lg) et
+   un rayon unifié --header-radius. Plus de fond sombre plat, plus de calque
+   dupliqué par couche, plus de margin-top négatif. Thèmes sombre ET clair. */
+:root {
+    --header-radius: 24px;
 }
 
-/* ── Liquid glass iOS (même langage que les product-cards) ─────────────── */
-:root.light-theme .logo-bubble,
-:root.light-theme .actions-bubble,
-:root.light-theme .search-bubble-compact,
-:root.light-theme .search-bubble-full .search-bar-container {
+.header-fixed {
+    position: relative;
+    isolation: isolate;
+    border-radius: var(--header-radius);
+    background: var(--lg-tint);
+    backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+    -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+    border: 1px solid var(--lg-border);
+    border-top-color: var(--lg-border-top);
+    box-shadow:
+        0 18px 44px rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 var(--lg-highlight);
+}
+
+/* Reflet spéculaire diagonal — signature Liquid Glass (identique à .lg-spec) */
+.header-fixed::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 0;
+    background: linear-gradient(
+        125deg,
+        rgba(255, 255, 255, 0.20) 0%,
+        rgba(255, 255, 255, 0.05) 30%,
+        transparent 50%,
+        transparent 74%,
+        rgba(255, 255, 255, 0.06) 100%
+    );
+}
+
+/* Contenu du header au-dessus du reflet */
+.header-fixed > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Thème clair : verre blanc lumineux (mêmes tokens --lg-* que .lg) */
+:root.light-theme .header-fixed {
     background:
         linear-gradient(
             180deg,
             rgba(255, 255, 255, 0.22) 0%,
             rgba(255, 255, 255, 0.10) 100%
         );
-    backdrop-filter: blur(22px) saturate(170%);
-    -webkit-backdrop-filter: blur(22px) saturate(170%);
-    border: 1px solid rgba(255, 255, 255, 0.62);
-    border-top-color: rgba(255, 255, 255, 0.9);
+    border-color: var(--lg-border);
+    border-top-color: var(--lg-border-top);
     box-shadow:
         0 10px 28px rgba(0, 0, 0, 0.10),
         0 1px 2px rgba(0, 0, 0, 0.04),
         inset 0 1px 0 rgba(255, 255, 255, 0.92),
         inset 0 -8px 16px rgba(255, 255, 255, 0.12);
-}
-
-/* Reflet spéculaire (même technique que .product-card-info) */
-:root.light-theme .logo-bubble::before,
-:root.light-theme .actions-bubble::before,
-:root.light-theme .search-bubble-compact::before,
-:root.light-theme .search-bubble-full .search-bar-container::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    pointer-events: none;
-    background: linear-gradient(
-        125deg,
-        rgba(255, 255, 255, 0.38) 0%,
-        rgba(255, 255, 255, 0.10) 28%,
-        transparent 48%,
-        transparent 72%,
-        rgba(255, 255, 255, 0.08) 100%
-    );
-    z-index: 0;
-}
-
-:root.light-theme .logo-bubble > *,
-:root.light-theme .actions-bubble > *,
-:root.light-theme .search-bubble-compact > *,
-:root.light-theme .search-bubble-full .search-bar-container > * {
-    position: relative;
-    z-index: 1;
 }
 
 /* +8px pour compenser le décollement des bulles */
@@ -154,7 +151,7 @@ body {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    border-radius: 999px;
+    border-radius: calc(var(--header-radius) - 12px);
     padding: 0.5rem 0.9rem 0.5rem 0.35rem;
     cursor: pointer;
     flex-shrink: 0;
@@ -327,7 +324,9 @@ body {
 :root.light-theme .header-cart-badge { border-color: rgba(255, 255, 255, 0.88); }
 
 /* ── Couche 1 header Temu : recherche PLEINE LARGEUR, toujours visible ────
-   Plus de version compacte qui rétrécit en loupe : --sp ne plie plus rien. */
+   Plus de version compacte qui rétrécit en loupe : --sp ne plie plus rien.
+   PROMPT 3A : pas de verre propre à la bulle — la feuille liquid-glass est
+   portée par .header-fixed (une seule surface pour le header entier). */
 .search-bubble-full {
     overflow: visible;
     max-height: none;
@@ -337,7 +336,6 @@ body {
 .search-bubble-full .search-bar-container {
     /* pleine largeur (marge latérale portée par .header-fixed) */
     padding: 0.45rem 0.6rem;
-    border-radius: 999px;
 }
 .search-bubble-full .search-bar {
     background: transparent;
@@ -359,25 +357,11 @@ body {
     touch-action: pan-x;
     color: var(--text-secondary);
 }
-/* Fond liquid-glass de la couche 2 (sombre + thème clair) */
+/* PROMPT 3A : la rangée des catégories n'a PAS de fond propre — elle vit sur
+   la feuille liquid-glass unique du header (.header-fixed). Plus de verre
+   dupliqué, plus de border-radius BOTTOM isolé, plus de margin-top:-16px. */
 .header-fixed .header-category-row {
-    position: relative;
-    isolation: isolate;
-    background: rgba(18, 18, 26, 0.50);
-    backdrop-filter: blur(var(--lg-blur, 24px)) saturate(var(--lg-saturate, 160%));
-    -webkit-backdrop-filter: blur(var(--lg-blur, 24px)) saturate(var(--lg-saturate, 160%));
-    border-radius: 0 0 20px 20px;
-    margin-top: -16px; /* recouvre le bas de la bulle recherche → couches collées */
-    padding-top: 0.55rem;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-top: none;
-}
-:root.light-theme .header-fixed .header-category-row {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.30) 0%, rgba(255, 255, 255, 0.14) 100%);
-    backdrop-filter: blur(22px) saturate(170%);
-    -webkit-backdrop-filter: blur(22px) saturate(170%);
-    border-color: rgba(255, 255, 255, 0.62);
-    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.6), 0 8px 20px rgba(0, 0, 0, 0.08);
+    padding-top: 0.2rem;
 }
 .header-category-row::-webkit-scrollbar { display: none; }
 

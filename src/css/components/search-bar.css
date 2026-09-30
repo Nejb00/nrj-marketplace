@@ -1,9 +1,16 @@
-/* ✅ Conteneur transparent : tout flotte sur la feuille de verre du header */
+/* PROMPT 3A : plus de fond sombre plat — le verre du header vient des tokens
+   --lg-* sur .header-fixed (feuille liquid-glass unique). */
 .search-bar-container {
     padding: 0.45rem 0.9rem 0.65rem;
     background: transparent;
     border-bottom: none;
     position: relative;
+}
+
+/* Input en mode saisie : occupe la place restante sur la même ligne */
+.search-bubble-full .search-bar-container #searchInput:not([hidden]) {
+    flex: 1;
+    min-width: 0;
 }
 
 .search-bar {
@@ -101,6 +108,16 @@
 .search-clear:hover { color: var(--text); }
 
 /* ─── Header Temu : barre de recherche pleine largeur ────────────────────── */
+/* PROMPT 3A — Ligne unique ~48px, en flex :
+   [loupe + placeholder/input (flex:1)] [caméra] [bouton rond noir].
+   Le verre est porté par .header-fixed (feuille unique), rien ici. */
+.search-bubble-full .search-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 48px;
+}
+
 /* Façade « tap-to-search » : le tap ouvre la page de recherche dédiée. */
 .tap-to-search {
     flex: 1;

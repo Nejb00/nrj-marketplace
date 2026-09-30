@@ -202,7 +202,6 @@ body.categories-page-open .header-fixed {
 }
 
 body.categories-page-open .search-bubble-full {
-    max-height: 68px !important;
     opacity: 1 !important;
 }
 

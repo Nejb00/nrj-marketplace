@@ -3,6 +3,7 @@
 // (comportement historique du bouton compact). Tous les getElementById sont
 // optionnels (?.) : le module est safe même si le DOM change.
 import { switchToSearchView } from '../search/search-view.js';
+import { openVisualSearchPicker } from '../../services/visual-search.js';
 
 export function initHeaderSearchBar() {
   // Façade : tap → page de recherche dédiée (#searchView)
@@ -16,10 +17,9 @@ export function initHeaderSearchBar() {
     switchToSearchView((input && input.value.trim()) || '');
   });
 
-  // Caméra : recherche par photo via WhatsApp (même cible que le bouton sourcing)
+  // Caméra : vraie recherche visuelle (sélecteur de photo + searchByImage).
+  // PROMPT 3A : l'ancien lien wa.me WhatsApp a été supprimé.
   document.getElementById('searchCamera')?.addEventListener('click', () => {
-    window.open(`https://wa.me/242066271882?text=${encodeURIComponent(
-      "Bonjour NRJ Marketplace, je souhaite rechercher un produit par photo. Voici ma photo :"
-    )}`);
+    openVisualSearchPicker();
   });
 }

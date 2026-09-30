@@ -132,18 +132,20 @@ body::before {
 }
 .lg-spec > * { position: relative; z-index: 1; }
 
-/* ── 3. HARMONISATION DES BULLES EXISTANTES (fondation déjà posée) ─────────
-   On laisse leur structure intacte, on affine seulement la translucidité
-   sombre pour que l'aurora transpare — c'était 0.72 (trop opaque). */
+/* ── 3. HARMONISATION DES BULLES (PROMPT 3A) ───────────────────────────────
+   Le header Temu n'a plus qu'UNE SEULE feuille liquid-glass, portée par
+   .header-fixed (tokens --lg-* + rayon unifié). Les anciennes règles qui
+   repeignaient chaque bulle (fond sombre plat 0.72 / calque clair dupliqué)
+   ont été retirées de base.css : logo-bubble / actions-bubble /
+   search-bubble-compact restent transparentes et flottent sur la feuille
+   unique du header — mêmes matériaux/tokens que les autres surfaces .lg. */
 
 .logo-bubble,
 .actions-bubble,
-.search-bubble-compact,
-.search-bubble-full .search-bar-container {
-    background: rgba(18, 18, 26, 0.50);
-    backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
-    -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
-    border-top-color: rgba(255, 255, 255, 0.16);
+.search-bubble-compact {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
 }
 
 /* Balayage spéculaire lié au scroll : la lumière glisse sur les bulles

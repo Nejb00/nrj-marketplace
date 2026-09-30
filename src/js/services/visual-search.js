@@ -157,6 +157,27 @@ async function indexProducts(list, onProgress) {
   return { idx, ok };
 }
 
+// ─── Sélecteur de photo partagé (PROMPT 3A) ────────────────────────────────
+// Input <file> caché réutilisable + searchByImage. Exporté pour que le header
+// (#searchCamera) lance la vraie recherche visuelle au lieu d'ouvrir WhatsApp.
+let sharedFileInput = null;
+
+export function openVisualSearchPicker() {
+  if (!sharedFileInput) {
+    sharedFileInput = document.createElement('input');
+    sharedFileInput.type = 'file';
+    sharedFileInput.accept = 'image/*';
+    sharedFileInput.style.display = 'none';
+    document.body.appendChild(sharedFileInput);
+    sharedFileInput.addEventListener('change', () => {
+      const f = sharedFileInput.files && sharedFileInput.files[0];
+      if (f) searchByImage(f);
+      sharedFileInput.value = '';
+    });
+  }
+  sharedFileInput.click();
+}
+
 // ─── UI injectée ────────────────────────────────────────────────────────────
 const style = document.createElement('style');
 style.textContent = `
