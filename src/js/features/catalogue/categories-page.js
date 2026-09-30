@@ -28,9 +28,12 @@ export function syncCategoriesHeaderOffset() {
         document.getElementById('searchCompact')?.classList.remove('active');
     }
     const apply = () => {
-        // Header Temu : hauteur réelle du header (smart-header.js expose aussi
-        // --header-height). +8px = top offset de .header-fixed.
-        const headerH = Math.ceil(8 + (fixed ? fixed.getBoundingClientRect().height : 132));
+        // Header Temu : hauteur RÉELLE du header (bulles exclues — elles sont
+        // absolues sous top:100%) + rangée bulles quand elle est affichée
+        // (PROMPT 3B : même formule que le #headerSpacer dans smart-header.js).
+        let headerH = Math.ceil(8 + (fixed ? fixed.getBoundingClientRect().height : 132));
+        const row = document.getElementById('subcategoryBubbles');
+        if (row && !row.hidden) headerH += Math.ceil(row.offsetHeight);
         if (spacer) spacer.style.height = headerH + 'px';
         cv.style.setProperty('--categories-header-h', headerH + 'px');
         cv.style.height = `calc(100dvh - ${headerH}px)`;

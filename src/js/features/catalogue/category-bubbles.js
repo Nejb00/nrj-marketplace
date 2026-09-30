@@ -5,6 +5,17 @@ import { escapeHtml } from '../../utils/escape-html.js';
 import { thumb } from '../../utils/images.js';
 import { fetchSubcategoriesWithLatestImage } from '../../api/api.js';
 import { refreshCatalogue } from './catalogue-init.js';
+import { resetSubcategoryCollapse } from '../app/subcategory-collapse.js';
+
+// PROMPT 3B : à chaque changement de catégorie (parent, enfant ou « Tout »),
+// on remonte en haut de page et on remet la rangée bulles à l'état déplié.
+// Centralisé ici car TOUS les chemins passent par applyFilter / selectSubcategoryAll :
+// clic dans la barre des parents (click-delegation), sélection d'enfant, « Tout »,
+// swipe-nav (qui simule un click sur .filter-btn), page Catégories.
+function backToTopAndExpand() {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    resetSubcategoryCollapse();
+}
 
 export function hideSubcategoryBubbles() {
     state.subcategoryBubbles = [];
@@ -45,6 +56,7 @@ export function renderSubcategoryBubbles() {
 export function selectSubcategoryAll() {
     const topId = state.activeTopCategoryId;
     if (!topId) return;
+    backToTopAndExpand();
     state.currentFilter = topId;
     state.activeSubcategoryId = null;
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -64,6 +76,7 @@ async function loadBubblesForTop(topId) {
 }
 
 export async function applyFilter(categoryId) {
+    backToTopAndExpand();
     state.currentFilter = categoryId;
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     if (categoryId === 'all' || categoryId === 'favorites') {

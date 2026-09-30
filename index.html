@@ -51,13 +51,16 @@
             </div>
             <!-- Couche 2 : rangée des catégories parentes, collée sous la recherche -->
             <div class="filters-bar header-category-row" id="filterBar"></div>
+            <!-- PROMPT 3B : bulles enfants attachées au header — position:absolute;
+                 top:100% (hors de la hauteur du header), même feuille liquid-glass.
+                 Repli = translateY(-100%) + opacity uniquement (aucun changement de
+                 hauteur → pas de sauts de scroll). z-index sous la rangée des parents. -->
+            <div class="subcategory-bubbles" id="subcategoryBubbles" hidden></div>
         </div>
         <div id="headerSpacer"></div>
         <main id="mainContent">
             <section class="hero-section" id="homeSection">
                 <div class="hero-banner" id="heroBanner"></div>
-                <!-- Bulles enfants : hors du header fixe, dans le flux, au-dessus de la grille -->
-                <div class="subcategory-bubbles" id="subcategoryBubbles" hidden></div>
                 <div class="products-grid" id="productsGrid" role="list"></div>
                 <div class="load-more-wrap" id="loadMoreWrap" style="display:none;">
                     <button class="load-more-btn" id="loadMoreBtn">Charger plus</button>

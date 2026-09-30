@@ -139,6 +139,22 @@ body {
         inset 0 -8px 16px rgba(255, 255, 255, 0.12);
 }
 
+/* PROMPT 3B : thème clair — la rangée bulles attachée au header reprend le
+   même verre blanc lumineux que le header (mêmes tokens --lg-*). */
+:root.light-theme .subcategory-bubbles {
+    background:
+        linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.22) 0%,
+            rgba(255, 255, 255, 0.10) 100%
+        );
+    border-color: var(--lg-border);
+    box-shadow:
+        0 10px 28px rgba(0, 0, 0, 0.10),
+        0 1px 2px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.92);
+}
+
 /* +8px pour compenser le décollement des bulles */
 #headerSpacer {
     width: 100%;
@@ -362,6 +378,12 @@ body {
    dupliqué, plus de border-radius BOTTOM isolé, plus de margin-top:-16px. */
 .header-fixed .header-category-row {
     padding-top: 0.2rem;
+}
+/* PROMPT 3B : z-index au-dessus des bulles absolues (z-index:0) → quand elles
+   se replient via translateY(-100%), elles glissent DERRIÈRE cette rangée. */
+.header-fixed .header-category-row {
+    position: relative;
+    z-index: 1;
 }
 .header-category-row::-webkit-scrollbar { display: none; }
 

@@ -58,14 +58,40 @@
 .filter-btn:hover:not(.active) { border-color: #555; }
 .filter-count { font-size: 0.7rem; opacity: 0.7; margin-left: 0.2rem; }
 
+/* ═══ PROMPT 3B — bulles enfants ATTACHÉES au header ═══
+   #subcategoryBubbles vit dans #headerFixed, en position:absolute sous la
+   rangée des parents (top:100% → hors de la hauteur du header). Même feuille
+   liquid-glass que le header (tokens --lg-*), même rayon de coins. Le repli
+   est purement visuel : translateY(-100%) + opacity (aucun changement de
+   hauteur ni de layout → pas de sauts de scroll, pas de boucle
+   repli/ré-affichage). z-index:0 < .header-category-row (z-index:1) : les
+   bulles glissent DERRIÈRE la rangée des parents. */
 .subcategory-bubbles {
     display: flex;
     gap: 0.75rem;
-    padding: 0.35rem 1rem 0.15rem;
+    padding: 0.45rem 1rem 0.3rem;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    background: var(--bg);
+    /* Feuille verre identique au header (.lg / --lg-*) */
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 0;
+    isolation: isolate;
+    background: var(--lg-tint);
+    -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+    backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+    border: 1px solid var(--lg-border);
+    border-top: none;
+    border-radius: 0 0 var(--header-radius) var(--header-radius);
+    box-shadow:
+        0 18px 44px rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 var(--lg-highlight);
+    /* Repli : uniquement transform + opacity — jamais de max-height/padding/margin */
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    will-change: transform, opacity;
 }
 
 .subcategory-bubbles::-webkit-scrollbar { display: none; }
@@ -74,27 +100,9 @@
     display: none !important;
 }
 
-/* ═══ Header Temu — étape B : repliage des bulles enfants au scroll vers le bas ═══ */
-.subcategory-bubbles {
-    max-height: 8rem;
-    transition:
-        transform 0.2s ease,
-        opacity 0.2s ease,
-        max-height 0.2s ease,
-        padding-top 0.2s ease,
-        padding-bottom 0.2s ease,
-        margin 0.2s ease;
-    will-change: transform, opacity;
-}
-
 .subcategory-bubbles.is-collapsed {
     transform: translateY(-100%);
     opacity: 0;
-    max-height: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-    margin: 0;
-    overflow: hidden;
     pointer-events: none;
 }
 

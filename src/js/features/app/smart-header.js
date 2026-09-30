@@ -1,7 +1,10 @@
 // ═══ App — header Temu fixe en 2 couches ═══
 // Couche 1 : recherche pleine largeur, toujours visible (plus de repli compact).
 // Couche 2 : catégories parentes (#filterBar), collée sous la recherche.
-// Le #headerSpacer suit la hauteur RÉELLE du header : variable CSS + ResizeObserver.
+// PROMPT 3B : #subcategoryBubbles est un enfant ABSOLU de #headerFixed
+// (top:100%, hors flux) → il ne change PAS la hauteur du header. Le spacer =
+// hauteur du header + hauteur de la rangée bulles quand elle n'est pas hidden ;
+// il NE change PAS quand la rangée se replie (repli = transform/opacity seuls).
 // Les handlers des bulles retirées (logo ☰ 👤 🛒 / loupe compacte) sont conservés
 // mais null-safe : ils ne plantent plus si les éléments n'existent plus.
 
@@ -12,11 +15,18 @@ export function initSmartHeader() {
   const spacer = document.getElementById('headerSpacer');
   if (!fixed || !spacer) return;
 
+  const bubblesRow = () => document.getElementById('subcategoryBubbles');
+
   // Synchronise le spacer (et la variable CSS --header-height) sur la hauteur réelle.
   function syncHeaderHeight() {
     const h = fixed.offsetHeight;
     document.documentElement.style.setProperty('--header-height', h + 'px');
-    spacer.style.height = h + 'px';
+    // Spacer = header + rangée bulles (seulement si elle est affichée ;
+    // l'état replié — .is-collapsed — ne change RIEN au spacer).
+    let total = h;
+    const row = bubblesRow();
+    if (row && !row.hidden) total += row.offsetHeight;
+    spacer.style.height = total + 'px';
   }
 
   // Plus de --sp : le header ne se replie pas, il reste fixe en 2 couches.
@@ -24,8 +34,20 @@ export function initSmartHeader() {
 
   if ('ResizeObserver' in window) {
     new ResizeObserver(syncHeaderHeight).observe(fixed);
+    // La hauteur des bulles peut varier (rendu async, wrappement) : on observe
+    // aussi la rangée pour garder le spacer exact.
+    const row = bubblesRow();
+    if (row) new ResizeObserver(syncHeaderHeight).observe(row);
   }
   window.addEventListener('resize', syncHeaderHeight);
+  // Rendu async des bulles (fetch sous-catégories) : re-sync à chaque mutation
+  // (hidden toggled,innerHTML rempli).
+  const row0 = bubblesRow();
+  if (row0) {
+    new MutationObserver(syncHeaderHeight).observe(row0, {
+      attributes: true, attributeFilter: ['hidden'], childList: true,
+    });
+  }
   // Scroll : seule la rangée enfant (#subcategoryBubbles) se masque — voir
   // subcategory-collapse.js. Ici on garde uniquement le bouton « retour en haut ».
   window.addEventListener('scroll', () => {
