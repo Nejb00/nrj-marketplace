@@ -19,11 +19,13 @@ import { openProductModal } from '../product/modal-render.js';
 import { switchToSearchView } from '../search/search-view.js';
 import { initThemeToggle } from './theme.js';
 import { initSmartHeader, initHeaderSearchCompact } from './smart-header.js';
+import { initHeaderSearchBar } from './header-search.js';
 import { initHeaderActionsBubble } from './header-actions.js';
 import { initServiceWorkerUpdates, initOfflineIndicator, precacheCatalogueImages } from './offline.js';
 import { initLogoLongPress } from './logo-press.js';
 import { initSwipeCategories } from './swipe-nav.js';
 import { buildFilterBar } from './filter-bar.js';
+import { initSubcategoryCollapse } from './subcategory-collapse.js';
 
 async function init() {
   try {
@@ -37,9 +39,11 @@ async function init() {
     initPlaceholderRotation();
     initVoiceSearch();
     initSmartHeader();
+    initHeaderSearchBar();
     initHeaderSearchCompact();
     initHeaderActionsBubble();
     initLogoLongPress();
+    initSubcategoryCollapse();
     initThemeToggle();
     initOfflineIndicator();
     initChat();

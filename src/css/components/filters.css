@@ -74,6 +74,41 @@
     display: none !important;
 }
 
+/* ═══ Header Temu — étape B : repliage des bulles enfants au scroll vers le bas ═══ */
+.subcategory-bubbles {
+    max-height: 8rem;
+    transition:
+        transform 0.2s ease,
+        opacity 0.2s ease,
+        max-height 0.2s ease,
+        padding-top 0.2s ease,
+        padding-bottom 0.2s ease,
+        margin 0.2s ease;
+    will-change: transform, opacity;
+}
+
+.subcategory-bubbles.is-collapsed {
+    transform: translateY(-100%);
+    opacity: 0;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+/* prefers-reduced-motion : pas d'animation ; on coupe aussi le glissement visuel */
+@media (prefers-reduced-motion: reduce) {
+    .subcategory-bubbles {
+        transition: none;
+    }
+    .subcategory-bubbles.no-collapse-motion {
+        transform: none;
+        opacity: 1;
+    }
+}
+
 .subcat-bubble {
     flex: 0 0 auto;
     display: flex;
