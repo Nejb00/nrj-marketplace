@@ -21,11 +21,13 @@ export function initSmartHeader() {
   function syncHeaderHeight() {
     const h = fixed.offsetHeight;
     document.documentElement.style.setProperty('--header-height', h + 'px');
-    // Spacer = header + rangée bulles (seulement si elle est affichée ;
-    // l'état replié — .is-collapsed — ne change RIEN au spacer).
+    // Spacer = header + rangée bulles + gap (PROMPT 3D : la rangée est décolée
+    // du header de var(--bubbles-gap), top:calc(100% + gap)). l'état replié —
+    // .is-collapsed — ne change RIEN au spacer (repli = transform/opacity seuls).
+    const gapPx = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bubbles-gap')) || 0;
     let total = h;
     const row = bubblesRow();
-    if (row && !row.hidden) total += row.offsetHeight;
+    if (row && !row.hidden) total += row.offsetHeight + gapPx;
     spacer.style.height = total + 'px';
   }
 

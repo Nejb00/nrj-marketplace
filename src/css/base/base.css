@@ -138,21 +138,9 @@ body {
         inset 0 -8px 16px rgba(255, 255, 255, 0.12);
 }
 
-/* PROMPT 3B : thème clair — la rangée bulles attachée au header reprend le
-   même verre blanc lumineux que le header (mêmes tokens --lg-*). */
-:root.light-theme .subcategory-bubbles {
-    background:
-        linear-gradient(
-            180deg,
-            rgba(255, 255, 255, 0.22) 0%,
-            rgba(255, 255, 255, 0.10) 100%
-        );
-    border-color: var(--lg-border);
-    box-shadow:
-        0 10px 28px rgba(0, 0, 0, 0.10),
-        0 1px 2px rgba(0, 0, 0, 0.04),
-        inset 0 1px 0 rgba(255, 255, 255, 0.92);
-}
+/* PROMPT 3D : le thème clair de la rangée bulles est surchargé dans
+   filters.css (:root.light-theme .header-fixed .subcategory-bubbles), plus
+   ici — base.css ne définit que la feuille de verre du header lui-même. */
 
 /* +8px pour compenser le décollement des bulles */
 #headerSpacer {

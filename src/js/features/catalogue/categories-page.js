@@ -29,11 +29,13 @@ export function syncCategoriesHeaderOffset() {
     }
     const apply = () => {
         // Header Temu : hauteur RÉELLE du header (bulles exclues — elles sont
-        // absolues sous top:100%) + rangée bulles quand elle est affichée
-        // (PROMPT 3B : même formule que le #headerSpacer dans smart-header.js).
+        // absolues sous top:calc(100% + gap)) + rangée bulles + gap quand elle
+        // est affichée (PROMPT 3D : même formule que le #headerSpacer dans
+        // smart-header.js ; le gap est lu via --bubbles-gap, pas codé en dur).
+        const gapPx = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bubbles-gap')) || 0;
         let headerH = Math.ceil(8 + (fixed ? fixed.getBoundingClientRect().height : 132));
         const row = document.getElementById('subcategoryBubbles');
-        if (row && !row.hidden) headerH += Math.ceil(row.offsetHeight);
+        if (row && !row.hidden) headerH += Math.ceil(row.offsetHeight + gapPx);
         if (spacer) spacer.style.height = headerH + 'px';
         cv.style.setProperty('--categories-header-h', headerH + 'px');
         cv.style.height = `calc(100dvh - ${headerH}px)`;
