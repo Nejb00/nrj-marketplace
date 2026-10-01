@@ -808,3 +808,25 @@ body.modal-open { overflow:hidden; overscroll-behavior:none; }
 @media (prefers-reduced-motion:reduce) {
     .sticky-progress-track i { transition:none; }
 }
+
+/* ── Purchase Dock interaction feedback ──────────────────────────── */
+.btn-cart-sticky.purchase-state-pop {
+    animation: purchaseStatePop .28s cubic-bezier(.2,.8,.2,1);
+}
+.btn-cart-sticky.purchase-ready-flash {
+    animation: purchaseReadyFlash .55s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes purchaseStatePop {
+    0% { transform: scale(.985); }
+    55% { transform: scale(1.018); }
+    100% { transform: scale(1); }
+}
+@keyframes purchaseReadyFlash {
+    0% { transform: scale(.985); filter: brightness(1); }
+    35% { transform: scale(1.025); filter: brightness(1.12); }
+    100% { transform: scale(1); filter: brightness(1); }
+}
+@media (prefers-reduced-motion:reduce) {
+    .btn-cart-sticky.purchase-state-pop,
+    .btn-cart-sticky.purchase-ready-flash { animation:none; }
+}
