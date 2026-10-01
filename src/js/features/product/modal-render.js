@@ -115,6 +115,12 @@ export async function openProductModal(pid) {
     modal.setAttribute('aria-hidden', 'false');
     document.body.classList.add('modal-open');
     document.getElementById('stickyBottomBar').classList.add('visible');
-    history.replaceState({ modalOpen: true, productId: p.id }, '', `?id=${p.id}`);
+    const currentId = new URLSearchParams(window.location.search).get('id');
+    const modalWasOpen = state.modalOpen;
+    if (modalWasOpen || currentId === String(p.id)) {
+        history.replaceState({ modalOpen: true, productId: p.id }, '', `?id=${p.id}`);
+    } else {
+        history.pushState({ modalOpen: true, productId: p.id }, '', `?id=${p.id}`);
+    }
     state.modalOpen = true;
 }
