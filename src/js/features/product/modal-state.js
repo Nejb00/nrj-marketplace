@@ -15,6 +15,7 @@ export const modalCtx = {
     uPrice: 0,
     colorQtys: {},
     currentQty: 1,
+    openToken: 0,
     imageSlideOffset: 0,
     imgs: [],
     videoUrl: '',
