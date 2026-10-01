@@ -916,14 +916,14 @@ body.modal-open { overflow:hidden; overscroll-behavior:none; }
     background: var(--primary);
     transition: width .22s ease, background .22s ease;
 }
-.btn-cart-sticky[data-purchase-state="size"] .sticky-progress-track i,
-.btn-cart-sticky[data-purchase-state="quantity"] .sticky-progress-track i {
+.sticky-total[data-purchase-state="size"] .sticky-progress-track i,
+.sticky-total[data-purchase-state="quantity"] .sticky-progress-track i {
     background: var(--text-secondary);
 }
-.btn-cart-sticky[data-purchase-state="ready"] .sticky-progress-track i {
+.sticky-total[data-purchase-state="ready"] .sticky-progress-track i {
     background: #25D366;
 }
-.btn-cart-sticky[data-purchase-state="pending"] .sticky-progress-track i {
+.sticky-total[data-purchase-state="pending"] .sticky-progress-track i {
     background: var(--primary);
 }
 @media (max-width:380px) {
