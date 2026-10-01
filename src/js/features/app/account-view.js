@@ -68,6 +68,14 @@ function renderAccount() {
   }
 
   root.innerHTML = `
+    <section class="account-brand" aria-label="NRJ Marketplace">
+      <span class="logo-icon" aria-hidden="true"></span>
+      <div class="account-brand-copy">
+        <h1>NRJ Marketplace</h1>
+        <p>Chine • France • Turquie → Congo Brazzaville 🔥</p>
+      </div>
+    </section>
+
     <div class="account-header">
       <button class="account-back" data-account-action="close" aria-label="Retour">←</button>
       <div class="account-identity">
@@ -165,6 +173,8 @@ function renderAccount() {
         </button>
       </div>
     </div>` : ''}
+
+    <footer class="account-brand-footer">© 2026 NRJ Marketplace</footer>
   `;
 }
 
