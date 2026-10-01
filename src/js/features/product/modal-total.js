@@ -27,5 +27,17 @@ export function updateTotal() {
             totalEl.textContent = `Total minimum : ${formatPrice(amount)}`;
         }
     }
-    if (stickyEl) stickyEl.textContent = formatPrice(amount);
+    if (stickyEl) {
+        stickyEl.textContent = formatPrice(amount);
+        const stickyWrap = stickyEl.closest('.sticky-total');
+        if (stickyWrap) {
+            stickyWrap.classList.remove('bump');
+            void stickyWrap.offsetWidth;
+            stickyWrap.classList.add('bump');
+        }
+    }
+    if (totalEl) {
+        totalEl.classList.toggle('purchase-ready', totalQty >= modalCtx.moq && totalQty > 0);
+        totalEl.classList.toggle('purchase-pending', modalCtx.couleurs.length > 0 && totalQty > 0 && totalQty < modalCtx.moq);
+    }
 }
