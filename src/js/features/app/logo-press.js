@@ -1,9 +1,8 @@
 // ═══ App — long-press logo → espace admin ═══
 // Éclaté de main.js (refacto-archi) — logique strictement identique.
 export function initLogoLongPress() {
-  // Header Temu : la bulle logo est retirée du header (redondante avec l'onglet
-  // Accueil de la bottom nav). Handler conservé mais null-safe : no-op si absent.
-  const logo = document.querySelector('.logo-bubble');
+  // L'accès admin est déclenché par un appui long sur l'éclair de la carte de marque.
+  const logo = document.querySelector('.account-brand .logo-icon');
   if (!logo) return;
 
   logo.style.webkitUserSelect = 'none';
