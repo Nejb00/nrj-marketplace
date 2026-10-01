@@ -49,8 +49,12 @@ document.addEventListener('click', e => {
 document.getElementById('modalCloseBtn')?.addEventListener('click', () => { if (state.modalOpen) closeProductModal(); });
 
 window.addEventListener('popstate', (e) => {
+  if (e.state?.modalOpen && e.state.productId) {
+    openProductModal(Number(e.state.productId));
+    return;
+  }
   if (e.state && e.state.search) switchToSearchView(state.searchViewState.query);
-  else if (state.modalOpen) closeProductModal({ fromHistory: true });
+  else if (state.modalOpen && !e.state?.modalOpen) closeProductModal({ fromHistory: true });
 });
 
 document.getElementById('modalSourcingBtn')?.addEventListener('click', () => window.open(`https://wa.me/242066271882?text=${encodeURIComponent('Bonjour NRJ Marketplace, je recherche un produit. Je peux vous envoyer une photo')}`));
