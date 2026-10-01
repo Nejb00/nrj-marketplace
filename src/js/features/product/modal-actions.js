@@ -99,6 +99,7 @@ export function bindStickyActions() {
 export function closeProductModal() {
     pauseModalVideos();
     document.getElementById('productModal').classList.remove('open');
+    document.body.classList.remove('modal-open');
     document.getElementById('stickyBottomBar').classList.remove('visible');
     state.modalOpen = false;
     history.replaceState({}, '', window.location.pathname);
@@ -118,6 +119,7 @@ export function closeProductModal() {
     handle.addEventListener('touchstart', (e) => {
         dragging = true;
         startY = e.touches[0].clientY;
+        dy = 0;
         sheet.style.transition = 'none';
     }, { passive: true });
 
@@ -145,4 +147,18 @@ export function closeProductModal() {
         if (!modal.classList.contains('open')) sheet.style.transform = '';
     });
     mo.observe(modal, { attributes: true, attributeFilter: ['class'] });
+})();
+
+
+// Fermeture intuitive : clic sur le scrim + touche Échap.
+(function setupModalDismiss() {
+    const modal = document.getElementById('productModal');
+    const sheet = modal?.querySelector('.modal-sheet');
+    if (!modal || !sheet) return;
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeProductModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('open')) closeProductModal();
+    });
 })();
