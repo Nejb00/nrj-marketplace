@@ -26,7 +26,10 @@ export function showAccountView() {
 
 export function hideAccountView() {
   const av = document.getElementById('accountView');
-  if (av) av.style.display = 'none';
+  if (av) {
+    av.style.display = 'none';
+    av.classList.remove('account-brand-compact');
+  }
   const wrap = document.getElementById('catalogueWrapper');
   if (wrap) wrap.style.display = 'block';
 }
@@ -34,6 +37,9 @@ export function hideAccountView() {
 function renderAccount() {
   const root = document.getElementById('accountContent');
   if (!root) return;
+  initAccountBrandScroll();
+  const view = document.getElementById('accountView');
+  if (view) view.classList.toggle('account-brand-compact', view.scrollTop >= 24);
 
   const name = localStorage.getItem('fluo_customer_name') || '';
   const initials = name ? name.split(/\s+/).map(s => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() : '?';
@@ -69,6 +75,7 @@ function renderAccount() {
 
   root.innerHTML = `
     <section class="account-brand" aria-label="NRJ Marketplace">
+      <button class="account-back account-brand-back" data-account-action="close" aria-label="Retour">←</button>
       <span class="logo-icon" aria-hidden="true"></span>
       <div class="account-brand-copy">
         <h1>NRJ Marketplace</h1>
@@ -77,7 +84,6 @@ function renderAccount() {
     </section>
 
     <div class="account-header">
-      <button class="account-back" data-account-action="close" aria-label="Retour">←</button>
       <div class="account-identity">
         <div class="account-avatar">${escapeHtml(initials)}</div>
         <div class="account-greet">
@@ -176,6 +182,22 @@ function renderAccount() {
 
     <footer class="account-brand-footer">© 2026 NRJ Marketplace</footer>
   `;
+}
+
+
+function initAccountBrandScroll() {
+  const view = document.getElementById('accountView');
+  if (!view || view.dataset.brandScrollReady === 'true') return;
+  view.dataset.brandScrollReady = 'true';
+  let frame = 0;
+  const update = () => {
+    frame = 0;
+    view.classList.toggle('account-brand-compact', view.scrollTop >= 24);
+  };
+  view.addEventListener('scroll', () => {
+    if (!frame) frame = requestAnimationFrame(update);
+  }, { passive: true });
+  update();
 }
 
 window.renderAccount = renderAccount;
