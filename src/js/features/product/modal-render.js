@@ -18,6 +18,8 @@ export { closeProductModal } from './modal-actions.js';
 
 export async function openProductModal(pid) {
     const openToken = ++modalCtx.openToken;
+    const active = document.activeElement;
+    modalCtx.returnFocus = active && typeof active.focus === 'function' ? active : null;
     let p = state.products.find(pr => pr.id === pid);
     if (!p) return;
 
@@ -108,7 +110,9 @@ export async function openProductModal(pid) {
     await renderRecommendations(p, () => openToken === modalCtx.openToken);
     if (openToken !== modalCtx.openToken) return;
 
-    document.getElementById('productModal').classList.add('open');
+    const modal = document.getElementById('productModal');
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
     document.body.classList.add('modal-open');
     document.getElementById('stickyBottomBar').classList.add('visible');
     history.replaceState({ modalOpen: true, productId: p.id }, '', `?id=${p.id}`);
