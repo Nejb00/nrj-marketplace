@@ -120,12 +120,32 @@
             <div class="carousel-dots" id="modalCarouselDots"></div>
         </div>
         <div class="product-details">
-            <div class="product-detail-price" id="modalPrice"></div>
-            <div class="product-detail-moq" id="modalMoq"></div>
-            <div class="product-detail-total" id="modalTotal"></div>
-            <div class="product-detail-desc" id="modalDesc"></div>
+            <div class="product-detail-head">
+                <div class="product-detail-price" id="modalPrice"></div>
+                <div class="product-detail-moq" id="modalMoq"></div>
+                <div class="product-detail-total" id="modalTotal"></div>
+            </div>
+            <h2 class="product-detail-name" id="modalProductName"></h2>
+            <div class="modal-meta-row" id="modalMetaRow">
+                <div class="modal-meta-pill" id="modalAvailability">● Disponible</div>
+                <div class="modal-meta-pill" id="modalDelivery">🚚 Import NRJ</div>
+            </div>
+            <div class="product-detail-desc-wrap">
+                <button type="button" class="product-detail-desc-toggle" id="modalDescToggle" aria-expanded="false">
+                    <span>Description</span><span class="desc-chevron">⌄</span>
+                </button>
+                <div class="product-detail-desc" id="modalDesc"></div>
+            </div>
             <div class="option-group" id="modalTailleGroup" style="display:none;"><label>Taille</label><div class="option-buttons" id="modalTailleOptions"></div></div>
             <div class="option-group" id="modalCouleurGroup" style="display:none;"><label>Couleur</label><div class="option-buttons" id="modalCouleurOptions"></div></div>
+            <div class="option-group quantity-group" id="modalQuantityGroup" style="display:none;">
+                <div class="quantity-heading"><label for="modalQtyValue">Quantité</label><span class="quantity-hint" id="modalQtyHint"></span></div>
+                <div class="quantity-stepper">
+                    <button type="button" id="modalQtyMinus" aria-label="Diminuer la quantité">−</button>
+                    <span id="modalQtyValue" aria-live="polite">1</span>
+                    <button type="button" id="modalQtyPlus" aria-label="Augmenter la quantité">+</button>
+                </div>
+            </div>
         </div>
         <div class="recommendations"><h3>Vous aimerez aussi</h3><div class="rec-carousel" id="modalRecCarousel"></div></div>
         <div class="sourcing-section">
@@ -139,7 +159,11 @@
         </div><!-- /.modal-sheet -->
     </div>
     <div class="sticky-bottom-bar" id="stickyBottomBar">
-        <button class="btn-direct-sticky" id="directOrderStickyBtn">⚡ Commander directement</button>
+        <div class="sticky-total">
+            <span>Total</span>
+            <strong id="stickyTotalValue">—</strong>
+        </div>
+        <button class="btn-direct-sticky" id="directOrderStickyBtn">⚡ Commander</button>
         <button class="btn-chat-sticky" id="chatStickyBtn" aria-label="Discuter avec NRJ" title="Discuter avec NRJ">💬</button>
         <button class="btn-cart-sticky" id="addToCartStickyBtn" aria-label="Ajouter au panier"><svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"></path></svg></button>
     </div>
