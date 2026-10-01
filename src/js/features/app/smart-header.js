@@ -1,44 +1,72 @@
-// ═══ App — header intelligent (compact au scroll) ═══
-// Éclaté de main.js (refacto-archi) — logique strictement identique.
+// ═══ App — header Temu fixe en 2 couches ═══
+// Couche 1 : recherche pleine largeur, toujours visible (plus de repli compact).
+// Couche 2 : catégories parentes (#filterBar), collée sous la recherche.
+// PROMPT 3B : #subcategoryBubbles est un enfant ABSOLU de #headerFixed
+// (top:100%, hors flux) → il ne change PAS la hauteur du header. Le spacer =
+// hauteur du header + hauteur de la rangée bulles quand elle n'est pas hidden ;
+// il NE change PAS quand la rangée se replie (repli = transform/opacity seuls).
+// Les handlers des bulles retirées (logo ☰ 👤 🛒 / loupe compacte) sont conservés
+// mais null-safe : ils ne plantent plus si les éléments n'existent plus.
+
 import { switchToSearchView } from '../search/search-view.js';
 
 export function initSmartHeader() {
   const fixed = document.getElementById('headerFixed');
   const spacer = document.getElementById('headerSpacer');
-  const searchCompact = document.getElementById('searchCompact');
   if (!fixed || !spacer) return;
 
-  const THRESHOLD = 90;
-  let ticking = false;
+  const bubblesRow = () => document.getElementById('subcategoryBubbles');
 
-  function updateHeader() {
-    const rawProgress = Math.min(1, Math.max(0, window.scrollY / THRESHOLD));
-    const progress = 1 - Math.pow(1 - rawProgress, 3);
-    
-    fixed.style.setProperty('--sp', progress);
-    if (searchCompact) searchCompact.classList.toggle('active', rawProgress > 0.92);
-    spacer.style.height = fixed.offsetHeight + 'px';
-    ticking = false;
+  // Synchronise le spacer (et la variable CSS --header-height) sur la hauteur réelle.
+  function syncHeaderHeight() {
+    const h = fixed.offsetHeight;
+    document.documentElement.style.setProperty('--header-height', h + 'px');
+    // Spacer = header + rangée bulles (seulement si elle est affichée ;
+    // l'état replié — .is-collapsed — ne change RIEN au spacer).
+    let total = h;
+    const row = bubblesRow();
+    if (row && !row.hidden) {
+      const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bubbles-gap')) || 6;
+      total += row.offsetHeight + gap;
+    }
+    spacer.style.height = total + 'px';
   }
 
-  window.addEventListener('scroll', () => {
-    if (!ticking) { requestAnimationFrame(updateHeader); ticking = true; }
-  }, { passive: true });
+  // Plus de --sp : le header ne se replie pas, il reste fixe en 2 couches.
+  fixed.style.setProperty('--sp', 0);
 
+  if ('ResizeObserver' in window) {
+    new ResizeObserver(syncHeaderHeight).observe(fixed);
+    // La hauteur des bulles peut varier (rendu async, wrappement) : on observe
+    // aussi la rangée pour garder le spacer exact.
+    const row = bubblesRow();
+    if (row) new ResizeObserver(syncHeaderHeight).observe(row);
+  }
+  window.addEventListener('resize', syncHeaderHeight);
+  // Rendu async des bulles (fetch sous-catégories) : re-sync à chaque mutation
+  // (hidden toggled,innerHTML rempli).
+  const row0 = bubblesRow();
+  if (row0) {
+    new MutationObserver(syncHeaderHeight).observe(row0, {
+      attributes: true, attributeFilter: ['hidden'], childList: true,
+    });
+  }
+  // Scroll : seule la rangée enfant (#subcategoryBubbles) se masque — voir
+  // subcategory-collapse.js. Ici on garde uniquement le bouton « retour en haut ».
   window.addEventListener('scroll', () => {
     const btn = document.getElementById('scrollToTopBtn');
     if (btn) btn.classList.toggle('visible', window.scrollY > 300);
   }, { passive: true });
 
-  window.addEventListener('resize', () => { spacer.style.height = fixed.offsetHeight + 'px'; });
-  updateHeader();
+  syncHeaderHeight();
 }
 
+// Legacy : la loupe compacte n'existe plus dans le header Temu.
+// Handler conservé mais null-safe (no-op si l'élément est absent).
 export function initHeaderSearchCompact() {
   const searchCompact = document.getElementById('searchCompact');
   if (!searchCompact) return;
   searchCompact.addEventListener('click', () => {
-    if (!searchCompact.classList.contains('active')) return;
     switchToSearchView('');
   });
 }

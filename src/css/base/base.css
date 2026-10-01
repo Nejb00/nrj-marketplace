@@ -48,8 +48,9 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   ⚡ HEADER NRJ — 3 bulles liquid-glass indépendantes, scroll-linked (option B)
-   --sp = "scroll progress" (0 → 1), piloté par JS à chaque frame de scroll
+   ⚡ HEADER NRJ — Temu : 2 couches fixes (recherche pleine largeur + catégories
+   parentes). --sp est figé à 0 (plus de repli scroll-linked) ; la hauteur réelle
+   est exposée via --header-height (ResizeObserver dans smart-header.js).
    ═══════════════════════════════════════════════════════════════════════════ */
 .header-fixed {
     position: fixed;
@@ -59,9 +60,13 @@ body {
     z-index: 100;
     display: flex;
     flex-direction: column;
-    gap: calc(8px * (1 - var(--sp, 0)));
+    gap: 0; /* couches collées (recherche + catégories parentes) */
     --sp: 0;
 }
+
+/* Hauteur réelle du header, synchronisée par smart-header.js (ResizeObserver).
+   Utilisée notamment par la page Catégories (--categories-header-h). */
+:root { --header-height: 132px; }
 
 .header-top-row {
     display: flex;
@@ -70,37 +75,62 @@ body {
     gap: 8px;
 }
 
-/* ── Style commun "verre" pour les 3 bulles ─────
-────────────────────────── */
-.logo-bubble,
-.actions-bubble,
-.search-bubble-compact,
-.search-bubble-full .search-bar-container {
-    position: relative;
-    overflow: hidden;
-    isolation: isolate;
-    background: rgba(16, 16, 20, 0.72);
-    backdrop-filter: blur(24px) saturate(160%);
-    -webkit-backdrop-filter: blur(24px) saturate(160%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+/* ══ FEUILLE LIQUID-GLASS UNIQUE DU HEADER (PROMPT 3A) ════════════════════
+   Le header Temu (recherche + catégories parentes) est UNE seule surface de
+   verre : matériaux pilotés par les tokens --lg-* (glass.css, comme .lg) et
+   un rayon unifié --header-radius. Plus de fond sombre plat, plus de calque
+   dupliqué par couche, plus de margin-top négatif. Thèmes sombre ET clair. */
+:root {
+    --header-radius: 24px;
 }
 
-/* ── Liquid glass iOS (même langage que les product-cards) ─────────────── */
-:root.light-theme .logo-bubble,
-:root.light-theme .actions-bubble,
-:root.light-theme .search-bubble-compact,
-:root.light-theme .search-bubble-full .search-bar-container {
+.header-fixed {
+    isolation: isolate;
+    border-radius: var(--header-radius);
+    background: var(--lg-tint);
+    backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+    -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+    border: 1px solid var(--lg-border);
+    border-top-color: var(--lg-border-top);
+    box-shadow:
+        0 18px 44px rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 var(--lg-highlight);
+}
+
+/* Reflet spéculaire diagonal — signature Liquid Glass (identique à .lg-spec) */
+.header-fixed::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 0;
+    background: linear-gradient(
+        125deg,
+        rgba(255, 255, 255, 0.20) 0%,
+        rgba(255, 255, 255, 0.05) 30%,
+        transparent 50%,
+        transparent 74%,
+        rgba(255, 255, 255, 0.06) 100%
+    );
+}
+
+/* Contenu du header au-dessus du reflet */
+.header-fixed > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Thème clair : verre blanc lumineux (mêmes tokens --lg-* que .lg) */
+:root.light-theme .header-fixed {
     background:
         linear-gradient(
             180deg,
             rgba(255, 255, 255, 0.22) 0%,
             rgba(255, 255, 255, 0.10) 100%
         );
-    backdrop-filter: blur(22px) saturate(170%);
-    -webkit-backdrop-filter: blur(22px) saturate(170%);
-    border: 1px solid rgba(255, 255, 255, 0.62);
-    border-top-color: rgba(255, 255, 255, 0.9);
+    border-color: var(--lg-border);
+    border-top-color: var(--lg-border-top);
     box-shadow:
         0 10px 28px rgba(0, 0, 0, 0.10),
         0 1px 2px rgba(0, 0, 0, 0.04),
@@ -108,33 +138,20 @@ body {
         inset 0 -8px 16px rgba(255, 255, 255, 0.12);
 }
 
-/* Reflet spéculaire (même technique que .product-card-info) */
-:root.light-theme .logo-bubble::before,
-:root.light-theme .actions-bubble::before,
-:root.light-theme .search-bubble-compact::before,
-:root.light-theme .search-bubble-full .search-bar-container::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    pointer-events: none;
-    background: linear-gradient(
-        125deg,
-        rgba(255, 255, 255, 0.38) 0%,
-        rgba(255, 255, 255, 0.10) 28%,
-        transparent 48%,
-        transparent 72%,
-        rgba(255, 255, 255, 0.08) 100%
-    );
-    z-index: 0;
-}
-
-:root.light-theme .logo-bubble > *,
-:root.light-theme .actions-bubble > *,
-:root.light-theme .search-bubble-compact > *,
-:root.light-theme .search-bubble-full .search-bar-container > * {
-    position: relative;
-    z-index: 1;
+/* PROMPT 3B : thème clair — la rangée bulles attachée au header reprend le
+   même verre blanc lumineux que le header (mêmes tokens --lg-*). */
+:root.light-theme .subcategory-bubbles {
+    background:
+        linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.22) 0%,
+            rgba(255, 255, 255, 0.10) 100%
+        );
+    border-color: var(--lg-border);
+    box-shadow:
+        0 10px 28px rgba(0, 0, 0, 0.10),
+        0 1px 2px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.92);
 }
 
 /* +8px pour compenser le décollement des bulles */
@@ -149,7 +166,7 @@ body {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    border-radius: 999px;
+    border-radius: calc(var(--header-radius) - 12px);
     padding: 0.5rem 0.9rem 0.5rem 0.35rem;
     cursor: pointer;
     flex-shrink: 0;
@@ -321,21 +338,98 @@ body {
 }
 :root.light-theme .header-cart-badge { border-color: rgba(255, 255, 255, 0.88); }
 
-/* ── Bulle 3 : recherche complète (se replie au scroll) ─────────────────── */
+/* ── Couche 1 header Temu : recherche PLEINE LARGEUR, toujours visible ────
+   Plus de version compacte qui rétrécit en loupe : --sp ne plie plus rien.
+   PROMPT 3A : pas de verre propre à la bulle — la feuille liquid-glass est
+   portée par .header-fixed (une seule surface pour le header entier). */
 .search-bubble-full {
-    overflow: hidden;
-    max-height: calc(68px * (1 - var(--sp, 0)));
-    opacity: calc(1 - var(--sp, 0) * 1.6);
+    overflow: visible;
+    max-height: none;
+    opacity: 1;
+    transition: none; /* neutralise tout ancien repli scroll-linked */
 }
 .search-bubble-full .search-bar-container {
-    border-radius: 22px;
-    padding: 0;
+    /* pleine largeur (marge latérale portée par .header-fixed) */
+    padding: 0.45rem 0.6rem;
 }
 .search-bubble-full .search-bar {
     background: transparent;
     border: none;
     box-shadow: none;
 }
+
+/* Rangée des catégories parentes (couche 2 du header), collée sous la recherche */
+.header-category-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.15rem 0.55rem 0.45rem;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x;
+    color: var(--text-secondary);
+}
+/* PROMPT 3A : la rangée des catégories n'a PAS de fond propre — elle vit sur
+   la feuille liquid-glass unique du header (.header-fixed). Plus de verre
+   dupliqué, plus de border-radius BOTTOM isolé, plus de margin-top:-16px. */
+.header-fixed .header-category-row {
+    padding-top: 0.2rem;
+}
+/* PROMPT 3B : z-index au-dessus des bulles absolues (z-index:0) → quand elles
+   se replient via translateY(-100%), elles glissent DERRIÈRE cette rangée. */
+.header-fixed .header-category-row {
+    position: relative;
+    z-index: 1;
+}
+.header-category-row::-webkit-scrollbar { display: none; }
+
+.header-category-row .filter-btn {
+    position: relative;
+    flex: 0 0 auto;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-weight: 700;
+    font-size: 0.8rem;
+    padding: 0.45rem 0.55rem 0.5rem;
+    border-radius: 0;
+    transition: color 0.2s ease;
+}
+.header-category-row .filter-btn:hover:not(.active) {
+    border-color: transparent;
+    color: var(--text);
+}
+.header-category-row .filter-btn.active {
+    background: transparent;
+    border-color: transparent;
+    color: var(--text);
+}
+/* Soulignement de l'onglet actif (façon Temu) */
+.header-category-row .filter-btn::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 0.1rem;
+    width: 55%;
+    height: 3px;
+    border-radius: 3px;
+    background: var(--primary);
+    transform: translateX(-50%) scaleX(0);
+    transition: transform 0.2s ease;
+}
+.header-category-row .filter-btn.active::after {
+    transform: translateX(-50%) scaleX(1);
+}
+
+/* ── Legacy header 3 bulles : retirées du header Temu (redondantes avec la
+   bottom nav). Rendu neutralisé ; handlers JS conservés et null-safe. ────── */
+.header-top-row,
+.logo-bubble,
+.actions-bubble,
+.search-bubble-compact { display: none !important; }
 
 /* ✅ Bouton thème : hublot glass + lune/soleil vectoriels */
 .theme-toggle-btn {

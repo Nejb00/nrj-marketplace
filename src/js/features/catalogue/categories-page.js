@@ -28,7 +28,15 @@ export function syncCategoriesHeaderOffset() {
         document.getElementById('searchCompact')?.classList.remove('active');
     }
     const apply = () => {
-        const headerH = Math.ceil(8 + (fixed ? fixed.getBoundingClientRect().height : 152));
+        // Header Temu : hauteur RÉELLE du header (bulles exclues — elles sont
+        // absolues sous top:100%) + rangée bulles quand elle est affichée
+        // (PROMPT 3B : même formule que le #headerSpacer dans smart-header.js).
+        let headerH = Math.ceil(8 + (fixed ? fixed.getBoundingClientRect().height : 132));
+        const row = document.getElementById('subcategoryBubbles');
+        if (row && !row.hidden) {
+            const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bubbles-gap')) || 6;
+            headerH += Math.ceil(row.offsetHeight + gap);
+        }
         if (spacer) spacer.style.height = headerH + 'px';
         cv.style.setProperty('--categories-header-h', headerH + 'px');
         cv.style.height = `calc(100dvh - ${headerH}px)`;
