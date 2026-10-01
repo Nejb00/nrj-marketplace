@@ -2,6 +2,7 @@
 // Éclaté de product-modal.js (refacto-archi) — logique strictement identique.
 import { formatPrice } from '../../utils/format.js';
 import { modalCtx } from './modal-state.js';
+import { updatePurchaseDock } from './modal-actions.js';
 
 export function getTotalColorQty() {
     return Object.values(modalCtx.colorQtys).reduce((s, q) => s + (Number(q) || 0), 0);
@@ -40,4 +41,5 @@ export function updateTotal() {
         totalEl.classList.toggle('purchase-ready', totalQty >= modalCtx.moq && totalQty > 0);
         totalEl.classList.toggle('purchase-pending', modalCtx.couleurs.length > 0 && totalQty > 0 && totalQty < modalCtx.moq);
     }
+    updatePurchaseDock();
 }
