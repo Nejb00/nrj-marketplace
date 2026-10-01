@@ -499,7 +499,163 @@
     "vite.config.js": {
       "githubSha": "610c4be52446afa97857f6a11b16f6ebb15c2d3d",
       "driveMd5": "ba96d156f4f2282a5e0fe5b742620aaf"
+    },
+    "index.drive-version.html": {
+      "githubSha": "8aa78f119a9580c82f6d6d9fb7bbc2b1ea44cca9",
+      "driveMd5": "c25451029dbd8663674dec3f0ce77ee3"
+    },
+    "admin.drive-version.html": {
+      "githubSha": "99b730a98854d1a3ebef29d23ecca355e2f0fcab",
+      "driveMd5": "495a40eed2cdbc6b05374505e73dc7fe"
+    },
+    "README.drive-version.md": {
+      "githubSha": "0d86aea2ba0c33bc03fe6b3ee829c248771bee2c",
+      "driveMd5": "434f3bf44160a0f0ea47be37d6f13a21"
+    },
+    "supabase/functions/chat-ai/index.drive-version.ts": {
+      "githubSha": "f26f974f0ba21f81feb11c30b3735ffee8de965b",
+      "driveMd5": "79742cd75253f5d541603c5f2a7ea1cd"
+    },
+    "api/og-product.drive-version.js": {
+      "githubSha": "30ead57d3aa214884c0f14d491e01bd7cd1f8216",
+      "driveMd5": "bfc6fe004c6c18f027fc6178c21772b6"
+    },
+    "src/js/main.drive-version.js": {
+      "githubSha": "2e3c70161e787588b282931c86a12c0b7b6f147d",
+      "driveMd5": "3e52f6aef6afd3359b8dc438b26b049d"
+    },
+    "src/js/product-modal.js": {
+      "githubSha": "1f4fe4105a41c6487ea6128d5f02b11b722bdda2",
+      "driveMd5": "6cab0b8f3c47537d10bb3e505956f7c5"
+    },
+    "src/js/chat.js": {
+      "githubSha": "42b0fc0a4c8f6692351ee41c2d798000198af01d",
+      "driveMd5": "fcf7d7489a2f40a594b9d215b9e1d45e"
+    },
+    "src/js/cart.js": {
+      "githubSha": "895e8108f7b1f2373c4106c3f59adaeaed3f26b2",
+      "driveMd5": "fb362c17539807f6668c7c69aac16c13"
+    },
+    "src/js/admin-chat.js": {
+      "githubSha": "2cde5453f6ee1c8e789e450670ddcc138d21afed",
+      "driveMd5": "27cb57dd58fd489528bd7e20d0b23c14"
+    },
+    "src/js/config.js": {
+      "githubSha": "24c407f48054dcdbec2ac147fe5c2ca3939e70b9",
+      "driveMd5": "145c89b4fe965d1bde9402633278a524"
+    },
+    "src/js/catalogue.js": {
+      "githubSha": "5da9023a00aa633c3403bfb8d5e01077d283e281",
+      "driveMd5": "8f3422d2a0fb46b56247663cdbef9755"
+    },
+    "src/js/admin.js": {
+      "githubSha": "880bf8e562071dba3b195f33e3c677a55fcf2cf3",
+      "driveMd5": "75543689c78e127007eda710392d2275"
+    },
+    "src/js/visual-search.js": {
+      "githubSha": "32c9d5abf31ae0f613ce15ae0b3a3d1c5896672e",
+      "driveMd5": "f4c61c8d1c6e232db75fce73894c24ae"
+    },
+    "src/js/utils.js": {
+      "githubSha": "1589cdfda12d4c9ca18c931c4b9d599b266f5e45",
+      "driveMd5": "c4db0059694dba690b2b9423e3601d26"
+    },
+    "src/js/sync.js": {
+      "githubSha": "f0b38b81f47d89dd5a3bf2e1a44843c4ffa4897a",
+      "driveMd5": "c3ca469c4179217cd0b552061bad3306"
+    },
+    "src/js/state.js": {
+      "githubSha": "929257061c1111dd02ee9e9f2b3f6cbeb132fd50",
+      "driveMd5": "8b7d8a159104591810c442eb55272746"
+    },
+    "src/js/search.js": {
+      "githubSha": "1ca6fb6c800a413b793228cfda974ed145feeb98",
+      "driveMd5": "3eed44ea1fef4309f400d19a8117d2ff"
+    },
+    "src/js/search-view.js": {
+      "githubSha": "b7b4b812b28f2eef9a99e3a45cf86ff32d545a4b",
+      "driveMd5": "03a5cf6c5bec79ff054843482d646726"
+    },
+    "src/js/reco.js": {
+      "githubSha": "bc67994a04d2d22477a0e9840287ef337fb1dc81",
+      "driveMd5": "2505795481f914c197d98a7b31bdec7c"
+    },
+    "src/js/product-edit.js": {
+      "githubSha": "42ec1f825a53fa6c35f093a1befe9cf981c75a76",
+      "driveMd5": "81a9a71920c079c1fb38ceb0f3749ccf"
+    },
+    "src/js/lazy-loading.js": {
+      "githubSha": "dd6ee1e0d664b32a9441b93cff6b21fe28ab9e04",
+      "driveMd5": "ab8cd0e72792bdf247cb66bf9ac67114"
+    },
+    "src/js/db.js": {
+      "githubSha": "992453a985f96184b93273818cae44ce0927fb3c",
+      "driveMd5": "291cc0bbb5705d792fdb1dcb10e57cc0"
+    },
+    "src/js/api.js": {
+      "githubSha": "42e987832abd9648f59834ff3c9695c2f7f68d2c",
+      "driveMd5": "bd414a9bd9ab341276f4a78c872e70ba"
+    },
+    "src/css/light-theme-patch.css": {
+      "githubSha": "df3a12f2cf0c584c77cf64a2b285f493ca2681ab",
+      "driveMd5": "73a5845bdd8ebd634c2c9db81668f662"
+    },
+    "src/css/chat.css": {
+      "githubSha": "a7f7639e00d26617fa2e9dfd6e93ea0f6e58f0bf",
+      "driveMd5": "b8d1c83293834d19b0d7c2b4009b8082"
+    },
+    "src/css/base.css": {
+      "githubSha": "696ad1d3cda624e10724af606d294218f99678a7",
+      "driveMd5": "415e7d1b998377f9adec59bb7da5c308"
+    },
+    "src/css/product-modal.css": {
+      "githubSha": "665ff0dac8cfcd5de8ab3271dbd76a911971f21a",
+      "driveMd5": "cfcee1a4222017da798f6295a9b6f0de"
+    },
+    "src/css/skeleton.css": {
+      "githubSha": "10977aa6171382fd8e14817789dace46e4e0c4eb",
+      "driveMd5": "101fe0b4a249c2fc6c214ec3e7f35514"
+    },
+    "src/css/search-view.css": {
+      "githubSha": "373cc0c61d1bb0d1516bd3d0557cd1543ce2275f",
+      "driveMd5": "0a9bf115d4f0f369314c1100b5373ef9"
+    },
+    "src/css/search-bar.css": {
+      "githubSha": "237e3acffe244a80da8ddec5251117d1d30ab6bc",
+      "driveMd5": "0928c9f0681111e1c12b18792b6d54cf"
+    },
+    "src/css/product-card.css": {
+      "githubSha": "26081356d3700421b7bc70f9afa670362a391eae",
+      "driveMd5": "599596e8a1b15b66a8b49070b0f9842a"
+    },
+    "src/css/placeholder.css": {
+      "githubSha": "6ce0e38bbd5f91136e492ba59aca71446b6af423",
+      "driveMd5": "fc509d7d9d638f30651cfd4a17c07f7f"
+    },
+    "src/css/navigation.css": {
+      "githubSha": "30e2ab2b4dcebf9d9eea7d027698f884636a854c",
+      "driveMd5": "01a6fe8cb41ceb8a57cad3daa3a9ef8b"
+    },
+    "src/css/fluo-theme.css": {
+      "githubSha": "62ce0f319e741ec1644bdac8e7a60815b0f4d3b3",
+      "driveMd5": "fddcaaae7ea01a68d407fbc85ffb9dc6"
+    },
+    "src/css/filters.css": {
+      "githubSha": "d9a05d2a365b9d25db7eab209c376e3a5025b33c",
+      "driveMd5": "6306431d5de1624969958f33de3274c6"
+    },
+    "src/css/cart-admin.css": {
+      "githubSha": "e100a87877b6def8cca31dc83b0affc7124f2cec",
+      "driveMd5": "76331db24a5f86dc5bf13aa9e241ca73"
+    },
+    "src/css/admin.css": {
+      "githubSha": "f58a3cdcff2e9429f550439dbaac6946f47fe3f1",
+      "driveMd5": "2299e3648440891fc99c08bc88ea625f"
+    },
+    "public/manifest.drive-version.webmanifest": {
+      "githubSha": "fb750ade83688056a7218c9c95d86cd24c1cc496",
+      "driveMd5": "8756e9b70e581f02695ed1e27c51e719"
     }
   },
-  "updatedAt": "2026-10-01T18:57:49.859Z"
+  "updatedAt": "2026-10-01T19:52:18.581Z"
 }
