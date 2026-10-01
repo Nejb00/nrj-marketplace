@@ -130,6 +130,7 @@ export function renderCouleurOptions() {
                 e.stopPropagation();
                 const color = btn.dataset.color;
                 const action = btn.dataset.action;
+                modalCtx.sC = color;
                 let q = Number(modalCtx.colorQtys[color]) || 0;
                 if (action === 'plus') q += 1;
                 else q = Math.max(0, q - 1);
