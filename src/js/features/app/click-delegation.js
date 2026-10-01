@@ -131,7 +131,7 @@ document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('clic
   if (nav === 'cart') {
     document.getElementById('cartPanel')?.classList.add('open');
     document.getElementById('cartOverlay')?.classList.add('open');
-    refreshCartDisplay();
+    refreshCartDisplay(true);
   }
   if (nav === 'favorites') {
     if (isFlexOpen('searchView')) switchFromSearchView();
