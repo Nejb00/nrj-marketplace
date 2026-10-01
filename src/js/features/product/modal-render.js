@@ -17,6 +17,7 @@ import { renderRecommendations } from './modal-recommendations.js';
 export { closeProductModal } from './modal-actions.js';
 
 export async function openProductModal(pid) {
+    const openToken = ++modalCtx.openToken;
     let p = state.products.find(pr => pr.id === pid);
     if (!p) return;
 
@@ -32,6 +33,7 @@ export async function openProductModal(pid) {
         if (fullProduct) productDetailsCache.set(pid, fullProduct);
     }
     if (fullProduct) p = fullProduct;
+    if (openToken !== modalCtx.openToken) return;
 
     // ── Remplissage du contexte partagé (anciennes closures) ──
     modalCtx.p = p;
