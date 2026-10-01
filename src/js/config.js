@@ -6,6 +6,7 @@ export const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 export const BASE_URL = 'https://nrj-marketplace.vercel.app/';
 export const WHATSAPP_NUMBER = '242066271882';
+export const CHAT_AI_ENDPOINT = 'https://peojyqliwrtghomyukwn.supabase.co/functions/v1/chat-ai';
 export const PRODUCTS_PER_PAGE = 20;
 export const NEW_PRODUCT_DAYS = 7;
 export const POPULAR_THRESHOLD = 20;

@@ -52,16 +52,25 @@ export function getFilteredProducts() {
 export function renderInitialProducts() {
     state.currentFilteredProducts = getFilteredProducts();
     state.displayedCount = 0;
+    state.isLoadingMore = false;
     const grid = document.getElementById('productsGrid');
+    if (!grid) return;
     grid.innerHTML = '';
     if (state.currentFilteredProducts.length === 0) {
         grid.innerHTML = '<div style="color:#666;text-align:center;padding:3rem;grid-column:1/-1;">Aucun produit trouvé</div>';
-        document.getElementById('loadMoreSentinel').style.display = 'none';
-        document.getElementById('loadingMessage').style.display = 'none';
+        const s = document.getElementById('loadMoreSentinel');
+        const msg = document.getElementById('loadingMessage');
+        if (s) s.style.display = 'none';
+        if (msg) msg.style.display = 'none';
+        const wrap = document.getElementById('loadMoreWrap');
+        if (wrap) wrap.style.display = 'none';
         return;
     }
     for (let i = 0; i < PRODUCTS_PER_PAGE; i++) grid.appendChild(createSkeletonCard());
-    setTimeout(() => appendProducts(0, PRODUCTS_PER_PAGE), 100);
+    setTimeout(() => {
+        appendProducts(0, PRODUCTS_PER_PAGE);
+        setupObserver();
+    }, 100);
     updateSentinelVisibility();
 }
 
@@ -95,40 +104,72 @@ export function renderProductCardHTML(p) {
 export function appendProducts(start, count) {
     if (!state.scrollObserver) setupScrollObserver();
     const grid = document.getElementById('productsGrid');
+    if (!grid) return;
     if (start === 0) grid.querySelectorAll('.skeleton-card').forEach(s => s.remove());
     const fragment = document.createDocumentFragment();
-    state.currentFilteredProducts.slice(start, start + count).forEach(p => {
+    const slice = state.currentFilteredProducts.slice(start, start + count);
+    slice.forEach(p => {
         const card = document.createElement('div');
         card.className = 'product-card';
         card.dataset.productId = p.id;
         card.setAttribute('role', 'listitem');
         card.innerHTML = renderProductCardHTML(p);
         fragment.appendChild(card);
-        state.scrollObserver.observe(card);
+        if (state.scrollObserver) state.scrollObserver.observe(card);
     });
     grid.appendChild(fragment);
-    state.displayedCount += Math.min(count, state.currentFilteredProducts.length - start);
-    document.getElementById('loadingMessage').style.display = 'none';
+    state.displayedCount += slice.length;
+    state.isLoadingMore = false;
+    const msg = document.getElementById('loadingMessage');
+    if (msg) msg.style.display = 'none';
     updateSentinelVisibility();
 }
 
 export function loadMoreProducts() {
+    if (state.isLoadingMore) return;
     if (state.displayedCount >= state.currentFilteredProducts.length) return;
-    document.getElementById('loadingMessage').style.display = 'block';
-    setTimeout(() => appendProducts(state.displayedCount, PRODUCTS_PER_PAGE), 100);
+    state.isLoadingMore = true;
+    const msg = document.getElementById('loadingMessage');
+    if (msg) msg.style.display = 'block';
+    setTimeout(() => appendProducts(state.displayedCount, PRODUCTS_PER_PAGE), 50);
 }
 
 function updateSentinelVisibility() {
+    const hasMore = state.displayedCount < state.currentFilteredProducts.length;
     const s = document.getElementById('loadMoreSentinel');
-    s.style.display = state.displayedCount >= state.currentFilteredProducts.length ? 'none' : 'block';
+    if (s) {
+        s.style.display = hasMore ? 'block' : 'none';
+        s.style.height = hasMore ? '40px' : '0';
+        s.style.minHeight = hasMore ? '40px' : '0';
+    }
+    const wrap = document.getElementById('loadMoreWrap');
+    const btn = document.getElementById('loadMoreBtn');
+    if (wrap) wrap.style.display = hasMore ? 'flex' : 'none';
+    if (btn && !btn.dataset.bound) {
+        btn.dataset.bound = '1';
+        btn.addEventListener('click', () => loadMoreProducts());
+    }
 }
 
 export function setupObserver() {
-    if (state.observer) state.observer.disconnect();
+    if (state.observer) {
+        state.observer.disconnect();
+        state.observer = null;
+    }
     const s = document.getElementById('loadMoreSentinel');
-    if (!s) return;
-    state.observer = new IntersectionObserver((entries) => { entries.forEach(e => { if (e.isIntersecting && state.displayedCount < state.currentFilteredProducts.length) loadMoreProducts(); }); }, { rootMargin: '200px' });
+    if (!s) {
+        updateSentinelVisibility();
+        return;
+    }
+    state.observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+            if (e.isIntersecting && !state.isLoadingMore && state.displayedCount < state.currentFilteredProducts.length) {
+                loadMoreProducts();
+            }
+        });
+    }, { root: null, rootMargin: '400px 0px', threshold: 0 });
     state.observer.observe(s);
+    updateSentinelVisibility();
 }
 
 export function refreshCatalogue() {

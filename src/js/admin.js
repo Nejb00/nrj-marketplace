@@ -38,7 +38,10 @@ export async function handleLogout() {
 
 export async function checkAdminSession() {
   const { data: { session } } = await supabaseClient.auth.getSession();
-  if (session) {
+  // Admin = compte marqué role 'admin' (app_metadata) — pas les sessions
+  // anonymes du chat ni les éventuels comptes créés par des visiteurs.
+  const user = session?.user;
+  if (user && user.app_metadata?.role === 'admin') {
     state.isAdminLoggedIn = true;
     document.getElementById('adminPanel').classList.add('active');
     document.getElementById('loginPanel').style.display = 'none';
