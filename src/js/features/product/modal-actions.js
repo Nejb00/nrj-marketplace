@@ -79,7 +79,7 @@ export function bindStickyActions() {
             selected.forEach(([c, q]) => { msg += `\n  • ${c} × ${q}`; });
             msg += `\nQuantité totale: ${totalQ}`;
         } else {
-            msg += `\nQuantité: ${moq}`;
+            msg += `\nQuantité: ${modalCtx.currentQty}`;
         }
 
         trackPopularity(p.id, 10);
