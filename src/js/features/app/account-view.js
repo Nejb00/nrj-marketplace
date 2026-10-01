@@ -26,7 +26,10 @@ export function showAccountView() {
 
 export function hideAccountView() {
   const av = document.getElementById('accountView');
-  if (av) av.style.display = 'none';
+  if (av) {
+    av.style.display = 'none';
+    av.classList.remove('account-brand-compact');
+  }
   const wrap = document.getElementById('catalogueWrapper');
   if (wrap) wrap.style.display = 'block';
 }
@@ -35,6 +38,8 @@ function renderAccount() {
   const root = document.getElementById('accountContent');
   if (!root) return;
   initAccountBrandScroll();
+  const view = document.getElementById('accountView');
+  if (view) view.classList.toggle('account-brand-compact', view.scrollTop >= 24);
 
   const name = localStorage.getItem('fluo_customer_name') || '';
   const initials = name ? name.split(/\s+/).map(s => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() : '?';
