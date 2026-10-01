@@ -31,7 +31,28 @@ document.addEventListener('click', e => {
   const removeBtn = e.target.closest('[data-action="cart-remove"]'); if (removeBtn) { e.stopPropagation(); removeCartItem(parseInt(removeBtn.dataset.index)); return; }
   const incBtn = e.target.closest('[data-action="cart-increase"]'); if (incBtn) { changeQty(parseInt(incBtn.dataset.index), 1); return; }
   const decBtn = e.target.closest('[data-action="cart-decrease"]'); if (decBtn) { changeQty(parseInt(decBtn.dataset.index), -1); return; }
-  const recCard = e.target.closest('.rec-card'); if (recCard) { openProductModal(parseInt(recCard.dataset.productId)); return; }
+  const recAddBtn = e.target.closest('[data-action="cart-rec-add"]');
+  if (recAddBtn) {
+    e.stopPropagation();
+    const pid = parseInt(recAddBtn.dataset.id);
+    const p = state.products.find(pr => pr.id === pid);
+    if (!p) return;
+    const hasVariants = Boolean(String(p.tailles || '').trim() || String(p.couleurs || '').trim());
+    if (hasVariants) {
+      openProductModal(pid);
+    } else {
+      addToCart(pid, '', '', recAddBtn);
+    }
+    return;
+  }
+  const recCard = e.target.closest('.rec-card, .cart-rec-card'); if (recCard) { openProductModal(parseInt(recCard.dataset.productId)); return; }
+  const emptyCatalogBtn = e.target.closest('[data-action="cart-empty-catalog"]');
+  if (emptyCatalogBtn) {
+    document.getElementById('cartPanel')?.classList.remove('open');
+    document.getElementById('cartOverlay')?.classList.remove('open');
+    switchView('home');
+    return;
+  }
   const catCard = e.target.closest('.category-card'); if (catCard) {
     const catId = catCard.dataset.category;
     const label = getCategoryName(catId) || catId;
