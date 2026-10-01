@@ -32,59 +32,94 @@ export function bindHeaderActions(p, uPrice, moq) {
     };
 }
 
-export function bindStickyActions() {
+function getPurchaseDockState() {
+    const { tailles, couleurs, moq } = modalCtx;
+    if (tailles.length && !modalCtx.sT) return { state: 'size', label: 'Choisir une taille' };
+    if (couleurs.length) {
+        const totalQ = Object.values(modalCtx.colorQtys).reduce((sum, q) => sum + (Number(q) || 0), 0);
+        if (totalQ === 0) return { state: 'quantity', label: 'Choisir les quantités' };
+        if (totalQ < moq) {
+            const remaining = moq - totalQ;
+            return { state: 'pending', label: `Ajouter encore ${remaining} pièce${remaining > 1 ? 's' : ''}` };
+        }
+    }
+    return { state: 'ready', label: 'Ajouter au panier' };
+}
+
+export function updatePurchaseDock() {
+    const btn = document.getElementById('addToCartStickyBtn');
+    const label = document.getElementById('stickyPurchaseLabel');
+    if (!btn) return;
+    const purchase = getPurchaseDockState();
+    btn.dataset.purchaseState = purchase.state;
+    btn.setAttribute('aria-label', purchase.label);
+    if (label) label.textContent = purchase.label;
+}
+
+function focusPurchaseSection(kind) {
+    const id = kind === 'size' ? 'modalTailleGroup' : 'modalCouleurGroup';
+    const target = document.getElementById(id);
+    if (!target) return;
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    target.classList.remove('purchase-focus');
+    void target.offsetWidth;
+    target.classList.add('purchase-focus');
+}
+
+function addCurrentSelectionToCart(button) {
     const p = modalCtx.p;
-    const { tailles, couleurs, moq, uPrice } = modalCtx;
+    const { tailles, couleurs, moq } = modalCtx;
+    if (tailles.length && !modalCtx.sT) {
+        focusPurchaseSection('size');
+        showToast('⚠️ Sélectionnez une taille');
+        return false;
+    }
+    if (couleurs.length) {
+        const selected = Object.entries(modalCtx.colorQtys).filter(([, q]) => q > 0);
+        const totalQ = selected.reduce((s, [, q]) => s + q, 0);
+        if (selected.length === 0) {
+            focusPurchaseSection('quantity');
+            showToast('⚠️ Choisis les quantités');
+            return false;
+        }
+        if (totalQ < moq) {
+            focusPurchaseSection('quantity');
+            showToast(`⚠️ Encore ${moq - totalQ} pièce${moq - totalQ > 1 ? 's' : ''} pour atteindre le minimum`);
+            return false;
+        }
+        selected.forEach(([color, qty], i) => {
+            addToCart(p.id, modalCtx.sT, color, i === 0 ? button : null, qty);
+        });
+    } else {
+        addToCart(p.id, modalCtx.sT, '', button, modalCtx.currentQty);
+    }
+    return true;
+}
+
+export function bindStickyActions() {
+    const { moq } = modalCtx;
 
     document.getElementById('addToCartStickyBtn').onclick = (e) => {
-        if (tailles.length && !modalCtx.sT) return showToast('⚠️ Sélectionnez une taille');
-
-        if (couleurs.length) {
-            const selected = Object.entries(modalCtx.colorQtys).filter(([, q]) => q > 0);
-            const totalQ = selected.reduce((s, [, q]) => s + q, 0);
-            if (selected.length === 0) {
-                showToast('⚠️ Choisis au moins une quantité');
-                return;
+        const purchase = getPurchaseDockState();
+        if (purchase.state !== 'ready') {
+            const totalQ = Object.values(modalCtx.colorQtys).reduce((s, q) => s + (Number(q) || 0), 0);
+            if (purchase.state === 'size') {
+                focusPurchaseSection('size');
+                showToast('⚠️ Sélectionnez une taille');
+            } else if (purchase.state === 'quantity') {
+                focusPurchaseSection('quantity');
+                showToast('⚠️ Choisis les quantités');
+            } else {
+                focusPurchaseSection('quantity');
+                const remaining = moq - totalQ;
+                showToast(`⚠️ Encore ${remaining} pièce${remaining > 1 ? 's' : ''} pour atteindre le minimum`);
             }
-            if (totalQ < moq) {
-                showToast(`⚠️ Minimum d'achat : ${moq} pièce(s)`);
-                return;
-            }
-            selected.forEach(([color, qty], i) => {
-                addToCart(p.id, modalCtx.sT, color, i === 0 ? e.currentTarget : null, qty);
-            });
-        } else {
-            addToCart(p.id, modalCtx.sT, '', e.currentTarget, modalCtx.currentQty);
+            return;
         }
+        addCurrentSelectionToCart(e.currentTarget);
     };
 
-    document.getElementById('directOrderStickyBtn').onclick = () => {
-        if (tailles.length && !modalCtx.sT) return showToast('⚠️ Sélectionnez une taille');
-
-        let msg = `Bonjour NRJ Marketplace, je souhaite commander :\n${p.name} (ID: ${p.id})`;
-        if (modalCtx.sT) msg += `\nTaille: ${modalCtx.sT}`;
-
-        if (couleurs.length) {
-            const selected = Object.entries(modalCtx.colorQtys).filter(([, q]) => q > 0);
-            if (selected.length === 0) {
-                showToast('⚠️ Choisis au moins une quantité');
-                return;
-            }
-            const totalQ = selected.reduce((s, [, q]) => s + q, 0);
-            if (totalQ < moq) {
-                showToast(`⚠️ Minimum d'achat : ${moq} pièce(s)`);
-                return;
-            }
-            msg += '\nCouleurs:';
-            selected.forEach(([c, q]) => { msg += `\n  • ${c} × ${q}`; });
-            msg += `\nQuantité totale: ${totalQ}`;
-        } else {
-            msg += `\nQuantité: ${modalCtx.currentQty}`;
-        }
-
-        trackPopularity(p.id, 10);
-        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
-    };
+    updatePurchaseDock();
 
     document.getElementById('chatStickyBtn').onclick = () => {
         trackPopularity(p.id, 3);
