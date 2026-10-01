@@ -138,7 +138,18 @@
                 <div class="product-detail-desc" id="modalDesc"></div>
             </div>
             <div class="option-group" id="modalTailleGroup" style="display:none;"><label>Taille</label><div class="option-buttons" id="modalTailleOptions"></div></div>
-            <div class="option-group" id="modalCouleurGroup" style="display:none;"><label>Couleur</label><div class="option-buttons" id="modalCouleurOptions"></div></div>
+            <div class="option-group color-selection-group" id="modalCouleurGroup" style="display:none;">
+                <div class="color-selection-head">
+                    <div>
+                        <label>Couleurs</label>
+                        <span class="color-selection-subtitle">Répartis la commande entre les couleurs</span>
+                    </div>
+                    <div class="color-selection-total" id="modalColorQtySummary" aria-live="polite">0 pièce</div>
+                </div>
+                <div class="color-selection-progress" aria-hidden="true"><i id="modalColorProgressBar"></i></div>
+                <div class="color-selection-status" id="modalColorMoqStatus" aria-live="polite">Minimum : 1 pièce</div>
+                <div class="option-buttons color-variant-list" id="modalCouleurOptions"></div>
+            </div>
             <div class="option-group quantity-group" id="modalQuantityGroup" style="display:none;">
                 <div class="quantity-heading"><label for="modalQtyValue">Quantité</label><span class="quantity-hint" id="modalQtyHint"></span></div>
                 <div class="quantity-stepper">
