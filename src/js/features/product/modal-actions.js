@@ -216,11 +216,18 @@ export function bindStickyActions() {
 export function closeProductModal() {
     modalCtx.openToken += 1;
     pauseModalVideos();
-    document.getElementById('productModal').classList.remove('open');
+    const modal = document.getElementById('productModal');
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('modal-open');
     document.getElementById('stickyBottomBar').classList.remove('visible');
     state.modalOpen = false;
     history.replaceState({}, '', window.location.pathname);
+    const returnFocus = modalCtx.returnFocus;
+    modalCtx.returnFocus = null;
+    if (returnFocus && returnFocus.isConnected && typeof returnFocus.focus === 'function') {
+        requestAnimationFrame(() => returnFocus.focus({ preventScroll: true }));
+    }
 }
 
 /* ═══ iOS sheet : glisser la poignée vers le bas pour fermer ═════════════
