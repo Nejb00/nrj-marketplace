@@ -161,8 +161,10 @@
     </div>
     <div class="sticky-bottom-bar" id="stickyBottomBar">
         <div class="sticky-total">
-            <span>Total</span>
+            <span id="stickyTotalLabel">Total</span>
             <strong id="stickyTotalValue">—</strong>
+            <small id="stickyPurchaseProgress" aria-live="polite"></small>
+            <span class="sticky-progress-track" aria-hidden="true"><i id="stickyProgressBar"></i></span>
         </div>
         <button class="btn-direct-sticky" id="directOrderStickyBtn" aria-label="Commander directement sur WhatsApp" title="Commander directement sur WhatsApp">⚡</button>
         <button class="btn-chat-sticky" id="chatStickyBtn" aria-label="Discuter avec NRJ" title="Discuter avec NRJ">💬</button>
