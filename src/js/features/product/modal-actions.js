@@ -97,7 +97,8 @@ function addCurrentSelectionToCart(button) {
 }
 
 export function bindStickyActions() {
-    const { moq } = modalCtx;
+    const p = modalCtx.p;
+    const { tailles, couleurs, moq } = modalCtx;
 
     document.getElementById('addToCartStickyBtn').onclick = (e) => {
         const purchase = getPurchaseDockState();
@@ -117,6 +118,34 @@ export function bindStickyActions() {
             return;
         }
         addCurrentSelectionToCart(e.currentTarget);
+    };
+
+    document.getElementById('directOrderStickyBtn').onclick = () => {
+        if (tailles.length && !modalCtx.sT) return showToast('⚠️ Sélectionnez une taille');
+
+        let msg = `Bonjour NRJ Marketplace, je souhaite commander :\n${p.name} (ID: ${p.id})`;
+        if (modalCtx.sT) msg += `\nTaille: ${modalCtx.sT}`;
+
+        if (couleurs.length) {
+            const selected = Object.entries(modalCtx.colorQtys).filter(([, q]) => q > 0);
+            if (selected.length === 0) {
+                showToast('⚠️ Choisis au moins une quantité');
+                return;
+            }
+            const totalQ = selected.reduce((s, [, q]) => s + q, 0);
+            if (totalQ < moq) {
+                showToast(`⚠️ Minimum d'achat : ${moq} pièce(s)`);
+                return;
+            }
+            msg += '\nCouleurs:';
+            selected.forEach(([color, q]) => { msg += `\n  • ${color} × ${q}`; });
+            msg += `\nQuantité totale: ${totalQ}`;
+        } else {
+            msg += `\nQuantité: ${modalCtx.currentQty}`;
+        }
+
+        trackPopularity(p.id, 10);
+        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
     };
 
     updatePurchaseDock();
