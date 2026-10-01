@@ -54,6 +54,7 @@ export function updatePurchaseDock() {
     const progressText = document.getElementById('stickyPurchaseProgress');
     const progressBar = document.getElementById('stickyProgressBar');
     const totalLabel = document.getElementById('stickyTotalLabel');
+    const stickyTotal = document.querySelector('#stickyBottomBar .sticky-total');
     if (!btn) return;
 
     const purchase = getPurchaseDockState();
@@ -73,7 +74,15 @@ export function updatePurchaseDock() {
     if (label) label.textContent = purchase.label;
 
     if (totalLabel) totalLabel.textContent = purchase.state === 'ready' ? 'Total' : 'À compléter';
-    if (progressBar) progressBar.style.width = `${Math.round(ratio * 100)}%`;
+    if (stickyTotal) stickyTotal.dataset.purchaseState = purchase.state;
+    if (progressBar) {
+        progressBar.style.width = `${Math.round(ratio * 100)}%`;
+        progressBar.style.background = purchase.state === 'ready'
+            ? '#25D366'
+            : purchase.state === 'pending'
+                ? 'var(--primary)'
+                : 'var(--text-secondary)';
+    }
 
     if (progressText) {
         if (couleurs.length) {
