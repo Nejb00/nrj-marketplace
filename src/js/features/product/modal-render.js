@@ -77,6 +77,28 @@ export async function openProductModal(pid) {
     renderTailleOptions();
     renderCouleurOptions();
 
+    const qtyGroup = document.getElementById('modalQuantityGroup');
+    const qtyValue = document.getElementById('modalQtyValue');
+    const qtyHint = document.getElementById('modalQtyHint');
+    const qtyMinus = document.getElementById('modalQtyMinus');
+    const qtyPlus = document.getElementById('modalQtyPlus');
+    const syncQty = () => {
+        if (qtyValue) qtyValue.textContent = String(modalCtx.currentQty);
+        if (qtyHint) qtyHint.textContent = `Minimum ${modalCtx.moq} pièce${modalCtx.moq > 1 ? 's' : ''}`;
+        if (qtyMinus) qtyMinus.disabled = modalCtx.currentQty <= modalCtx.moq;
+        updateTotal();
+    };
+    if (qtyGroup) qtyGroup.style.display = modalCtx.couleurs.length ? 'none' : 'flex';
+    if (qtyMinus) qtyMinus.onclick = () => {
+        modalCtx.currentQty = Math.max(modalCtx.moq, modalCtx.currentQty - 1);
+        syncQty();
+    };
+    if (qtyPlus) qtyPlus.onclick = () => {
+        modalCtx.currentQty += 1;
+        syncQty();
+    };
+    syncQty();
+
     updateTotal();
 
     bindStickyActions();
