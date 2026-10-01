@@ -15,6 +15,7 @@ export function updateTotal() {
         totalQty = modalCtx.currentQty;
     }
     const totalEl = document.getElementById('modalTotal');
+    const stickyEl = document.getElementById('stickyTotalValue');
     if (totalEl) {
         if (totalQty > 0) {
             totalEl.textContent = `Total : ${formatPrice(modalCtx.uPrice * totalQty)} (${totalQty} pc${totalQty > 1 ? 's' : ''})`;
