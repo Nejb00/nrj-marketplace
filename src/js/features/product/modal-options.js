@@ -1,6 +1,7 @@
 // ═══ Fiche produit — options (tailles + couleurs avec steppers) ═══
 // Éclaté de product-modal.js (refacto-archi) — logique strictement identique.
 import { escapeHtml } from '../../utils/escape-html.js';
+import { formatPrice } from '../../utils/format.js';
 import { thumbImg } from '../../utils/images.js';
 import { modalCtx } from './modal-state.js';
 import { goToImageForColor } from './modal-carousel.js';
@@ -37,7 +38,9 @@ export function renderCouleurOptions() {
     if (couleurs.length && couleurGroup && couleurOpts) {
         couleurGroup.style.display = 'block';
         const label = couleurGroup.querySelector('label');
-        if (label) label.textContent = `Couleurs — choisis les quantités`;
+        const qtySummary = document.getElementById('modalColorQtySummary');
+        const moqStatus = document.getElementById('modalColorMoqStatus');
+        const progressBar = document.getElementById('modalColorProgressBar');
 
         couleurOpts.className = 'option-buttons color-variant-list';
         modalCtx.colorQtys = {};
@@ -52,14 +55,63 @@ export function renderCouleurOptions() {
                 </button>
                 <div class="color-variant-info">
                     <span class="color-variant-name">${escapeHtml(c)}</span>
+                    <span class="color-variant-subtotal" data-color-total="${escapeHtml(c)}">XAF 0</span>
                 </div>
-                <div class="mini-qty-stepper">
-                    <button type="button" class="mini-qty-btn" data-action="minus" data-color="${escapeHtml(c)}" aria-label="Diminuer">−</button>
-                    <span class="mini-qty-value" data-color="${escapeHtml(c)}">0</span>
-                    <button type="button" class="mini-qty-btn" data-action="plus" data-color="${escapeHtml(c)}" aria-label="Augmenter">+</button>
+                <div class="mini-qty-stepper" aria-label="Quantité pour ${escapeHtml(c)}">
+                    <button type="button" class="mini-qty-btn" data-action="minus" data-color="${escapeHtml(c)}" aria-label="Diminuer ${escapeHtml(c)}">−</button>
+                    <span class="mini-qty-value" data-color="${escapeHtml(c)}" aria-live="polite">0</span>
+                    <button type="button" class="mini-qty-btn" data-action="plus" data-color="${escapeHtml(c)}" aria-label="Augmenter ${escapeHtml(c)}">+</button>
                 </div>
             </div>`;
         }).join('');
+
+        const updateColorSummary = () => {
+            const total = getTotalColorQty();
+            const moq = modalCtx.moq;
+            const remaining = Math.max(0, moq - total);
+            if (qtySummary) {
+                qtySummary.textContent = total === 0
+                    ? '0 pièce'
+                    : `${total} pièce${total > 1 ? 's' : ''}`;
+                qtySummary.classList.toggle('ready', total >= moq);
+            }
+            if (moqStatus) {
+                if (total >= moq) {
+                    moqStatus.textContent = `✓ Minimum atteint · ${total} pcs`;
+                    moqStatus.classList.add('ready');
+                    moqStatus.classList.remove('pending');
+                } else if (total > 0) {
+                    moqStatus.textContent = `Encore ${remaining} pièce${remaining > 1 ? 's' : ''} pour atteindre le minimum`;
+                    moqStatus.classList.add('pending');
+                    moqStatus.classList.remove('ready');
+                } else {
+                    moqStatus.textContent = `Minimum : ${moq} pièce${moq > 1 ? 's' : ''}`;
+                    moqStatus.classList.remove('pending', 'ready');
+                }
+            }
+            if (progressBar) {
+                progressBar.style.width = `${Math.min(100, moq > 0 ? (total / moq) * 100 : 0)}%`;
+            }
+        };
+
+        const updateColorRow = (row, color, q) => {
+            row?.classList.toggle('has-qty', q > 0);
+            row?.classList.toggle('is-selected', q > 0);
+            const valEl = row?.querySelector('.mini-qty-value');
+            if (valEl) valEl.textContent = String(q);
+            const totalEl = row?.querySelector(`[data-color-total="${CSS.escape(color)}"]`);
+            if (totalEl) totalEl.textContent = formatPrice(modalCtx.uPrice * q);
+            const minusBtn = row?.querySelector('.mini-qty-btn[data-action="minus"]');
+            if (minusBtn) minusBtn.disabled = q <= 0;
+        };
+
+        const refreshColorUI = () => {
+            couleurOpts.querySelectorAll('.color-variant-row').forEach(row => {
+                const color = row.dataset.val;
+                updateColorRow(row, color, Number(modalCtx.colorQtys[color]) || 0);
+            });
+            updateColorSummary();
+        };
 
         couleurOpts.querySelectorAll('.color-variant-thumb').forEach(btn => {
             btn.onclick = (e) => {
@@ -83,22 +135,15 @@ export function renderCouleurOptions() {
                 else q = Math.max(0, q - 1);
                 modalCtx.colorQtys[color] = q;
 
-                const valEl = couleurOpts.querySelector(`.mini-qty-value[data-color="${CSS.escape(color)}"]`);
-                if (valEl) valEl.textContent = String(q);
-
                 const row = btn.closest('.color-variant-row');
-                if (row) row.classList.toggle('has-qty', q > 0);
+                updateColorRow(row, color, q);
+                updateColorSummary();
 
                 if (label) {
                     const total = getTotalColorQty();
-                    if (total > 0) {
-                        const parts = Object.entries(modalCtx.colorQtys)
-                            .filter(([, qty]) => qty > 0)
-                            .map(([c, qty]) => `${c} ×${qty}`);
-                        label.textContent = `Couleurs (${total} pcs) : ${parts.join(', ')}`;
-                    } else {
-                        label.textContent = `Couleurs — choisis les quantités`;
-                    }
+                    label.textContent = total > 0
+                        ? `Couleurs — ${total} pièce${total > 1 ? 's' : ''}`
+                        : 'Couleurs';
                 }
                 updateTotal();
             };
@@ -109,6 +154,7 @@ export function renderCouleurOptions() {
             firstRow.classList.add('active-preview');
             goToImageForColor(0);
         }
+        refreshColorUI();
     } else if (couleurGroup) {
         couleurGroup.style.display = 'none';
     }
