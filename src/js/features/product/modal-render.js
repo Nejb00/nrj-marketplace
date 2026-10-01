@@ -105,13 +105,12 @@ export async function openProductModal(pid) {
 
     bindStickyActions();
 
-    await renderRecommendations(p);
+    await renderRecommendations(p, () => openToken === modalCtx.openToken);
+    if (openToken !== modalCtx.openToken) return;
 
     document.getElementById('productModal').classList.add('open');
     document.body.classList.add('modal-open');
     document.getElementById('stickyBottomBar').classList.add('visible');
-    if (!state.modalOpen) {
-        history.replaceState({ modalOpen: true }, '', `?id=${p.id}`);
-        state.modalOpen = true;
-    }
+    history.replaceState({ modalOpen: true, productId: p.id }, '', `?id=${p.id}`);
+    state.modalOpen = true;
 }
