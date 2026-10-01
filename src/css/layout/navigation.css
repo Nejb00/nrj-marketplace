@@ -412,6 +412,13 @@ body { padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
   backdrop-filter: blur(24px) saturate(165%);
 }
 
+/* Le style de la vue catégories ne doit pas réduire le logo de Mon NRJ. */
+body.categories-page-open #accountView .account-brand .logo-icon {
+  width: 52px !important;
+  height: 52px !important;
+  opacity: 1 !important;
+}
+
 .account-brand .logo-icon {
   width: 52px;
   height: 52px;
