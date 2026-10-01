@@ -51,6 +51,19 @@ export async function openProductModal(pid) {
 
     // ── En-tête (prix, MOQ, description, badges) ──
     document.getElementById('modalPrice').textContent = formatPrice(modalCtx.uPrice);
+    const nameEl = document.getElementById('modalProductName');
+    if (nameEl) nameEl.textContent = p.name || 'Produit NRJ';
+    const descToggle = document.getElementById('modalDescToggle');
+    const descWrap = descToggle ? descToggle.closest('.product-detail-desc-wrap') : null;
+    if (descToggle && descWrap) {
+        descToggle.setAttribute('aria-expanded', 'false');
+        descWrap.classList.remove('expanded');
+        descToggle.onclick = () => {
+            const expanded = descToggle.getAttribute('aria-expanded') === 'true';
+            descToggle.setAttribute('aria-expanded', String(!expanded));
+            descWrap.classList.toggle('expanded', !expanded);
+        };
+    }
     document.getElementById('modalMoq').textContent = `Minimum d'achat : ${modalCtx.moq} pièce(s)`;
     document.getElementById('modalTotal').textContent = `Total minimum : ${formatPrice(modalCtx.uPrice * modalCtx.moq)}`;
     document.getElementById('modalDesc').textContent = p.description || '';
