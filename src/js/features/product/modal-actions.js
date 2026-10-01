@@ -26,8 +26,12 @@ export function bindHeaderActions(p, uPrice, moq) {
         const txt = `${formatPrice(uPrice)}\nMinimum d'achat : ${moq} pièce(s)\nDécouvre "${p.name}" sur NRJ Marketplace ${url}`;
         if (typeof navigator.share === 'function') {
             navigator.share({ title: p.name, text: txt, url }).catch(() => {});
+        } else if (navigator.clipboard?.writeText) {
+            navigator.clipboard.writeText(txt)
+                .then(() => showToast('🔗 Copié !'))
+                .catch(() => showToast('⚠️ Impossible de copier le lien'));
         } else {
-            navigator.clipboard.writeText(txt).then(() => showToast('🔗 Copié !'));
+            showToast('⚠️ Partage non disponible sur ce navigateur');
         }
     };
 }
