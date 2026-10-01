@@ -2,6 +2,7 @@
 // Éclaté de search.js (refacto-archi).
 import { state } from '../core/state.js';
 import { showToast } from '../utils/dom-helpers.js';
+import { setSearchFacadeText, restoreSearchFacadeRotation } from './search-rotation.js';
 
 export function initVoiceSearch() {
   const voiceBtn = document.getElementById('searchVoice');
@@ -25,6 +26,7 @@ export function initVoiceSearch() {
     state.isVoiceListening = true;
     voiceBtn.classList.add('listening');
     searchInput.placeholder = '🎤 Parlez maintenant...';
+    setSearchFacadeText('🎤 Parlez maintenant...');
   };
 
   recognition.onresult = (event) => {
@@ -48,7 +50,8 @@ export function initVoiceSearch() {
   recognition.onend = () => {
     state.isVoiceListening = false;
     voiceBtn.classList.remove('listening');
-    searchInput.placeholder = state.rotationList[state.currentPlaceholderIndex];
+    searchInput.placeholder = state.rotationList[state.currentPlaceholderIndex] || 'Rechercher un produit...';
+    restoreSearchFacadeRotation();
   };
 
   voiceBtn.addEventListener('click', () => {

@@ -39,6 +39,29 @@ export function buildSmartRotationList() {
 }
 
 let historyCaptureBound = false;
+let rotationTimer = null;
+
+export function setSearchFacadeText(text) {
+  const facade = document.getElementById('searchTapPlaceholder');
+  if (!facade) return;
+  const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if (reducedMotion) {
+    facade.textContent = text;
+    facade.style.opacity = '';
+    return;
+  }
+  facade.style.transition = 'opacity 180ms ease';
+  facade.style.opacity = '0';
+  window.setTimeout(() => {
+    facade.textContent = text;
+    facade.style.opacity = '1';
+  }, 180);
+}
+
+export function restoreSearchFacadeRotation() {
+  const text = state.rotationList[state.currentPlaceholderIndex] || 'Rechercher un produit...';
+  setSearchFacadeText(text);
+}
 
 export function initPlaceholderRotation() {
   buildSmartRotationList();
@@ -55,10 +78,14 @@ export function initPlaceholderRotation() {
     });
   }
 
-  setInterval(() => {
-    if (document.activeElement !== input && input.value === '') {
+  if (rotationTimer !== null) clearInterval(rotationTimer);
+  restoreSearchFacadeRotation();
+  rotationTimer = setInterval(() => {
+    if (!state.isVoiceListening && document.activeElement !== input && input.value === '' && state.rotationList.length) {
       state.currentPlaceholderIndex = (state.currentPlaceholderIndex + 1) % state.rotationList.length;
-      input.placeholder = state.rotationList[state.currentPlaceholderIndex];
+      const current = state.rotationList[state.currentPlaceholderIndex];
+      input.placeholder = current;
+      setSearchFacadeText(current);
     }
   }, 3500);
 }
