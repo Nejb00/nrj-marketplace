@@ -27,7 +27,7 @@ export function openHeaderProfile() {
 export function openHeaderCart() {
   document.getElementById('cartPanel')?.classList.add('open');
   document.getElementById('cartOverlay')?.classList.add('open');
-  refreshCartDisplay();
+  refreshCartDisplay(true);
 }
 
 export function initHeaderActionsBubble() {
