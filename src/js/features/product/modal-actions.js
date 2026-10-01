@@ -46,6 +46,8 @@ function getPurchaseDockState() {
     return { state: 'ready', label: 'Ajouter au panier' };
 }
 
+let purchaseDockState = null;
+
 export function updatePurchaseDock() {
     const btn = document.getElementById('addToCartStickyBtn');
     const label = document.getElementById('stickyPurchaseLabel');
@@ -63,6 +65,8 @@ export function updatePurchaseDock() {
         ? Math.min(1, totalQ / Math.max(moq, 1))
         : 1;
 
+    const previous = purchaseDockState;
+    purchaseDockState = purchase.state;
     btn.dataset.purchaseState = purchase.state;
     btn.setAttribute('aria-label', purchase.label);
     btn.setAttribute('title', purchase.label);
@@ -81,6 +85,18 @@ export function updatePurchaseDock() {
                 ? `${modalCtx.currentQty} pcs`
                 : `MOQ · ${moq} pcs`;
         }
+    }
+
+    if (previous && previous !== purchase.state) {
+        btn.classList.remove('purchase-state-pop');
+        void btn.offsetWidth;
+        btn.classList.add('purchase-state-pop');
+    }
+
+    if (purchase.state === 'ready' && previous !== 'ready') {
+        btn.classList.remove('purchase-ready-flash');
+        void btn.offsetWidth;
+        btn.classList.add('purchase-ready-flash');
     }
 }
 
