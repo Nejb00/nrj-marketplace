@@ -17,6 +17,10 @@
     opacity: 1; 
     pointer-events: auto; 
 }
+.product-modal.open .modal-sheet { will-change:transform; }
+.product-modal.open .modal-image-section { animation: modalImageIn .45s ease both; }
+@keyframes modalImageIn { from { transform:scale(1.015); } to { transform:scale(1); } }
+
 
 /* La feuille : verre épais, coins supérieurs arrondis, monte avec ressort */
 .modal-sheet {
@@ -241,7 +245,7 @@
 .product-detail-head { display:grid; grid-template-columns:1fr auto; align-items:end; gap:2px 12px; }
 .product-detail-price { grid-column:1; font-size:2rem; line-height:1.05; font-weight:850; letter-spacing:-.03em; color:var(--primary); }
 .product-detail-moq { grid-column:1; font-size:.78rem; color:var(--text-secondary); font-weight:650; }
-.product-detail-total { grid-column:2; grid-row:1 / span 2; margin:0; padding:.45rem .7rem; border-radius:12px; background:color-mix(in srgb,var(--primary) 10%,transparent); color:var(--text); font-size:.78rem; font-weight:750; text-align:right; }
+ .product-detail-total { grid-column:2; grid-row:1 / span 2; margin:0; padding:.45rem .7rem; border-radius:12px; background:color-mix(in srgb,var(--primary) 10%,transparent); color:var(--text); font-size:.78rem; font-weight:750; text-align:right; }
 .product-detail-name { margin:.9rem 0 .55rem; font-size:1.2rem; line-height:1.25; letter-spacing:-.02em; }
 .modal-meta-row { display:flex; flex-wrap:wrap; gap:.45rem; margin-bottom:.85rem; }
 .modal-meta-pill { padding:.32rem .58rem; border-radius:999px; background:var(--surface-light); color:var(--text-secondary); border:1px solid var(--border); font-size:.68rem; font-weight:700; }
@@ -365,10 +369,12 @@
 .sourcing-btn { background: var(--primary); color: white; border: none; padding: 0.9rem 2rem; border-radius: 50px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 0.8rem; margin-right: 0.5rem; }
 .whatsapp-btn { background: var(--whatsapp); color: white; border: none; padding: 0.9rem 2rem; border-radius: 50px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; }
 
-.recommendations { padding: 1rem 0; background: transparent; border-top: 1px solid rgba(255,255,255,0.08); margin-bottom: var(--bottom-bar-height); }
+ .recommendations { padding: 1.2rem 0; background: transparent; border-top: 1px solid rgba(255,255,255,0.08); margin-bottom: var(--bottom-bar-height); }
 .recommendations h3 { font-size: 1.1rem; margin-left: 1rem; margin-bottom: 0.8rem; color: var(--text); }
-.rec-carousel { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; padding: 0 1rem; }
-@media (min-width: 768px) { .rec-carousel { grid-template-columns: repeat(3, 1fr); } }
+ .rec-carousel { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; gap:.7rem; padding:0 1rem .35rem; scrollbar-width:none; }
+.rec-carousel::-webkit-scrollbar { display:none; }
+.rec-card { flex:0 0 142px; scroll-snap-align:start; }
+@media (min-width:768px){ .rec-card{flex-basis:175px;} }
 
 .rec-card { 
     background: linear-gradient(90deg, var(--surface-light) 25%, var(--surface) 50%, var(--surface-light) 75%);
