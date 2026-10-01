@@ -16,6 +16,7 @@ export const modalCtx = {
     colorQtys: {},
     currentQty: 1,
     openToken: 0,
+    returnFocus: null,
     imageSlideOffset: 0,
     imgs: [],
     videoUrl: '',
