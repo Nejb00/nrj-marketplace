@@ -49,11 +49,39 @@ function getPurchaseDockState() {
 export function updatePurchaseDock() {
     const btn = document.getElementById('addToCartStickyBtn');
     const label = document.getElementById('stickyPurchaseLabel');
+    const progressText = document.getElementById('stickyPurchaseProgress');
+    const progressBar = document.getElementById('stickyProgressBar');
+    const totalLabel = document.getElementById('stickyTotalLabel');
     if (!btn) return;
+
     const purchase = getPurchaseDockState();
+    const { couleurs, moq } = modalCtx;
+    const totalQ = couleurs.length
+        ? Object.values(modalCtx.colorQtys).reduce((sum, q) => sum + (Number(q) || 0), 0)
+        : modalCtx.currentQty;
+    const ratio = couleurs.length
+        ? Math.min(1, totalQ / Math.max(moq, 1))
+        : 1;
+
     btn.dataset.purchaseState = purchase.state;
     btn.setAttribute('aria-label', purchase.label);
+    btn.setAttribute('title', purchase.label);
     if (label) label.textContent = purchase.label;
+
+    if (totalLabel) totalLabel.textContent = purchase.state === 'ready' ? 'Total' : 'À compléter';
+    if (progressBar) progressBar.style.width = `${Math.round(ratio * 100)}%`;
+
+    if (progressText) {
+        if (couleurs.length) {
+            progressText.textContent = purchase.state === 'ready'
+                ? `MOQ atteint · ${totalQ} pcs`
+                : `${totalQ} / ${moq} pcs`;
+        } else {
+            progressText.textContent = modalCtx.currentQty > modalCtx.moq
+                ? `${modalCtx.currentQty} pcs`
+                : `MOQ · ${moq} pcs`;
+        }
+    }
 }
 
 function focusPurchaseSection(kind) {
