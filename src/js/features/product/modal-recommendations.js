@@ -32,15 +32,19 @@ async function buildRecommendations(currentProduct) {
     return rec;
 }
 
-export async function renderRecommendations(p) {
+export async function renderRecommendations(p, isCurrent = () => true) {
+    const container = document.getElementById('modalRecCarousel');
+    if (!container || !isCurrent()) return [];
+
     // Squelettes d'attente
-    document.getElementById('modalRecCarousel').innerHTML = Array(6).fill(
+    container.innerHTML = Array(6).fill(
         '<div class="rec-card"><div class="rec-card-img" style="background:var(--surface-light);"></div></div>'
     ).join('');
 
     const rec = await buildRecommendations(p);
+    if (!isCurrent()) return [];
 
-    document.getElementById('modalRecCarousel').innerHTML = rec.map(r => `
+    container.innerHTML = rec.map(r => `
         <div class="rec-card" data-product-id="${r.id}">
             <div class="rec-card-img">${r.image ? thumbImg(r.image, r.name, 300, 400) : '📦'}</div>
             <div class="rec-card-overlay">
