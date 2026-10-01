@@ -698,3 +698,17 @@ body.modal-open { overflow:hidden; overscroll-behavior:none; }
     .btn-direct-sticky::after,
     .btn-cart-sticky::after { animation:none; transition:none; }
 }
+
+/* ── Purchase readiness ─────────────────────────────────────────── */
+.product-detail-total { transition:transform .18s ease, background .18s ease, color .18s ease; }
+.purchase-ready {
+    background:color-mix(in srgb,#25D366 13%,transparent);
+    color:#25D366;
+}
+.purchase-pending {
+    background:color-mix(in srgb,#f59e0b 14%,transparent);
+    color:#f59e0b;
+}
+.sticky-total strong { transition:transform .18s ease; }
+.sticky-total.bump strong { animation:totalBump .22s ease; }
+@keyframes totalBump { 50% { transform:scale(1.08); } }
