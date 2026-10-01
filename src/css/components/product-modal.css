@@ -712,3 +712,51 @@ body.modal-open { overflow:hidden; overscroll-behavior:none; }
 .sticky-total strong { transition:transform .18s ease; }
 .sticky-total.bump strong { animation:totalBump .22s ease; }
 @keyframes totalBump { 50% { transform:scale(1.08); } }
+
+/* ── Contextual Purchase Dock ─────────────────────────────────────── */
+.btn-cart-sticky {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: .9rem 1rem;
+    gap: .55rem;
+    font-size: .86rem;
+}
+.btn-cart-sticky svg { width: 19px; height: 19px; flex: 0 0 19px; fill: currentColor; }
+.btn-cart-sticky[data-purchase-state="size"],
+.btn-cart-sticky[data-purchase-state="quantity"] {
+    background: var(--surface-light);
+    color: var(--text);
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 20px rgba(0,0,0,.12);
+}
+.btn-cart-sticky[data-purchase-state="pending"] {
+    background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 72%, #000));
+}
+.btn-cart-sticky[data-purchase-state="ready"] {
+    box-shadow: 0 10px 26px color-mix(in srgb, var(--primary) 28%, transparent);
+}
+.btn-cart-sticky[data-purchase-state="size"] svg,
+.btn-cart-sticky[data-purchase-state="quantity"] svg { opacity: .72; }
+.btn-direct-sticky {
+    flex: 0 0 48px;
+    width: 48px;
+    min-width: 48px;
+    height: 48px;
+    padding: 0;
+    border-radius: 50%;
+    background: var(--surface-light);
+    color: var(--text);
+    border: 1px solid var(--border);
+    box-shadow: 0 5px 16px rgba(0,0,0,.12);
+}
+.btn-direct-sticky:hover { filter: brightness(1.08); }
+.purchase-focus { animation: purchaseFocus .85s ease; }
+@keyframes purchaseFocus {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 42%, transparent); }
+    45% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--primary) 18%, transparent); }
+    100% { box-shadow: 0 0 0 0 transparent; }
+}
+@media (max-width:380px) {
+    .btn-direct-sticky { flex-basis:44px; width:44px; min-width:44px; height:44px; }
+    .btn-cart-sticky { padding:.82rem .75rem; font-size:.8rem; }
+}
