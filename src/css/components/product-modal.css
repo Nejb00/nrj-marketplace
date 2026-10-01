@@ -760,3 +760,51 @@ body.modal-open { overflow:hidden; overscroll-behavior:none; }
     .btn-direct-sticky { flex-basis:44px; width:44px; min-width:44px; height:44px; }
     .btn-cart-sticky { padding:.82rem .75rem; font-size:.8rem; }
 }
+
+/* ── Purchase Dock state meter ───────────────────────────────────── */
+.sticky-total {
+    width: 94px;
+    min-width: 94px;
+    gap: 2px;
+}
+.sticky-total small {
+    min-height: 10px;
+    color: var(--text-secondary);
+    font-size: .55rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.sticky-progress-track {
+    display: block;
+    width: 100%;
+    height: 3px;
+    margin-top: 2px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--text-secondary) 16%, transparent);
+}
+.sticky-progress-track i {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--primary);
+    transition: width .22s ease, background .22s ease;
+}
+.btn-cart-sticky[data-purchase-state="size"] .sticky-progress-track i,
+.btn-cart-sticky[data-purchase-state="quantity"] .sticky-progress-track i {
+    background: var(--text-secondary);
+}
+.btn-cart-sticky[data-purchase-state="ready"] .sticky-progress-track i {
+    background: #25D366;
+}
+.btn-cart-sticky[data-purchase-state="pending"] .sticky-progress-track i {
+    background: var(--primary);
+}
+@media (max-width:380px) {
+    .sticky-total { width: 82px; min-width: 82px; }
+    .sticky-total small { font-size:.5rem; }
+}
+@media (prefers-reduced-motion:reduce) {
+    .sticky-progress-track i { transition:none; }
+}
