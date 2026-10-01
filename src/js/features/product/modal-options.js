@@ -16,6 +16,8 @@ function renderOptions(ct, opts, sel, ty) {
             ct.querySelectorAll('.option-btn').forEach(x => x.classList.remove('selected'));
             b.classList.add('selected');
             if (ty === 'taille') modalCtx.sT = o; else modalCtx.sC = o;
+            b.animate([{transform:'scale(.96)'},{transform:'scale(1)'}], {duration:160, easing:'ease-out'});
+            updateTotal();
         };
         ct.appendChild(b);
     });
