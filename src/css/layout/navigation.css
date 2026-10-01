@@ -465,9 +465,8 @@ body.categories-page-open #accountView .account-brand .logo-icon {
 /* Carte de marque sticky et compacte dans le conteneur de Mon NRJ */
 #accountView .account-brand {
   position: sticky;
-  top: 0;
+  top: env(safe-area-inset-top, 0px);
   z-index: 40;
-  margin-top: env(safe-area-inset-top, 0px);
   min-height: 0;
   transition: padding 200ms ease, border-radius 200ms ease, background 200ms ease, box-shadow 200ms ease;
 }
