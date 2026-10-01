@@ -214,6 +214,7 @@ export function bindStickyActions() {
 }
 
 export function closeProductModal() {
+    modalCtx.openToken += 1;
     pauseModalVideos();
     document.getElementById('productModal').classList.remove('open');
     document.body.classList.remove('modal-open');
