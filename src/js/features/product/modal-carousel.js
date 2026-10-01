@@ -36,11 +36,13 @@ export function buildCarousel() {
     const p = modalCtx.p;
     const sc = modalCtx.sc;
     const dc = modalCtx.dc;
+    const countEl = document.getElementById('modalCarouselCount');
     const videoUrl = modalCtx.videoUrl;
     const imgs = modalCtx.imgs;
 
     sc.innerHTML = '';
     dc.innerHTML = '';
+    if (countEl) countEl.textContent = '1 / 1';
 
     let slideIndex = 0;
     modalCtx.imageSlideOffset = videoUrl ? 1 : 0;
@@ -70,6 +72,8 @@ export function buildCarousel() {
         sc.addEventListener('scroll', () => {
             const idx = Math.round(sc.scrollLeft / Math.max(sc.offsetWidth, 1));
             updateCarouselDots(sc, dc, idx);
+            const total = sc.children.length;
+            if (countEl) countEl.textContent = total ? `${idx + 1} / ${total}` : '1 / 1';
             const videos = sc.querySelectorAll('video');
             videos.forEach((v, vi) => {
                 if (vi !== idx) {
