@@ -106,6 +106,7 @@ export async function openProductModal(pid) {
     await renderRecommendations(p);
 
     document.getElementById('productModal').classList.add('open');
+    document.body.classList.add('modal-open');
     document.getElementById('stickyBottomBar').classList.add('visible');
     if (!state.modalOpen) {
         history.replaceState({ modalOpen: true }, '', `?id=${p.id}`);
