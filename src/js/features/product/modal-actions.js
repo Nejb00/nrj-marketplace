@@ -217,7 +217,7 @@ export function bindStickyActions() {
     };
 }
 
-export function closeProductModal() {
+export function closeProductModal({ fromHistory = false } = {}) {
     modalCtx.openToken += 1;
     pauseModalVideos();
     const modal = document.getElementById('productModal');
@@ -226,7 +226,11 @@ export function closeProductModal() {
     document.body.classList.remove('modal-open');
     document.getElementById('stickyBottomBar').classList.remove('visible');
     state.modalOpen = false;
-    history.replaceState({}, '', window.location.pathname);
+
+    if (!fromHistory && history.state?.modalOpen) {
+        history.back();
+    }
+
     const returnFocus = modalCtx.returnFocus;
     modalCtx.returnFocus = null;
     if (returnFocus && returnFocus.isConnected && typeof returnFocus.focus === 'function') {
