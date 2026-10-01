@@ -215,7 +215,7 @@ export function handleAccountAction(action) {
       hideAccountView();
       document.getElementById('cartPanel').classList.add('open');
       document.getElementById('cartOverlay').classList.add('open');
-      refreshCartDisplay();
+      refreshCartDisplay(true);
       break;
     }
     case 'go-favs': {
