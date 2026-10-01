@@ -16,11 +16,16 @@ export function updateTotal() {
     }
     const totalEl = document.getElementById('modalTotal');
     const stickyEl = document.getElementById('stickyTotalValue');
+    const amount = modalCtx.uPrice * (totalQty > 0 ? totalQty : modalCtx.moq);
     if (totalEl) {
-        if (totalQty > 0) {
-            totalEl.textContent = `Total : ${formatPrice(modalCtx.uPrice * totalQty)} (${totalQty} pc${totalQty > 1 ? 's' : ''})`;
+        if (modalCtx.couleurs.length && totalQty > 0 && totalQty < modalCtx.moq) {
+            const remaining = modalCtx.moq - totalQty;
+            totalEl.textContent = `Encore ${remaining} pièce${remaining > 1 ? 's' : ''} · ${formatPrice(amount)}`;
+        } else if (totalQty > 0) {
+            totalEl.textContent = `Total : ${formatPrice(amount)} (${totalQty} pc${totalQty > 1 ? 's' : ''})`;
         } else {
-            totalEl.textContent = `Total minimum : ${formatPrice(modalCtx.uPrice * modalCtx.moq)}`;
+            totalEl.textContent = `Total minimum : ${formatPrice(amount)}`;
         }
     }
+    if (stickyEl) stickyEl.textContent = formatPrice(amount);
 }
