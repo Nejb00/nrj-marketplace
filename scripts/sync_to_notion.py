@@ -34,6 +34,13 @@ BASE_HEADERS = {
 EXCLUDE_DIRS = {'.git', 'node_modules', 'dist', 'build', '.next', '.cache'}
 EXCLUDE_FILES = {'package-lock.json', 'yarn.lock'}
 
+# Fichiers binaires : illisibles en bloc de code, très lourds, et c'est eux
+# qui faisaient exploser les requêtes (PNG de 762 Ko lu comme du texte !).
+# Le .svg reste inclus : c'est du texte lisible et éditable.
+BINARY_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.webp', '.gif', '.ico',
+                     '.woff', '.woff2', '.ttf', '.otf', '.mp3', '.mp4',
+                     '.zip', '.pdf'}
+
 LANG_MAP = {
     '.js': 'javascript',
     '.jsx': 'javascript',
@@ -48,6 +55,15 @@ LANG_MAP = {
     '.yaml': 'yaml'
 }
 
+# Limites d'envoi.
+# Notion n'autorise que 100 blocs enfants par bloc parent, mais surtout :
+# embarquer tout le code du repo dans une seule requête PATCH déclenche un
+# HTTP 413 "Payload Too Large" depuis que le projet a grossi (refacto,
+# liquid-glass, admin). On garde donc une marge large par requête.
+MAX_CHILDREN_PER_TOGGLE = 100      # limite dure de l'API Notion
+CHILDREN_BATCH_SIZE = 40           # ~76 Ko max par requête (40 x 1900 car.)
+TOP_LEVEL_BATCH_SIZE = 25          # blocs racine (petits : titres de toggles)
+
 def get_language(filename):
     ext = os.path.splitext(filename)[1].lower()
     return LANG_MAP.get(ext, 'plain text')
@@ -57,54 +73,102 @@ def chunk_text(text, max_len=1900):
         return ["// Fichier vide"]
     return [text[i:i + max_len] for i in range(0, len(text), max_len)]
 
-def clear_existing_blocks():
-    """Supprime les anciens blocs de la page Notion pour repartir à zéro"""
-    url = f"https://api.notion.com/v1/blocks/{PAGE_ID}/children?page_size=100"
+def notion_request(method, url, payload=None):
+    """Requête Notion générique avec gestion d'erreur explicite."""
     headers = dict(BASE_HEADERS)
-    req = urllib.request.Request(url, headers=headers, method='GET')
+    data = None
+    if payload is not None:
+        headers["Content-Type"] = "application/json"
+        data = json.dumps(payload).encode('utf-8')
+    req = urllib.request.Request(url, data=data, headers=headers, method=method)
     try:
         with urllib.request.urlopen(req) as resp:
-            data = json.loads(resp.read().decode('utf-8'))
-            blocks = data.get('results', [])
-            for block in blocks:
-                del_url = f"https://api.notion.com/v1/blocks/{block['id']}"
-                del_req = urllib.request.Request(del_url, headers=headers, method='DELETE')
-                try:
-                    urllib.request.urlopen(del_req)
-                except Exception:
-                    pass
-    except Exception as e:
-        print(f"Note lors du nettoyage : {e}")
+            body = resp.read().decode('utf-8')
+            return json.loads(body) if body else {}
+    except urllib.error.HTTPError as e:
+        print(f"Erreur HTTP {e.code}: {e.read().decode('utf-8')}")
+        raise
 
-def push_blocks_in_batches(blocks):
-    """Envoie les blocs à Notion par paquets de 100 (limite API)"""
-    url = f"https://api.notion.com/v1/blocks/{PAGE_ID}/children"
-    headers = {**BASE_HEADERS, "Content-Type": "application/json"}
+def clear_existing_blocks():
+    """Supprime les anciens blocs de la page Notion pour repartir à zéro.
+    Pagination ajoutée : au-delà de 100 blocs racine, l'ancien nettoyage
+    laissait des blocs orphelins s'accumuler sur la page."""
+    cursor = None
+    total_deleted = 0
+    while True:
+        url = f"https://api.notion.com/v1/blocks/{PAGE_ID}/children?page_size=100"
+        if cursor:
+            url += f"&start_cursor={cursor}"
+        data = notion_request('GET', url)
+        for block in data.get('results', []):
+            try:
+                notion_request('DELETE', f"https://api.notion.com/v1/blocks/{block['id']}")
+                total_deleted += 1
+            except Exception:
+                pass
+        if not data.get('has_more'):
+            break
+        cursor = data.get('next_cursor')
+    print(f"Anciens blocs supprimés : {total_deleted}")
 
-    batch_size = 80
-    for i in range(0, len(blocks), batch_size):
-        batch = blocks[i:i + batch_size]
-        payload = {"children": batch}
-        data = json.dumps(payload).encode('utf-8')
-        req = urllib.request.Request(url, data=data, headers=headers, method='PATCH')
-        try:
-            with urllib.request.urlopen(req) as resp:
-                print(f"Séquence {i // batch_size + 1} envoyée ({len(batch)} blocs)")
-        except urllib.error.HTTPError as e:
-            print(f"Erreur HTTP {e.code}: {e.read().decode('utf-8')}")
-            raise e
+def push_children(parent_id, children, label=""):
+    """Envoie les blocs enfants d'un parent par petits paquets (anti-413)."""
+    url = f"https://api.notion.com/v1/blocks/{parent_id}/children"
+    for i in range(0, len(children), CHILDREN_BATCH_SIZE):
+        batch = children[i:i + CHILDREN_BATCH_SIZE]
+        notion_request('PATCH', url, {"children": batch})
+        print(f"  {label} : séquence {i // CHILDREN_BATCH_SIZE + 1}"
+              f"/{(len(children) + CHILDREN_BATCH_SIZE - 1) // CHILDREN_BATCH_SIZE}"
+              f" ({len(batch)} blocs)")
 
-def generate_notion_content():
-    all_blocks = []
-    all_blocks.append({
+def make_code_blocks(chunks, lang):
+    return [{
+        "object": "block",
+        "type": "code",
+        "code": {
+            "rich_text": [{"type": "text", "text": {"content": chunk}}],
+            "language": lang
+        }
+    } for chunk in chunks]
+
+def make_toggle_header(filepath, char_count, part, parts):
+    """Bloc toggle SANS enfants imbriqués : le code sera envoyé séparément,
+    requête par requête, pour rester sous les limites de taille de payload."""
+    label = f"📄 {filepath}"
+    if parts > 1:
+        label += f" — partie {part}/{parts}"
+    return {
+        "object": "block",
+        "type": "toggle",
+        "toggle": {
+            "rich_text": [
+                {
+                    "type": "text",
+                    "text": {"content": label},
+                    "annotations": {"bold": True}
+                },
+                {
+                    "type": "text",
+                    "text": {"content": f" ({char_count:,} caractères)"},
+                    "annotations": {"italic": True, "color": "gray"}
+                }
+            ]
+        }
+    }
+
+def generate_content():
+    """Retourne (blocs_racine, fichiers) où fichiers = liste de
+    (bloc_toggle_sans_enfants, blocs_de_code_a_ajouter_dedans)."""
+    top_blocks = [{
         "object": "block",
         "type": "heading_1",
         "heading_1": {
             "rich_text": [{"type": "text", "text": {"content": f"🚀 Code Source : {REPO_NAME}"}}]
         }
-    })
+    }]
 
     file_list = []
+    binary_count = 0
     total_chars = 0
 
     for root, dirs, files in os.walk('.'):
@@ -112,11 +176,17 @@ def generate_notion_content():
         for f in sorted(files):
             if f.startswith('.') or f in EXCLUDE_FILES:
                 continue
+            if os.path.splitext(f)[1].lower() in BINARY_EXTENSIONS:
+                binary_count += 1
+                continue
             filepath = os.path.normpath(os.path.join(root, f))
             file_list.append(filepath)
 
     file_list.sort()
+    if binary_count:
+        print(f"{binary_count} fichiers binaires ignorés (images, polices…)")
 
+    file_entries = []
     for filepath in file_list:
         try:
             with open(filepath, 'r', encoding='utf-8', errors='ignore') as file_obj:
@@ -129,37 +199,13 @@ def generate_notion_content():
         lang = get_language(filepath)
         chunks = chunk_text(content)
 
-        children_code_blocks = []
-        for chunk in chunks:
-            children_code_blocks.append({
-                "object": "block",
-                "type": "code",
-                "code": {
-                    "rich_text": [{"type": "text", "text": {"content": chunk}}],
-                    "language": lang
-                }
-            })
-
-        toggle_block = {
-            "object": "block",
-            "type": "toggle",
-            "toggle": {
-                "rich_text": [
-                    {
-                        "type": "text",
-                        "text": {"content": f"📄 {filepath} "},
-                        "annotations": {"bold": True}
-                    },
-                    {
-                        "type": "text",
-                        "text": {"content": f"({char_count:,} caractères)"},
-                        "annotations": {"italic": True, "color": "gray"}
-                    }
-                ],
-                "children": children_code_blocks[:100]
-            }
-        }
-        all_blocks.append(toggle_block)
+        # Découpage en "parties" de 100 chunks max (= 190 000 caractères) :
+        # l'ancien [:100] tronquait silencieusement les gros fichiers.
+        parts = [chunks[i:i + MAX_CHILDREN_PER_TOGGLE]
+                 for i in range(0, len(chunks), MAX_CHILDREN_PER_TOGGLE)]
+        for index, part_chunks in enumerate(parts):
+            header = make_toggle_header(filepath, char_count, index + 1, len(parts))
+            file_entries.append((header, make_code_blocks(part_chunks, lang)))
 
     summary_block = {
         "object": "block",
@@ -167,20 +213,48 @@ def generate_notion_content():
         "callout": {
             "rich_text": [{
                 "type": "text",
-                "text": {"content": f"📊 Projet synchronisé : {len(file_list)} fichiers | {total_chars:,} caractères au total.\nCliquez sur un fichier pour dérouler son code ou laissez Claude lire la page."}
+                "text": {"content": f"📊 Projet synchronisé : {len(file_list)} fichiers | {total_chars:,} caractères au total.\n🧿 {binary_count} fichiers binaires (images, polices) non inclus.\nCliquez sur un fichier pour dérouler son code ou laissez Claude lire la page."}
             }],
             "icon": {"type": "emoji", "emoji": "⚡"}
         }
     }
-    all_blocks.insert(1, summary_block)
-
-    return all_blocks
+    top_blocks.insert(1, summary_block)
+    return top_blocks, file_entries
 
 if __name__ == "__main__":
     print("Nettoyage de l'ancienne page Notion...")
     clear_existing_blocks()
     print("Génération du code source pour Notion...")
-    blocks = generate_notion_content()
-    print(f"Envoi de {len(blocks)} éléments vers Notion...")
-    push_blocks_in_batches(blocks)
+    top_blocks, file_entries = generate_content()
+    print(f"{len(file_entries)} fichiers à envoyer...")
+
+    # 1) Créer tous les blocs racine (titres vides) par petits lots et
+    #    mémoriser leur ID renvoyé par l'API.
+    headers_with_children = [header for header, _ in file_entries]
+    all_root = top_blocks + headers_with_children
+    id_by_header_index = {}
+    for i in range(0, len(all_root), TOP_LEVEL_BATCH_SIZE):
+        batch = all_root[i:i + TOP_LEVEL_BATCH_SIZE]
+        resp = notion_request(
+            'PATCH',
+            f"https://api.notion.com/v1/blocks/{PAGE_ID}/children",
+            {"children": batch}
+        )
+        for local_index, created in enumerate(resp.get('results', [])):
+            global_index = i + local_index
+            id_by_header_index[global_index] = created['id']
+        print(f"Blocs racine {i + 1}-{i + len(batch)} créés")
+
+    # 2) Remplir chaque toggle avec son code, fichier par fichier,
+    #    en petites requêtes : plus aucune payload ne transporte tout le repo.
+    first_header_position = len(top_blocks)
+    for j, (header, children) in enumerate(file_entries):
+        global_index = first_header_position + j
+        block_id = id_by_header_index.get(global_index)
+        if not block_id:
+            print(f"⚠️ ID manquant pour le bloc {global_index}, fichier ignoré")
+            continue
+        label = header["toggle"]["rich_text"][0]["text"]["content"]
+        push_children(block_id, children, label)
+
     print("Synchronisation terminée avec succès !")
