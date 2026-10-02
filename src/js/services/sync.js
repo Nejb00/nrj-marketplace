@@ -9,17 +9,13 @@ import db from './db.js';
 
 let isSyncing = false;
 
-function getSyncUserId() {
-    try {
-        let h = localStorage.getItem('nrj_user_hash');
-        if (!h) {
-            h = Math.random().toString(36).slice(2) + Date.now().toString(36);
-            localStorage.setItem('nrj_user_hash', h);
-        }
-        return h;
-    } catch {
-        return 'anon';
-    }
+async function getSyncUserId() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session?.user?.id) return session.user.id;
+
+    const { data, error } = await supabaseClient.auth.signInAnonymously();
+    if (error) throw error;
+    return data.user.id;
 }
 
 export async function syncCartToSupabase() {
@@ -29,7 +25,7 @@ export async function syncCartToSupabase() {
         const { error } = await supabaseClient
             .from('carts')
             .upsert({
-                user_id: getSyncUserId(),
+                user_id: await getSyncUserId(),
                 items: cart.map((item) => ({
                     product_id: item.productId,
                     quantity: item.quantity,
@@ -50,7 +46,7 @@ export async function syncFavoritesToSupabase() {
         const { error } = await supabaseClient
             .from('favorites')
             .upsert({
-                user_id: getSyncUserId(),
+                user_id: await getSyncUserId(),
                 product_ids: favorites
             });
         if (error) console.warn('Sync favoris:', error.message);
