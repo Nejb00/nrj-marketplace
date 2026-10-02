@@ -169,8 +169,8 @@
       "driveMd5": "99b84610867cb74b594fa65b94219d1d"
     },
     "src/js/api/api.js": {
-      "githubSha": "7eae50b796ee6f415b30fdd8d821492a2e66fc28",
-      "driveMd5": "bf6a6ef4ba1577a9c37012a52dd30c08"
+      "githubSha": "705b3079d3f30782f7a1fe5a1b3023d25d1adf21",
+      "driveMd5": "bd6f20bf25adb3954ca6d24e9c16620d"
     },
     "src/js/core/config.js": {
       "githubSha": "e783395f32cf43847c6215b65999371df89acf3b",
@@ -449,8 +449,8 @@
       "driveMd5": "c9b56e5f1b46934732cbb6606dc7654c"
     },
     "src/js/services/sync.js": {
-      "githubSha": "b579bfb66a1c59ef75a524114c41c6c1a339c10d",
-      "driveMd5": "e45706bbe003e261439a36483ff90b83"
+      "githubSha": "2dcbe48b309c8be2c7bcda20b1a19bfbac918067",
+      "driveMd5": "99f092ab304c8b3adcb265689580cafc"
     },
     "src/js/services/visual-search.js": {
       "githubSha": "2829806320832a99256a438ead2d013e664884a0",
@@ -492,6 +492,18 @@
       "githubSha": "1e63b5716ae844062c4e5bdd70bccd34871091e0",
       "driveMd5": "ea1dbc984c6949001daa675a482eb1fc"
     },
+    "supabase/migrations/20261002192115_harden_rls_and_fk_indexes.sql": {
+      "githubSha": "5f3706cba2e0c63b5897bc894e336b8cb5c5ac61",
+      "driveMd5": "330d78071d420028846112948b0a28d1"
+    },
+    "supabase/migrations/20261002192211_harden_function_search_paths.sql": {
+      "githubSha": "853d80d21718e2249b4885489ba6dd1680ebec3d",
+      "driveMd5": "85e6bf86e580704214f3810fbbec78d9"
+    },
+    "supabase/migrations/20261002200000_restrict_increment_popularity.sql": {
+      "githubSha": "bfdc678e88cb865fc275b6dbfcd2068cd15da73c",
+      "driveMd5": "031a891a4b88141b520b5c1a10bb1c85"
+    },
     "vercel.json": {
       "githubSha": "b16eb60657eb498912d183f20230eb5401ace826",
       "driveMd5": "b8658470ca689642450ef625326f37f2"
@@ -501,5 +513,5 @@
       "driveMd5": "ba96d156f4f2282a5e0fe5b742620aaf"
     }
   },
-  "updatedAt": "2026-10-02T16:39:47.853Z"
+  "updatedAt": "2026-10-02T21:01:42.615Z"
 }
