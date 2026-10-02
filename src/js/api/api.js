@@ -27,10 +27,31 @@ const USER_HASH = (() => {
   } catch { return 'anon'; }
 })();
 
+let popularityAuthPromise = null;
+
+async function ensurePopularityAuth() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session?.user?.id) return session.user.id;
+
+    if (!popularityAuthPromise) {
+        popularityAuthPromise = supabaseClient.auth.signInAnonymously()
+            .then(({ data, error }) => {
+                if (error) throw error;
+                return data.user.id;
+            })
+            .finally(() => {
+                popularityAuthPromise = null;
+            });
+    }
+
+    return popularityAuthPromise;
+}
+
 export async function trackPopularity(productId, points) {
     try {
+        await ensurePopularityAuth();
         const { error } = await fetchWithTimeout(
-            supabaseClient.rpc('increment_popularity', { product_id: productId, amount: points })
+            supabase.rpc('increment_popularity', { product_id: productId, amount: points })
         );
         if (error) console.warn('Erreur tracking popularité:', error);
     } catch (err) {
