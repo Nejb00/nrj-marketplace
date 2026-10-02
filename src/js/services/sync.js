@@ -46,7 +46,7 @@ export async function syncFavoritesToSupabase() {
         const { error } = await supabaseClient
             .from('favorites')
             .upsert({
-                user_id: getSyncUserId(),
+                user_id: await getSyncUserId(),
                 product_ids: favorites
             });
         if (error) console.warn('Sync favoris:', error.message);
