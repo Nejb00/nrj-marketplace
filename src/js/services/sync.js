@@ -21,7 +21,8 @@ async function getSyncUserId() {
 export async function syncCartToSupabase() {
     try {
         const cart = await db.getCart();
-        if (!cart.length) return;
+        // Synchroniser aussi un tableau vide : une suppression locale doit
+        // pouvoir vider l'état distant au lieu de laisser un ancien panier.
         const { error } = await supabaseClient
             .from('carts')
             .upsert({
@@ -42,7 +43,7 @@ export async function syncCartToSupabase() {
 export async function syncFavoritesToSupabase() {
     try {
         const favorites = await db.getFavorites();
-        if (!favorites.length) return;
+        // Même principe pour les favoris : [] doit écraser l'ancien état distant.
         const { error } = await supabaseClient
             .from('favorites')
             .upsert({
