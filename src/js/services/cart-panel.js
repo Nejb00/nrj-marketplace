@@ -10,7 +10,6 @@ import { initCartMenu } from './cart-menu.js';
 import { updateNavCartBadge } from './cart-badge.js';
 import { openOrderModal } from './checkout.js';
 import { forYou, hasProfile } from './reco.js';
-import { closeCartPanel } from '../features/app/view-helpers.js';
 import { renderProductCardHTML } from '../features/catalogue/render-product-card.js';
 
 let cartPanelEventsInited = false;
@@ -49,7 +48,8 @@ function renderRecommendations(products) {
 }
 
 function backToCatalogue() {
-    closeCartPanel();
+    document.getElementById('cartPanel')?.classList.remove('open');
+    document.getElementById('cartOverlay')?.classList.remove('open');
     document.querySelector('.nav-item[data-nav="home"]')?.click();
 }
 
