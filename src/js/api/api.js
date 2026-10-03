@@ -78,6 +78,10 @@ export async function trackView(productId) {
 
 export async function getRelatedProducts(productId, limit = 8) {
     try {
+        // Le RPC s'appuie sur product_views, accessible uniquement aux
+        // utilisateurs authentifiés. Sur une première ouverture, attendre
+        // donc la session anonyme avant d'appeler le RPC.
+        await ensurePopularityAuth();
         const { data, error } = await fetchWithTimeout(
             supabaseClient.rpc('get_related_products', { pid: productId, lim: limit })
         );
