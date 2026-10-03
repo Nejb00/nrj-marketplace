@@ -1,7 +1,7 @@
 node_modules/
 dist/
 .DS_Store
-package-lock.json
 
-# Python__pycache__/
+# Python
+__pycache__/
 *.pyc
