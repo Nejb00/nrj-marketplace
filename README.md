@@ -1,67 +1,69 @@
 # NRJ Marketplace
 
-Marketplace e-commerce moderne construite avec **Vite** + **Supabase**.
+**🇬🇧 English** | [🇫🇷 Français](README.fr.md)
 
-- Catalogue public + panneau admin
-- Panier & favoris (localStorage)
-- Commande via WhatsApp
-- Recherche (texte + vocale + visuelle)
-- Chat intégré (client ↔ vendeur + IA de secours)
-- Thèmes clair / sombre
-- **UI Liquid Glass** (iOS 26 : aurora, nav verre, bottom sheets)
-- **PWA installable iOS/Android** (mode hors-ligne)
-- Synchronisation Google Drive / Notion
+Modern e-commerce marketplace built with **Vite** + **Supabase**, designed for the Republic of Congo 🇨🇬.
 
-**Live :** https://nrj-marketplace.vercel.app
+- Public catalogue + admin panel
+- Cart & favorites (localStorage)
+- Order via WhatsApp
+- Search (text + voice + visual)
+- Built-in chat (customer ↔ seller + AI fallback)
+- Light / dark themes
+- **Liquid Glass UI** (iOS 26: aurora, glass nav, bottom sheets)
+- **Installable PWA** iOS/Android (offline mode)
+- Google Drive / Notion synchronization
+
+**Live:** https://nrj-marketplace.vercel.app
 
 ---
 
 ## Stack
 
-- **Frontend** : Vite 5, HTML/CSS/JS vanilla (modules ES)
-- **Backend** : Supabase (Auth + Database + Edge Functions)
-- **Déploiement** : Vercel
-- **PWA** : Service Worker + Web Manifest
+- **Frontend:** Vite 5, vanilla HTML/CSS/JS (ES modules)
+- **Backend:** Supabase (Auth + Database + Edge Functions)
+- **Deployment:** Vercel
+- **PWA:** Service Worker + Web Manifest
 
 ---
 
-## Structure du projet
+## Project structure
 
-> 📐 Architecture en **modules fins** (refacto 2026-09) : une responsabilité
-> = un fichier. `main.js` est un point d'entrée minimal — l'ordre de ses
-> imports reproduit l'ordre historique d'exécution (side-effects).
+> 📐 **Thin modules** architecture (2026-09 refactor): one responsibility =
+> one file. `main.js` is a minimal entry point — its import order reproduces
+> the historical execution order (side-effects).
 
 ```
-├── index.html              → Catalogue public
-├── admin.html              → Panneau admin (login + gestion produits + chat)
+├── index.html              → Public catalogue
+├── admin.html              → Admin panel (login + product management + chat)
 ├── vite.config.js
 ├── vercel.json
 ├── package.json
 │
 ├── public/
 │   ├── icon-*.png / icon.svg / apple-touch-icon*.png
-│   ├── screenshot-narrow.png / screenshot-wide.png   → visuels d'install
+│   ├── screenshot-narrow.png / screenshot-wide.png   → install visuals
 │   ├── manifest.webmanifest
 │   ├── sw.js                 → Service Worker (SHELL + runtime + precache)
 │   └── placeholder.svg
 │
 ├── src/
 │   ├── css/
-│   │   ├── main.css            → importe tout (l'ordre = la cascade)
+│   │   ├── main.css            → imports everything (order = cascade)
 │   │   ├── base/base.css
 │   │   ├── layout/navigation.css
 │   │   ├── components/         → glass, search-bar, search-view, filters,
 │   │   │                         product-card, product-modal, cart-admin,
 │   │   │                         chat, placeholder, skeleton, admin
-│   │   └── themes/             → light-theme-patch (TOUJOURS en dernier)
+│   │   └── themes/             → light-theme-patch (ALWAYS last)
 │   │
 │   └── js/
-│       ├── core/               → config.js (constantes + client Supabase),
-│       │                         state.js (état global)
-│       ├── api/api.js          → appels REST Supabase + caches
+│       ├── core/               → config.js (constants + Supabase client),
+│       │                         state.js (global state)
+│       ├── api/api.js          → Supabase REST calls + caches
 │       │
 │       ├── services/           → db.js, sync.js, lazy-loading.js,
-│       │                         reco.js, visual-search.js (TF.js lazy),
+│       │                         reco.js, visual-search.js (lazy TF.js),
 │       │                         cart×8 (storage / actions / qty-picker /
 │       │                         menu / panel / badge / checkout / favorites),
 │       │                         search×4 (history / rotation / voice /
@@ -69,29 +71,30 @@ Marketplace e-commerce moderne construite avec **Vite** + **Supabase**.
 │       │
 │       ├── utils/              → escape-html, format, dom-helpers,
 │       │                         badges, category-icon, fuzzy-search,
-│       │                         images (proxy wsrv.nl + watchdog)
+│       │                         images (wsrv.nl proxy + watchdog)
 │       │
 │       ├── features/
-│       │   ├── catalogue/      → ×8 : tri/filtres, carte, grille,
-│       │   │                     pagination, bulles sous-cats, vue
-│       │   │                     catégories, produits populaires, init
-│       │   ├── chat/           → ×10 : state (chatCtx partagé), session
-│       │   │                     anonyme, temps réel, typing, IA, bulles,
-│       │   │                     affichage, historique, envoi, UI
+│       │   ├── catalogue/      → ×8: sort/filters, card, grid,
+│       │   │                     pagination, subcategory bubbles,
+│       │   │                     category view, popular products, init
+│       │   ├── chat/           → ×10: state (shared chatCtx), anonymous
+│       │   │                     session, realtime, typing, AI, bubbles,
+│       │   │                     display, history, send, UI
 │       │   │                     + admin-chat.js
-│       │   ├── product/        → ×10 : fiche (state modalCtx, carrousel,
-│       │   │                     options, total, actions, recommandations,
-│       │   │                     render) + édition (dropdowns, form, save)
-│       │   ├── admin/          → ×5 : auth, form ajout, delete,
-│       │   │                     category-dropdowns, liste + stats
-│       │   ├── search/         → search-view.js (page résultats)
-│       │   └── app/            → ×13 : thème, smart-header, header-actions,
+│       │   ├── product/        → ×10: detail page (modalCtx state,
+│       │   │                     carousel, options, total, actions,
+│       │   │                     recommendations, render) + editing
+│       │   │                     (dropdowns, form, save)
+│       │   ├── admin/          → ×5: auth, add form, delete,
+│       │   │                     category-dropdowns, list + stats
+│       │   ├── search/         → search-view.js (results page)
+│       │   └── app/            → ×13: theme, smart-header, header-actions,
 │       │                         offline, logo-press, account-view,
 │       │                         swipe-nav, quick-filters, search-bar,
 │       │                         click-delegation, filter-bar, app-init
 │       │
-│       ├── main.js             → entry public (25 lignes, orchestration)
-│       └── admin-main.js       → entry admin (séparé du bundle public)
+│       ├── main.js             → public entry (25 lines, orchestration)
+│       └── admin-main.js       → admin entry (separate from public bundle)
 │
 ├── api/
 │   └── og-product.js           → Open Graph images (Vercel serverless)
@@ -103,70 +106,72 @@ Marketplace e-commerce moderne construite avec **Vite** + **Supabase**.
 │
 └── supabase/
     └── functions/
-        └── chat-ai/            → Edge Function IA pour le chat
+        └── chat-ai/            → AI Edge Function for the chat
 ```
 
 ---
 
-## Démarrage local
+## Local setup
 
 ```bash
 npm install
 npm run dev          # http://localhost:5173
 ```
 
-### Scripts disponibles
+### Available scripts
 
-| Commande          | Description                              |
+| Command           | Description                              |
 |-------------------|------------------------------------------|
-| `npm run dev`     | Serveur de développement (hot-reload)    |
-| `npm run build`   | Build de production → `dist/`            |
-| `npm run preview` | Prévisualiser le build localement        |
-| `npm run sync`    | Lancer la synchronisation Google Drive   |
+| `npm run dev`     | Development server (hot-reload)          |
+| `npm run build`   | Production build → `dist/`               |
+| `npm run preview` | Preview the build locally                |
+| `npm run sync`    | Run the Google Drive synchronization     |
 
 ---
 
-## Build & Déploiement
+## Build & deployment
 
 ```bash
 npm run build
 ```
 
-Le projet est configuré pour **Vercel** (`base: '/'`).
+The project is configured for **Vercel** (`base: '/'`).
 
-- Push sur `main` → déploiement automatique
-- Les fichiers `index.html` et `admin.html` sont tous les deux inclus dans le build
-- `admin-main.js` est un **entry séparé** : aucune trace admin dans le bundle public
-
----
-
-## Fonctionnalités principales
-
-- Catalogue avec filtres, catégories, sous-catégories et pagination infinie
-- Recherche texte + vocale + **recherche visuelle** (TensorFlow.js chargé à la demande)
-- Panier + favoris persistants (localStorage)
-- Commande envoyée directement sur WhatsApp
-- Compte client (historique commandes, favoris…)
-- Mode admin (ajout / modification / suppression produits + stats)
-- **Chat** client ↔ admin + assistance IA (Supabase Edge Function)
-- Thème clair / sombre
-- **UI Liquid Glass** : fond aurora, nav flottante en verre, bottom sheets iOS
-- **PWA installable** (iOS via Safari « Sur l'écran d'accueil », Android via Chrome)
-  + mode hors-ligne (Service Worker + precache images)
-- Synchronisation produits vers Google Drive et Notion
+- Push to `main` → automatic deployment
+- Both `index.html` and `admin.html` are included in the build
+- `admin-main.js` is a **separate entry**: no admin code leaks into the public bundle
 
 ---
 
-## Notes techniques
+## Key features
 
-- Client Supabase importé via npm (`@supabase/supabase-js`), appels REST en `fetch` natif (zéro dépendance)
-- Code-splitting des vendors (chunk `supabase`)
-- Precache automatique des assets hashés via plugin Vite + Service Worker
-- Long-press sur le logo → accès admin
-- Images servies via proxy `wsrv.nl` (WebP, tiers de taille) avec watchdog
-  de secours — postimg.cc exclu du proxy (bloqué par politique)
-- **Règles d'architecture** (issues de la refacto) :
-  - jamais d'appel de fonction au niveau module dans un graphe cyclique
-    (risque TDZ) — les auto-inits vivent dans les entry points
-  - les imports CSS résolvent **relativement au fichier** qui les contient
-  - état partagé inter-modules via ctx explicites (`chatCtx`, `modalCtx`)
+- Catalogue with filters, categories, subcategories and infinite pagination
+- Text search + voice search + **visual search** (TensorFlow.js loaded on demand)
+- Persistent cart + favorites (localStorage)
+- Orders sent directly to WhatsApp
+- Customer account (order history, favorites…)
+- Admin mode (add / edit / delete products + stats)
+- **Chat** customer ↔ admin + AI assistance (Supabase Edge Function)
+- Light / dark theme
+- **Liquid Glass UI**: aurora background, floating glass nav bar, iOS bottom sheets
+- **Installable PWA** (iOS via Safari "Add to Home Screen", Android via Chrome)
+  + offline mode (Service Worker + image precache)
+- Product synchronization to Google Drive and Notion
+
+---
+
+## Technical notes
+
+- Supabase client imported via npm (`@supabase/supabase-js`), REST calls with
+  native `fetch` (zero extra dependencies)
+- Vendor code-splitting (`supabase` chunk)
+- Automatic precache of hashed assets via a Vite plugin + Service Worker
+- Long-press on the logo → admin access
+- Images served through the `wsrv.nl` proxy (WebP, a third of the size) with a
+  fallback watchdog — postimg.cc excluded from the proxy (blocked by policy)
+- **Architecture rules** (from the refactor):
+  - never call a function at module level inside a cyclic graph
+    (TDZ risk) — auto-inits live in the entry points
+  - CSS imports resolve **relative to the file** that contains them
+  - shared state across modules goes through explicit ctx objects
+    (`chatCtx`, `modalCtx`)
