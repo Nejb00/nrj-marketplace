@@ -511,7 +511,27 @@
     "vite.config.js": {
       "githubSha": "610c4be52446afa97857f6a11b16f6ebb15c2d3d",
       "driveMd5": "ba96d156f4f2282a5e0fe5b742620aaf"
+    },
+    "supabase/migrations/20261002200000_restrict_increment_popularity.drive-version.sql": {
+      "githubSha": "bfdc678e88cb865fc275b6dbfcd2068cd15da73c",
+      "driveMd5": "031a891a4b88141b520b5c1a10bb1c85"
+    },
+    "supabase/migrations/20261002192211_harden_function_search_paths.drive-version.sql": {
+      "githubSha": "853d80d21718e2249b4885489ba6dd1680ebec3d",
+      "driveMd5": "85e6bf86e580704214f3810fbbec78d9"
+    },
+    "supabase/migrations/20261002192115_harden_rls_and_fk_indexes.drive-version.sql": {
+      "githubSha": "5f3706cba2e0c63b5897bc894e336b8cb5c5ac61",
+      "driveMd5": "330d78071d420028846112948b0a28d1"
+    },
+    "src/js/services/sync.drive-version.js": {
+      "githubSha": "2dcbe48b309c8be2c7bcda20b1a19bfbac918067",
+      "driveMd5": "99f092ab304c8b3adcb265689580cafc"
+    },
+    "src/js/api/api.drive-version.js": {
+      "githubSha": "705b3079d3f30782f7a1fe5a1b3023d25d1adf21",
+      "driveMd5": "bd6f20bf25adb3954ca6d24e9c16620d"
     }
   },
-  "updatedAt": "2026-10-02T21:01:42.615Z"
+  "updatedAt": "2026-10-03T00:32:13.797Z"
 }
