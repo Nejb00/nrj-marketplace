@@ -81,7 +81,10 @@ export async function getRelatedProducts(productId, limit = 8) {
         // Le RPC s'appuie sur product_views, accessible uniquement aux
         // utilisateurs authentifiés. Sur une première ouverture, attendre
         // donc la session anonyme avant d'appeler le RPC.
-        await ensurePopularityAuth();
+        // L'authentification anonyme peut rester bloquée si le backend est
+        // inaccessible. Elle doit respecter le même timeout que le RPC afin
+        // que le panier puisse retomber sur ses recommandations locales.
+        await fetchWithTimeout(ensurePopularityAuth(), REQUEST_TIMEOUT);
         const { data, error } = await fetchWithTimeout(
             supabaseClient.rpc('get_related_products', { pid: productId, lim: limit })
         );
