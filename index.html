@@ -180,6 +180,26 @@
         <div class="cart-panel-footer" id="cartPanelFooter"></div>
     </div>
     <div class="cart-overlay" id="cartOverlay"></div>
+    <div class="modal-overlay" id="orderModalOverlay" role="dialog" aria-modal="true" aria-labelledby="orderModalTitle">
+        <div class="modal order-modal">
+            <div class="order-modal-header">
+                <div>
+                    <h2 id="orderModalTitle">Confirmer ta commande</h2>
+                    <p>Vérifie les articles puis envoie la commande sur WhatsApp.</p>
+                </div>
+                <button type="button" class="cart-close-btn order-modal-close" id="cancelOrderBtn" aria-label="Fermer">×</button>
+            </div>
+            <div class="order-summary" id="orderSummary"></div>
+            <div class="form-group">
+                <label for="customerName">Ton nom</label>
+                <input id="customerName" type="text" name="customerName" autocomplete="name" placeholder="Ex. Exaucé" maxlength="80">
+            </div>
+            <div class="order-modal-actions">
+                <button type="button" class="order-cancel-btn" data-action="cancel-order">Annuler</button>
+                <button type="button" class="order-whatsapp-btn" id="sendWhatsAppBtn">Envoyer sur WhatsApp</button>
+            </div>
+        </div>
+    </div>
     <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
 
     <div id="searchView" style="display:none;">
