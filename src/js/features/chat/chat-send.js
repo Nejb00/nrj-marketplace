@@ -1,7 +1,7 @@
 // ═══ Chat — envoi de messages + marquage lu ═══
 // Éclaté de chat.js (refacto-archi) — logique strictement identique.
 import { supabaseClient } from '../../core/config.js';
-import { NAME_KEY, chatCtx, $ } from './chat-state.js';
+import { chatCtx, $ } from './chat-state.js';
 import { showToast } from '../../utils/dom-helpers.js';
 import { ensureSession } from './chat-session.js';
 import { buildBubble } from './chat-bubbles.js';
@@ -54,17 +54,8 @@ export async function sendMessage() {
         if (tk) { tk.textContent = '✓✓'; tk.classList.toggle('read', !!data.read_by_admin); }
         chatCtx.pendingProduct = null;
 
-        // Met à jour l'aperçu côté boîte de réception vendeur.
-        supabaseClient
-            .from('chat_sessions')
-            .update({
-                last_message_preview: text.slice(0, 90),
-                last_message_at: data.created_at,
-                customer_name: localStorage.getItem(NAME_KEY) || null,
-            })
-            .eq('id', chatCtx.sessionId)
-            .then(() => {});
-
+        // Le trigger DB met déjà à jour automatiquement l’aperçu, la date
+        // et le compteur de non-lus lors de l’insertion du message.
         // 🤖 Si personne ne répond d'ici {delay}, l'Assistant NRJ prend le relais
         scheduleAIReply();
     } catch {
