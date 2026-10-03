@@ -18,6 +18,11 @@ import { isFlexOpen } from './view-helpers.js';
 import { switchToSearchView, switchFromSearchView } from '../search/search-view.js';
 
 document.addEventListener('click', e => {
+  const cancelOrder = e.target.closest('[data-action="cancel-order"]');
+  if (cancelOrder) {
+    document.getElementById('orderModalOverlay')?.classList.remove('open');
+    return;
+  }
   const fb = e.target.closest('.filter-btn'); if (fb) { applyFilter(fb.dataset.category); return; }
   const subBubble = e.target.closest('.subcat-bubble');
   if (subBubble) {
