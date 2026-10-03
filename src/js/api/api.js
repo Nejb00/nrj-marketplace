@@ -30,18 +30,26 @@ const USER_HASH = (() => {
 let popularityAuthPromise = null;
 
 async function ensurePopularityAuth() {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (session?.user?.id) return session.user.id;
-
     if (!popularityAuthPromise) {
-        popularityAuthPromise = supabaseClient.auth.signInAnonymously()
-            .then(({ data, error }) => {
-                if (error) throw error;
-                return data.user.id;
-            })
-            .finally(() => {
-                popularityAuthPromise = null;
-            });
+        popularityAuthPromise = (async () => {
+            // Les appels d'auth eux-mêmes doivent être bornés : sinon une
+            // connexion indisponible peut laisser la promesse partagée bloquée
+            // pour toutes les ouvertures suivantes du panier.
+            const { data: { session } } = await fetchWithTimeout(
+                supabaseClient.auth.getSession(),
+                REQUEST_TIMEOUT
+            );
+            if (session?.user?.id) return session.user.id;
+
+            const { data, error } = await fetchWithTimeout(
+                supabaseClient.auth.signInAnonymously(),
+                REQUEST_TIMEOUT
+            );
+            if (error) throw error;
+            return data.user.id;
+        })().finally(() => {
+            popularityAuthPromise = null;
+        });
     }
 
     return popularityAuthPromise;
