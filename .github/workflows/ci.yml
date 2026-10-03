@@ -1,0 +1,44 @@
+# CI — vérification automatique du code
+# Chaque PR vers main (et chaque push sur main) doit buildé sans erreur.
+# Objectif : plus jamais un build cassé mergé à l'aveugle (voir les
+# aventures du parseur CSS — un import mort ou une syntaxe tuée = CI rouge).
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du repo
+        uses: actions/checkout@v4
+
+      - name: Installation de Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Installation des dépendances
+        run: npm ci
+
+      - name: Build de production
+        run: npm run build
+
+      - name: Vérification du livrable
+        run: |
+          if [ ! -f dist/index.html ]; then
+            echo "ECHEC : dist/index.html manquant — le build n'a rien produit"
+            exit 1
+          fi
+          if [ ! -d dist/assets ]; then
+            echo "ECHEC : dist/assets manquant — les bundles JS/CSS absents"
+            exit 1
+          fi
+          echo "Build OK — dist généré avec ses assets"
