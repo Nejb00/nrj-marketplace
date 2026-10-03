@@ -582,3 +582,100 @@
   animation: none;
  }
 }
+
+
+/* ═══ Modale de confirmation de commande ═══ */
+.order-modal {
+ max-width: 460px;
+ max-height: min(90dvh, 720px);
+ overflow-y: auto;
+ padding: 1.25rem;
+}
+
+.order-modal-header {
+ display: flex;
+ align-items: flex-start;
+ justify-content: space-between;
+ gap: 1rem;
+ margin-bottom: 1.1rem;
+}
+
+.order-modal-header h2 {
+ margin: 0;
+ color: var(--text);
+ font-size: 1.1rem;
+ font-weight: 850;
+}
+
+.order-modal-header p {
+ margin: 0.35rem 0 0;
+ color: var(--text-secondary);
+ font-size: 0.8rem;
+ line-height: 1.45;
+}
+
+.order-modal-close {
+ flex: 0 0 auto;
+}
+
+.order-summary {
+ margin-bottom: 1rem;
+ padding: 0.9rem;
+ border: 1px solid var(--border);
+ border-radius: 16px;
+ background: var(--surface-light);
+ color: var(--text);
+ font-size: 0.8rem;
+ line-height: 1.55;
+ overflow-wrap: anywhere;
+}
+
+.order-modal .form-group {
+ margin-bottom: 1rem;
+}
+
+.order-modal .form-group input {
+ border-radius: 14px;
+ min-height: 46px;
+ background: var(--surface-light);
+}
+
+.order-modal-actions {
+ display: grid;
+ grid-template-columns: 1fr 1fr;
+ gap: 0.65rem;
+}
+
+.order-cancel-btn,
+.order-whatsapp-btn {
+ min-height: 46px;
+ padding: 0.75rem 0.9rem;
+ border-radius: 14px;
+ font-family: inherit;
+ font-size: 0.82rem;
+ font-weight: 800;
+ cursor: pointer;
+ -webkit-tap-highlight-color: transparent;
+ transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
+}
+
+.order-cancel-btn {
+ background: var(--surface-light);
+ color: var(--text);
+ border: 1px solid var(--border);
+}
+
+.order-whatsapp-btn {
+ border: 0;
+ background: var(--primary);
+ color: #fff;
+}
+
+.order-cancel-btn:active,
+.order-whatsapp-btn:active {
+ transform: scale(0.98);
+}
+
+@media (max-width: 360px) {
+ .order-modal-actions { grid-template-columns: 1fr; }
+}
