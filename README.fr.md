@@ -2,7 +2,7 @@
 
 [🇬🇧 English](README.md) | **🇫🇷 Français**
 
-Marketplace e-commerce moderne construite avec **Vite** + **Supabase**, pensée pour la République du Congo 🇨🇬.
+Marketplace e-commerce moderne construite avec **Vite** + **Supabase**.
 
 - Catalogue public + panneau admin
 - Panier & favoris (localStorage)

@@ -2,7 +2,7 @@
 
 **🇬🇧 English** | [🇫🇷 Français](README.fr.md)
 
-Modern e-commerce marketplace built with **Vite** + **Supabase**, designed for the Republic of Congo 🇨🇬.
+Modern e-commerce marketplace built with **Vite** + **Supabase**.
 
 - Public catalogue + admin panel
 - Cart & favorites (localStorage)
