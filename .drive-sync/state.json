@@ -169,8 +169,8 @@
       "driveMd5": "99b84610867cb74b594fa65b94219d1d"
     },
     "src/js/api/api.js": {
-      "githubSha": "705b3079d3f30782f7a1fe5a1b3023d25d1adf21",
-      "driveMd5": "bd6f20bf25adb3954ca6d24e9c16620d"
+      "githubSha": "05cfa90d1e8b2d085a0d66215dbe2a8ef99f0d0e",
+      "driveMd5": "404d6fef931a3f5a97587ab6469be48e"
     },
     "src/js/core/config.js": {
       "githubSha": "e783395f32cf43847c6215b65999371df89acf3b",
@@ -321,8 +321,8 @@
       "driveMd5": "42e722d3d2dfddd1287a3445cdeea746"
     },
     "src/js/features/chat/chat-send.js": {
-      "githubSha": "6bc0cc12e5ae87ae57c35a6798ec1f60769dca79",
-      "driveMd5": "5f5138daa3cfdd740b779407f272c548"
+      "githubSha": "4a1b6870c2f954f65e4e2df4770d70770ab6a3f6",
+      "driveMd5": "c10fcc89fe0c10f942959b4b99089d79"
     },
     "src/js/features/chat/chat-session.js": {
       "githubSha": "671ff4ae8ef986c69725322e011f288fc70917eb",
@@ -449,8 +449,8 @@
       "driveMd5": "c9b56e5f1b46934732cbb6606dc7654c"
     },
     "src/js/services/sync.js": {
-      "githubSha": "2dcbe48b309c8be2c7bcda20b1a19bfbac918067",
-      "driveMd5": "99f092ab304c8b3adcb265689580cafc"
+      "githubSha": "ac4ff4112d672fb665ec4e84e18821d4fc31ed1c",
+      "driveMd5": "bdcf3a2224ef3db3601099067ad5f21f"
     },
     "src/js/services/visual-search.js": {
       "githubSha": "2829806320832a99256a438ead2d013e664884a0",
@@ -504,6 +504,18 @@
       "githubSha": "bfdc678e88cb865fc275b6dbfcd2068cd15da73c",
       "driveMd5": "031a891a4b88141b520b5c1a10bb1c85"
     },
+    "supabase/migrations/20261003091500_harden_chat_and_vector_rpcs.sql": {
+      "githubSha": "038d8bb7d4b0c2a083e4e555b819c0094191027c",
+      "driveMd5": "dc0f0913a1e089f015494b31bce0c700"
+    },
+    "supabase/migrations/20261003092000_revoke_chat_trigger_execute.sql": {
+      "githubSha": "a550d759f5620157a4dfd321caeb84d5a932c94b",
+      "driveMd5": "7876169a7adcb99696c4031462d28b3d"
+    },
+    "supabase/migrations/20261003093000_fix_related_products_access.sql": {
+      "githubSha": "51e0013acf2a93ab8a96546555fe7a17876452f4",
+      "driveMd5": "6eee13bb40aa50e8f965855b51408a2e"
+    },
     "vercel.json": {
       "githubSha": "b16eb60657eb498912d183f20230eb5401ace826",
       "driveMd5": "b8658470ca689642450ef625326f37f2"
@@ -513,5 +525,5 @@
       "driveMd5": "ba96d156f4f2282a5e0fe5b742620aaf"
     }
   },
-  "updatedAt": "2026-10-03T05:47:40.757Z"
+  "updatedAt": "2026-10-03T11:25:47.376Z"
 }
