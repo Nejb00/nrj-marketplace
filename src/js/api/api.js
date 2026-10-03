@@ -30,18 +30,26 @@ const USER_HASH = (() => {
 let popularityAuthPromise = null;
 
 async function ensurePopularityAuth() {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (session?.user?.id) return session.user.id;
-
     if (!popularityAuthPromise) {
-        popularityAuthPromise = supabaseClient.auth.signInAnonymously()
-            .then(({ data, error }) => {
-                if (error) throw error;
-                return data.user.id;
-            })
-            .finally(() => {
-                popularityAuthPromise = null;
-            });
+        popularityAuthPromise = (async () => {
+            // Les appels d'auth eux-mêmes doivent être bornés : sinon une
+            // connexion indisponible peut laisser la promesse partagée bloquée
+            // pour toutes les ouvertures suivantes du panier.
+            const { data: { session } } = await fetchWithTimeout(
+                supabaseClient.auth.getSession(),
+                REQUEST_TIMEOUT
+            );
+            if (session?.user?.id) return session.user.id;
+
+            const { data, error } = await fetchWithTimeout(
+                supabaseClient.auth.signInAnonymously(),
+                REQUEST_TIMEOUT
+            );
+            if (error) throw error;
+            return data.user.id;
+        })().finally(() => {
+            popularityAuthPromise = null;
+        });
     }
 
     return popularityAuthPromise;
@@ -77,11 +85,18 @@ export async function trackView(productId) {
 }
 
 export async function getRelatedProducts(productId, limit = 8) {
+    // Hors ligne : inutile d'attendre les timeouts Supabase. Le moteur local
+    // de recommandations du panier prendra immédiatement le relais.
+    if (typeof navigator !== 'undefined' && !navigator.onLine) return [];
+
     try {
         // Le RPC s'appuie sur product_views, accessible uniquement aux
         // utilisateurs authentifiés. Sur une première ouverture, attendre
         // donc la session anonyme avant d'appeler le RPC.
-        await ensurePopularityAuth();
+        // L'authentification anonyme peut rester bloquée si le backend est
+        // inaccessible. Elle doit respecter le même timeout que le RPC afin
+        // que le panier puisse retomber sur ses recommandations locales.
+        await fetchWithTimeout(ensurePopularityAuth(), REQUEST_TIMEOUT);
         const { data, error } = await fetchWithTimeout(
             supabaseClient.rpc('get_related_products', { pid: productId, lim: limit })
         );
