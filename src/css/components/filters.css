@@ -538,3 +538,30 @@ body.categories-page-open .logo-brand-text {
         grid-template-columns: repeat(6, 1fr);
     }
 }
+
+
+/* ━━━ Catalogue compact : 4 catégories parentes visibles à la fois ━━━ */
+.header-fixed #filterBar {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0.4rem 0.75rem 0.55rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+}
+
+.header-fixed #filterBar::-webkit-scrollbar { display: none; }
+
+.header-fixed #filterBar .filter-btn {
+    flex: 0 0 calc((100% - 1.2rem) / 4);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-left: 0.55rem;
+    padding-right: 0.55rem;
+    text-align: center;
+}
