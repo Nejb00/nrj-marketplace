@@ -61,6 +61,10 @@ export async function trackPopularity(productId, points) {
 
 export async function trackView(productId) {
     try {
+        // product_views n'autorise que les utilisateurs authentifiés.
+        // Le suivi doit donc attendre la même session anonyme que la popularité,
+        // sinon l'appel de la vue peut partir en rôle anon et être silencieusement refusé.
+        await ensurePopularityAuth();
         await fetchWithTimeout(
             supabaseClient.from('product_views').insert({
                 user_hash: USER_HASH,
