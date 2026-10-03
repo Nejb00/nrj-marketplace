@@ -85,6 +85,10 @@ export async function trackView(productId) {
 }
 
 export async function getRelatedProducts(productId, limit = 8) {
+    // Hors ligne : inutile d'attendre les timeouts Supabase. Le moteur local
+    // de recommandations du panier prendra immédiatement le relais.
+    if (typeof navigator !== 'undefined' && !navigator.onLine) return [];
+
     try {
         // Le RPC s'appuie sur product_views, accessible uniquement aux
         // utilisateurs authentifiés. Sur une première ouverture, attendre
