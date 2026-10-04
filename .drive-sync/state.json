@@ -1,0 +1,541 @@
+{
+  "files": {
+    ".github/test-branch-marker-temp": {
+      "githubSha": "3602361dafeea2cbec159128f5166a8428c0795c",
+      "driveMd5": "3d801aa532c1cec3ee82d87a99fdf63f"
+    },
+    ".github/workflows/ci.yml": {
+      "githubSha": "915cdf650f8c3749d07463f0b7ad9a083a29095b",
+      "driveMd5": "1a2423ea24747c904ce4931130253d24"
+    },
+    ".github/workflows/drive-sync.yml": {
+      "githubSha": "e87a8073e38174448cd4dd9dd1f2211d4076b861",
+      "driveMd5": "f99281934fdca8d0930cef584c4f6992"
+    },
+    ".github/workflows/gdrive-sync.yml": {
+      "githubSha": "4df2e4a889d7225df2fc54a3d6c64a048141c85d",
+      "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
+    },
+    ".github/workflows/notion-sync.yml": {
+      "githubSha": "7a13aada8e437d76f01f9a56f73aea4a4b139e53",
+      "driveMd5": "8c9bd72d39c67c3052c826eea0f363be"
+    },
+    ".gitignore": {
+      "githubSha": "7aaedd212125842e055efc0be8f486fd67fbfe1e",
+      "driveMd5": "aba8421d6411abd7574ab7bf06a69638"
+    },
+    "README.fr.md": {
+      "githubSha": "25eb13ef41b1a0188c1115cd50f13bbff282542f",
+      "driveMd5": "71f03ff96b9e45ebf6639aca631c2d66"
+    },
+    "README.md": {
+      "githubSha": "de361b7a6bb23d8b9ae633878292c16e37743002",
+      "driveMd5": "1b421ecf2ae9904bee86dd2b89a98821"
+    },
+    "admin.html": {
+      "githubSha": "b6081df7f10dbd04e3274795abd0efff53662589",
+      "driveMd5": "9d4a9c1876f02791c7101cf9db36dea4"
+    },
+    "api/og-product.js": {
+      "githubSha": "30ead57d3aa214884c0f14d491e01bd7cd1f8216",
+      "driveMd5": "bfc6fe004c6c18f027fc6178c21772b6"
+    },
+    "index.html": {
+      "githubSha": "f9a00f7f032814ca396c56250714182b554b725c",
+      "driveMd5": "04c2ef2d77aa1098b36dd0cdc88f8b19"
+    },
+    "package-lock.json": {
+      "githubSha": "e81c04dcd2bee19b1c0100f74111c74f9f7edd63",
+      "driveMd5": "654914167c47c8f85ae4d936eb47d820"
+    },
+    "package.json": {
+      "githubSha": "1eb6a13123632821b8908b5a8ee08bab6c5f78e2",
+      "driveMd5": "ad71f3ba685849f57700cd3b831747c7"
+    },
+    "public/Hr": {
+      "githubSha": "755d0629ab9b927d669f2476729886bf48958b47",
+      "driveMd5": "437ed0e94114990abbf8f2fe5b0f2c93"
+    },
+    "public/apple-touch-icon-167.png": {
+      "githubSha": "248e19cbd9a9973cc9cbd64dd694edca23c05099",
+      "driveMd5": "7b26171c885e862cf14c6ad4c9548f07"
+    },
+    "public/apple-touch-icon.png": {
+      "githubSha": "dc207d83b8497b89cab2ef58cc729431b86d1af3",
+      "driveMd5": "2711cf0a65cbd410b84d781f319a045d"
+    },
+    "public/icon-1024.png": {
+      "githubSha": "605fea1dc0fcce17d2bc5eb304c436d3317a5563",
+      "driveMd5": "8634547c5a0af99ef63e83678f80fa7a"
+    },
+    "public/icon-192.png": {
+      "githubSha": "296728de0188468d20778c000b23aa9e7f7445e4",
+      "driveMd5": "c79cba4f9cf7491eb441636f34c74943"
+    },
+    "public/icon-512.png": {
+      "githubSha": "227b6b0ed4c486aae755f06c7cf073321631decb",
+      "driveMd5": "ca7e5cd5dd9ec47946a74e66ace2c9cc"
+    },
+    "public/icon.svg": {
+      "githubSha": "04f8a6f8a9fcee0032b0824507aa2fcb05059a07",
+      "driveMd5": "6fb4079db8e45d734005bf5507445c2e"
+    },
+    "public/manifest.webmanifest": {
+      "githubSha": "7adfe776a628ea3fc7bbd1973f03d0d5e9dee347",
+      "driveMd5": "2a1f73cf80b8029f6a6821eddd8b9781"
+    },
+    "public/placeholder.svg": {
+      "githubSha": "47fe9f8fa403638fd3ea0ebd55a9447ac8645f6b",
+      "driveMd5": "e389578e57bc63fd76d19400276d4309"
+    },
+    "public/screenshot-narrow.png": {
+      "githubSha": "69399ae5d30b90e051ab17bbe13538473ce9ad58",
+      "driveMd5": "60b546a0ac64cdc5a7efacb4d94d1f25"
+    },
+    "public/screenshot-wide.png": {
+      "githubSha": "dd89be538eb6ce5e8d00c93738c5ef4aa22b8c06",
+      "driveMd5": "ff8828b45cdd558b1b34b063d369d559"
+    },
+    "public/sw.js": {
+      "githubSha": "ca71a986b92c25828983559f189c22a1c19c4991",
+      "driveMd5": "bf16f4c11c05e3f7da584a4be7a9a8c6"
+    },
+    "scripts/drive-sync.mjs": {
+      "githubSha": "d51b092ab918cd8aa58ab5fe9d89930a094037d4",
+      "driveMd5": "47bbfb3f93069edf9ed407290fe514a0"
+    },
+    "scripts/sync_to_gdrive.py": {
+      "githubSha": "9d43e41e7a90148c44dad49486cab825e475bfe6",
+      "driveMd5": "8b085f087095fe2df782e3f84b5959b4"
+    },
+    "scripts/sync_to_notion.py": {
+      "githubSha": "83021759676f75d2295c1d98229004fc65e048f0",
+      "driveMd5": "e2e1cbb5d4dbac45d01b40647b9d06ba"
+    },
+    "src/css/base/base.css": {
+      "githubSha": "23de71ad38f820ad84939cd2298ed9eb72f79f35",
+      "driveMd5": "6aeb10458dec1bce5704e0f133d602e7"
+    },
+    "src/css/components/admin.css": {
+      "githubSha": "76ed77d8b7d8fc991e2770ce9868891798eab257",
+      "driveMd5": "c66e21c684df9c2cf4484517204713d6"
+    },
+    "src/css/components/cart-admin.css": {
+      "githubSha": "0718af5c355d9cd685d7f788b6a00f52856b4c59",
+      "driveMd5": "0324326052e55631f49a5b0bb7b9f9f5"
+    },
+    "src/css/components/chat.css": {
+      "githubSha": "5d105c34aece7f5bca3154662e8b42dba870298d",
+      "driveMd5": "e0dc00e92abf98436873170b41f2d51c"
+    },
+    "src/css/components/filters.css": {
+      "githubSha": "8ac33407f4c3a386e2f43ac7c0a0ea2b58a6f786",
+      "driveMd5": "97f4cb60d9e9fb923069c818e7dbd774"
+    },
+    "src/css/components/glass.css": {
+      "githubSha": "e1fc1153559efc717dbe2152526ea71b24e12738",
+      "driveMd5": "4a460ac7294be1cf87e00bd8a0b68b3c"
+    },
+    "src/css/components/placeholder.css": {
+      "githubSha": "6ce0e38bbd5f91136e492ba59aca71446b6af423",
+      "driveMd5": "fc509d7d9d638f30651cfd4a17c07f7f"
+    },
+    "src/css/components/product-card.css": {
+      "githubSha": "46369982e8dae0cbca375e1148855364053e5267",
+      "driveMd5": "66dcee3428ed7c077b53a12e690a215e"
+    },
+    "src/css/components/product-modal.css": {
+      "githubSha": "631b98de93c6ddf77015bd5ec9020bbc73805f3d",
+      "driveMd5": "f877d746d5f8c98d05b471e0a3f1f31e"
+    },
+    "src/css/components/search-bar.css": {
+      "githubSha": "62977cc3e68e539d4d02bbe569c36a759db16ca2",
+      "driveMd5": "e8dad22b685e7044fbb1a04d6d9eba76"
+    },
+    "src/css/components/search-view.css": {
+      "githubSha": "373cc0c61d1bb0d1516bd3d0557cd1543ce2275f",
+      "driveMd5": "0a9bf115d4f0f369314c1100b5373ef9"
+    },
+    "src/css/components/skeleton.css": {
+      "githubSha": "10977aa6171382fd8e14817789dace46e4e0c4eb",
+      "driveMd5": "101fe0b4a249c2fc6c214ec3e7f35514"
+    },
+    "src/css/layout/navigation.css": {
+      "githubSha": "0f0b115fba746bff431c3715028db3c3d111b5d2",
+      "driveMd5": "788fc3756aa159851d7e4b2252c658a5"
+    },
+    "src/css/main.css": {
+      "githubSha": "2c92a75d7ed823c71d60f0405810ba63a370c29c",
+      "driveMd5": "150d897be2af7b48aa1c15f70aeb99f5"
+    },
+    "src/css/themes/fluo-theme.css": {
+      "githubSha": "62ce0f319e741ec1644bdac8e7a60815b0f4d3b3",
+      "driveMd5": "fddcaaae7ea01a68d407fbc85ffb9dc6"
+    },
+    "src/css/themes/light-theme-patch.css": {
+      "githubSha": "df3a12f2cf0c584c77cf64a2b285f493ca2681ab",
+      "driveMd5": "73a5845bdd8ebd634c2c9db81668f662"
+    },
+    "src/js/admin-main.js": {
+      "githubSha": "237f3e50dfd6793aa3458c2f2e936d885f78acd4",
+      "driveMd5": "99b84610867cb74b594fa65b94219d1d"
+    },
+    "src/js/api/api.js": {
+      "githubSha": "05cfa90d1e8b2d085a0d66215dbe2a8ef99f0d0e",
+      "driveMd5": "404d6fef931a3f5a97587ab6469be48e"
+    },
+    "src/js/core/config.js": {
+      "githubSha": "e783395f32cf43847c6215b65999371df89acf3b",
+      "driveMd5": "825f95554a3eb543fa9715843a58b3f1"
+    },
+    "src/js/core/state.js": {
+      "githubSha": "c956b3adfff49604c58997ccc4450a2e7514bce7",
+      "driveMd5": "d4cbb8319562d890ef29262d67917551"
+    },
+    "src/js/features/admin/admin-auth.js": {
+      "githubSha": "f4b342c68ed6ad6ed6718694ae80189cb89a5de1",
+      "driveMd5": "47852a793ad6f14d4f25e7a32c50eb45"
+    },
+    "src/js/features/admin/admin-list.js": {
+      "githubSha": "8b3a3a9a03afe48496f5b4604ecc82acf5842790",
+      "driveMd5": "6f12863a7f1d4d8a19229c57b540805e"
+    },
+    "src/js/features/admin/category-dropdowns.js": {
+      "githubSha": "d0a4f2d9813bd20f65d19f94e240056f25d6a4b0",
+      "driveMd5": "4f7b15232c20fdbcb5960f5a38823ec6"
+    },
+    "src/js/features/admin/multi-select.js": {
+      "githubSha": "6d09900c9ce3bf7731c86751ad6e5e1f4be3b8c7",
+      "driveMd5": "23485351167c679d1ede97ce96d12876"
+    },
+    "src/js/features/admin/product-delete.js": {
+      "githubSha": "8f745ab1973cf27436ad3df4c1bb8a6a7990eb2f",
+      "driveMd5": "57f1d8d055bf31bf9ec110b93cc0b205"
+    },
+    "src/js/features/admin/product-form.js": {
+      "githubSha": "c56398451be340e509771ead602cc7a4fa59d7f1",
+      "driveMd5": "b19b8bb0f4f1619846a16aa90f5de6e5"
+    },
+    "src/js/features/app/account-view.js": {
+      "githubSha": "c2a912bf1b097fff79e15e36cb3e108692c66111",
+      "driveMd5": "92b63d7c977b3320ebce6fe32e3ecc50"
+    },
+    "src/js/features/app/app-init.js": {
+      "githubSha": "2302183ba38a71a42d526f33dd2ed765f873dc7a",
+      "driveMd5": "2def19fc9cc31e344cdf2c1f547e0909"
+    },
+    "src/js/features/app/click-delegation.js": {
+      "githubSha": "bc82aa1ca157894c3850d722298062d53701dd03",
+      "driveMd5": "a7fb02056a9c4db1d3d2afd300823851"
+    },
+    "src/js/features/app/filter-bar.js": {
+      "githubSha": "e63288ce35d4d6262c2fbe4e18f3b2f10402c4b7",
+      "driveMd5": "bd5c7c17e04188ddffcf1ca2800eb44b"
+    },
+    "src/js/features/app/header-actions.js": {
+      "githubSha": "6cfe084859563c76e4bcfd06af55e8626f426809",
+      "driveMd5": "b6c470e6aeee5146ac0ca720f777c48a"
+    },
+    "src/js/features/app/header-search.js": {
+      "githubSha": "f4f85af15c52f9a17a9991d93afb7603cfd6a757",
+      "driveMd5": "47e3c5ce4675f838ff3b0d280b8ab8f2"
+    },
+    "src/js/features/app/logo-press.js": {
+      "githubSha": "67fa858f6d32d42f4f29a1f93ffa585370d988fd",
+      "driveMd5": "8ae076b8ad573d12367a700c0d1341f5"
+    },
+    "src/js/features/app/offline.js": {
+      "githubSha": "697ab085421b85e5388ca45616e1887d458ac12c",
+      "driveMd5": "60f4243e8d4ff7d2d32a93a0cbef44a3"
+    },
+    "src/js/features/app/quick-filters.js": {
+      "githubSha": "7f789d04023b24ab99559ca2a42031c5b5852c45",
+      "driveMd5": "bbb3135b50d2207894aca024f2e733ba"
+    },
+    "src/js/features/app/search-bar-bindings.js": {
+      "githubSha": "1fa9cf54775d56df466c6949541aee2b8d3152b1",
+      "driveMd5": "81b2687dc9202141b6fa654ed2678cc9"
+    },
+    "src/js/features/app/smart-header.js": {
+      "githubSha": "ff36f35fca7ef07647e7e9ba6e849c29268adae7",
+      "driveMd5": "c38785d2b0cfa48a7af668de4a192b01"
+    },
+    "src/js/features/app/subcategory-collapse.js": {
+      "githubSha": "ae161bb6402e0ef91132443828d63759113ca0e5",
+      "driveMd5": "806fd9a82183b1fdd8ca74ef0739530d"
+    },
+    "src/js/features/app/swipe-nav.js": {
+      "githubSha": "9dcea7a847464e42ad3177c0038f71fe6abcee4d",
+      "driveMd5": "f4c224c2cd0550cdf3bea392cec84626"
+    },
+    "src/js/features/app/theme.js": {
+      "githubSha": "15b1b695e9b2822af3b88515df002b56096b9e1a",
+      "driveMd5": "b83371b1917aaa02bcd44ef94932fa28"
+    },
+    "src/js/features/app/view-helpers.js": {
+      "githubSha": "20d7e019c32768f77d230d7c5f8ca89b9e363b02",
+      "driveMd5": "a7669e2c61baa96574a53c59e12a6a90"
+    },
+    "src/js/features/catalogue/catalogue-init.js": {
+      "githubSha": "b87a8d62f50d9b15b1cf61c9b50e5ae8d743a659",
+      "driveMd5": "fd5ce00d95630bc6bb0b3c90ab5e940c"
+    },
+    "src/js/features/catalogue/categories-page.js": {
+      "githubSha": "3fbb4d9b9c0d72b9fa1dff5a3547dac15395de02",
+      "driveMd5": "ad21420fead038296b6588cb426afad9"
+    },
+    "src/js/features/catalogue/categories-popular.js": {
+      "githubSha": "e0c0070a67ad6151e0f7f9ee249c7508d5ac21c2",
+      "driveMd5": "e4bdb18ea18a8a4863afef13916da67b"
+    },
+    "src/js/features/catalogue/category-bubbles.js": {
+      "githubSha": "e0d47596874878760e362b1f31206c74eb40bfef",
+      "driveMd5": "deb506c5c3d84ed772b9d693e28d6933"
+    },
+    "src/js/features/catalogue/pagination.js": {
+      "githubSha": "0e64d7664a6b51acff3d0c10dcbcab2d67b1169a",
+      "driveMd5": "7b3812ffaecf7f8d734316006c699fc6"
+    },
+    "src/js/features/catalogue/popularity-sort.js": {
+      "githubSha": "537c5a75fe8953ad2e3269a6677498161d8c3099",
+      "driveMd5": "ff47823d6193eb31a344270e7262824e"
+    },
+    "src/js/features/catalogue/render-grid.js": {
+      "githubSha": "241850b8cbbcb05c8446c116028a5982404951e0",
+      "driveMd5": "869d3848ab984f7bd40384d3fe0a85e7"
+    },
+    "src/js/features/catalogue/render-product-card.js": {
+      "githubSha": "247221406854fd87324e74054938175f507b6abe",
+      "driveMd5": "f716ec6f8c0273ffb40142b13d5ca964"
+    },
+    "src/js/features/chat/admin-chat.js": {
+      "githubSha": "4073b7f071cc6a40a1305b99c981b1201bc3ec5a",
+      "driveMd5": "341be14f3614b668b62bc4e48fc08b4c"
+    },
+    "src/js/features/chat/chat-ai.js": {
+      "githubSha": "b4e474425aa024402bb328a8fe48b5079221a3fc",
+      "driveMd5": "ff61b86abc624027d4070657fc64be22"
+    },
+    "src/js/features/chat/chat-bubbles.js": {
+      "githubSha": "916e7a319e821ea945b9546dccd07281d717187a",
+      "driveMd5": "715ad6af5319e30ea72fe0dd3b24efe9"
+    },
+    "src/js/features/chat/chat-channel.js": {
+      "githubSha": "5d62fb362ef4fa5c4995f258101f09236157e2b6",
+      "driveMd5": "fe686967cc28480d43b4c9f83eb9f3be"
+    },
+    "src/js/features/chat/chat-display.js": {
+      "githubSha": "3ae5d3f663466b17a8e0cc782078db5075837640",
+      "driveMd5": "48292189de47e94f310a80c3a28146d2"
+    },
+    "src/js/features/chat/chat-load.js": {
+      "githubSha": "995b0fc49d491329e1bca5365dbba09e9f2d9ff5",
+      "driveMd5": "42e722d3d2dfddd1287a3445cdeea746"
+    },
+    "src/js/features/chat/chat-send.js": {
+      "githubSha": "4a1b6870c2f954f65e4e2df4770d70770ab6a3f6",
+      "driveMd5": "c10fcc89fe0c10f942959b4b99089d79"
+    },
+    "src/js/features/chat/chat-session.js": {
+      "githubSha": "671ff4ae8ef986c69725322e011f288fc70917eb",
+      "driveMd5": "a3d46ad1436ef17a431ad89628e1630b"
+    },
+    "src/js/features/chat/chat-state.js": {
+      "githubSha": "cc5e2fdc34d9405cbef2289300357395a32612a4",
+      "driveMd5": "b04c775688407b4be719112bf8efa9bd"
+    },
+    "src/js/features/chat/chat-typing.js": {
+      "githubSha": "fe2b10c874e669ea27e30f49f6c48aaf35894a62",
+      "driveMd5": "4aaf67a10812e6784770b448d4a9216a"
+    },
+    "src/js/features/chat/chat-ui.js": {
+      "githubSha": "f9f5b9abc7b46ce65a79e15bbb20511600d18d8a",
+      "driveMd5": "19cf44bf00eb7cdf6f8179c0da9bb36a"
+    },
+    "src/js/features/product/modal-actions.js": {
+      "githubSha": "fbb263af6258a57781a15b30979d18453afff399",
+      "driveMd5": "df84023b0559b1113add8c3fee42cfd1"
+    },
+    "src/js/features/product/modal-carousel.js": {
+      "githubSha": "76b63706b07ccc19ccc97a3776e4d011af3ebb91",
+      "driveMd5": "2f48f215d5d4ba5ceb84965c7147e688"
+    },
+    "src/js/features/product/modal-options.js": {
+      "githubSha": "d591cdb0ff1dca6cac527683068a39c16b399454",
+      "driveMd5": "6cf20ee6a76064ae07385dcadecfdc2c"
+    },
+    "src/js/features/product/modal-recommendations.js": {
+      "githubSha": "d53389d5e780ee398f762f3ab2e2d01ce9059c7b",
+      "driveMd5": "4c32f3a0beb91acb51298ca336ebebbf"
+    },
+    "src/js/features/product/modal-render.js": {
+      "githubSha": "cda1a9cd23fdac04eb63e28a105e85ff85644af6",
+      "driveMd5": "05215485040d82d1bdf6e78747a5e231"
+    },
+    "src/js/features/product/modal-state.js": {
+      "githubSha": "9b64e58200fadbcd5219b1f435181603578c30f8",
+      "driveMd5": "8946e07c5a8d48eac6b4a4810469fc9d"
+    },
+    "src/js/features/product/modal-total.js": {
+      "githubSha": "60c9adb267b3d5a31b67cbd00331ae7c8ade7b1f",
+      "driveMd5": "7125e2ce55585fe5f88f293c69383890"
+    },
+    "src/js/features/product/product-edit-dropdowns.js": {
+      "githubSha": "3da22f2dfb754d551c7173937488e20b3c7af0cf",
+      "driveMd5": "b3b694478ba1fbc832d95f379f9a49d2"
+    },
+    "src/js/features/product/product-edit-form.js": {
+      "githubSha": "d32c972a8be0847e1c5b44456ccb8267a3d7937e",
+      "driveMd5": "f0911c5337697e5964f5db5f23d68376"
+    },
+    "src/js/features/product/product-edit-save.js": {
+      "githubSha": "2552d7b3747607401688132a5bf64fda620539d6",
+      "driveMd5": "693ad607ddf3a5ff9fd9bbf2be80aef1"
+    },
+    "src/js/features/search/search-view.js": {
+      "githubSha": "54a8b93636b6516c10a125e48b6b30cfc30318f7",
+      "driveMd5": "49ba6230367c7c8eabb6a7d9bb3fd75c"
+    },
+    "src/js/main.js": {
+      "githubSha": "4ef2ecd9ebb783950599c0dd4b7a93cd174145ad",
+      "driveMd5": "70145a0db666d6e0d593ea8bf762a1ca"
+    },
+    "src/js/services/cart-actions.js": {
+      "githubSha": "38ce8858ee2a86cc281291f61f0aa53050d15bda",
+      "driveMd5": "0cf26a17ec02ffc5699ad69abbe6ab33"
+    },
+    "src/js/services/cart-badge.js": {
+      "githubSha": "f9a9bd754a5285bc1aa9348989a4221bcb712c88",
+      "driveMd5": "ce8c176bde5a2bdb7fb932a0a2d004d2"
+    },
+    "src/js/services/cart-menu.js": {
+      "githubSha": "f79529554299bd3d4c0e5b988b688d2c818a8274",
+      "driveMd5": "c30ab5a7289ef0cf249d0ef94351eafd"
+    },
+    "src/js/services/cart-panel.js": {
+      "githubSha": "d93eeeee08cd2dfdbd9268ddcfba8dfbf917b691",
+      "driveMd5": "90cb6f2c58e141a5b6f59b6575dd91f6"
+    },
+    "src/js/services/cart-qty-picker.js": {
+      "githubSha": "101e9213f0bb176f138c4f01a155801742363e5d",
+      "driveMd5": "b004dbaf33aa4de016ac73fab5332d3d"
+    },
+    "src/js/services/cart-storage.js": {
+      "githubSha": "8d3966fe5302bb44a0793a9a305a554174d75d8e",
+      "driveMd5": "c9d59fa906572130e310af74e2424aeb"
+    },
+    "src/js/services/checkout.js": {
+      "githubSha": "5a1c3914c4047ab4fe565cd1d8e42a4d5b473a61",
+      "driveMd5": "827b79f44b2219e2fcbdb2ce0d8967b8"
+    },
+    "src/js/services/db.js": {
+      "githubSha": "992453a985f96184b93273818cae44ce0927fb3c",
+      "driveMd5": "291cc0bbb5705d792fdb1dcb10e57cc0"
+    },
+    "src/js/services/favorites.js": {
+      "githubSha": "ddc1c08c3c972f1521f6a8ec153195c9de926abd",
+      "driveMd5": "ae919539a1258444c222be7c074bcf81"
+    },
+    "src/js/services/lazy-loading.js": {
+      "githubSha": "50e09dbcf3ad7c63e3f465caa430d7a5b84d4832",
+      "driveMd5": "4a10cbcb77a6aeae75215731b5319dff"
+    },
+    "src/js/services/reco.js": {
+      "githubSha": "197bf27077ba0746157915f27dc4493611a66ee1",
+      "driveMd5": "423c1e48232dbed2c0ee43c0a9088f6e"
+    },
+    "src/js/services/search-dropdown.js": {
+      "githubSha": "1f4c764dea6afc41fb89f1c92f15854ad52c9381",
+      "driveMd5": "68d87d42431eab59495266f1ac2f1799"
+    },
+    "src/js/services/search-history.js": {
+      "githubSha": "931d7f72a7835554ba654a469ea627f8b00c5a08",
+      "driveMd5": "67c57b4672c59713cf23e7da558cd6e4"
+    },
+    "src/js/services/search-rotation.js": {
+      "githubSha": "960367bf30cb41fb1a18c46de3b090651d2f1d24",
+      "driveMd5": "88663f20d5ba2ea342ee7c1a5e09067b"
+    },
+    "src/js/services/search-voice.js": {
+      "githubSha": "8b6bbdb171718f02e2acfc6cc3e43eeafce54efe",
+      "driveMd5": "c9b56e5f1b46934732cbb6606dc7654c"
+    },
+    "src/js/services/sync.js": {
+      "githubSha": "ac4ff4112d672fb665ec4e84e18821d4fc31ed1c",
+      "driveMd5": "bdcf3a2224ef3db3601099067ad5f21f"
+    },
+    "src/js/services/visual-search.js": {
+      "githubSha": "2829806320832a99256a438ead2d013e664884a0",
+      "driveMd5": "75d7f41b4b78838cfd39746f978d6895"
+    },
+    "src/js/utils/badges.js": {
+      "githubSha": "2d1a7ee0841cb895bc6724a00ea494190b2a9dd6",
+      "driveMd5": "190e67a41e166187bb61facfeec8f055"
+    },
+    "src/js/utils/category-icon.js": {
+      "githubSha": "bfddb383302873073b9fac8f3792c137de7edc21",
+      "driveMd5": "7fc9587d02a6d1015d3c5a58fbc7275e"
+    },
+    "src/js/utils/dom-helpers.js": {
+      "githubSha": "a0c9d7cea994ae3eea37580a6c9b194d41af13c1",
+      "driveMd5": "2d9cf79c0ee1efe24c29395239b027fe"
+    },
+    "src/js/utils/escape-html.js": {
+      "githubSha": "13916947998eadfe5654282328579467960e3399",
+      "driveMd5": "cb6e2a0b5fc8ff48b171d2d446074cb3"
+    },
+    "src/js/utils/format.js": {
+      "githubSha": "2d8e9669a94861b10a48da3cb11e89dcd57f4f2b",
+      "driveMd5": "1ad718e6fb37eed8e30132502fe2d502"
+    },
+    "src/js/utils/fuzzy-search.js": {
+      "githubSha": "eb6cff22f38592f6ba18c617941177e24c409be1",
+      "driveMd5": "4f71ae1f24dc820278d83ad5e3d8c3cf"
+    },
+    "src/js/utils/images.js": {
+      "githubSha": "73f2d33eb42227e0c855931b6c6755c966f1dc35",
+      "driveMd5": "f68354709766f7930f55f85aaca1d01c"
+    },
+    "supabase/fix-service-role.sql": {
+      "githubSha": "c36cff0245d00b0da1bceada07609f291aea7476",
+      "driveMd5": "ce5d33f4a308ef6e237bfa86e364dcb9"
+    },
+    "supabase/functions/chat-ai/index.ts": {
+      "githubSha": "1e63b5716ae844062c4e5bdd70bccd34871091e0",
+      "driveMd5": "ea1dbc984c6949001daa675a482eb1fc"
+    },
+    "supabase/migrations/20261002192115_harden_rls_and_fk_indexes.sql": {
+      "githubSha": "5f3706cba2e0c63b5897bc894e336b8cb5c5ac61",
+      "driveMd5": "330d78071d420028846112948b0a28d1"
+    },
+    "supabase/migrations/20261002192211_harden_function_search_paths.sql": {
+      "githubSha": "853d80d21718e2249b4885489ba6dd1680ebec3d",
+      "driveMd5": "85e6bf86e580704214f3810fbbec78d9"
+    },
+    "supabase/migrations/20261002200000_restrict_increment_popularity.sql": {
+      "githubSha": "bfdc678e88cb865fc275b6dbfcd2068cd15da73c",
+      "driveMd5": "031a891a4b88141b520b5c1a10bb1c85"
+    },
+    "supabase/migrations/20261003091500_harden_chat_and_vector_rpcs.sql": {
+      "githubSha": "038d8bb7d4b0c2a083e4e555b819c0094191027c",
+      "driveMd5": "dc0f0913a1e089f015494b31bce0c700"
+    },
+    "supabase/migrations/20261003092000_revoke_chat_trigger_execute.sql": {
+      "githubSha": "a550d759f5620157a4dfd321caeb84d5a932c94b",
+      "driveMd5": "7876169a7adcb99696c4031462d28b3d"
+    },
+    "supabase/migrations/20261003093000_fix_related_products_access.sql": {
+      "githubSha": "51e0013acf2a93ab8a96546555fe7a17876452f4",
+      "driveMd5": "6eee13bb40aa50e8f965855b51408a2e"
+    },
+    "vercel.json": {
+      "githubSha": "b16eb60657eb498912d183f20230eb5401ace826",
+      "driveMd5": "b8658470ca689642450ef625326f37f2"
+    },
+    "vite.config.js": {
+      "githubSha": "610c4be52446afa97857f6a11b16f6ebb15c2d3d",
+      "driveMd5": "ba96d156f4f2282a5e0fe5b742620aaf"
+    }
+  },
+  "updatedAt": "2026-10-04T00:25:56.904Z"
+}

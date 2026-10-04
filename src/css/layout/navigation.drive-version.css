@@ -1,0 +1,517 @@
+/* ─── NAVIGATION « LIQUID GLASS » — pill flottante iPhone (Phase 2) ─────── */
+.main-nav {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  width: min(430px, calc(100% - 24px));
+  height: 62px;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-evenly;
+  z-index: 150;
+  padding: 5px 8px;
+  background: rgba(18, 18, 26, 0.55);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-top-color: rgba(255, 255, 255, 0.20);
+  border-radius: 26px;
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.55),
+    0 2px 8px rgba(0, 0, 0, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09);
+  animation: nav-rise 0.55s cubic-bezier(0.22, 1.2, 0.36, 1) both;
+}
+
+/* Version claire : même verre que les bulles du header */
+:root.light-theme .main-nav {
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.24) 0%,
+    rgba(255, 255, 255, 0.12) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-top-color: rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* Entrée : la pill monte et se pose, ressort léger (signature iOS) */
+@keyframes nav-rise {
+  from { transform: translateX(-50%) translateY(90px); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0);    opacity: 1; }
+}
+
+.main-nav .nav-item {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: rgba(255, 255, 255, 0.42);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: color 0.25s ease, transform 0.1s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.main-nav .nav-item:active { transform: scale(0.92); }
+
+.main-nav .nav-item svg {
+  fill: currentColor;
+  width: 21px;
+  height: 21px;
+  transition: transform 0.25s ease, filter 0.25s ease;
+  z-index: 1;
+}
+
+/* ✅ Titres des boutons, générés en pur CSS (aucun HTML à toucher) */
+.main-nav .nav-item::after {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  opacity: 0.9;
+  z-index: 1;
+}
+.main-nav .nav-item[data-nav="home"]::after { content: 'Accueil'; }
+.main-nav .nav-item[data-nav="categories"]::after { content: 'Catégories'; }
+.main-nav .nav-item[data-nav="cart"]::after { content: 'Panier'; }
+.main-nav .nav-item[data-nav="favorites"]::after { content: 'Favoris'; }
+.main-nav .nav-item[data-nav="profile"]::after { content: 'Mon NRJ'; }
+
+/* ✅ Pastille « magique » derrière l'icône active — verre teinté NRJ + pop */
+.main-nav .nav-item.active::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 46px;
+  height: 30px;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg,
+      rgba(255, 140, 66, 0.28) 0%,
+      rgba(255, 140, 66, 0.14) 100%);
+  border: 1px solid rgba(255, 140, 66, 0.35);
+  border-top-color: rgba(255, 183, 128, 0.55);
+  box-shadow:
+    0 4px 14px rgba(255, 140, 66, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(6px) saturate(150%);
+  -webkit-backdrop-filter: blur(6px) saturate(150%);
+  animation: pill-pop 0.42s cubic-bezier(0.22, 1.6, 0.36, 1) both;
+}
+
+@keyframes pill-pop {
+  0%   { transform: translateX(-50%) scale(0.55); opacity: 0; }
+  60%  { transform: translateX(-50%) scale(1.08); opacity: 1; }
+  100% { transform: translateX(-50%) scale(1); }
+}
+
+.main-nav .nav-item.active { color: var(--primary); }
+.main-nav .nav-item.active svg {
+  transform: translateY(-1px) scale(1.12);
+  filter: drop-shadow(0 0 9px rgba(255, 140, 66, 0.55));
+  animation: icon-spring 0.42s cubic-bezier(0.22, 1.6, 0.36, 1) both;
+}
+
+@keyframes icon-spring {
+  0%   { transform: translateY(-1px) scale(0.7); }
+  60%  { transform: translateY(-1px) scale(1.22); }
+  100% { transform: translateY(-1px) scale(1.12); }
+}
+
+/* Ressort sur le retour d'icône inactive */
+.main-nav .nav-item svg {
+  transition: transform 0.3s cubic-bezier(0.22, 1.4, 0.36, 1), filter 0.25s ease;
+}
+
+/* ✅ Anciens globes colorés neutralisés (les classes restent au HTML, sans effet) */
+.main-nav .categories-accent,
+.main-nav .cart-accent,
+.main-nav .favorites-accent { background: none; box-shadow: none; }
+
+/* ✅ Badges compteurs repositionnés sur l'icône */
+.cart-badge, .favorites-badge {
+  position: absolute;
+  top: 3px;
+  right: calc(50% - 17px);
+  background: var(--primary);
+  color: #0a0a0a;
+  font-size: 0.55rem;
+  font-weight: 800;
+  min-width: 15px;
+  height: 15px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 1.5px solid rgba(16, 16, 20, 0.9);
+  z-index: 2;
+}
+.favorites-badge { background: var(--favorites); color: #fff; }
+
+/* Nav flottante → réserver la hauteur de la pill + marge (safe-area incluse) */
+body { padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
+
+.categories-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+@media (min-width: 768px) { .categories-grid { grid-template-columns: repeat(3, 1fr); } }
+.category-card { position: relative; height: 160px; border-radius: var(--radius); overflow: hidden; cursor: pointer; transition: transform 0.3s ease, box-shadow 0.3s ease; background-color: var(--surface-light); border: 1px solid var(--border); }
+.category-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+.category-card-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; transition: transform 0.5s ease, opacity 0.3s ease; opacity: 0; }
+.category-card-bg.loaded { opacity: 1; }
+.category-card:hover .category-card-bg { transform: scale(1.08); }
+.category-card-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 60%, transparent 100%); z-index: 2; }
+.category-card-content { position: absolute; bottom: 0; left: 0; width: 100%; padding: 1rem; z-index: 3; display: flex; flex-direction: column; gap: 0.4rem; }
+.category-name { font-weight: 700; font-size: 1.1rem; color: #ffffff; line-height: 1.2; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+.category-count { font-size: 0.7rem; color: white; background: var(--primary); padding: 0.2rem 0.6rem; border-radius: 50px; font-weight: 600; display: inline-block; width: fit-content; }
+
+/* ─── Vue compte « Mon NRJ » ───────────────────────────────────────────── */
+#accountView {
+  background: var(--bg);
+  display: none;
+  flex-direction: column;
+  min-height: 100vh;
+  padding-bottom: 2rem;
+}
+
+.account-back {
+  background: var(--surface-light);
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.account-back:hover { background: var(--primary); border-color: var(--primary); }
+
+.account-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 1rem 1rem;
+}
+
+.account-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.account-avatar {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800;
+  font-size: 1.3rem;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(255, 140, 66, 0.4);
+  flex-shrink: 0;
+}
+
+.account-greet { min-width: 0; flex: 1; }
+.account-greet-hello {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.account-greet-sub {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin-top: 0.1rem;
+}
+
+.account-admin-badge {
+  background: var(--surface-light);
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.25rem 0.55rem;
+  border-radius: 50px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.account-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+  padding: 0 1rem 1rem;
+}
+
+.account-stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.8rem 0.5rem;
+  text-align: center;
+}
+
+.account-stat-label {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.account-stat-value {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-top: 0.2rem;
+}
+
+.account-section {
+  padding: 0.6rem 1rem;
+}
+
+.account-section-title {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  padding-left: 0.2rem;
+}
+
+.account-menu {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.account-menu-item {
+  width: 100%;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.9rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+
+.account-menu-item:last-child { border-bottom: none; }
+.account-menu-item:hover { background: var(--surface-light); }
+.account-menu-item.danger { color: #fca5a5; }
+.account-menu-item.danger:hover { background: rgba(239, 68, 68, 0.08); }
+
+.account-menu-meta {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.account-order {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.8rem 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.account-order-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+}
+
+.account-order-date {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.account-order-total {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.account-order-items {
+  font-size: 0.82rem;
+  color: var(--text);
+  margin-bottom: 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account-order-meta {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.account-empty {
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1.5rem 1rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 360px) {
+  .account-stat-value { font-size: 1rem; }
+  .account-greet-hello { font-size: 1rem; }
+}
+.main-nav .nav-item { text-decoration: none; }
+
+
+/* Marque NRJ dans « Mon NRJ » */
+#accountView {
+  min-height: 100dvh;
+  max-height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+  -webkit-overflow-scrolling: touch;
+}
+
+.account-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: calc(1rem + env(safe-area-inset-top, 0px)) 1rem 0.5rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-top-color: rgba(255, 255, 255, 0.28);
+  border-radius: 22px;
+  background: linear-gradient(145deg, rgba(255,255,255,0.10), rgba(255,255,255,0.035));
+  box-shadow: 0 12px 30px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.10);
+  -webkit-backdrop-filter: blur(24px) saturate(165%);
+  backdrop-filter: blur(24px) saturate(165%);
+}
+
+/* Le style de la vue catégories ne doit pas réduire le logo de Mon NRJ. */
+body.categories-page-open #accountView .account-brand .logo-icon {
+  width: 52px !important;
+  height: 52px !important;
+  opacity: 1 !important;
+}
+
+.account-brand .logo-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 15px;
+  opacity: 1;
+  flex: 0 0 52px;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  touch-action: manipulation;
+  cursor: default;
+}
+
+.account-brand-copy { min-width: 0; }
+.account-brand-copy h1 {
+  margin: 0;
+  color: var(--text);
+  font-size: 1.15rem;
+  line-height: 1.25;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+.account-brand-copy p {
+  margin: 0.35rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+:root.light-theme .account-brand {
+  background: linear-gradient(145deg, rgba(255,255,255,0.78), rgba(255,255,255,0.48));
+  border-color: rgba(255,255,255,0.82);
+  border-top-color: rgba(255,255,255,0.98);
+  box-shadow: 0 12px 30px rgba(31,41,55,0.08), inset 0 1px 0 rgba(255,255,255,0.85);
+}
+
+.account-brand-footer {
+  padding: 1.25rem 1rem 0.75rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+  opacity: 0.8;
+}
+
+
+/* Carte de marque sticky et compacte dans le conteneur de Mon NRJ */
+#accountView .account-brand {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 40;
+  min-height: 0;
+  transition: padding 200ms ease, border-radius 200ms ease, background 200ms ease, box-shadow 200ms ease;
+}
+#accountView .account-brand-back {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  flex: 0 0 40px;
+  border: 0;
+  background: rgba(128,128,128,0.14);
+}
+#accountView .account-brand .logo-icon {
+  width: 52px;
+  height: 52px;
+  flex-basis: 52px;
+  transition: width 200ms ease, height 200ms ease, flex-basis 200ms ease, border-radius 200ms ease;
+}
+#accountView .account-brand-copy h1,
+#accountView .account-brand-copy p {
+  transition: font-size 200ms ease, opacity 200ms ease, margin 200ms ease, max-height 200ms ease;
+}
+#accountView .account-brand-copy p { max-height: 2.2em; overflow: hidden; }
+#accountView.account-brand-compact .account-brand {
+  gap: 0.65rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 16px;
+  background: rgba(24, 25, 31, 0.92);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(24px) saturate(160%);
+}
+:root.light-theme #accountView.account-brand-compact .account-brand {
+  background: rgba(248, 249, 251, 0.94);
+}
+#accountView.account-brand-compact .account-brand .logo-icon {
+  width: 32px !important;
+  height: 32px !important;
+  flex-basis: 32px;
+  border-radius: 10px;
+}
+#accountView.account-brand-compact .account-brand-copy h1 { font-size: 0.95rem; }
+#accountView.account-brand-compact .account-brand-copy p { max-height: 0; opacity: 0; margin: 0; }
+#accountView.account-brand-compact .account-brand-back { width: 40px; height: 40px; }
+@media (prefers-reduced-motion: reduce) {
+  #accountView .account-brand,
+  #accountView .account-brand .logo-icon,
+  #accountView .account-brand-copy h1,
+  #accountView .account-brand-copy p { transition: none !important; }
+}
