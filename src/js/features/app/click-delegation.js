@@ -18,7 +18,16 @@ import { isFlexOpen } from './view-helpers.js';
 import { switchToSearchView, switchFromSearchView } from '../search/search-view.js';
 
 function syncCatalogueContentMode(nav) {
-  document.body.classList.toggle('catalogue-content-only', nav === 'home');
+  const isCatalogue = nav === 'home';
+  document.body.classList.toggle('catalogue-content-only', isCatalogue);
+
+  // Le CSS couvre le rendu, mais on synchronise aussi directement les deux
+  // éléments structurels du header pour éviter qu'un style/état précédent
+  // puisse les laisser visibles dans la vue Catalogue.
+  const header = document.getElementById('headerFixed');
+  const spacer = document.getElementById('headerSpacer');
+  if (header) header.style.display = isCatalogue ? 'none' : '';
+  if (spacer) spacer.style.display = isCatalogue ? 'none' : '';
 }
 
 // Au chargement, la vue par défaut est le catalogue :
