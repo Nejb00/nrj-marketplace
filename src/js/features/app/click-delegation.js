@@ -17,6 +17,23 @@ import { showAccountView, hideAccountView, handleAccountAction } from './account
 import { isFlexOpen } from './view-helpers.js';
 import { switchToSearchView, switchFromSearchView } from '../search/search-view.js';
 
+function syncCatalogueContentMode(nav) {
+  const isCatalogue = nav === 'home';
+  document.body.classList.toggle('catalogue-content-only', isCatalogue);
+
+  // Le CSS couvre le rendu, mais on synchronise aussi directement les deux
+  // éléments structurels du header pour éviter qu'un style/état précédent
+  // puisse les laisser visibles dans la vue Catalogue.
+  const header = document.getElementById('headerFixed');
+  const spacer = document.getElementById('headerSpacer');
+  if (header) header.style.display = isCatalogue ? 'none' : '';
+  if (spacer) spacer.style.display = isCatalogue ? 'none' : '';
+}
+
+// Au chargement, la vue par défaut est le catalogue :
+// la zone principale démarre directement sur son contenu.
+syncCatalogueContentMode('home');
+
 document.addEventListener('click', e => {
   const fb = e.target.closest('.filter-btn'); if (fb) { applyFilter(fb.dataset.category); return; }
   const subBubble = e.target.closest('.subcat-bubble');
@@ -78,6 +95,7 @@ document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('clic
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   this.classList.add('active');
   const nav = this.dataset.nav;
+  syncCatalogueContentMode(nav);
 
   if (nav === 'home') {
     if (state.modalOpen) closeProductModal();
