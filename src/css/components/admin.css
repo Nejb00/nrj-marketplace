@@ -624,3 +624,27 @@
 @media (max-width: 560px) {
   .product-import-pricing-grid { grid-template-columns: 1fr; }
 }
+
+
+/* ═══ PR #6 — média persistant Cloudinary ═══ */
+.product-import-media {
+  margin-top: 0.75rem;
+  padding: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+.product-import-media[hidden] { display: none !important; }
+.product-import-media-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-bottom: 0.65rem;
+}
+.product-import-media-head p {
+  margin: 0.2rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.65rem;
+  line-height: 1.4;
+}
