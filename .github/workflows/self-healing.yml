@@ -49,6 +49,17 @@ jobs:
             })).data;
 
             let intelligenceRecipeId = null;
+            let aiDiagnosis = null;
+            const aiDiagnosisMatch = issue.body?.match(
+              /<!-- nrj-ai-diagnosis\n([\s\S]*?)\n-->/
+            );
+            if (aiDiagnosisMatch) {
+              try {
+                aiDiagnosis = JSON.parse(aiDiagnosisMatch[1]);
+              } catch (error) {
+                core.warning('Dossier AI-Assisted Diagnosis illisible : ' + error.message);
+              }
+            }
             const intelligenceMatch = issue.body?.match(
               /<!-- nrj-incident-intelligence\n([\s\S]*?)\n-->/
             );
@@ -113,6 +124,37 @@ jobs:
             }
 
             const runId = Number(runMatch[1]);
+
+            const aiDiagnosisValidated =
+              aiDiagnosis?.schema_version === 1 &&
+              aiDiagnosis?.status === 'validated' &&
+              aiDiagnosis?.recommendation === 'self-healing' &&
+              typeof aiDiagnosis?.recommended_recipe_id === 'string' &&
+              Number(aiDiagnosis?.run_id) === runId;
+            const aiDiagnosisCommitOk =
+              !aiDiagnosis?.commit || aiDiagnosis.commit === run.head_sha;
+
+            if (!aiDiagnosisValidated || !aiDiagnosisCommitOk) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issueNumber,
+                body: [
+                  retryMarker,
+                  '## 🤖 Self-Healing V2',
+                  '',
+                  '🛑 Réparation automatique bloquée : un diagnostic IA validé et lié au run source est requis.',
+                  '',
+                  '- Diagnostic IA : **' + (aiDiagnosis?.status || 'absent') + '**',
+                  '- Action IA : **' + (aiDiagnosis?.recommendation || 'operator-review') + '**',
+                  '- Run cohérent : **' + (Number(aiDiagnosis?.run_id) === runId ? 'OUI' : 'NON') + '**',
+                  '- Commit cohérent : **' + (aiDiagnosisCommitOk ? 'OUI' : 'NON') + '**',
+                  '',
+                  'Aucune modification effectuée. Le diagnostic IA reste consultatif et les garde-fous déterministes demeurent obligatoires.'
+                ].join('\n')
+              });
+              return;
+            }
+
+            const aiRecipeHint = aiDiagnosis.recommended_recipe_id;
             const run = (await github.rest.actions.getWorkflowRun({
               owner, repo, run_id: runId
             })).data;
@@ -182,6 +224,7 @@ jobs:
                 (Number(candidate.max_age_hours || 24) * 60 * 60 * 1000);
               const workflowOk = candidate.workflow === run.name;
               const recipeHintOk = !intelligenceRecipeId || candidate.id === intelligenceRecipeId;
+              const aiRecipeOk = candidate.id === aiRecipeHint;
               const signatureOk = (candidate.signatures || []).some((signature) =>
                 logTexts.some((log) => log.includes(signature))
               );
