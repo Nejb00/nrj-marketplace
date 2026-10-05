@@ -180,6 +180,46 @@
         <div class="cart-panel-footer" id="cartPanelFooter"></div>
     </div>
     <div class="cart-overlay" id="cartOverlay"></div>
+
+    <div
+        class="cart-add-confirmation"
+        id="cartAddConfirmation"
+        role="dialog"
+        aria-modal="true"
+        aria-hidden="true"
+        aria-labelledby="cartAddConfirmationTitle"
+    >
+        <div class="cart-add-confirmation-backdrop" data-cart-add-close></div>
+        <section class="cart-add-confirmation-sheet" role="document">
+            <div class="cart-add-confirmation-header">
+                <div class="cart-add-confirmation-success" aria-hidden="true">✓</div>
+                <div>
+                    <p class="cart-add-confirmation-kicker">Panier</p>
+                    <h2>Ajouté au panier</h2>
+                </div>
+                <button
+                    type="button"
+                    class="cart-add-confirmation-close"
+                    data-cart-add-close
+                    aria-label="Fermer la confirmation"
+                >&times;</button>
+            </div>
+
+            <div data-cart-add-slot="summary"></div>
+
+            <div class="cart-add-confirmation-actions">
+                <button type="button" class="cart-add-confirmation-primary" data-cart-add-action="cart">
+                    Voir le panier
+                </button>
+                <button type="button" class="cart-add-confirmation-secondary" data-cart-add-action="continue">
+                    Continuer mes achats
+                </button>
+            </div>
+
+            <div data-cart-add-slot="recommendations"></div>
+        </section>
+    </div>
+
     <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
 
     <div id="searchView" style="display:none;">
