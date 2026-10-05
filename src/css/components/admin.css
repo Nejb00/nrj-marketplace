@@ -501,3 +501,39 @@
 @media (max-width: 560px) {
   .product-import-analysis-grid { grid-template-columns: 1fr; }
 }
+
+
+/* ═══ PR #4 — classification réelle contre l'arbre Supabase ═══ */
+.product-import-classification {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+.product-import-classification[hidden] { display: none !important; }
+.product-import-classification-label {
+  margin-bottom: 0.3rem;
+  color: var(--text-secondary);
+  font-size: 0.62rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.product-import-classification-hint {
+  display: grid;
+  gap: 0.2rem;
+  color: var(--text);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+.product-import-classification-hint strong { font-weight: 900; }
+.product-import-classification-hint span {
+  color: var(--text-secondary);
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+.product-import-classification-hint small {
+  color: var(--text-secondary);
+  font-size: 0.64rem;
+}
