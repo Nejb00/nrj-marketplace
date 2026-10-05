@@ -13,7 +13,7 @@ function get(pathname) {
 
       res.setEncoding("utf8");
       res.on("data", (chunk) => {
-        body += chunk;
+        body += chunk.toString();
       });
       res.on("end", () => {
         resolve({ status: res.statusCode ?? 0, body });
@@ -62,11 +62,11 @@ try {
 
   if (!homepage || homepage.status !== 200) {
     throw new Error(
-      `Le serveur Vite Preview n'est pas disponible. Sortie:\\n${serverOutput}`
+      `Le serveur Vite Preview n'est pas disponible. Sortie:\n${serverOutput}`
     );
   }
 
-  if (!/<html[\\s>]/i.test(homepage.body) || !/<\\/html>/i.test(homepage.body)) {
+  if (!/<html[\s>]/i.test(homepage.body) || !homepage.body.toLowerCase().includes("</html>")) {
     throw new Error("La page d'accueil servie n'est pas un document HTML valide.");
   }
 
