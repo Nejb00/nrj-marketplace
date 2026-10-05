@@ -1,0 +1,45 @@
+# Automation Workflow Topology
+
+## Event fan-out
+
+| Event | Workflows | Classification |
+|---|---|---|
+| Pull request opened/synchronized/reopened | CI, CodeQL, Dependency Review, PR Quality, PR Labels, Project Report | Required PR validation; Project Report is observability |
+| Pull request closed + merged into main | Release | Delivery |
+| Push to main | CI, Project Report, Drive Sync, Notion Sync | Post-merge validation/synchronization |
+| Critical workflow completed | Incident Guard | Incident detection |
+| CI completed | Automation Dashboard | State refresh |
+| Deployment status | Deployment Safety Net, Vercel Browser E2E | Production protection / browser validation |
+| Incident issue opened | AI-Assisted Diagnosis, Self-Healing | Diagnosis / repair pipeline |
+| Operator self-healing PR opened/updated | Self-Healing Repair Verification | Repair gate |
+| Scheduled | CodeQL, Drive Sync, Automation Dashboard, Branch Maintenance, Repo Health, Automation Debug Benchmark, Automation Cost Benchmark | Periodic maintenance/measurement |
+| Manual dispatch | Several operational workflows | Explicit operator action |
+
+## Important cascades
+
+### Incident path
+`critical workflow failure → Incident Guard → incident issue → AI Diagnosis → Self-Healing → Draft PR → Repair Verification`
+
+### Post-repair safety path
+`merged repair → main regression → Incident Guard → Safe Rollback candidate → Draft rollback PR`
+
+### Deployment path
+`Vercel deployment success → Production Browser E2E / Deployment Safety Net`
+
+## Known intentional fan-out
+
+- CI and CodeQL run on PRs because they answer different quality/security questions.
+- Incident Guard listens to security/build/deployment workflows because it is the detection boundary.
+- Repair Verification only runs for `operator/self-heal-*` branches.
+- Production Browser E2E is intentionally narrower than Preview E2E to reduce noise/cost.
+
+## Optimization candidates to measure before changing
+
+1. Project Report runs both on PRs and main pushes. The generated tree is largely equivalent after merge, so the post-merge run is a candidate for removal if the report is not needed as a post-merge artifact.
+2. Push-to-main synchronization (Drive + Notion) is operationally justified and should not be collapsed without checking sync semantics.
+3. Scheduled workflows are independent maintenance/measurement tasks; they should be optimized only from measured activity data.
+4. CI/CodeQL/Dependency Review are security/validation controls and are not candidates for removal merely because they consume time.
+
+## Safety rule
+
+No optimization should remove a detection, security, verification, or rollback boundary unless an equivalent control demonstrably replaces it.
