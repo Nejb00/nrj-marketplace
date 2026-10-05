@@ -21,14 +21,6 @@ ALTER TABLE public.orders
     OR char_length(checkout_idempotency_key) BETWEEN 16 AND 200
   );
 
-CREATE INDEX IF NOT EXISTS orders_checkout_fingerprint_lookup_idx
-  ON public.orders(user_id, checkout_idempotency_key, checkout_fingerprint)
-  WHERE checkout_idempotency_key IS NOT NULL;
-
 CREATE UNIQUE INDEX IF NOT EXISTS orders_checkout_idempotency_uidx
-  ON public.orders(user_id, checkout_idempotency_key)
-  WHERE checkout_idempotency_key IS NOT NULL;
-
-CREATE INDEX IF NOT EXISTS orders_checkout_idempotency_lookup_idx
   ON public.orders(user_id, checkout_idempotency_key)
   WHERE checkout_idempotency_key IS NOT NULL;
