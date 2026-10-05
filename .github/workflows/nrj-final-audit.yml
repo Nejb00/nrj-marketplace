@@ -1,0 +1,34 @@
+name: NRJ Final Automation Audit
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nrj-final-audit-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: Final automation surface
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout du repo
+        uses: actions/checkout@v7
+
+      - name: Installation de Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Audit de surface
+        run: node scripts/automation-final-audit.mjs
+
+      - name: Test de surface
+        run: node --test test/automation-final-audit.test.js
