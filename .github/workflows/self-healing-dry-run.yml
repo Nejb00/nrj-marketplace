@@ -1,0 +1,287 @@
+name: Self-Healing Dry Run
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue incident à simuler'
+        required: true
+        type: number
+
+permissions:
+  contents: read
+  actions: read
+  issues: write
+  pull-requests: read
+
+concurrency:
+  group: self-healing-dry-run
+  cancel-in-progress: false
+
+jobs:
+  simulate:
+    name: Simulate controlled self-healing
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout automation definitions
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Simulate repair without repository writes
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issueNumber = Number(context.payload.inputs.issue_number);
+            const { simulateRepair, renderSimulation } = await import(
+              'file://' + process.env.GITHUB_WORKSPACE + '/scripts/self-healing-simulation.mjs'
+            );
+
+            if (!Number.isSafeInteger(issueNumber) || issueNumber <= 0) {
+              core.setFailed('Numéro d’issue invalide.');
+              return;
+            }
+
+            const issue = (await github.rest.issues.get({
+              owner, repo, issue_number: issueNumber
+            })).data;
+
+            const isIncident =
+              issue.labels?.some((label) => {
+                const name = typeof label === 'string' ? label : label.name;
+                return name === 'incident';
+              }) &&
+              issue.title?.startsWith('🚨 Incident — ');
+
+            if (!isIncident) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issueNumber,
+                body: [
+                  '## 🧪 Self-Healing Dry Run',
+                  '',
+                  '🛑 Simulation refusée : cette issue ne correspond pas à un incident Incident Guard.',
+                  '',
+                  'Aucune écriture sur le dépôt n’a été effectuée.',
+                ].join('\n'),
+              });
+              return;
+            }
+
+            const intelligenceMatch = issue.body?.match(
+              /<!-- nrj-incident-intelligence\n([\s\S]*?)\n-->/
+            );
+            let intelligenceRecipeId = null;
+            if (intelligenceMatch) {
+              try {
+                const intelligence = JSON.parse(intelligenceMatch[1]);
+                if (
+                  intelligence.schema_version === 1 &&
+                  intelligence.classification === 'known-repair-candidate' &&
+                  typeof intelligence.recipe_id === 'string'
+                ) {
+                  intelligenceRecipeId = intelligence.recipe_id;
+                }
+              } catch (error) {
+                core.warning('Dossier Incident Intelligence illisible : ' + error.message);
+              }
+            }
+
+            const runMatch = issue.body?.match(
+              /Run:\s*https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/actions\/runs\/(\d+)/
+            );
+
+            if (!runMatch) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issueNumber,
+                body: [
+                  '## 🧪 Self-Healing Dry Run',
+                  '',
+                  '⚠️ Aucun run source exploitable n’a été trouvé.',
+                  '',
+                  'Aucune écriture sur le dépôt n’a été effectuée.',
+                ].join('\n'),
+              });
+              return;
+            }
+
+            const runId = Number(runMatch[1]);
+            const run = (await github.rest.actions.getWorkflowRun({
+              owner, repo, run_id: runId
+            })).data;
+
+            const allowedWorkflows = new Set([
+              'CI',
+              'CodeQL',
+              'Dependency Review',
+              'Deployment Safety Net',
+              'Vercel Browser E2E',
+            ]);
+
+            const recentFailure =
+              run.head_branch === 'main' &&
+              run.conclusion === 'failure' &&
+              allowedWorkflows.has(run.name) &&
+              Date.now() - new Date(run.updated_at).getTime() <= 24 * 60 * 60 * 1000;
+
+            if (!recentFailure) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issueNumber,
+                body: [
+                  '## 🧪 Self-Healing Dry Run',
+                  '',
+                  '🛑 Simulation bloquée par les garde-fous du run source.',
+                  '',
+                  '- Workflow : **' + run.name + '**',
+                  '- Branche : **' + (run.head_branch || '—') + '**',
+                  '- Conclusion : **' + (run.conclusion || run.status) + '**',
+                  '',
+                  'Aucune écriture sur le dépôt n’a été effectuée.',
+                ].join('\n'),
+              });
+              return;
+            }
+
+            const jobs = (await github.paginate(
+              github.rest.actions.listJobsForWorkflowRun,
+              { owner, repo, run_id: runId, per_page: 100 }
+            )).filter((job) => job.conclusion === 'failure');
+
+            const logTexts = [];
+            for (const job of jobs.slice(0, 3)) {
+              try {
+                const response = await github.request(
+                  'GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs',
+                  { owner, repo, job_id: job.id }
+                );
+                logTexts.push(
+                  typeof response.data === 'string'
+                    ? response.data
+                    : String(response.data || '')
+                );
+              } catch (error) {
+                core.warning('Logs indisponibles pour le job ' + job.id + ': ' + error.message);
+              }
+            }
+
+            const recipesFile = (await github.rest.repos.getContent({
+              owner, repo, path: '.github/self-healing-recipes.json', ref: 'main'
+            })).data;
+
+            if (Array.isArray(recipesFile) || !recipesFile.content) {
+              throw new Error('Catalogue de recettes indisponible.');
+            }
+
+            const recipes = JSON.parse(
+              Buffer.from(
+                recipesFile.content,
+                recipesFile.encoding || 'base64'
+              ).toString('utf8')
+            );
+
+            const recipe = (recipes.recipes || []).find((candidate) => {
+              const enabledOk = candidate.enabled !== false;
+              const ageOk = Date.now() - new Date(run.updated_at).getTime() <=
+                (Number(candidate.max_age_hours || 24) * 60 * 60 * 1000);
+              const workflowOk = candidate.workflow === run.name;
+              const recipeHintOk =
+                !intelligenceRecipeId || candidate.id === intelligenceRecipeId;
+              const signatureOk = (candidate.signatures || []).some((signature) =>
+                logTexts.some((log) => log.includes(signature))
+              );
+              return enabledOk && ageOk && workflowOk && recipeHintOk && signatureOk;
+            });
+
+            if (!recipe) {
+              const blocked = {
+                schema_version: 1,
+                mode: 'dry-run',
+                would_write: false,
+                eligible: false,
+                recipe_id: null,
+                workflow: run.name,
+                run_id: run.id,
+                commit: run.head_sha,
+                path: null,
+                occurrences: 0,
+                replacement_count: 0,
+                would_create_branch: false,
+                would_create_draft_pr: false,
+                safety_result: 'blocked',
+              };
+
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issueNumber,
+                body: [
+                  '## 🧪 Self-Healing Dry Run',
+                  '',
+                  '🔎 Aucun correctif automatique connu ne correspond à cet incident.',
+                  '',
+                  '### Simulation',
+                  '- Branche créée : **NON**',
+                  '- Commit créé : **NON**',
+                  '- Draft PR créée : **NON**',
+                  '',
+                  renderSimulation(blocked),
+                ].join('\n'),
+              });
+              return;
+            }
+
+            const target = (await github.rest.repos.getContent({
+              owner, repo, path: recipe.path, ref: run.head_sha
+            })).data;
+
+            if (Array.isArray(target) || !target.content) {
+              throw new Error('Fichier cible inaccessible.');
+            }
+
+            const current = Buffer.from(
+              target.content,
+              target.encoding || 'base64'
+            ).toString('utf8');
+
+            const result = simulateRepair({
+              recipe,
+              run,
+              path: recipe.path,
+              current,
+              findText: recipe.find,
+              replaceText: recipe.replace,
+            });
+
+            await github.rest.issues.createComment({
+              owner, repo, issue_number: issueNumber,
+              body: [
+                '## 🧪 Self-Healing Dry Run',
+                '',
+                result.eligible
+                  ? '✅ Simulation réussie : la recette serait éligible.'
+                  : '🛑 Simulation bloquée : la cible ne respecte pas exactement la recette.',
+                '',
+                '- Recette : ' + (result.recipe_id ? 'recipe ' + result.recipe_id : 'Aucune'),
+                '- Workflow : **' + result.workflow + '**',
+                '- Run : #' + result.run_id,
+                '- Fichier : ' + result.path,
+                '- Occurrences trouvées : **' + result.occurrences + '**',
+                '- Remplacements prévus : **' + result.replacement_count + '**',
+                '',
+                '### Écritures simulées',
+                '- Branche créée : **' + (result.would_create_branch ? 'OUI, si exécution réelle' : 'NON') + '**',
+                '- Commit créé : **NON**',
+                '- Draft PR créée : **' + (result.would_create_draft_pr ? 'OUI, si exécution réelle' : 'NON') + '**',
+                '- Modification de main : **NON**',
+                '',
+                'Les écritures de dépôt sont désactivées par conception.',
+                '',
+                renderSimulation(result),
+              ].join('\n'),
+            });
+
+            core.info(
+              'Dry Run terminé : eligible=' + result.eligible +
+              ', recipe=' + (result.recipe_id || 'none')
+            );
