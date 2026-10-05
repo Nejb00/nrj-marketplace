@@ -10,12 +10,28 @@ const CORS = {
   "Content-Type": "application/json"
 };
 
-type CallbackBody = { reference?: string };
+type CallbackBody = {
+  reference?: string;
+  amount?: string | number;
+  currency?: string;
+  paymentPhoneNumber?: string;
+  provider?: string;
+  type?: string;
+  status?: string;
+  message?: string;
+  customer?: Record<string, unknown> | null;
+  metadata?: Record<string, unknown> | null;
+};
 type OpenPayStatusResponse = {
   reference?: string;
   amount?: string | number;
   currency?: string;
+  paymentPhoneNumber?: string;
+  provider?: string;
+  type?: string;
   status?: string;
+  message?: string;
+  metadata?: Record<string, unknown> | null;
 };
 
 function json(data: unknown, status = 200): Response {
@@ -198,21 +214,54 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json({ ok: false, error: "payment_provider_mismatch" }, 409);
   }
 
-  const status = mapStatus(remote.data.status);
-
-  if (status === row.status) {
-    return json({ ok: true, unchanged: true, status });
+  const type = String(remote.data.type || body.type || "").trim().toLowerCase();
+  if (type && type !== "payment") {
+    return json({ ok: false, error: "payment_type_mismatch" }, 409);
   }
 
-  const update = await supabase<null>(
-    "payments?id=eq." + encodeURIComponent(row.id),
+  const status = mapStatus(remote.data.status);
+  const providerEventId = [
+    "openpay",
+    reference,
+    String(remote.data.status || "").trim().toLowerCase()
+  ].join(":");
+
+  const eventPayload = {
+    callback: body,
+    revalidated: remote.data
+  };
+
+  const applied = await supabase<Array<{
+    processed: boolean;
+    duplicate: boolean;
+    payment_status: string;
+  }>>(
+    "rpc/apply_payment_provider_event",
     {
-      method: "PATCH",
-      headers: { "Prefer": "return=minimal" },
-      body: JSON.stringify({ status })
+      method: "POST",
+      headers: { "Prefer": "return=representation" },
+      body: JSON.stringify({
+        p_payment_id: row.id,
+        p_provider: "openpay",
+        p_provider_event_id: providerEventId,
+        p_event_type: type || "payment",
+        p_payload: eventPayload,
+        p_provider_reference: reference,
+        p_status: status
+      })
     }
   );
 
-  if (!update.ok) return json({ ok: false, error: "payment_update_failed" }, 409);
-  return json({ ok: true, status });
+  if (!applied.ok || !applied.data?.[0]) {
+    return json({ ok: false, error: "payment_event_processing_failed" }, 502);
+  }
+
+  const result = applied.data[0];
+
+  return json({
+    ok: true,
+    processed: result.processed,
+    duplicate: result.duplicate,
+    status: result.payment_status
+  });
 });
