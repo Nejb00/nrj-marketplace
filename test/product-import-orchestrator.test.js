@@ -32,6 +32,13 @@ test('orchestrator never bypasses confidence gates', () => {
   assert.match(edge, /Number\(row\.overall_confidence\) >= 0\.90/);
 });
 
+test('orchestrator returns resumable media and pricing payloads', () => {
+  assert.match(edge, /media: row\.cloudinary_urls/);
+  assert.match(edge, /pricing: row\.ai_analysis\?\.pricing/);
+  assert.match(feature, /preparedImageDataUrl/);
+  assert.match(feature, /processProductImport\(currentImportId, imageDataUrl/);
+});
+
 test('orchestrator keeps secrets server-side', () => {
   assert.match(edge, /SERVICE_KEY/);
   assert.match(edge, /CLOUDINARY/);
