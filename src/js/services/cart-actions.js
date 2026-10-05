@@ -94,8 +94,6 @@ export async function addItemsToCart(items, sourceEl = null) {
         }
     }
 
-    if (sourceEl) flyToCart(sourceEl);
-
     const addedLines = [];
     const affectedProducts = new Map();
 
@@ -137,6 +135,7 @@ export async function addItemsToCart(items, sourceEl = null) {
 
     await saveCart();
     refreshCartDisplay();
+    if (sourceEl) flyToCart(sourceEl);
     syncSoon();
 
     const totalQuantity = addedLines.reduce((sum, item) => sum + item.quantity, 0);
