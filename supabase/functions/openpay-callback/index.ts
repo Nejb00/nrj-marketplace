@@ -10,7 +10,7 @@ const CORS = {
   "Content-Type": "application/json"
 };
 
-type CallbackBody = { reference?: string };
+type CallbackBody = { reference?: string; metadata?: Record<string, unknown> };
 type OpenPayStatusResponse = {
   reference?: string;
   amount?: string | number;
