@@ -1,12 +1,11 @@
 # CI — vérification automatique du code
-# Chaque PR vers main (et chaque push sur main) doit passer les contrôles techniques.
+# Chaque PR doit passer les contrôles techniques, y compris les PR imbriquées entre branches de fonctionnalité.
 # Node 22 est utilisé car les dépendances Supabase actuelles exigent Node >=22.
 
 name: CI
 
 on:
   pull_request:
-    branches: [main]
   push:
     branches: [main]
   workflow_dispatch:
