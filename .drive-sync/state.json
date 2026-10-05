@@ -668,6 +668,14 @@
       "githubSha": "51e0013acf2a93ab8a96546555fe7a17876452f4",
       "driveMd5": "6eee13bb40aa50e8f965855b51408a2e"
     },
+    "supabase/migrations/20261005083236_create_product_imports.sql": {
+      "githubSha": "81995c8eef353a34992eaa7178becff43e93ee24",
+      "driveMd5": "440e1c108674ee4824d8fae008bb604e"
+    },
+    "supabase/migrations/20261005083252_harden_product_imports_rls.sql": {
+      "githubSha": "041cb006693bd2e1dc4d73eba3c75cfe692b8950",
+      "driveMd5": "f282d574e7dd90793c55b5f4ca786786"
+    },
     "test/ai-assisted-diagnosis.test.js": {
       "githubSha": "52d53aef4531add8c5c14e50e2135e20e1ee87b6",
       "driveMd5": "671b54d4ee6b0f6c75b658f180f8486d"
@@ -769,5 +777,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-05T08:28:49.450Z"
+  "updatedAt": "2026-10-05T10:10:34.276Z"
 }
