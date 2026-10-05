@@ -5,6 +5,7 @@ const HOST = "127.0.0.1";
 const PORT = 4173;
 const BASE = `http://${HOST}:${PORT}`;
 const START_TIMEOUT_MS = 15_000;
+const STOP_TIMEOUT_MS = 3_000;
 
 function get(pathname) {
   return new Promise((resolve, reject) => {
@@ -13,7 +14,7 @@ function get(pathname) {
 
       res.setEncoding("utf8");
       res.on("data", (chunk) => {
-        body += chunk.toString();
+        body += chunk;
       });
       res.on("end", () => {
         resolve({ status: res.statusCode ?? 0, body });
@@ -32,11 +33,65 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const server = spawn(
-  process.platform === "win32" ? "npm.cmd" : "npm",
-  ["run", "preview", "--", "--host", HOST, "--port", String(PORT)],
-  { stdio: ["ignore", "pipe", "pipe"] }
-);
+function stopProcess(child) {
+  return new Promise((resolve) => {
+    if (child.exitCode !== null || child.signalCode !== null) {
+      resolve();
+      return;
+    }
+
+    let settled = false;
+
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      resolve();
+    };
+
+    child.once("exit", finish);
+
+    if (process.platform === "win32") {
+      child.kill();
+    } else {
+      try {
+        process.kill(-child.pid, "SIGTERM");
+      } catch {
+        child.kill("SIGTERM");
+      }
+    }
+
+    setTimeout(() => {
+      if (settled) return;
+
+      if (process.platform === "win32") {
+        child.kill();
+      } else {
+        try {
+          process.kill(-child.pid, "SIGKILL");
+        } catch {
+          child.kill("SIGKILL");
+        }
+      }
+
+      finish();
+    }, STOP_TIMEOUT_MS).unref();
+  });
+}
+
+const command = process.execPath;
+const args = [
+  "node_modules/vite/bin/vite.js",
+  "preview",
+  "--host",
+  HOST,
+  "--port",
+  String(PORT),
+];
+
+const server = spawn(command, args, {
+  detached: process.platform !== "win32",
+  stdio: ["ignore", "pipe", "pipe"],
+});
 
 let serverOutput = "";
 server.stdout.on("data", (chunk) => {
@@ -88,6 +143,5 @@ try {
     `Smoke test OK — accueil HTTP 200, HTML valide, ${uniqueReferences.length} ressource(s) vérifiée(s).`
   );
 } finally {
-  server.kill("SIGTERM");
-  await new Promise((resolve) => server.once("exit", resolve));
+  await stopProcess(server);
 }
