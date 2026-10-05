@@ -168,7 +168,7 @@ test('payment invariants detect missing idempotency, invalid lifecycle and incon
     currency: 'xaf',
     status: 'refunded',
     paid_at: 'not-a-date',
-    refunded_at: null,
+    refunded_at: 'not-a-date',
   }]);
 
   assert.deepEqual(
