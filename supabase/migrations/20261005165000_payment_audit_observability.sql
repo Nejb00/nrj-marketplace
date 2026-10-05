@@ -6,6 +6,7 @@
 -- and links them to the provider event when one exists.
 
 CREATE TABLE IF NOT EXISTS public.payment_status_history (
+  sequence bigint GENERATED ALWAYS AS IDENTITY UNIQUE,
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   payment_id uuid NOT NULL REFERENCES public.payments(id) ON DELETE RESTRICT,
   order_id uuid NOT NULL REFERENCES public.orders(id) ON DELETE RESTRICT,
@@ -40,10 +41,10 @@ CREATE INDEX IF NOT EXISTS payment_events_last_received_at_idx
   ON public.payment_events(last_received_at DESC);
 
 CREATE INDEX IF NOT EXISTS payment_status_history_payment_id_idx
-  ON public.payment_status_history(payment_id, changed_at DESC);
+  ON public.payment_status_history(payment_id, sequence DESC);
 
 CREATE INDEX IF NOT EXISTS payment_status_history_order_id_idx
-  ON public.payment_status_history(order_id, changed_at DESC);
+  ON public.payment_status_history(order_id, sequence DESC);
 
 CREATE INDEX IF NOT EXISTS payment_status_history_provider_event_idx
   ON public.payment_status_history(provider, provider_event_id)
