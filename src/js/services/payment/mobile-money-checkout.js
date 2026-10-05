@@ -159,7 +159,7 @@ export async function startMobileMoneyPayment() {
 
         let remoteOrder = pendingPaymentOrder;
 
-        if (!pendingPaymentReference) {
+        if (!pendingPaymentReference && !pendingPaymentOrder) {
             setPaymentUi({
                 busy: true,
                 message: 'Création de la commande sécurisée…'
@@ -207,6 +207,27 @@ export async function startMobileMoneyPayment() {
             } catch (error) {
                 const code = error?.code || (error instanceof Error ? error.message : String(error));
                 const details = error?.details || {};
+
+                if (
+                    code === 'payment_reconciliation_required' &&
+                    details.payment_id &&
+                    !details.provider_reference
+                ) {
+                    // The provider may already have created the transaction while
+                    // the response carrying its reference was lost. Keep the
+                    // same server order/payment so the next attempt cannot create
+                    // another provider transaction.
+                    pendingPaymentReference = null;
+                    pendingPaymentOrder = remoteOrder;
+                    pendingPaymentCustomer = customer;
+
+                    setPaymentUi({
+                        busy: false,
+                        message: 'Paiement en cours de récupération sécurisée. Réessayez la vérification dans quelques instants.'
+                    });
+                    showToast('⏳ Paiement en cours de récupération');
+                    return;
+                }
 
                 if (
                     code !== 'payment_reconciliation_required' ||
