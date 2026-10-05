@@ -54,6 +54,15 @@ async function getAccessToken() {
     return session.access_token;
 }
 
+class PaymentFunctionError extends Error {
+    constructor(code, details) {
+        super(code);
+        this.name = 'PaymentFunctionError';
+        this.code = code;
+        this.details = details || null;
+    }
+}
+
 async function callPaymentFunction(action, payload = {}) {
     const accessToken = await getAccessToken();
     const response = await fetch(OPENPAY_FUNCTION_ENDPOINT, {
@@ -75,8 +84,8 @@ async function callPaymentFunction(action, payload = {}) {
     }
 
     if (!response.ok) {
-        const message = data?.error || ('Payment service error (' + response.status + ')');
-        throw new Error(message);
+        const code = data?.error || ('payment_http_' + response.status);
+        throw new PaymentFunctionError(code, data);
     }
 
     return data;
@@ -128,6 +137,28 @@ export class OpenPayProvider extends PaymentProvider {
         });
 
         return {
+            status: normalizeResponseStatus(result?.status),
+            raw: result
+        };
+    }
+
+    async reconcilePayment({
+        orderId,
+        paymentId,
+        providerReference
+    } = {}) {
+        if (!orderId || !paymentId || !providerReference) {
+            throw new TypeError('OpenPay reconciliation requires orderId, paymentId and providerReference');
+        }
+
+        const result = await callPaymentFunction('reconcile', {
+            order_id: String(orderId),
+            payment_id: String(paymentId),
+            provider_reference: String(providerReference)
+        });
+
+        return {
+            providerReference: result?.provider_reference || String(providerReference),
             status: normalizeResponseStatus(result?.status),
             raw: result
         };
