@@ -1,6 +1,6 @@
 // ═══ Admin — import produit intelligent (PR #2) ═══
 import { showToast } from '../../utils/dom-helpers.js';
-import { analyzeProductImport, fetchProductImports, insertProductImport, deleteProductImport } from '../../api/api.js';
+import { analyzeProductImport, classifyProductImport, fetchProductImports, insertProductImport, deleteProductImport } from '../../api/api.js';
 
 const STATUS_LABELS = {
   RECEIVED: 'Reçu',
@@ -98,14 +98,16 @@ async function buildAnalysisImage(file) {
   }
 }
 
-function renderAnalysis(analysis) {
+function renderAnalysis(analysis, classification = null) {
   const panel = byId('productImportAnalysis');
   const grid = byId('productImportAnalysisGrid');
   const variants = byId('productImportAnalysisVariants');
   const confidence = byId('productImportConfidence');
+  const classificationPanel = byId('productImportClassification');
+  const classificationHint = byId('productImportClassificationHint');
   if (!panel || !grid || !variants || !confidence) return;
 
-  const pct = Math.round(Number(analysis?.overall_confidence || 0) * 100);
+  const pct = Math.round(Number(classification?.classification?.overall_confidence ?? analysis?.overall_confidence ?? 0) * 100);
   confidence.textContent = pct + '% de confiance';
 
   const fields = [
@@ -113,7 +115,7 @@ function renderAnalysis(analysis) {
     ['Description', analysis?.description || '—'],
     ['Prix fournisseur', analysis?.supplier_price != null ? String(analysis.supplier_price) + ' ' + (analysis.supplier_currency || '') : '—'],
     ['MOQ', analysis?.moq || '—'],
-    ['Catégorie suggérée', analysis?.visual_category_hint || '—']
+    ['Indice visuel', analysis?.visual_category_hint || '—']
   ];
 
   grid.innerHTML = fields.map(([label, value]) =>
@@ -123,6 +125,26 @@ function renderAnalysis(analysis) {
   const colors = Array.isArray(analysis?.variants?.colors) ? analysis.variants.colors : [];
   const sizes = Array.isArray(analysis?.variants?.sizes) ? analysis.variants.sizes : [];
   const extras = Array.isArray(analysis?.variants?.other) ? analysis.variants.other : [];
+  if (classificationPanel && classificationHint) {
+    const category = classification?.category;
+    const meta = classification?.classification;
+    const path = category
+      ? (category.parent_name ? category.parent_name + ' > ' + category.name : category.name)
+      : 'Aucune catégorie fiable';
+
+    classificationPanel.hidden = false;
+    classificationHint.innerHTML =
+      '<strong>' + escapeHtml(path) + '</strong>' +
+      '<span>' +
+        (meta?.auto_publish_eligible
+          ? 'Classification automatique ≥ 90%'
+          : meta?.review_required
+            ? 'Validation humaine recommandée (70–89%)'
+            : 'Blocage : confiance insuffisante') +
+      '</span>' +
+      (meta?.reason ? '<small>' + escapeHtml(meta.reason) + '</small>' : '');
+  }
+
   variants.innerHTML =
     '<strong>Variantes</strong>' +
     '<div class="product-import-variant-lines">' +
@@ -223,12 +245,21 @@ async function prepareProductImport() {
     setStatus('Import ' + row.id.slice(0, 8) + '… reçu. Analyse Vision en cours…');
     const result = await analyzeProductImport(row.id, data, rawText);
     renderAnalysis(result.analysis);
-    const confidence = Number(result.analysis?.overall_confidence || 0);
+
+    setStatus('Analyse terminée. Classement contre le catalogue en cours…');
+    const classification = await classifyProductImport(row.id);
+    renderAnalysis(result.analysis, classification);
+
+    const confidence = Number(classification?.classification?.overall_confidence || 0);
     setStatus(
-      'Analyse terminée : ' + Math.round(confidence * 100) + '% de confiance.',
+      confidence >= 0.9
+        ? 'Catégorie validée automatiquement : ' + Math.round(confidence * 100) + '%.'
+        : confidence >= 0.7
+          ? 'Catégorie trouvée : validation humaine recommandée (' + Math.round(confidence * 100) + '%).'
+          : 'Import bloqué : classification insuffisamment fiable (' + Math.round(confidence * 100) + '%.',
       confidence >= 0.7 ? 'success' : 'error'
     );
-    showToast('🧠 Analyse IA terminée');
+    showToast('🧠 Analyse + classification terminées');
     await refreshProductImports();
 
     byId('productImportSourceUrl').value = '';
