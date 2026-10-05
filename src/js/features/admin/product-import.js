@@ -411,6 +411,7 @@ function renderImports(rows) {
           '</div>' +
         '<div class="product-import-row-actions">' +
           ((row.status === 'MEDIA_READY' || row.status === 'READY') ? '<button type="button" class="product-import-publish" data-publish-import-id="' + escapeHtml(row.id) + '">Publier</button>' : '') +
+          ((row.status === 'FAILED') ? '<button type="button" class="product-import-retry" data-retry-import-id="' + escapeHtml(row.id) + '">Reprendre</button>' : '') +
           '<button type="button" class="product-import-delete" data-import-id="' + escapeHtml(row.id) + '" aria-label="Supprimer cet import">🗑️</button>' +
           '</div>' +
       '</article>'
@@ -512,6 +513,33 @@ async function prepareProductImport() {
 }
 
 
+async function handleRetryImport(id) {
+  if (!id) return;
+  try {
+    const result = await processProductImport(id, null, null, false);
+    if (result?.status === 'PUBLISHED') {
+      showToast('🚀 Import récupéré et publié');
+      setStatus('Réparation terminée : produit #' + result.productId + ' publié.', 'success');
+    } else if (result?.status === 'CLASSIFIED') {
+      showToast('🧠 Import récupéré');
+      setStatus('Réparation terminée : import classifié, prix à calculer.', 'success');
+    } else if (result?.status === 'PRICED') {
+      setStatus('Réparation terminée : média à finaliser.', 'success');
+    } else {
+      setStatus(
+        result?.next_action === 'image_requise_pour_analyse'
+          ? 'Reprise impossible sans la capture originale.'
+          : 'Reprise terminée au statut ' + (result?.status || 'inconnu') + '.',
+        result?.status === 'LOW_CONFIDENCE' ? 'error' : 'success'
+      );
+    }
+    await refreshProductImports();
+  } catch (err) {
+    setStatus(err?.message || 'Reprise automatique impossible.', 'error');
+    showToast('❌ Auto-récupération interrompue');
+  }
+}
+
 async function handlePublishImport(id) {
   if (!id) return;
   try {
@@ -576,6 +604,11 @@ export function initProductImportUI() {
     const publishButton = event.target.closest('[data-publish-import-id]');
     if (publishButton) {
       handlePublishImport(publishButton.dataset.publishImportId);
+      return;
+    }
+    const retryButton = event.target.closest('[data-retry-import-id]');
+    if (retryButton) {
+      handleRetryImport(retryButton.dataset.retryImportId);
       return;
     }
     const button = event.target.closest('[data-import-id]');
