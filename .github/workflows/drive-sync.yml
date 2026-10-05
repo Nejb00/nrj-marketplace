@@ -1,11 +1,18 @@
 name: Synchro GitHub <-> Google Drive
 
 on:
+  push:
+    branches:
+      - main
   schedule:
-    # Toutes les 15 minutes (les crons trop fréquents type */5 sont
-    # silencieusement ignorés par GitHub sur les repos actifs)
-    - cron: "*/15 * * * *"
-  workflow_dispatch: {} # permet aussi de le lancer manuellement depuis l'onglet Actions
+    # Contrôle périodique Drive -> GitHub sans marteler l'API :
+    # les pushes sur main déclenchent déjà une synchro immédiate.
+    - cron: "17 * * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: drive-sync
+  cancel-in-progress: false
 
 jobs:
   sync:
@@ -13,6 +20,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+
     steps:
       - name: Checkout du repo
         uses: actions/checkout@v4
@@ -21,9 +29,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: npm
 
       - name: Installation des dépendances
-        run: npm install
+        run: npm ci
 
       - name: Lancer la synchronisation
         env:
