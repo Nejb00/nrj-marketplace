@@ -130,9 +130,27 @@ function initEvents() {
         if (cartButton) {
             event.preventDefault();
             closeAndRestoreFocus();
+            document.querySelectorAll('.nav-item').forEach(button => button.classList.remove('active'));
+            document.querySelector('.nav-item[data-nav="cart"]')?.classList.add('active');
+            import('../features/product/modal-render.js')
+                .then(({ closeProductModal }) => closeProductModal())
+                .catch(() => {});
             document.getElementById('cartPanel')?.classList.add('open');
             document.getElementById('cartOverlay')?.classList.add('open');
-            document.querySelector('.nav-item[data-nav="cart"]')?.classList.add('active');
+            return;
+        }
+
+        const recCard = event.target.closest('.cart-add-reco-card');
+        if (recCard) {
+            event.preventDefault();
+            event.stopPropagation();
+            const productId = Number(recCard.dataset.productId);
+            closeAndRestoreFocus();
+            if (Number.isInteger(productId)) {
+                import('../features/product/modal-render.js')
+                    .then(({ openProductModal }) => openProductModal(productId))
+                    .catch(() => {});
+            }
             return;
         }
 
