@@ -140,13 +140,17 @@
       "githubSha": "55cfba982e5c6cfb2fe1ac63b00215fa556e660d",
       "driveMd5": "eefec29bbd6ab8970dc27d425ab5e4a6"
     },
+    "docs/payment-checkout.md": {
+      "githubSha": "6b4f8794887f11e3789eceed1e793f08cb6cbc96",
+      "driveMd5": "7f0cd1dc5267fbb57cabc9502a6dc073"
+    },
     "docs/payment-openpay.md": {
       "githubSha": "c998da7c2a3b7a219217a0b08bacf05b85ff8fc3",
       "driveMd5": "d3261d47b9e7d1a773a0cd94e1ecc47d"
     },
     "index.html": {
-      "githubSha": "f9a00f7f032814ca396c56250714182b554b725c",
-      "driveMd5": "04c2ef2d77aa1098b36dd0cdc88f8b19"
+      "githubSha": "8f73024fe3adb6a72acbe54f1eddf485fa4b0670",
+      "driveMd5": "d6c02fafbb6af3a0fc3764b71200600a"
     },
     "package-lock.json": {
       "githubSha": "e81c04dcd2bee19b1c0100f74111c74f9f7edd63",
@@ -284,6 +288,10 @@
       "githubSha": "e1fc1153559efc717dbe2152526ea71b24e12738",
       "driveMd5": "4a460ac7294be1cf87e00bd8a0b68b3c"
     },
+    "src/css/components/order-modal.css": {
+      "githubSha": "9b11d6e0129804b8819a5a2cb7749f14ab13790a",
+      "driveMd5": "673354e9b4c586ee66b8357c68114731"
+    },
     "src/css/components/placeholder.css": {
       "githubSha": "6ce0e38bbd5f91136e492ba59aca71446b6af423",
       "driveMd5": "fc509d7d9d638f30651cfd4a17c07f7f"
@@ -313,8 +321,8 @@
       "driveMd5": "788fc3756aa159851d7e4b2252c658a5"
     },
     "src/css/main.css": {
-      "githubSha": "2c92a75d7ed823c71d60f0405810ba63a370c29c",
-      "driveMd5": "150d897be2af7b48aa1c15f70aeb99f5"
+      "githubSha": "5a2912ed1aaee1aa429e6844cef8c1c28ec71bcb",
+      "driveMd5": "411fc132d572b8ed2cdf9cfe5d7a7f24"
     },
     "src/css/themes/fluo-theme.css": {
       "githubSha": "62ce0f319e741ec1644bdac8e7a60815b0f4d3b3",
@@ -573,8 +581,8 @@
       "driveMd5": "c9d59fa906572130e310af74e2424aeb"
     },
     "src/js/services/checkout.js": {
-      "githubSha": "5a1c3914c4047ab4fe565cd1d8e42a4d5b473a61",
-      "driveMd5": "827b79f44b2219e2fcbdb2ce0d8967b8"
+      "githubSha": "04627063192a802aceeece1f5a5ac42668b69db3",
+      "driveMd5": "d1039636cd52c53d4b5c5ad3215c0ea2"
     },
     "src/js/services/db.js": {
       "githubSha": "992453a985f96184b93273818cae44ce0927fb3c",
@@ -589,8 +597,8 @@
       "driveMd5": "4a10cbcb77a6aeae75215731b5319dff"
     },
     "src/js/services/payment/index.js": {
-      "githubSha": "4194f5aea7b4b544d3b3c31aa89eda550a6db33c",
-      "driveMd5": "0839364441d5b9815d51b26c10a98b40"
+      "githubSha": "97425711319aaef2c777b5591b6d1f4b21629b3b",
+      "driveMd5": "a90b93bd4655c79f9b4d47beaace5279"
     },
     "src/js/services/payment/mock-payment-provider.js": {
       "githubSha": "e3ed9d0b228bd6369e1ec7aa7038b4386e4ca732",
@@ -599,6 +607,10 @@
     "src/js/services/payment/openpay-provider.js": {
       "githubSha": "4ad2af3a8fc72049be71ae4f33785ba3d1980c95",
       "driveMd5": "0f90facda91e1e014e00a9ada677b4f6"
+    },
+    "src/js/services/payment/order-service.js": {
+      "githubSha": "36e1d797ddca3ea5cd243c2850cf82e0bd80271a",
+      "driveMd5": "db57064a50f906e511c65d5ff906fb5b"
     },
     "src/js/services/payment/payment-provider.js": {
       "githubSha": "acad9d378af168e998f17e29ad10bffc9926d824",
@@ -671,6 +683,18 @@
     "supabase/functions/chat-ai/index.ts": {
       "githubSha": "1e63b5716ae844062c4e5bdd70bccd34871091e0",
       "driveMd5": "ea1dbc984c6949001daa675a482eb1fc"
+    },
+    "supabase/functions/create-order/README.md": {
+      "githubSha": "f7655a64e25af93fc709700a2ea2319ce75848d9",
+      "driveMd5": "f7d2f9b850775d9b6f049aef616d7307"
+    },
+    "supabase/functions/create-order/config.toml": {
+      "githubSha": "94dbe1fb4352115148a0bf3bb0afcbd41e5c5163",
+      "driveMd5": "1a46a5644e6d38ddf203b44c6bc8ebd3"
+    },
+    "supabase/functions/create-order/index.ts": {
+      "githubSha": "95c3e61a59ca15fce17cb02c363d7b2a9e0ffd5c",
+      "driveMd5": "81089c1b22cfbd3db1d8057176a0c741"
     },
     "supabase/functions/openpay-callback/config.toml": {
       "githubSha": "4d867863b17b69c7d8551401790f1e4888a28f9e",
@@ -751,6 +775,10 @@
     "test/automation-topology.test.js": {
       "githubSha": "1e4ad027fedb80779e7682d8ccaf8486173fc03b",
       "driveMd5": "5ff881c3e3ab16027592b1dfdbac7ab5"
+    },
+    "test/create-order-contract.test.js": {
+      "githubSha": "8bf2d1f8a16a5d362046396d6da5ec622cf6389d",
+      "driveMd5": "fe048e578a2f4649c2fe8aa0def4c196"
     },
     "test/drive-sync-optimization.test.js": {
       "githubSha": "e4866d521e40c05bde0955ef36f2d7ebcba9aab6",
@@ -841,5 +869,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-05T18:29:47.981Z"
+  "updatedAt": "2026-10-05T18:33:44.594Z"
 }
