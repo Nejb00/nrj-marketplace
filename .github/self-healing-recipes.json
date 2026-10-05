@@ -1,8 +1,10 @@
 {
   "version": 1,
+  "max_recipes": 32,
   "recipes": [
     {
       "id": "e2e-missing-refresh-cart-display-import",
+      "enabled": true,
       "workflow": "Vercel Browser E2E",
       "signatures": [
         "refreshCartDisplay is not defined"
