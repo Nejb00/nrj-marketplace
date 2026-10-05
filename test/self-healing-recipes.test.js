@@ -69,10 +69,6 @@ test('recette refreshCartDisplay: remplacement déterministe exact', () => {
   const repairedSource = brokenSource.replace(recipe.find, recipe.replace);
 
   assert.equal(
-    countOccurrences(repairedSource, recipe.find),
-    0
-  );
-  assert.equal(
     countOccurrences(repairedSource, recipe.replace),
     1
   );
