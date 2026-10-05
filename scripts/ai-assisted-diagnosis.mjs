@@ -9,7 +9,8 @@ function cleanText(value, max = MAX_TEXT) {
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, ' ')
     .replace(/\r/g, '')
     .replace(/\n{3,}/g, '\n\n')
-    .replace(/<!--|-->/g, '')
+    .replace(/<!--[\s\S]*?(?:-->|--!>)/g, '[HTML_COMMENT_REMOVED]')
+    .replace(/<!--|--!?>/g, '')
     .replace(/<LOG_DATA>|<\/LOG_DATA>/g, '[DELIMITER_REMOVED]')
     .trim()
     .slice(0, max);
