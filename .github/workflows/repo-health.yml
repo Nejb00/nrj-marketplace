@@ -1,0 +1,123 @@
+name: Repo Health
+
+on:
+  schedule:
+    - cron: "30 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: repo-health
+  cancel-in-progress: true
+
+jobs:
+  health:
+    name: Repository Health
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout du repo
+        uses: actions/checkout@v7
+
+      - name: Installation de Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Installation des dépendances
+        run: npm ci
+
+      - name: Audit des dépendances de production
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Vérification de la structure GitHub
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const expectedWorkflows = new Set([
+              "CI",
+              "CodeQL",
+              "Dependency Review",
+              "PR Labels",
+              "PR Quality",
+              "Project Report",
+              "Release",
+              "Repo Health",
+            ]);
+
+            const workflows = await github.paginate(
+              github.rest.actions.listRepoWorkflows,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                per_page: 100,
+              }
+            );
+
+            const workflowNames = new Set(workflows.map((workflow) => workflow.name));
+            const missingWorkflows = [...expectedWorkflows].filter(
+              (name) => !workflowNames.has(name)
+            );
+
+            if (missingWorkflows.length) {
+              core.setFailed(
+                `Workflows attendus absents : ${missingWorkflows.join(", ")}`
+              );
+            } else {
+              core.info(
+                `Workflow check OK — ${expectedWorkflows.size} workflows attendus présents.`
+              );
+            }
+
+            const branch = await github.rest.repos.getBranch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              branch: "main",
+            });
+
+            if (!branch.data.protected) {
+              core.setFailed("La branche main n'est plus protégée.");
+              return;
+            }
+
+            const required =
+              branch.data.protection?.required_status_checks?.contexts ?? [];
+
+            const expectedChecks = [
+              "Build",
+              "PR Quality Gate",
+              "CodeQL (javascript-typescript)",
+              "CodeQL (actions)",
+              "Dependency Review",
+            ];
+
+            const missingChecks = expectedChecks.filter(
+              (check) => !required.includes(check)
+            );
+
+            if (missingChecks.length) {
+              core.setFailed(
+                `Checks obligatoires absents de main : ${missingChecks.join(", ")}`
+              );
+            }
+
+            core.summary
+              .addHeading("Repository Health")
+              .addTable([
+                [
+                  { data: "Contrôle", header: true },
+                  { data: "Résultat", header: true },
+                ],
+                ["Workflows attendus", missingWorkflows.length ? "Échec" : "OK"],
+                ["Protection de main", branch.data.protected ? "OK" : "Échec"],
+                [
+                  "Checks obligatoires",
+                  missingChecks.length ? "Échec" : "OK",
+                ],
+              ])
+              .write();
