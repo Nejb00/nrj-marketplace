@@ -133,6 +133,10 @@ test('ATTAQUE #21 provides an append-only payment status audit trail', () => {
   );
   assert.match(
     auditMigration,
+    /sequence bigint GENERATED ALWAYS AS IDENTITY UNIQUE/,
+  );
+  assert.match(
+    auditMigration,
     /changed_at timestamptz NOT NULL DEFAULT now\(\)/,
   );
   assert.match(
