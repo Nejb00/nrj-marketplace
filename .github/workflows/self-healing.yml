@@ -13,7 +13,8 @@ on:
 permissions:
   actions: write
   issues: write
-  contents: read
+  contents: write
+  pull-requests: write
 
 concurrency:
   group: self-healing
@@ -29,7 +30,7 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: Retry known transient failure
+      - name: Evaluate incident and apply known recipe
         uses: actions/github-script@v9
         with:
           script: |
@@ -47,40 +48,32 @@ jobs:
               owner, repo, issue_number: issueNumber
             })).data;
 
-            const sourceAssociations = new Set([
-              'OWNER',
-              'MEMBER',
-              'COLLABORATOR',
-              'BOT',
-            ]);
-
+            const sourceAssociations = new Set(['OWNER', 'MEMBER', 'COLLABORATOR', 'BOT']);
             const sourceAssociation = issue.user?.type === 'Bot'
               ? 'BOT'
               : (issue.author_association || 'NONE');
-
             const isIncident = issue.labels?.some((label) => {
               const name = typeof label === 'string' ? label : label.name;
               return name === 'incident';
             });
-
-            const isGuardIncident =
-              isIncident &&
+            const isGuardIncident = isIncident &&
               sourceAssociations.has(sourceAssociation) &&
               issue.title?.startsWith('🚨 Incident — ');
 
             if (!isGuardIncident) {
-              core.info('Issue non incidente : aucune action.');
+              core.info('Issue non incidente provenant de Incident Guard : aucune action.');
               return;
             }
 
-            const marker = '<!-- nrj-self-healing-retry -->';
+            const retryMarker = '<!-- nrj-self-healing-retry -->';
+            const repairMarker = '<!-- nrj-self-healing-repair -->';
             const comments = await github.paginate(
               github.rest.issues.listComments,
               { owner, repo, issue_number: issueNumber, per_page: 100 }
             );
 
-            if (comments.some((comment) => comment.body?.includes(marker))) {
-              core.info('Self-Healing déjà tenté pour cette issue.');
+            if (comments.some((comment) => comment.body?.includes(repairMarker))) {
+              core.info('Une réparation automatique a déjà été tentée pour cette issue.');
               return;
             }
 
@@ -92,13 +85,11 @@ jobs:
               await github.rest.issues.createComment({
                 owner, repo, issue_number: issueNumber,
                 body: [
-                  marker,
+                  retryMarker,
                   '## 🤖 Self-Healing',
                   '',
-                  '⚠️ Impossible de retrouver le run source dans l’incident.',
-                  'Aucune action automatique effectuée.',
-                  '',
-                  'Le GitHub Operator peut continuer le diagnostic avec /operator diagnose.'
+                  '⚠️ Aucun run source exploitable n’a été trouvé.',
+                  'Aucune réparation automatique effectuée.'
                 ].join('\n')
               });
               return;
@@ -117,68 +108,164 @@ jobs:
               'Vercel Browser E2E',
             ]);
 
-            const validRun =
+            const recentFailure =
               run.head_branch === 'main' &&
               run.conclusion === 'failure' &&
               allowedWorkflows.has(run.name) &&
               Date.now() - new Date(run.updated_at).getTime() <= 24 * 60 * 60 * 1000;
 
-            if (!validRun) {
+            if (!recentFailure) {
               await github.rest.issues.createComment({
                 owner, repo, issue_number: issueNumber,
                 body: [
-                  marker,
+                  retryMarker,
                   '## 🤖 Self-Healing',
                   '',
-                  '🛑 Auto-retry refusé par les garde-fous.',
+                  '🛑 Auto-réparation refusée par les garde-fous.',
                   '',
-                  '- Run : #' + run.id,
                   '- Workflow : **' + run.name + '**',
                   '- Branche : **' + (run.head_branch || '—') + '**',
                   '- Conclusion : **' + (run.conclusion || run.status) + '**',
                   '',
-                  'Le run doit être récent, provenir de main, être en échec et appartenir à la liste des workflows autorisés.'
+                  'Le run doit être récent, en échec, provenir de main et appartenir à la liste autorisée.'
                 ].join('\n')
               });
               return;
             }
 
-            try {
-              await github.request(
-                'POST /repos/{owner}/{repo}/actions/runs/{run_id}/rerun-failed-jobs',
-                { owner, repo, run_id: run.id }
-              );
+            const jobs = (await github.rest.actions.listJobsForWorkflowRun({
+              owner, repo, run_id: runId, per_page: 100
+            })).data.jobs || [];
+            const failedJobs = jobs.filter((job) => job.conclusion === 'failure');
+            const logTexts = [];
 
-              await github.rest.issues.createComment({
-                owner, repo, issue_number: issueNumber,
-                body: [
-                  marker,
-                  '## 🤖 Self-Healing',
-                  '',
-                  '🔄 Retry automatique effectué sur les jobs échoués.',
-                  '',
-                  '- Workflow : **' + run.name + '**',
-                  '- Run : [#' + run.run_number + '](' + run.html_url + ')',
-                  '- Fenêtre : **1 tentative maximum par incident**',
-                  '',
-                  'Si le run échoue encore, l’incident reste ouvert pour diagnostic et correction par le GitHub Operator.'
-                ].join('\n')
-              });
-
-              core.info('Self-Healing retry déclenché pour le run #' + run.id);
-            } catch (error) {
-              await github.rest.issues.createComment({
-                owner, repo, issue_number: issueNumber,
-                body: [
-                  marker,
-                  '## 🤖 Self-Healing',
-                  '',
-                  '❌ Le retry automatique n’a pas pu être déclenché.',
-                  '',
-                  'Erreur : ' + error.message,
-                  '',
-                  'Aucune autre action automatique ne sera tentée pour cet incident.'
-                ].join('\n')
-              });
-              core.warning(error.message);
+            for (const job of failedJobs.slice(0, 3)) {
+              try {
+                const response = await github.request(
+                  'GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs',
+                  { owner, repo, job_id: job.id }
+                );
+                logTexts.push(typeof response.data === 'string' ? response.data : String(response.data || ''));
+              } catch (error) {
+                core.warning('Logs indisponibles pour le job ' + job.id + ': ' + error.message);
+              }
             }
+
+            const recipesResponse = await github.rest.repos.getContent({
+              owner, repo, path: '.github/self-healing-recipes.json', ref: 'main'
+            });
+            const recipesFile = recipesResponse.data;
+            if (Array.isArray(recipesFile) || !recipesFile.content) {
+              throw new Error('Catalogue de recettes indisponible.');
+            }
+            const recipes = JSON.parse(Buffer.from(recipesFile.content, recipesFile.encoding || 'base64').toString('utf8'));
+            const recipe = (recipes.recipes || []).find((candidate) => {
+              const ageOk = Date.now() - new Date(run.updated_at).getTime() <=
+                (Number(candidate.max_age_hours || 24) * 60 * 60 * 1000);
+              const workflowOk = candidate.workflow === run.name;
+              const signatureOk = (candidate.signatures || []).some((signature) =>
+                logTexts.some((log) => log.includes(signature))
+              );
+              return ageOk && workflowOk && signatureOk;
+            });
+
+            if (!recipe) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issueNumber,
+                body: [
+                  repairMarker,
+                  '## 🤖 Self-Healing V2',
+                  '',
+                  '🔎 Aucun correctif automatique connu ne correspond à cet incident.',
+                  'Aucune modification n’a été effectuée.',
+                  '',
+                  'Le GitHub Operator doit prendre le relais pour le diagnostic et la création éventuelle d’une PR.'
+                ].join('\n')
+              });
+              return;
+            }
+
+            const path = typeof recipe.path === 'string' ? recipe.path : '';
+            const findText = typeof recipe.find === 'string' ? recipe.find : '';
+            const replaceText = typeof recipe.replace === 'string' ? recipe.replace : '';
+            const forbidden = /(^|\/)(?:\.env|secrets|credentials|id_rsa)(?:\.|\/|$)/i.test(path) ||
+              /\.(?:pem|key|p12|pfx)$/i.test(path) ||
+              path === '.github/workflows/self-healing.yml' ||
+              path === '.github/self-healing-recipes.json';
+            if (forbidden || !path || !findText || findText.length > 20000 || replaceText.length > 20000) {
+              throw new Error('Recette bloquée par les garde-fous de chemin/taille.');
+            }
+
+            const target = (await github.rest.repos.getContent({
+              owner, repo, path, ref: 'main'
+            })).data;
+            if (Array.isArray(target) || !target.content) throw new Error('Fichier cible inaccessible.');
+            const current = Buffer.from(target.content, target.encoding || 'base64').toString('utf8');
+            const occurrences = current.split(findText).length - 1;
+            if (occurrences !== 1) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issueNumber,
+                body: [
+                  repairMarker,
+                  '## 🤖 Self-Healing V2',
+                  '',
+                  '🛑 La recette **' + recipe.id + '** a été reconnue mais son texte cible n’est pas dans l’état attendu.',
+                  '',
+                  '- Fichier : `' + path + '`',
+                  '- Occurrences attendues : **1**',
+                  '- Occurrences trouvées : **' + occurrences + '**',
+                  '',
+                  'Aucune modification effectuée.'
+                ].join('\n')
+              });
+              return;
+            }
+
+            const next = current.replace(findText, replaceText);
+            const branchName = 'operator/self-heal-' + runId + '-' + Date.now();
+            await github.rest.git.createRef({
+              owner, repo, ref: 'refs/heads/' + branchName, sha: run.head_sha
+            });
+            await github.rest.repos.createOrUpdateFileContents({
+              owner, repo, path, branch: branchName,
+              message: recipe.commit_message || recipe.title || 'fix(automation): self-healing',
+              content: Buffer.from(next, 'utf8').toString('base64'),
+              sha: target.sha
+            });
+
+            const pr = (await github.rest.pulls.create({
+              owner, repo, title: recipe.title || 'fix(automation): self-healing',
+              head: branchName, base: 'main', draft: true,
+              body: [
+                '## 🤖 Self-Healing V2',
+                '',
+                'Recette connue appliquée automatiquement après correspondance exacte.',
+                '',
+                '- Recette : `' + recipe.id + '`',
+                '- Incident : #' + issueNumber,
+                '- Run source : #' + runId,
+                '- Fichier : `' + path + '`',
+                '- Branche : `' + branchName + '`',
+                '- Occurrences remplacées : **1**',
+                '',
+                'Cette PR est en Draft et doit passer les checks avant toute validation humaine.'
+              ].join('\n')
+            })).data;
+
+            await github.rest.issues.createComment({
+              owner, repo, issue_number: issueNumber,
+              body: [
+                repairMarker,
+                '## 🤖 Self-Healing V2',
+                '',
+                '🛠️ **Réparation automatique préparée.**',
+                '',
+                '- Recette : `' + recipe.id + '`',
+                '- Branche : `' + branchName + '`',
+                '- Draft PR : [#' + pr.number + '](' + pr.html_url + ')',
+                '',
+                '🛡️ Aucun changement direct n’a été appliqué à `main`.'
+              ].join('\n')
+            });
+
+            core.info('Self-Healing V2: Draft PR #' + pr.number + ' créée.');
