@@ -25,7 +25,6 @@ async function getAccessToken() {
 
 export async function createRemoteOrder({
     items,
-    customerName,
     phone,
     paymentMethod = 'whatsapp'
 } = {}) {
@@ -40,7 +39,6 @@ export async function createRemoteOrder({
         },
         body: JSON.stringify({
             items,
-            customer_name: customerName,
             phone,
             payment_method: paymentMethod
         })
