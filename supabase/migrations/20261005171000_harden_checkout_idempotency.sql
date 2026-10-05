@@ -9,6 +9,9 @@ ALTER TABLE public.orders
   ADD COLUMN IF NOT EXISTS checkout_idempotency_key text;
 
 ALTER TABLE public.orders
+  ADD COLUMN IF NOT EXISTS checkout_fingerprint text;
+
+ALTER TABLE public.orders
   DROP CONSTRAINT IF EXISTS orders_checkout_idempotency_key_length_check;
 
 ALTER TABLE public.orders
@@ -17,6 +20,10 @@ ALTER TABLE public.orders
     checkout_idempotency_key IS NULL
     OR char_length(checkout_idempotency_key) BETWEEN 16 AND 200
   );
+
+CREATE INDEX IF NOT EXISTS orders_checkout_fingerprint_lookup_idx
+  ON public.orders(user_id, checkout_idempotency_key, checkout_fingerprint)
+  WHERE checkout_idempotency_key IS NOT NULL;
 
 CREATE UNIQUE INDEX IF NOT EXISTS orders_checkout_idempotency_uidx
   ON public.orders(user_id, checkout_idempotency_key)
