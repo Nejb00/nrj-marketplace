@@ -1,0 +1,183 @@
+.order-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.order-modal-overlay.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.order-modal {
+  width: min(100%, 560px);
+  max-height: min(90vh, 760px);
+  overflow-y: auto;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 24px 24px 18px 18px;
+  padding: 1.1rem;
+  background: var(--surface, #171717);
+  color: var(--text-primary, #fff);
+  box-shadow: 0 24px 70px rgba(0,0,0,0.35);
+  transform: translateY(24px);
+  transition: transform 0.2s ease;
+}
+
+.order-modal-overlay.open .order-modal {
+  transform: translateY(0);
+}
+
+.order-modal-handle {
+  width: 42px;
+  height: 4px;
+  margin: 0 auto 0.9rem;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.22;
+}
+
+.order-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.order-modal-kicker {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  opacity: 0.55;
+}
+
+.order-modal-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.order-modal-close {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(127,127,127,0.12);
+  color: inherit;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.order-summary {
+  margin: 1rem 0;
+  padding: 0.9rem;
+  border-radius: 16px;
+  background: rgba(127,127,127,0.08);
+  line-height: 1.45;
+  font-size: 0.9rem;
+}
+
+.order-form-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.order-field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.order-field span {
+  font-size: 0.78rem;
+  font-weight: 700;
+  opacity: 0.72;
+}
+
+.order-field input {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid rgba(127,127,127,0.22);
+  border-radius: 14px;
+  padding: 0 0.85rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.order-payment-note {
+  display: grid;
+  gap: 0.2rem;
+  margin-top: 0.9rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 14px;
+  background: rgba(255, 166, 0, 0.1);
+  font-size: 0.8rem;
+}
+
+.order-payment-note span {
+  opacity: 0.75;
+}
+
+.order-modal-actions {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.order-whatsapp-btn,
+.order-payment-btn {
+  min-height: 50px;
+  border: 0;
+  border-radius: 15px;
+  padding: 0 1rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.order-whatsapp-btn {
+  background: #25d366;
+  color: #07130b;
+}
+
+.order-payment-btn {
+  background: rgba(127,127,127,0.14);
+  color: inherit;
+}
+
+.order-payment-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.order-modal-footnote {
+  margin: 0.8rem 0 0;
+  text-align: center;
+  font-size: 0.72rem;
+  opacity: 0.52;
+}
+
+@media (min-width: 640px) {
+  .order-modal-overlay {
+    align-items: center;
+  }
+
+  .order-modal {
+    border-radius: 24px;
+  }
+
+  .order-form-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
