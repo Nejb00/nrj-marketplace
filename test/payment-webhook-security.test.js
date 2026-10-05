@@ -15,3 +15,5 @@ test("webhook signature comparison rejects different lengths", () => {
 test("webhook signature comparison accepts identical bytes", () => {
   assert.equal(timingSafeEqual(new Uint8Array([1, 2, 3]), new Uint8Array([1, 2, 3])), true);
 });
+
+// Regression coverage: signature comparison must remain length-safe and deterministic.
