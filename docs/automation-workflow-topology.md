@@ -68,3 +68,10 @@ The flow is:
 `business invariant test/audit → CART-*/ORDER-*/IMPORT-* signal → Incident Intelligence → AI Diagnosis context`
 
 A business rule signal alone never selects a self-healing recipe. Automatic repair still requires an existing deterministic recipe, a validated AI diagnosis, exact run/commit correlation, and all repair verification gates.
+
+### Supabase migration drift path
+`PR/push → Supabase Migration Drift → compare local filenames vs remote migration history by timestamp → machine-readable drift report`
+
+The detector is intentionally read-only: it never applies, repairs, reorders, or deletes migrations. Supabase itself compares local migration files with remote history by migration timestamp. The remote probe uses the Supabase Management API only when the repository has both `SUPABASE_ACCESS_TOKEN` and `SUPABASE_PROJECT_REF` configured. Without those credentials, the workflow remains installed but explicitly reports that the remote audit is not enabled.
+
+A migration drift is an evidence signal, not a self-healing authorization. In particular, a remote-only migration means the database has applied schema history that is not represented in the repository and must be reconciled deliberately before any automated repair is considered.
