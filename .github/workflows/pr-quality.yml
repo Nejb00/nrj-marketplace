@@ -1,0 +1,63 @@
+name: PR Quality
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: pr-quality-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: PR Quality Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Validate PR metadata
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const titlePattern = /^(feat|fix|refactor|docs|test|ci|security|automation|chore|perf)(\(.+\))?!?: .+/;
+            const errors = [];
+
+            if (!titlePattern.test(pr.title)) {
+              errors.push(
+                "Titre invalide. Utilise un préfixe comme feat:, fix:, ci:, security: ou automation:."
+              );
+            }
+
+            const body = (pr.body || "").replace(/\s/g, "");
+            if (body.length < 40) {
+              errors.push("La description de la PR doit contenir au moins 40 caractères.");
+            }
+
+            const files = await github.paginate(
+              github.rest.pulls.listFiles,
+              { owner: context.repo.owner, repo: context.repo.repo, pull_number: pr.number, per_page: 100 }
+            );
+
+            if (files.length > 50) {
+              core.warning(`PR volumineuse : ${files.length} fichiers modifiés. Pense à découper la livraison.`);
+            }
+
+            core.summary
+              .addHeading("PR Quality")
+              .addTable([
+                [{data:"Contrôle",header:true},{data:"Résultat",header:true}],
+                ["Titre", titlePattern.test(pr.title) ? "OK" : "Échec"],
+                ["Description", body.length >= 40 ? "OK" : "Échec"],
+                ["Fichiers modifiés", String(files.length)],
+              ])
+              .write();
+
+            if (errors.length) {
+              core.setFailed(errors.join("\n"));
+            }

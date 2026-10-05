@@ -1,0 +1,66 @@
+name: Project Report
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: project-report-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  report:
+    name: Generate project report
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout du repo
+        uses: actions/checkout@v7
+
+      - name: Générer le rapport
+        run: |
+          set -eu
+
+          {
+            echo "# Rapport structure — nrj-marketplace"
+            echo
+            echo "- Commit: \`$GITHUB_SHA\`"
+            echo "- Référence: \`$GITHUB_REF_NAME\`"
+            echo
+            echo "## Statistiques"
+            echo
+            echo "| Élément | Valeur |"
+            echo "|---|---:|"
+            echo "| Fichiers suivis | $(git ls-files | wc -l | tr -d ' ') |"
+            echo "| Fichiers JavaScript | $(git ls-files '*.js' '*.mjs' '*.cjs' | wc -l | tr -d ' ') |"
+            echo "| Fichiers CSS | $(git ls-files '*.css' | wc -l | tr -d ' ') |"
+            echo "| Fichiers HTML | $(git ls-files '*.html' | wc -l | tr -d ' ') |"
+            echo
+            echo "## Arborescence"
+            echo
+            echo '\`\`\`text'
+            git ls-files |
+              awk -F/ '{
+                indent="";
+                for (i=1; i<NF; i++) indent=indent "  ";
+                print indent "├── " $NF;
+              }'
+            echo '\`\`\`'
+          } > PROJECT_STRUCTURE.md
+
+          cat PROJECT_STRUCTURE.md
+
+      - name: Publier le rapport comme artefact
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: project-structure-${{ github.sha }}
+          path: PROJECT_STRUCTURE.md
+          if-no-files-found: error
+          retention-days: 14
