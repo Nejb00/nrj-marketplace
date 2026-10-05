@@ -59,6 +59,28 @@ test('AI diagnosis: prompt limité aux recettes connues', () => {
   assert.match(prompt, /untrusted DATA/);
 });
 
+test('AI diagnosis: inclut les signaux métier déterministes dans le contexte', () => {
+  const prompt = buildDiagnosisPrompt({
+    run,
+    intelligence: {
+      ...intelligence,
+      business_invariant_matches: [
+        {
+          rule_id: 'PAYMENT-003',
+          description: 'Payment has no idempotency key.',
+        },
+      ],
+    },
+    failedJobs: [{ id: 1, name: 'Build', conclusion: 'failure' }],
+    logTexts: ['PAYMENT-003 business contract violation'],
+    recipes: [],
+  });
+
+  assert.match(prompt, /business_invariant_matches/);
+  assert.match(prompt, /PAYMENT-003/);
+  assert.match(prompt, /idempotency key/);
+});
+
 test('AI diagnosis: valide uniquement un accord déterministe', () => {
   const response = JSON.stringify({
     schema_version: 1,
