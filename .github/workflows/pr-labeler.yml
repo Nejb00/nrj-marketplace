@@ -1,0 +1,144 @@
+name: PR Labels
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: pr-labels-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  label:
+    name: Classify PR
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Apply labels
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const pullNumber = context.payload.pull_request.number;
+
+            const definitions = {
+              "automation": { color: "5319E7", description: "Automation, CI/CD or repository tooling" },
+              "security": { color: "B60205", description: "Security hardening or dependency security" },
+              "ci": { color: "1D76DB", description: "Continuous integration and GitHub Actions" },
+              "frontend": { color: "0E8A16", description: "Frontend, UI or client-side changes" },
+              "backend": { color: "D93F0B", description: "Backend, API or server-side changes" },
+              "tests": { color: "FBCA04", description: "Tests or validation changes" },
+              "docs": { color: "0075CA", description: "Documentation changes" },
+              "dependencies": { color: "0366D6", description: "Dependency updates" },
+            };
+
+            for (const [name, meta] of Object.entries(definitions)) {
+              try {
+                await github.rest.issues.getLabel({ owner, repo, name });
+              } catch (error) {
+                if (error.status !== 404) throw error;
+                await github.rest.issues.createLabel({
+                  owner,
+                  repo,
+                  name,
+                  color: meta.color,
+                  description: meta.description,
+                });
+              }
+            }
+
+            const files = await github.paginate(
+              github.rest.pulls.listFiles,
+              { owner, repo, pull_number: pullNumber, per_page: 100 }
+            );
+
+            const paths = files.map(file => file.filename);
+            const labels = new Set();
+
+            const add = (name) => labels.add(name);
+
+            if (paths.some(p =>
+              p.startsWith(".github/") ||
+              p === "vercel.json" ||
+              p === "package-lock.json"
+            )) add("automation");
+
+            if (paths.some(p =>
+              p.includes("codeql") ||
+              p.includes("dependabot") ||
+              p.includes("dependency-review") ||
+              p.startsWith("security/")
+            )) add("security");
+
+            if (paths.some(p =>
+              p.startsWith(".github/workflows/") ||
+              p.includes("ci-check") ||
+              p === "package.json"
+            )) add("ci");
+
+            if (paths.some(p =>
+              p.startsWith("src/") ||
+              p.endsWith(".html") ||
+              p.endsWith(".css")
+            )) add("frontend");
+
+            if (paths.some(p =>
+              p.startsWith("api/") ||
+              p.startsWith("supabase/")
+            )) add("backend");
+
+            if (paths.some(p =>
+              p.startsWith("test/") ||
+              p.startsWith("tests/") ||
+              p.includes(".test.") ||
+              p.includes(".spec.")
+            )) add("tests");
+
+            if (paths.some(p =>
+              p.endsWith(".md") ||
+              p.startsWith("docs/")
+            )) add("docs");
+
+            if (paths.some(p =>
+              p === "package.json" ||
+              p === "package-lock.json" ||
+              p.startsWith(".github/dependabot")
+            )) add("dependencies");
+
+            const managed = Object.keys(definitions);
+            const existing = await github.rest.issues.listLabelsOnIssue({
+              owner,
+              repo,
+              issue_number: pullNumber,
+              per_page: 100,
+            });
+
+            const staleManaged = existing.data
+              .filter(label => managed.includes(label.name) && !labels.has(label.name))
+              .map(label => label.name);
+
+            for (const name of staleManaged) {
+              await github.rest.issues.removeLabel({
+                owner,
+                repo,
+                issue_number: pullNumber,
+                name,
+              });
+            }
+
+            for (const name of labels) {
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: pullNumber,
+                labels: [name],
+              });
+            }
+
+            core.info(`Labels appliqués: ${[...labels].join(", ") || "aucun"}`);
