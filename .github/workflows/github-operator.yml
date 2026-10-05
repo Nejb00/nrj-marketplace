@@ -14,8 +14,14 @@ on:
           - status
           - diagnose
           - prs
+          - inspect
           - retry-failed
           - help
+      run_id:
+        description: 'ID du run à inspecter (pour inspect)'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -73,11 +79,15 @@ jobs:
             const tokens = rawCommand.trim().split(/\\s+/);
             const command = tokens[1]?.toLowerCase() || 'help';
             const confirmed = tokens[2]?.toLowerCase() === 'confirm';
+            const requestedRunId = context.eventName === 'workflow_dispatch'
+              ? (context.payload.inputs?.run_id || '')
+              : (tokens[2] || '');
 
             const validCommands = new Set([
               'status',
               'diagnose',
               'prs',
+              'inspect',
               'retry-failed',
               'help',
             ]);
@@ -204,6 +214,128 @@ jobs:
             operatorLines.push(\`Main : **\${shortSha(branch.data.commit.sha)}**\`);
             operatorLines.push('');
 
+            if (command === 'inspect') {
+              const runId = Number.parseInt(requestedRunId, 10);
+
+              if (!Number.isSafeInteger(runId) || runId <= 0) {
+                operatorLines.push('### 🔎 Inspection');
+                operatorLines.push('');
+                operatorLines.push('❌ ID de run invalide.');
+                operatorLines.push('');
+                operatorLines.push('Utilisation : `/operator inspect 37258123784`');
+              } else {
+                try {
+                  const runResponse = await github.rest.actions.getWorkflowRun({
+                    owner,
+                    repo,
+                    run_id: runId,
+                  });
+
+                  const run = runResponse.data;
+                  const ageMs = Date.now() - new Date(run.updated_at).getTime();
+                  const maxAgeMs = 30 * 24 * 60 * 60 * 1000;
+
+                  if (ageMs > maxAgeMs) {
+                    operatorLines.push('### 🔎 Inspection');
+                    operatorLines.push('');
+                    operatorLines.push('⚠️ Ce run est âgé de plus de 30 jours. Inspection abandonnée.');
+                  } else {
+                    const jobsResponse = await github.rest.actions.listJobsForWorkflowRun({
+                      owner,
+                      repo,
+                      run_id: runId,
+                      per_page: 100,
+                    });
+
+                    const jobs = jobsResponse.data.jobs || [];
+                    const failedJobs = jobs.filter((job) => job.conclusion === 'failure');
+                    const failedSteps = failedJobs.flatMap((job) =>
+                      (job.steps || [])
+                        .filter((step) => step.conclusion === 'failure')
+                        .map((step) => ({
+                          job: job.name,
+                          step: step.name,
+                        }))
+                    );
+
+                    const evidence = [];
+                    const patterns = [
+                      [/ReferenceError|TypeError|SyntaxError/g, 'Erreur JavaScript'],
+                      [/npm ERR!|ELIFECYCLE/g, 'Erreur npm / script'],
+                      [/Playwright|locator|expect\(/g, 'Échec de test navigateur'],
+                      [/timeout|timed out|TimeoutError/gi, 'Timeout'],
+                      [/permission denied|forbidden|401|403/gi, 'Problème de permission'],
+                      [/module not found|Cannot find module/gi, 'Module introuvable'],
+                      [/failed|failure|error/gi, 'Erreur générique'],
+                    ];
+
+                    for (const job of failedJobs.slice(0, 3)) {
+                      try {
+                        const logResponse = await github.request(
+                          'GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs',
+                          {
+                            owner,
+                            repo,
+                            job_id: job.id,
+                          }
+                        );
+
+                        const rawLog = typeof logResponse.data === 'string'
+                          ? logResponse.data
+                          : String(logResponse.data || '');
+                        const tail = rawLog.split('\n').slice(-160).join('\n');
+
+                        for (const [pattern, label] of patterns) {
+                          if (pattern.test(tail)) evidence.push(`${job.name}: ${label}`);
+                        }
+                      } catch (error) {
+                        core.warning(`Logs indisponibles pour le job ${job.id}: ${error.message}`);
+                      }
+                    }
+
+                    operatorLines.push('### 🔎 Inspection du run');
+                    operatorLines.push('');
+                    operatorLines.push(`Run : **#${run.id} — ${run.name}**`);
+                    operatorLines.push(`État : **${run.conclusion || run.status}**`);
+                    operatorLines.push(`Branche : **${run.head_branch || '—'}**`);
+                    operatorLines.push(`Commit : \\`${shortSha(run.head_sha)}\\``);
+                    operatorLines.push(`Mis à jour : ${relativeTime(run.updated_at)}`);
+                    operatorLines.push('');
+
+                    if (failedJobs.length === 0) {
+                      operatorLines.push('✅ Aucun job en échec dans ce run.');
+                    } else {
+                      operatorLines.push(`**Jobs échoués : ${failedJobs.length}**`);
+                      for (const job of failedJobs.slice(0, 8)) {
+                        operatorLines.push(`- ❌ ${job.name}`);
+                      }
+
+                      if (failedSteps.length) {
+                        operatorLines.push('');
+                        operatorLines.push('**Étapes en échec :**');
+                        for (const item of failedSteps.slice(0, 10)) {
+                          operatorLines.push(`- ${item.job} → ${item.step}`);
+                        }
+                      }
+
+                      const uniqueEvidence = [...new Set(evidence)].slice(0, 10);
+                      if (uniqueEvidence.length) {
+                        operatorLines.push('');
+                        operatorLines.push('**Indices détectés dans les logs :**');
+                        for (const item of uniqueEvidence) operatorLines.push(`- ${item}`);
+                      }
+
+                      operatorLines.push('');
+                      operatorLines.push('> Diagnostic basé sur les métadonnées du run et des motifs détectés dans les dernières lignes de logs. Aucun log brut n’est publié.');
+                    }
+                  }
+                } catch (error) {
+                  operatorLines.push('### 🔎 Inspection');
+                  operatorLines.push('');
+                  operatorLines.push(`❌ Impossible d’inspecter le run : ${error.message}`);
+                }
+              }
+            }
             if (command === 'retry-failed') {
               if (context.eventName === 'issue_comment' && !confirmed) {
                 operatorLines.push('### 🔐 Confirmation requise');
@@ -277,6 +409,7 @@ jobs:
               operatorLines.push('- \`/operator status\` — état général du dépôt');
               operatorLines.push('- \`/operator diagnose\` — anomalies récentes CI/déploiement');
               operatorLines.push('- \`/operator prs\` — PRs récemment actives vers main');
+              operatorLines.push('- \`/operator inspect <run_id>\` — analyse sécurisée d’un run et de ses jobs/logs');
               operatorLines.push('- \`/operator retry-failed confirm\` — relance contrôlée des jobs échoués de main');
               operatorLines.push('- \`/operator help\` — cette aide');
               operatorLines.push('');
