@@ -1,0 +1,184 @@
+name: Self-Healing
+
+on:
+  issues:
+    types: [opened]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue incident à traiter'
+        required: true
+        type: number
+
+permissions:
+  actions: write
+  issues: write
+  contents: read
+
+concurrency:
+  group: self-healing
+  cancel-in-progress: false
+
+jobs:
+  self-heal:
+    name: Controlled self-healing
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.issue.labels.*.name, 'incident')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Retry known transient failure
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issueNumber = context.eventName === 'workflow_dispatch'
+              ? Number(context.payload.inputs.issue_number)
+              : context.payload.issue.number;
+
+            if (!Number.isSafeInteger(issueNumber) || issueNumber <= 0) {
+              core.setFailed('Numéro d’issue invalide.');
+              return;
+            }
+
+            const issue = (await github.rest.issues.get({
+              owner, repo, issue_number: issueNumber
+            })).data;
+
+            const sourceAssociations = new Set([
+              'OWNER',
+              'MEMBER',
+              'COLLABORATOR',
+              'BOT',
+            ]);
+
+            const sourceAssociation = issue.user?.type === 'Bot'
+              ? 'BOT'
+              : (issue.author_association || 'NONE');
+
+            const isIncident = issue.labels?.some((label) => {
+              const name = typeof label === 'string' ? label : label.name;
+              return name === 'incident';
+            });
+
+            const isGuardIncident =
+              isIncident &&
+              sourceAssociations.has(sourceAssociation) &&
+              issue.title?.startsWith('🚨 Incident — ');
+
+            if (!isGuardIncident) {
+              core.info('Issue non incidente : aucune action.');
+              return;
+            }
+
+            const marker = '<!-- nrj-self-healing-retry -->';
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number: issueNumber, per_page: 100 }
+            );
+
+            if (comments.some((comment) => comment.body?.includes(marker))) {
+              core.info('Self-Healing déjà tenté pour cette issue.');
+              return;
+            }
+
+            const runMatch = issue.body?.match(
+              /Run:\s*https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/actions\/runs\/(\d+)/
+            );
+
+            if (!runMatch) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issueNumber,
+                body: [
+                  marker,
+                  '## 🤖 Self-Healing',
+                  '',
+                  '⚠️ Impossible de retrouver le run source dans l’incident.',
+                  'Aucune action automatique effectuée.',
+                  '',
+                  'Le GitHub Operator peut continuer le diagnostic avec /operator diagnose.'
+                ].join('\n')
+              });
+              return;
+            }
+
+            const runId = Number(runMatch[1]);
+            const run = (await github.rest.actions.getWorkflowRun({
+              owner, repo, run_id: runId
+            })).data;
+
+            const allowedWorkflows = new Set([
+              'CI',
+              'CodeQL',
+              'Dependency Review',
+              'Deployment Safety Net',
+              'Vercel Browser E2E',
+            ]);
+
+            const validRun =
+              run.head_branch === 'main' &&
+              run.conclusion === 'failure' &&
+              allowedWorkflows.has(run.name) &&
+              Date.now() - new Date(run.updated_at).getTime() <= 24 * 60 * 60 * 1000;
+
+            if (!validRun) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issueNumber,
+                body: [
+                  marker,
+                  '## 🤖 Self-Healing',
+                  '',
+                  '🛑 Auto-retry refusé par les garde-fous.',
+                  '',
+                  '- Run : #' + run.id,
+                  '- Workflow : **' + run.name + '**',
+                  '- Branche : **' + (run.head_branch || '—') + '**',
+                  '- Conclusion : **' + (run.conclusion || run.status) + '**',
+                  '',
+                  'Le run doit être récent, provenir de main, être en échec et appartenir à la liste des workflows autorisés.'
+                ].join('\n')
+              });
+              return;
+            }
+
+            try {
+              await github.request(
+                'POST /repos/{owner}/{repo}/actions/runs/{run_id}/rerun-failed-jobs',
+                { owner, repo, run_id: run.id }
+              );
+
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issueNumber,
+                body: [
+                  marker,
+                  '## 🤖 Self-Healing',
+                  '',
+                  '🔄 Retry automatique effectué sur les jobs échoués.',
+                  '',
+                  '- Workflow : **' + run.name + '**',
+                  '- Run : [#' + run.run_number + '](' + run.html_url + ')',
+                  '- Fenêtre : **1 tentative maximum par incident**',
+                  '',
+                  'Si le run échoue encore, l’incident reste ouvert pour diagnostic et correction par le GitHub Operator.'
+                ].join('\n')
+              });
+
+              core.info('Self-Healing retry déclenché pour le run #' + run.id);
+            } catch (error) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issueNumber,
+                body: [
+                  marker,
+                  '## 🤖 Self-Healing',
+                  '',
+                  '❌ Le retry automatique n’a pas pu être déclenché.',
+                  '',
+                  'Erreur : ' + error.message,
+                  '',
+                  'Aucune autre action automatique ne sera tentée pour cet incident.'
+                ].join('\n')
+              });
+              core.warning(error.message);
+            }

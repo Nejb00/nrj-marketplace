@@ -51,6 +51,7 @@ jobs:
               "Deployment Safety Net",
               "Vercel Browser E2E",
               "Automation Dashboard",
+              "Self-Healing",
             ]);
 
             const workflows = await github.paginate(
