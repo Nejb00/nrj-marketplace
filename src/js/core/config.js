@@ -31,5 +31,5 @@ export const MAX_PLACEHOLDER_SUGGESTIONS = 10;
  * VITE_PAYMENT_E2E_MODE=true ; les appels provider sont alors mockés
  * dans Playwright et aucun paiement réel n'est possible.
  */
-const PAYMENT_E2E_MODE = import.meta.env.VITE_PAYMENT_E2E_MODE === 'true';
+const PAYMENT_E2E_MODE = import.meta.env?.VITE_PAYMENT_E2E_MODE === 'true';
 export const MOBILE_MONEY_PAYMENT_ENABLED = PAYMENT_E2E_MODE ? true : false;
