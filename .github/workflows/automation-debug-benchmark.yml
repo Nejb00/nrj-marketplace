@@ -1,0 +1,146 @@
+name: Automation Debug Benchmark
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "27 3 * * 1"
+
+permissions:
+  contents: read
+  actions: read
+  issues: read
+
+jobs:
+  benchmark:
+    name: Measure automation debug effectiveness
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Collect incident history
+        uses: actions/github-script@v9
+        env:
+          BENCHMARK_DAYS: "30"
+        with:
+          script: |
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const { owner, repo } = context.repo;
+            const days = Number(process.env.BENCHMARK_DAYS || 30);
+            const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+
+            const issues = await github.paginate(
+              github.rest.issues.listForRepo,
+              {
+                owner,
+                repo,
+                state: 'all',
+                labels: 'incident',
+                per_page: 100,
+              }
+            );
+
+            const incidents = [];
+            for (const issue of issues) {
+              if (new Date(issue.created_at).getTime() < cutoff) continue;
+
+              const comments = await github.paginate(
+                github.rest.issues.listComments,
+                {
+                  owner,
+                  repo,
+                  issue_number: issue.number,
+                  per_page: 100,
+                }
+              );
+
+              const diagnosisComment = comments.find((c) =>
+                /NRJ_AI_DIAGNOSIS_START/.test(c.body || '') ||
+                /AI-Assisted Diagnosis/.test(c.body || '')
+              );
+
+              const repairComment = comments.find((c) =>
+                /Self-Healing V2/.test(c.body || '') &&
+                /Draft PR/i.test(c.body || '')
+              );
+
+              const verificationComment = comments.find((c) =>
+                /nrj-self-healing-repair-verification/.test(c.body || '') ||
+                /Repair (?:VERIFIED|REJECTED)/.test(c.body || '')
+              );
+
+              const resolvedComment = comments.find((c) =>
+                /Le workflow est de nouveau vert/.test(c.body || '') &&
+                /resolved/i.test(c.body || '')
+              );
+
+              const runMatch = (issue.body || '').match(
+                /Run:\s*https:\/\/github\.com\/[^/]+\/[^/]+\/actions\/runs\/(\d+)/
+              );
+
+              let sourceCompletedAt = null;
+              if (runMatch) {
+                try {
+                  const run = (await github.rest.actions.getWorkflowRun({
+                    owner, repo, run_id: Number(runMatch[1]),
+                  })).data;
+                  if (run.conclusion) sourceCompletedAt = run.updated_at;
+                } catch (error) {
+                  core.warning('Impossible de lire le run ' + runMatch[1] + ': ' + error.message);
+                }
+              }
+
+              incidents.push({
+                issue_number: issue.number,
+                source_completed_at: sourceCompletedAt,
+                incident_created_at: issue.created_at,
+                diagnosis_at: diagnosisComment?.created_at || null,
+                repair_at: repairComment?.created_at || null,
+                verification_at: verificationComment?.created_at || null,
+                resolved_at: resolvedComment?.created_at || null,
+              });
+            }
+
+            fs.writeFileSync(
+              path.join(process.env.RUNNER_TEMP, 'automation-benchmark-input.json'),
+              JSON.stringify({ incidents }, null, 2),
+              { mode: 0o600 }
+            );
+
+            core.info('Incidents analysés: ' + incidents.length);
+
+      - name: Calculate benchmark
+        run: |
+          node scripts/automation-benchmark.mjs < "$RUNNER_TEMP/automation-benchmark-input.json" > "$RUNNER_TEMP/automation-benchmark.json"
+
+      - name: Publish benchmark summary
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const report = JSON.parse(
+            fs.readFileSync(process.env.RUNNER_TEMP + '/automation-benchmark.json', 'utf8')
+          );
+          const pct = (v) => v == null ? 'N/A' : v.toFixed(1) + '%';
+          const min = (v) => v == null ? 'N/A' : v.toFixed(1) + ' min';
+
+          let out = '# 📊 Automation Debug Benchmark\n\n';
+          out += '**Sample:** ' + report.sample_size + ' incident(s) instrumented sur les 30 derniers jours.\n\n';
+          out += '| KPI | Mesure |\n|---|---:|\n';
+          out += '| Diagnostic automatique | ' + pct(report.coverage.diagnosis_pct) + ' |\n';
+          out += '| Réparation préparée | ' + pct(report.coverage.repair_prepared_pct) + ' |\n';
+          out += '| Vérification des réparations | ' + pct(report.coverage.verification_pct) + ' |\n';
+          out += '| Résolution observée | ' + pct(report.coverage.resolution_pct) + ' |\n';
+          out += '| Médiane détection | ' + min(report.median_latency_minutes.detection) + ' |\n';
+          out += '| Médiane diagnostic | ' + min(report.median_latency_minutes.diagnosis) + ' |\n';
+          out += '| Médiane préparation réparation | ' + min(report.median_latency_minutes.repair) + ' |\n';
+          out += '| Médiane vérification | ' + min(report.median_latency_minutes.verification) + ' |\n';
+          out += '| Médiane résolution | ' + min(report.median_latency_minutes.resolution) + ' |\n\n';
+          out += '## Ligne de base\n\n';
+          out += 'Le dataset pré-automatisation n’est pas instrumenté dans GitHub : aucun pourcentage avant/après ne doit être inventé.\n';
+          out += 'Le benchmark deviendra statistiquement exploitable dès que plusieurs incidents réels auront traversé le pipeline.\n';
+
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, out);
+          process.stdout.write(out);
+          NODE
