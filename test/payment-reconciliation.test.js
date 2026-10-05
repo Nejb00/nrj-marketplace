@@ -73,6 +73,7 @@ test('ATTAQUE #19 stores and deduplicates provider callbacks atomically', () => 
   );
   assert.match(eventMigration, /UPDATE public\.payment_events/);
   assert.match(eventMigration, /processed_at = now\(\)/);
+  assert.match(eventMigration, /duplicate boolean/);
   assert.match(eventMigration, /GRANT EXECUTE[\s\S]*TO service_role/);
   assert.match(eventMigration, /REVOKE EXECUTE[\s\S]*FROM PUBLIC, anon, authenticated/);
 });
