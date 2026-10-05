@@ -10,6 +10,7 @@ import { addToCart, changeQty, removeCartItem } from '../../services/cart-action
 import { refreshCartDisplay } from '../../services/cart-panel.js';
 import { toggleFavorite } from '../../services/favorites.js';
 import { openOrderModal, sendWhatsAppOrder } from '../../services/checkout.js';
+import { startMobileMoneyPayment, initMobileMoneyPaymentUi } from '../../services/payment/mobile-money-checkout.js';
 import { openProductModal, closeProductModal } from '../product/modal-render.js';
 import { openEditModal } from '../product/product-edit-form.js';
 import { updateProduct } from '../product/product-edit-save.js';
@@ -67,6 +68,8 @@ document.getElementById('cartOverlay')?.addEventListener('click', () => {
 });
 document.getElementById('checkoutBtn')?.addEventListener('click', openOrderModal);
 document.getElementById('sendWhatsAppBtn')?.addEventListener('click', sendWhatsAppOrder);
+document.getElementById('startMobileMoneyBtn')?.addEventListener('click', startMobileMoneyPayment);
+initMobileMoneyPaymentUi();
 document.getElementById('cancelOrderBtn')?.addEventListener('click', () => document.getElementById('orderModalOverlay').classList.remove('open'));
 
 document.getElementById('saveEditBtn')?.addEventListener('click', updateProduct);

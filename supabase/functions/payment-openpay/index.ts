@@ -5,7 +5,10 @@ const PUBLIC_KEY =
   Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ||
   "";
 const OPENPAY_API_KEY = Deno.env.get("OPENPAY_API_KEY") || "";
+const OPENPAY_PAYMENT_ENABLED = Deno.env.get("OPENPAY_PAYMENT_ENABLED") === "true";
 const OPENPAY_BASE_URL = "https://api.openpay-cg.com/v1";
+const MAX_PERSIST_ATTEMPTS = 3;
+const PERSIST_RETRY_DELAYS_MS = [0, 100, 250];
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -175,13 +178,15 @@ interface OpenPayPaymentResponse {
 }
 
 interface RequestBody {
-  action?: "create" | "status";
+  action?: "create" | "status" | "reconcile";
   order_id?: string;
   currency?: string;
   payment_phone_number?: string;
   operator?: "MTN" | "AIRTEL";
+  customer_name?: string | null;
   idempotency_key?: string | null;
   provider_reference?: string;
+  payment_id?: string;
 }
 
 async function findOwnedOrder(orderId: string, token: string): Promise<OrderRow | null> {
@@ -204,6 +209,15 @@ async function findPaymentByIdempotency(key: string): Promise<PaymentRow | null>
   return result.data?.[0] || null;
 }
 
+async function findLivePaymentForOrder(orderId: string): Promise<PaymentRow | null> {
+  const result = await supabaseRest<PaymentRow[]>(
+    "payments?select=id,order_id,provider,payment_method,provider_reference,idempotency_key,amount,currency,status&provider=eq.openpay&order_id=eq." +
+      encodeURIComponent(orderId) +
+      "&status=in.(pending,processing,paid,refund_pending,refunded)&limit=1"
+  );
+  return result.data?.[0] || null;
+}
+
 async function findOwnedPayment(reference: string, token: string): Promise<PaymentRow | null> {
   const result = await supabaseRest<PaymentRow[]>(
     "payments?select=id,order_id,provider,payment_method,provider_reference,idempotency_key,amount,currency,status&provider=eq.openpay&provider_reference=eq." +
@@ -213,6 +227,68 @@ async function findOwnedPayment(reference: string, token: string): Promise<Payme
     token
   );
   return result.data?.[0] || null;
+}
+
+async function findOwnedPaymentById(paymentId: string, token: string): Promise<PaymentRow | null> {
+  const result = await supabaseRest<PaymentRow[]>(
+    "payments?select=id,order_id,provider,payment_method,provider_reference,idempotency_key,amount,currency,status&provider=eq.openpay&id=eq." +
+      encodeURIComponent(paymentId) +
+      "&limit=1",
+    {},
+    token
+  );
+  return result.data?.[0] || null;
+}
+
+async function persistConfirmedPayment(
+  paymentId: string,
+  providerReference: string,
+  status: InternalStatus
+): Promise<boolean> {
+  for (let attempt = 0; attempt < MAX_PERSIST_ATTEMPTS; attempt += 1) {
+    const update = await supabaseRest<null>(
+      "payments?id=eq." + encodeURIComponent(paymentId),
+      {
+        method: "PATCH",
+        headers: { "Prefer": "return=minimal" },
+        body: JSON.stringify({
+          provider_reference: providerReference,
+          status
+        })
+      }
+    );
+
+    if (!update.error) {
+      return true;
+    }
+
+    if (attempt + 1 < MAX_PERSIST_ATTEMPTS) {
+      await new Promise((resolve) =>
+        setTimeout(resolve, PERSIST_RETRY_DELAYS_MS[attempt + 1])
+      );
+    }
+  }
+
+  return false;
+}
+
+async function persistPaymentFailure(
+  paymentId: string,
+  failureReason: string
+): Promise<boolean> {
+  const failure = await supabaseRest<null>(
+    "payments?id=eq." + encodeURIComponent(paymentId),
+    {
+      method: "PATCH",
+      headers: { "Prefer": "return=minimal" },
+      body: JSON.stringify({
+        status: "failed",
+        failure_reason: failureReason
+      })
+    }
+  );
+
+  return !failure.error;
 }
 
 Deno.serve(async (req: Request): Promise<Response> => {
@@ -233,6 +309,84 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   const action = body.action || "create";
+
+  if (!OPENPAY_PAYMENT_ENABLED) {
+    return json({ ok: false, error: "openpay_payment_disabled" }, 503);
+  }
+
+  if (action === "reconcile") {
+    if (!body.order_id) {
+      return json({ ok: false, error: "order_id_required" }, 400);
+    }
+    if (!body.payment_id) {
+      return json({ ok: false, error: "payment_id_required" }, 400);
+    }
+    if (!body.provider_reference) {
+      return json({ ok: false, error: "provider_reference_required" }, 400);
+    }
+
+    const order = await findOwnedOrder(body.order_id, token);
+    if (!order) return json({ ok: false, error: "order_not_found_or_not_owned" }, 404);
+
+    const payment = await findOwnedPaymentById(body.payment_id, token);
+    if (!payment) return json({ ok: false, error: "payment_not_found" }, 404);
+    if (payment.order_id !== order.id) {
+      return json({ ok: false, error: "payment_order_conflict" }, 409);
+    }
+    if (payment.provider !== "openpay") {
+      return json({ ok: false, error: "payment_provider_conflict" }, 409);
+    }
+
+    const providerReference = body.provider_reference.trim();
+    const remote = await openPay<OpenPayPaymentResponse>(
+      "/transaction/status/" + encodeURIComponent(providerReference),
+      { method: "GET" }
+    );
+
+    if (remote.error || !remote.data) {
+      return json({ ok: false, error: "openpay_status_failed" }, 502);
+    }
+
+    const remoteReference = String(remote.data.reference || "").trim();
+    const amount = Number(remote.data.amount);
+    const currency = String(remote.data.currency || "").toUpperCase();
+
+    if (
+      !remoteReference ||
+      remoteReference !== providerReference ||
+      !Number.isFinite(amount) ||
+      amount !== Number(order.total) ||
+      amount !== Number(payment.amount) ||
+      currency !== "XAF"
+    ) {
+      return json({ ok: false, error: "payment_mismatch" }, 409);
+    }
+
+    const status = mapOpenPayStatus(remote.data.status);
+    const persisted = await persistConfirmedPayment(
+      payment.id,
+      providerReference,
+      status
+    );
+
+    if (!persisted) {
+      return json({
+        ok: false,
+        error: "payment_reconciliation_persist_failed",
+        payment_id: payment.id,
+        provider_reference: providerReference,
+        status
+      }, 409);
+    }
+
+    return json({
+      ok: true,
+      reconciled: true,
+      payment_id: payment.id,
+      provider_reference: providerReference,
+      status
+    });
+  }
 
   if (action === "status") {
     if (!body.provider_reference) {
@@ -261,15 +415,20 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const status = mapOpenPayStatus(remote.data.status);
 
     if (status !== payment.status) {
-      const update = await supabaseRest<null>(
-        "payments?id=eq." + encodeURIComponent(payment.id),
-        {
-          method: "PATCH",
-          headers: { "Prefer": "return=minimal" },
-          body: JSON.stringify({ status })
-        }
+      const persisted = await persistConfirmedPayment(
+        payment.id,
+        payment.provider_reference || "",
+        status
       );
-      if (update.error) return json({ ok: false, error: "payment_update_failed" }, 409);
+      if (!persisted) {
+        return json({
+          ok: false,
+          error: "payment_update_failed",
+          payment_id: payment.id,
+          provider_reference: payment.provider_reference,
+          status
+        }, 409);
+      }
     }
 
     return json({
@@ -321,12 +480,47 @@ Deno.serve(async (req: Request): Promise<Response> => {
       return json({ ok: false, error: "payment_operator_conflict" }, 409);
     }
 
+    if (!existing.provider_reference) {
+      return json({
+        ok: false,
+        error: "payment_reconciliation_required",
+        payment_id: existing.id,
+        provider_reference: null,
+        status: existing.status
+      }, 409);
+    }
+
     return json({
       ok: true,
       reused: true,
       payment_id: existing.id,
       provider_reference: existing.provider_reference,
       status: existing.status
+    });
+  }
+
+  const livePayment = await findLivePaymentForOrder(order.id);
+  if (livePayment) {
+    if (livePayment.payment_method !== expectedMethod) {
+      return json({ ok: false, error: "payment_operator_conflict" }, 409);
+    }
+    if (!livePayment.provider_reference) {
+      return json({
+        ok: false,
+        error: "payment_reconciliation_required",
+        payment_id: livePayment.id,
+        provider_reference: null,
+        status: livePayment.status
+      }, 409);
+    }
+
+    return json({
+      ok: true,
+      reused: true,
+      concurrent_live: true,
+      payment_id: livePayment.id,
+      provider_reference: livePayment.provider_reference,
+      status: livePayment.status
     });
   }
 
@@ -351,6 +545,20 @@ Deno.serve(async (req: Request): Promise<Response> => {
   );
 
   if (insert.error) {
+    const concurrent = await findLivePaymentForOrder(order.id);
+    if (concurrent) {
+      if (concurrent.payment_method !== expectedMethod) {
+        return json({ ok: false, error: "payment_operator_conflict" }, 409);
+      }
+      return json({
+        ok: true,
+        reused: true,
+        concurrent_live: true,
+        payment_id: concurrent.id,
+        provider_reference: concurrent.provider_reference,
+        status: concurrent.status
+      });
+    }
     return json({ ok: false, error: "payment_persistence_failed" }, 500);
   }
 
@@ -386,27 +594,43 @@ Deno.serve(async (req: Request): Promise<Response> => {
         payment_phone_number: body.payment_phone_number,
         provider: body.operator,
         customer_external_id: order.id,
+        customer: {
+          name: body.customer_name || "Client NRJ",
+          phone: body.payment_phone_number
+        },
         metadata: { order_id: order.id }
       })
     }
   );
 
   if (remote.error || !remote.data) {
-    const failure = await supabaseRest<null>(
-      "payments?id=eq." + encodeURIComponent(localPayment.id),
-      {
-        method: "PATCH",
-        headers: { "Prefer": "return=minimal" },
-        body: JSON.stringify({
-          status: "failed",
-          failure_reason: remote.error || "openpay_payment_failed"
-        })
-      }
+    const ambiguous =
+      remote.status === 0 ||
+      remote.status >= 500;
+
+    if (ambiguous) {
+      return json({
+        ok: false,
+        error: "payment_reconciliation_required",
+        payment_id: localPayment.id,
+        provider_reference: null,
+        status: localPayment.status,
+        reason: "provider_response_unknown"
+      }, 409);
+    }
+
+    const persisted = await persistPaymentFailure(
+      localPayment.id,
+      remote.error || "openpay_payment_failed"
     );
 
-    if (failure.error) {
-      return json({ ok: false, error: "openpay_payment_failed_persist_failed" }, 502);
+    if (!persisted) {
+      return json({
+        ok: false,
+        error: "openpay_payment_failed_persist_failed"
+      }, 502);
     }
+
     return json({ ok: false, error: "openpay_payment_failed" }, 502);
   }
 
@@ -431,36 +655,36 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const providerReference = String(remote.data.reference || "").trim();
 
   if (!providerReference) {
-    await supabaseRest<null>(
-      "payments?id=eq." + encodeURIComponent(localPayment.id),
-      {
-        method: "PATCH",
-        headers: { "Prefer": "return=minimal" },
-        body: JSON.stringify({
-          status: "failed",
-          failure_reason: "openpay_reference_missing"
-        })
-      }
-    );
-    return json({ ok: false, error: "openpay_reference_missing" }, 502);
+    // A successful/ambiguous provider response without its reference is NOT
+    // evidence of failure. Keep the local payment pending so no retry can
+    // create a second provider transaction. Recovery is completed when the
+    // provider callback brings back the authoritative reference.
+    return json({
+      ok: false,
+      error: "payment_reconciliation_required",
+      payment_id: localPayment.id,
+      provider_reference: null,
+      status: localPayment.status,
+      reason: "provider_reference_missing"
+    }, 409);
   }
 
   const status = mapOpenPayStatus(remote.data.status);
 
-  const update = await supabaseRest<null>(
-    "payments?id=eq." + encodeURIComponent(localPayment.id),
-    {
-      method: "PATCH",
-      headers: { "Prefer": "return=minimal" },
-      body: JSON.stringify({
-        provider_reference: providerReference,
-        status
-      })
-    }
+  const persisted = await persistConfirmedPayment(
+    localPayment.id,
+    providerReference,
+    status
   );
 
-  if (update.error) {
-    return json({ ok: false, error: "payment_update_failed" }, 409);
+  if (!persisted) {
+    return json({
+      ok: false,
+      error: "payment_reconciliation_required",
+      payment_id: localPayment.id,
+      provider_reference: providerReference,
+      status
+    }, 409);
   }
 
   return json({

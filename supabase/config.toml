@@ -1,0 +1,8 @@
+[functions.create-order]
+verify_jwt = true
+
+[functions.payment-openpay]
+verify_jwt = true
+
+[functions.openpay-callback]
+verify_jwt = false

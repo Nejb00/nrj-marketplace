@@ -24,3 +24,7 @@ export const MAX_SEARCH_RESULTS = 7;
 export const SEARCH_HISTORY_KEY = 'nrj_search_history';
 export const MAX_HISTORY_ITEMS = 5;
 export const MAX_PLACEHOLDER_SUGGESTIONS = 10;
+
+
+/** Paiement réel : à activer uniquement après validation migration + secrets + tests. */
+export const MOBILE_MONEY_PAYMENT_ENABLED = false;

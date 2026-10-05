@@ -142,3 +142,25 @@
     grid-template-columns: 1fr 1fr;
   }
 }
+
+
+.order-select {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid rgba(127,127,127,0.22);
+  border-radius: 14px;
+  padding: 0 0.85rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.mobile-money-status {
+  margin-top: 0.7rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+  background: rgba(127,127,127,0.08);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
