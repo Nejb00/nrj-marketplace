@@ -23,3 +23,14 @@ test('OpenPay statuses map to NRJ statuses', () => {
 test('unknown OpenPay status fails closed to pending', () => {
     assert.equal(normalizeResponseStatus('mystery'), PAYMENT_STATUS.PENDING);
 });
+
+
+test('OpenPay accepts the Congo 242XXXXXXXXX phone format', async () => {
+    const { isValidCongoPhone } = await import(
+        '../src/js/services/payment/openpay-provider.js'
+    );
+
+    assert.equal(isValidCongoPhone('242060000001'), true);
+    assert.equal(isValidCongoPhone('24206000001'), false);
+    assert.equal(isValidCongoPhone('+242060000001'), false);
+});
