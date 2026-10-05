@@ -233,6 +233,12 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
     const cart = await page.evaluate(() => JSON.parse(localStorage.getItem("nrj_cart_v32") || "[]"));
     expect(cart).toEqual([]);
 
+    // Le checkout peut laisser le panneau panier ouvert après vidage.
+    // Fermer l'overlay s'il est visible avant de renaviguer vers le panier.
+    const cartCloseButton = page.locator("#cartCloseBtn");
+    if (await cartCloseButton.isVisible()) {
+      await cartCloseButton.click();
+    }
     await page.locator('a[data-nav="cart"]').click();
     await expect(page.locator("#cartPanel")).toHaveClass(/\bopen\b/);
     await expect(page.locator("#cartEmptyTitle")).toBeVisible();
