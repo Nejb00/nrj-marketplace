@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+
 const DUPLICATE_SIGNAL_PATTERN = /\bDUP-\d{3}\b/g;
 const ORPHAN_SIGNAL_PATTERN = /\bORPHAN-\d{3}\b/g;
 
@@ -84,7 +86,6 @@ export function extractIntegrityMatches(logTexts = []) {
 }
 
 function readJson(filePath) {
-  const fs = require('node:fs');
   return JSON.parse(fs.readFileSync(filePath, 'utf8'));
 }
 
