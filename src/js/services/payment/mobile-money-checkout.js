@@ -247,6 +247,9 @@ export async function startMobileMoneyPayment() {
             await saveCart();
             refreshCartDisplay();
 
+            pendingPaymentReference = null;
+            pendingPaymentOrder = null;
+            pendingPaymentCustomer = null;
             document.getElementById('orderModalOverlay')?.classList.remove('open');
             showToast('✅ Paiement confirmé');
             return;
