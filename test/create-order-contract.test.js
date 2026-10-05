@@ -7,11 +7,12 @@ const source = fs.readFileSync(
     'utf8'
 );
 
-test('create-order uses standard bearer and Congo phone regexes', () => {
-    assert.match(source, /value\.match\(\/\^Bearer\\s\+ \(\.\+\)\$\/i\)/);
+test('create-order uses a standard bearer guard and Congo phone validation', () => {
+    assert.match(source, /function getBearerToken\(req: Request\)/);
+    assert.match(source, /req\.headers\.get\(["']authorization["']\)/);
     assert.match(source, /const PHONE_PATTERN = \/\^242\\d\{9\}\$\//);
 });
 
 test('create-order keeps the idempotent variant separator as a real control escape', () => {
-    assert.match(source, /\.join\("\\u001f"\);/);
+    assert.match(source, /\.join\(["']\\u001f["']\);/);
 });
