@@ -77,7 +77,7 @@ async function rest(path, init) {
 async function readImport(importId) {
   const rows = await rest(
     "product_imports?id=eq." + encodeURIComponent(importId) +
-    "&select=id,status,error_code,error_message,product_name,raw_text,overall_confidence,category_confidence,calculated_price,cloudinary_urls,ai_analysis,published_product_id&limit=1"
+    "&select=id,status,error_code,error_message,product_name,description,supplier_price,supplier_currency,moq,variants,raw_text,overall_confidence,category_confidence,calculated_price,cloudinary_urls,ai_analysis,published_product_id&limit=1"
   );
   return rows?.[0] || null;
 }
@@ -372,6 +372,17 @@ Deno.serve(async (req) => {
         name: classification?.category_name || null,
         parent_name: classification?.parent_name || null
       } : null,
+      analysis: {
+        product_name: row?.product_name || null,
+        description: row?.description || null,
+        supplier_price: row?.supplier_price ?? null,
+        supplier_currency: row?.supplier_currency || null,
+        moq: row?.moq || null,
+        variants: row?.variants || { colors: [], sizes: [], other: [] },
+        visual_category_hint: ai.visual_category_hint || null,
+        overall_confidence: Number(row?.overall_confidence || 0),
+        evidence: Array.isArray(ai.evidence) ? ai.evidence : []
+      },
       pricing: ai.pricing || null,
       media: row?.cloudinary_urls || null,
       review_required: row?.status === "MEDIA_READY",
