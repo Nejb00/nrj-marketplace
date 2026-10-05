@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import test from 'node:test';
 
 const migration = fs.readFileSync(
-  'supabase/migrations/20261005140000_harden_payment_order_consistency.sql',
+  'supabase/migrations/20261005134207_harden_payment_order_consistency.sql',
   'utf8',
 );
 const paymentOpenPay = fs.readFileSync(
