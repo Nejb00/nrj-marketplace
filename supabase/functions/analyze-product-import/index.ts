@@ -310,6 +310,6 @@ Deno.serve(async (req) => {
     } catch {
       // keep the primary error
     }
-    return json({ ok: false, error: "analysis_failed", detail: message }, 500);
+    return json({ ok: false, error: "analysis_failed" }, 500);
   }
 });
