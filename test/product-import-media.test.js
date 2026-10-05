@@ -18,7 +18,7 @@ test('media function is admin-only and keeps Cloudinary credentials server-side'
   assert.match(edge, /CLOUDINARY_API_KEY/);
   assert.match(edge, /CLOUDINARY_API_SECRET/);
   assert.match(edge, /role === "admin"/);
-  assert.match(edge, /verify_jwt/i);
+  assert.match(edge, /function isAdmin/);
 });
 
 test('media upload is signed, bounded and idempotent', () => {
