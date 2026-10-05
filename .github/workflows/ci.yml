@@ -46,6 +46,9 @@ jobs:
       - name: Tests unitaires
         run: npm test
 
+      - name: Contrats métier déterministes
+        run: npm run check:business
+
       - name: Build de production
         run: npm run build
 
