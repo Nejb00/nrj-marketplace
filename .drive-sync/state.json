@@ -713,8 +713,8 @@
       "driveMd5": "deccc5559be09473133f7372a1a7c566"
     },
     "supabase/functions/payment-openpay/index.ts": {
-      "githubSha": "d6586ccbaca7ef7cae71d4e67d4b25db11ae07e1",
-      "driveMd5": "34b7e98aaf5ce3590ee436d756d02af9"
+      "githubSha": "5afc4646f3e18832dbdce3352ee8acf7c65423f5",
+      "driveMd5": "a555b3af847689fee679ce867b1a8790"
     },
     "supabase/functions/payment-webhook/README.md": {
       "githubSha": "1d2506f81dfa909185b7b7d7a387a4a09a6f0678",
@@ -769,12 +769,16 @@
       "driveMd5": "5584b343d5a0ca9131b2e204ca6a4c71"
     },
     "supabase/migrations/20261005153000_apply_payment_provider_event.sql": {
-      "githubSha": "099fd9529126d11a2038cc6ebe7376ed3cfc6f71",
-      "driveMd5": "130ff050d2585a78a279e6fb8d1ce1d3"
+      "githubSha": "49120cc45d45905a099cb75093c06d831d33ed6b",
+      "driveMd5": "715c8d36eaabc6f88186e208904c0f47"
     },
     "supabase/migrations/20261005161000_enforce_payment_order_state_machine.sql": {
       "githubSha": "d3ffc7864d0b7ef55b1842b2a384b89f758600e0",
       "driveMd5": "b8955a77157442b04699446c43c25368"
+    },
+    "supabase/migrations/20261005165000_payment_audit_observability.sql": {
+      "githubSha": "44cb574e1a8fe889701d672e597ecdd2b74023d8",
+      "driveMd5": "64cc7a5381f7fbf8b726db91a34d9d0f"
     },
     "test/ai-assisted-diagnosis.test.js": {
       "githubSha": "52d53aef4531add8c5c14e50e2135e20e1ee87b6",
@@ -849,12 +853,12 @@
       "driveMd5": "1fa71fbeae4608bb10a4961179ca4520"
     },
     "test/payment-order-consistency.test.js": {
-      "githubSha": "a6f28299f7a908c53a526bb492be634e9b053052",
-      "driveMd5": "5714c3ce530b9c19820b769e135fa7f7"
+      "githubSha": "39f4b7c02b7bf0a53169778fb67b52cc42883bfe",
+      "driveMd5": "58756c97498fd9131273da289238e48b"
     },
     "test/payment-reconciliation.test.js": {
-      "githubSha": "12fe3f87bddce6c022ece14de09205f0d62e64a8",
-      "driveMd5": "9b00d2d4955780321feb3f9edd52d542"
+      "githubSha": "323973e7c6d363b29a97c0f945a021684c626aba",
+      "driveMd5": "05facadc9e5f52350bfc6dd8fceca70e"
     },
     "test/payment-webhook-security.test.js": {
       "githubSha": "29cd591716d927ab6076a3619c05cc67fc63c34a",
@@ -921,5 +925,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-05T18:52:31.771Z"
+  "updatedAt": "2026-10-05T18:54:33.945Z"
 }
