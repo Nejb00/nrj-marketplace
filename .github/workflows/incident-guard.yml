@@ -6,6 +6,7 @@ on:
       - CI
       - CodeQL
       - Dependency Review
+      - Deployment Safety Net
     types: [completed]
 
 permissions:
