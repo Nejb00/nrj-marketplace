@@ -37,6 +37,7 @@ test("Vercel Browser E2E runs automatically only for production deployments", ()
 
 
 test("Vercel Browser E2E does not install unused project dependencies", () => {
+  const workflow = fs.readFileSync(WORKFLOW, "utf8");
   assert.equal(workflow.includes("run: npm ci"), false);
   assert.equal(workflow.includes("cache: npm"), false);
   assert.equal(
