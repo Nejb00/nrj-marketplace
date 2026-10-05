@@ -9,9 +9,7 @@ function cleanText(value, max = MAX_TEXT) {
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, ' ')
     .replace(/\r/g, '')
     .replace(/\n{3,}/g, '\n\n')
-    .replace(/<!--[\s\S]*?(?:-->|--!>)/g, '[HTML_COMMENT_REMOVED]')
-    .replace(/<!--|--!?>/g, '')
-    .replace(/<LOG_DATA>|<\/LOG_DATA>/g, '[DELIMITER_REMOVED]')
+
     .trim()
     .slice(0, max);
 }
@@ -219,9 +217,13 @@ export function validateDiagnosis({
 }
 
 export function renderDiagnosis(diagnosis) {
+  const fence = String.fromCharCode(96).repeat(3);
+  const serialized = JSON.stringify(diagnosis).replaceAll(String.fromCharCode(96), '\\u0060');
   return [
-    '<!-- nrj-ai-diagnosis',
-    JSON.stringify(diagnosis),
-    '-->',
+    'NRJ_AI_DIAGNOSIS_START',
+    fence + 'json',
+    serialized,
+    fence,
+    'NRJ_AI_DIAGNOSIS_END',
   ].join('\n');
 }
