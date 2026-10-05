@@ -1,0 +1,39 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+
+const api = fs.readFileSync('src/js/api/api.js', 'utf8');
+const feature = fs.readFileSync('src/js/features/admin/product-import.js', 'utf8');
+const edge = fs.readFileSync('supabase/functions/process-product-import/index.ts', 'utf8');
+
+test('orchestrator is exposed through the admin API', () => {
+  assert.match(api, /functions\.invoke\('process-product-import'/);
+  assert.match(feature, /processProductImport/);
+});
+
+test('orchestrator follows the staging state machine', () => {
+  assert.match(edge, /status === "RECEIVED"/);
+  assert.match(edge, /analyze-product-import/);
+  assert.match(edge, /classify-product-import/);
+  assert.match(edge, /price-product-import/);
+  assert.match(edge, /upload-product-import-media/);
+  assert.match(edge, /publish-product-import/);
+});
+
+test('orchestrator retries only transient downstream failures', () => {
+  assert.match(edge, /MAX_STAGE_RETRIES = 2/);
+  assert.match(edge, /response.status < 500/);
+  assert.match(edge, /setTimeout/);
+});
+
+test('orchestrator never bypasses confidence gates', () => {
+  assert.match(edge, /LOW_CONFIDENCE/);
+  assert.match(edge, /human_approval/);
+  assert.match(edge, /Number\(row\.overall_confidence\) >= 0\.90/);
+});
+
+test('orchestrator keeps secrets server-side', () => {
+  assert.match(edge, /SERVICE_KEY/);
+  assert.match(edge, /CLOUDINARY/);
+  assert.doesNotMatch(edge, /CLOUDINARY_API_SECRET\s*=\s*["'][^"']/);
+});
