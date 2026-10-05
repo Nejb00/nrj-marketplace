@@ -1,6 +1,6 @@
 // ═══ Admin — import produit intelligent (PR #2) ═══
 import { showToast } from '../../utils/dom-helpers.js';
-import { fetchProductImports, insertProductImport, deleteProductImport } from '../../api/api.js';
+import { analyzeProductImport, fetchProductImports, insertProductImport, deleteProductImport } from '../../api/api.js';
 
 const STATUS_LABELS = {
   RECEIVED: 'Reçu',
@@ -17,6 +17,7 @@ const STATUS_LABELS = {
 
 let selectedFile = null;
 let previewUrl = null;
+let imageDataUrl = null;
 let initialized = false;
 
 function byId(id) {
@@ -55,6 +56,7 @@ function setStatus(message = '', tone = '') {
 
 function resetPreview() {
   const preview = byId('productImportPreview');
+  imageDataUrl = null;
   if (previewUrl) {
     URL.revokeObjectURL(previewUrl);
     previewUrl = null;
@@ -65,7 +67,83 @@ function resetPreview() {
   }
 }
 
-function renderPreview(file) {
+async function buildAnalysisImage(file) {
+  if (!file) return null;
+  if (!file.type.startsWith('image/')) throw new Error('Le fichier sélectionné n’est pas une image.');
+  if (file.size > 8 * 1024 * 1024) throw new Error('Image trop volumineuse. Limite : 8 Mo.');
+
+  const source = URL.createObjectURL(file);
+  try {
+    const image = new Image();
+    image.decoding = 'async';
+    image.src = source;
+    await image.decode();
+
+    const maxSide = 1600;
+    const scale = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Préparation de l’image impossible.');
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+    if (dataUrl.length > 15 * 1024 * 1024) throw new Error('Image encore trop volumineuse après compression.');
+    imageDataUrl = dataUrl;
+    return dataUrl;
+  } finally {
+    URL.revokeObjectURL(source);
+  }
+}
+
+function renderAnalysis(analysis) {
+  const panel = byId('productImportAnalysis');
+  const grid = byId('productImportAnalysisGrid');
+  const variants = byId('productImportAnalysisVariants');
+  const confidence = byId('productImportConfidence');
+  if (!panel || !grid || !variants || !confidence) return;
+
+  const pct = Math.round(Number(analysis?.overall_confidence || 0) * 100);
+  confidence.textContent = pct + '% de confiance';
+
+  const fields = [
+    ['Nom', analysis?.product_name || '—'],
+    ['Description', analysis?.description || '—'],
+    ['Prix fournisseur', analysis?.supplier_price != null ? String(analysis.supplier_price) + ' ' + (analysis.supplier_currency || '') : '—'],
+    ['MOQ', analysis?.moq || '—'],
+    ['Catégorie suggérée', analysis?.visual_category_hint || '—']
+  ];
+
+  grid.innerHTML = fields.map(([label, value]) =>
+    '<div><dt>' + escapeHtml(label) + '</dt><dd>' + escapeHtml(value) + '</dd></div>'
+  ).join('');
+
+  const colors = Array.isArray(analysis?.variants?.colors) ? analysis.variants.colors : [];
+  const sizes = Array.isArray(analysis?.variants?.sizes) ? analysis.variants.sizes : [];
+  const extras = Array.isArray(analysis?.variants?.other) ? analysis.variants.other : [];
+  variants.innerHTML =
+    '<strong>Variantes</strong>' +
+    '<div class="product-import-variant-lines">' +
+      '<span>Couleurs : ' + escapeHtml(colors.length ? colors.join(', ') : '—') + '</span>' +
+      '<span>Tailles : ' + escapeHtml(sizes.length ? sizes.join(', ') : '—') + '</span>' +
+      '<span>Autres : ' + escapeHtml(extras.length ? extras.join(', ') : '—') + '</span>' +
+    '</div>';
+
+  panel.hidden = false;
+}
+
+function clearAnalysis() {
+  const panel = byId('productImportAnalysis');
+  if (panel) panel.hidden = true;
+  const grid = byId('productImportAnalysisGrid');
+  if (grid) grid.innerHTML = '';
+  const variants = byId('productImportAnalysisVariants');
+  if (variants) variants.innerHTML = '';
+}
+
+async function renderPreview(file) {
   const preview = byId('productImportPreview');
   if (!preview || !file) return;
 
@@ -121,8 +199,8 @@ async function prepareProductImport() {
   const sourceUrl = byId('productImportSourceUrl')?.value.trim() || '';
   const rawText = byId('productImportRawText')?.value.trim() || '';
 
-  if (!selectedFile && !sourceUrl && !rawText) {
-    setStatus('Ajoute une capture, une URL source ou du texte Alibaba.', 'error');
+  if (!selectedFile) {
+    setStatus('Ajoute une capture pour l’analyse Vision. Le texte Alibaba reste facultatif.', 'error');
     return;
   }
 
@@ -134,14 +212,23 @@ async function prepareProductImport() {
   setStatus('Création du dossier sécurisé…');
 
   try {
+    const data = imageDataUrl || await buildAnalysisImage(selectedFile);
+
     const row = await insertProductImport({
       source_image: sourceUrl || null,
       raw_text: rawText || null,
       status: 'RECEIVED'
     });
 
-    setStatus('Import ' + row.id.slice(0, 8) + '… reçu. Prêt pour l’analyse IA.', 'success');
-    showToast('✅ Import placé dans le sas');
+    setStatus('Import ' + row.id.slice(0, 8) + '… reçu. Analyse Vision en cours…');
+    const result = await analyzeProductImport(row.id, data, rawText);
+    renderAnalysis(result.analysis);
+    const confidence = Number(result.analysis?.overall_confidence || 0);
+    setStatus(
+      'Analyse terminée : ' + Math.round(confidence * 100) + '% de confiance.',
+      confidence >= 0.7 ? 'success' : 'error'
+    );
+    showToast('🧠 Analyse IA terminée');
     await refreshProductImports();
 
     byId('productImportSourceUrl').value = '';
@@ -156,7 +243,7 @@ async function prepareProductImport() {
   } finally {
     if (button) {
       button.disabled = false;
-      button.textContent = 'Préparer l’analyse →';
+      button.textContent = 'Analyser avec l’IA →';
     }
   }
 }
@@ -184,12 +271,20 @@ export function initProductImportUI() {
 
   chooseBtn?.addEventListener('click', () => fileInput?.click());
 
-  fileInput?.addEventListener('change', () => {
+  fileInput?.addEventListener('change', async () => {
     const file = fileInput.files?.[0] || null;
     selectedFile = file;
+    clearAnalysis();
     if (file) {
-      renderPreview(file);
-      setStatus('Capture prête. Elle sera envoyée durablement lors de la pipeline média.', 'success');
+      try {
+        await renderPreview(file);
+        setStatus('Capture prête. Elle sera compressée puis envoyée temporairement à l’IA.', 'success');
+      } catch (err) {
+        selectedFile = null;
+        resetPreview();
+        fileInput.value = '';
+        setStatus(err?.message || 'Image invalide.', 'error');
+      }
     } else {
       resetPreview();
     }
