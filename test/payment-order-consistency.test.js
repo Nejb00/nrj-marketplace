@@ -152,13 +152,11 @@ test('ATTAQUE #21 provides an append-only payment status audit trail', () => {
 test('ATTAQUE #21 supports explicit audit context for provider callbacks', () => {
   assert.match(
     auditMigration,
-    /set_config\(
-    'app\.payment_audit_source'/,
+    /set_config\(\s*'app\.payment_audit_source'/,
   );
   assert.match(
     auditMigration,
-    /set_config\(
-    'app\.payment_provider_event_id'/,
+    /set_config\(\s*'app\.payment_provider_event_id'/,
   );
   assert.match(
     auditMigration,
