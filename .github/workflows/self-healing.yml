@@ -30,6 +30,12 @@ jobs:
     timeout-minutes: 10
 
     steps:
+      - name: Checkout automation definitions
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+
       - name: Evaluate incident and apply known recipe
         uses: actions/github-script@v9
         with:
@@ -50,6 +56,16 @@ jobs:
 
             let intelligenceRecipeId = null;
             let aiDiagnosis = null;
+            const aiDiagnosisMatch = issue.body?.match(
+              /<!-- nrj-ai-diagnosis\n([\s\S]*?)\n-->/
+            );
+            if (aiDiagnosisMatch) {
+              try {
+                aiDiagnosis = JSON.parse(aiDiagnosisMatch[1]);
+              } catch (error) {
+                core.warning('Dossier AI-Assisted Diagnosis illisible : ' + error.message);
+              }
+            }
             const intelligenceMatch = issue.body?.match(
               /<!-- nrj-incident-intelligence\n([\s\S]*?)\n-->/
             );
@@ -89,24 +105,6 @@ jobs:
               github.rest.issues.listComments,
               { owner, repo, issue_number: issueNumber, per_page: 100 }
             );
-
-            const aiDiagnosisComment = [...comments].reverse().find((comment) =>
-              comment.user?.type === 'Bot' &&
-              comment.body?.includes('NRJ_AI_DIAGNOSIS_START')
-            );
-            if (aiDiagnosisComment?.body) {
-              const fence = String.fromCharCode(96).repeat(3);
-              const aiDiagnosisMatch = aiDiagnosisComment.body.match(new RegExp(
-                'NRJ_AI_DIAGNOSIS_START\\n' + fence + 'json\\n([\\s\\S]*?)\\n' + fence + '\\nNRJ_AI_DIAGNOSIS_END'
-              ));
-              if (aiDiagnosisMatch) {
-                try {
-                  aiDiagnosis = JSON.parse(aiDiagnosisMatch[1]);
-                } catch (error) {
-                  core.warning('Dossier AI-Assisted Diagnosis illisible : ' + error.message);
-                }
-              }
-            }
 
             if (comments.some((comment) => comment.body?.includes(repairMarker))) {
               core.info('Une réparation automatique a déjà été tentée pour cette issue.');
@@ -166,6 +164,200 @@ jobs:
                   'Le run doit être récent, en échec, provenir de main et appartenir à la liste autorisée.'
                 ].join('\n')
               });
+              return;
+            }
+
+            const {
+              selectRollbackCandidate,
+              buildRollbackBranchName,
+              buildRollbackTitle,
+              renderRollbackMarker,
+            } = await import(
+              'file://' + process.env.GITHUB_WORKSPACE + '/scripts/self-healing-rollback.mjs'
+            );
+
+            const recentRepairs = await github.paginate(
+              github.rest.pulls.list,
+              {
+                owner,
+                repo,
+                state: 'closed',
+                base: 'main',
+                sort: 'updated',
+                direction: 'desc',
+                per_page: 100,
+              }
+            );
+
+            const rollbackCandidate = selectRollbackCandidate({
+              pullRequests: recentRepairs,
+              issueNumber,
+              incidentRun: run,
+              maxAgeHours: 24,
+            });
+
+            if (rollbackCandidate) {
+              const rollbackMarker = renderRollbackMarker();
+
+              if (comments.some((comment) => comment.body?.includes(rollbackMarker))) {
+                core.info('Un rollback a déjà été préparé pour cette issue.');
+                return;
+              }
+
+              const compare = await github.rest.repos.compareCommits({
+                owner,
+                repo,
+                base: rollbackCandidate.merge_commit_sha,
+                head: run.head_sha,
+              });
+
+              if (compare.data.merge_base_commit?.sha !== rollbackCandidate.merge_commit_sha) {
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: issueNumber,
+                  body: [
+                    rollbackMarker,
+                    '## Self-Healing Safe Rollback',
+                    '',
+                    '🛑 Réparation récente détectée, mais la relation d’ascendance Git ne peut pas être prouvée.',
+                    '',
+                    '- Repair PR : #' + rollbackCandidate.pull_request_number,
+                    '- Merge commit : ' + rollbackCandidate.merge_commit_sha,
+                    '- Incident run : #' + run.id,
+                    '',
+                    'Aucun rollback n’a été créé.',
+                  ].join('\n'),
+                });
+                return;
+              }
+
+              const rollbackBranch = buildRollbackBranchName({
+                runId: run.id,
+                mergeCommitSha: rollbackCandidate.merge_commit_sha,
+              });
+
+              try {
+                await github.rest.repos.getBranch({
+                  owner,
+                  repo,
+                  branch: rollbackBranch,
+                });
+
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: issueNumber,
+                  body: [
+                    rollbackMarker,
+                    '## Self-Healing Safe Rollback',
+                    '',
+                    'ℹ️ Une branche de rollback existe déjà pour cette réparation.',
+                    '',
+                    '- Branche : ' + rollbackBranch,
+                    '- Repair PR : #' + rollbackCandidate.pull_request_number,
+                  ].join('\n'),
+                });
+                return;
+              } catch (error) {
+                if (error.status !== 404) throw error;
+              }
+
+              const { execFileSync } = await import('node:child_process');
+              execFileSync('git', ['config', 'user.name', 'github-actions[bot]']);
+              execFileSync('git', ['config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com']);
+              execFileSync('git', ['switch', '--detach', run.head_sha]);
+
+              const parents = execFileSync(
+                'git',
+                ['rev-list', '--parents', '-n', '1', rollbackCandidate.merge_commit_sha],
+                { encoding: 'utf8' },
+              ).trim().split(/\s+/);
+
+              const revertArgs = parents.length > 2
+                ? ['revert', '--no-edit', '-m', '1', rollbackCandidate.merge_commit_sha]
+                : ['revert', '--no-edit', rollbackCandidate.merge_commit_sha];
+
+              try {
+                execFileSync('git', revertArgs, {
+                  encoding: 'utf8',
+                  stdio: ['ignore', 'pipe', 'pipe'],
+                });
+              } catch (error) {
+                const details = String(error.stderr || error.message || '').slice(0, 1200);
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: issueNumber,
+                  body: [
+                    rollbackMarker,
+                    '## Self-Healing Safe Rollback',
+                    '',
+                    '🛑 Le revert déterministe n’a pas pu être appliqué sans conflit.',
+                    '',
+                    '- Repair PR : #' + rollbackCandidate.pull_request_number,
+                    '- Merge commit : ' + rollbackCandidate.merge_commit_sha,
+                    '',
+                    'Aucune branche de rollback n’a été publiée.',
+                    '',
+                    '```text',
+                    details,
+                    '```',
+                  ].join('\n'),
+                });
+                return;
+              }
+
+              execFileSync('git', [
+                'push',
+                'origin',
+                'HEAD:refs/heads/' + rollbackBranch,
+              ], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+
+              const rollbackPr = (await github.rest.pulls.create({
+                owner,
+                repo,
+                title: buildRollbackTitle({
+                  repairPrNumber: rollbackCandidate.pull_request_number,
+                }),
+                head: rollbackBranch,
+                base: 'main',
+                draft: true,
+                body: [
+                  '## Self-Healing Safe Rollback',
+                  '',
+                  'Rollback préparé automatiquement après détection déterministe d’un incident post-réparation.',
+                  '',
+                  '- Incident : #' + issueNumber,
+                  '- Incident run : #' + run.id,
+                  '- Repair PR : #' + rollbackCandidate.pull_request_number,
+                  '- Repair merge commit : ' + rollbackCandidate.merge_commit_sha,
+                  '- Rollback branch : ' + rollbackBranch,
+                  '',
+                  'Le rollback est porté par une Draft PR et doit passer les vérifications avant toute décision humaine.',
+                  'Aucun merge automatique n’est autorisé.',
+                ].join('\n'),
+              })).data;
+
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: issueNumber,
+                body: [
+                  rollbackMarker,
+                  '## Self-Healing Safe Rollback',
+                  '',
+                  '↩️ Rollback préparé.',
+                  '',
+                  '- Repair PR : #' + rollbackCandidate.pull_request_number,
+                  '- Branche : ' + rollbackBranch,
+                  '- Draft PR : #' + rollbackPr.number + ' — ' + rollbackPr.html_url,
+                  '',
+                  'Aucun changement direct n’a été appliqué à main.',
+                ].join('\n'),
+              });
+
+              core.info('Safe Rollback: Draft PR #' + rollbackPr.number + ' créée.');
               return;
             }
 
