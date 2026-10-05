@@ -16,7 +16,8 @@
     "check:integrity": "node --test test/data-integrity.test.js",
     "check:cross": "node --test test/cross-system-integrity.test.js",
     "check:security": "node --test test/security-audit.test.js",
-    "check:test-intelligence": "node --test test/test-intelligence.test.js"
+    "check:test-intelligence": "node --test test/test-intelligence.test.js",
+    "check:payments": "node --test test/payment-audit.test.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.32.0",
