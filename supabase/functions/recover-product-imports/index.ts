@@ -97,7 +97,7 @@ async function recoverOne(importId) {
     status: parsed?.status || null,
     next_action: parsed?.next_action || null,
     recovery_exhausted: parsed?.recovery_exhausted === true,
-    detail: parsed?.detail || parsed?.error || (response.ok ? null : raw.slice(0, 300))
+    detail: null
   };
 }
 
