@@ -1,6 +1,6 @@
 // ═══ Admin — import produit intelligent (PR #2) ═══
 import { showToast } from '../../utils/dom-helpers.js';
-import { analyzeProductImport, classifyProductImport, fetchProductImports, insertProductImport, deleteProductImport } from '../../api/api.js';
+import { analyzeProductImport, classifyProductImport, fetchProductImports, insertProductImport, priceProductImport, deleteProductImport } from '../../api/api.js';
 
 const STATUS_LABELS = {
   RECEIVED: 'Reçu',
@@ -19,6 +19,7 @@ let selectedFile = null;
 let previewUrl = null;
 let imageDataUrl = null;
 let initialized = false;
+let currentImportId = null;
 
 function byId(id) {
   return document.getElementById(id);
@@ -167,6 +168,11 @@ function clearAnalysis() {
   if (variants) variants.innerHTML = '';
   const classificationHint = byId('productImportClassificationHint');
   if (classificationHint) classificationHint.innerHTML = '';
+  const pricingPanel = byId('productImportPricing');
+  if (pricingPanel) pricingPanel.hidden = true;
+  const pricingResult = byId('productImportPriceResult');
+  if (pricingResult) pricingResult.textContent = '';
+  currentImportId = null;
 }
 
 async function renderPreview(file) {
@@ -184,6 +190,82 @@ async function renderPreview(file) {
     '</div>';
 }
 
+function setPricingDefaults(analysis) {
+  const currency = String(analysis?.supplier_currency || '').trim().toUpperCase();
+  const fx = byId('productImportFxRate');
+  const margin = byId('productImportMargin');
+  const rounding = byId('productImportRounding');
+  if (margin && !margin.value) margin.value = '30';
+  if (rounding && !rounding.value) rounding.value = '500';
+  if (fx) fx.value = currency === 'XAF' ? '1' : '';
+}
+
+function showPricingPanel(analysis, classification) {
+  const panel = byId('productImportPricing');
+  const button = byId('productImportPriceBtn');
+  const note = byId('productImportPricingNote');
+  if (!panel) return;
+
+  const confidence = Number(classification?.classification?.overall_confidence || 0);
+  const categoryReady = Boolean(classification?.category) && confidence >= 0.70;
+  panel.hidden = false;
+  setPricingDefaults(analysis);
+
+  if (note) {
+    note.textContent = categoryReady
+      ? 'Paramètres modifiables. Pour une devise étrangère, saisis le taux vers XAF.'
+      : 'Le calcul reste verrouillé tant qu’une catégorie fiable n’est pas validée.';
+  }
+  if (button) button.disabled = !categoryReady || !currentImportId;
+}
+
+function renderPrice(pricing) {
+  const result = byId('productImportPriceResult');
+  if (!result || !pricing) return;
+  result.innerHTML =
+    '<strong>Prix conseillé : ' + escapeHtml(String(pricing.rounded_price_xaf)) + ' XAF</strong>' +
+    '<span>Coût rendu : ' + escapeHtml(String(pricing.cost_before_margin_xaf)) + ' XAF · Profit estimé : ' +
+      escapeHtml(String(pricing.actual_profit_xaf)) + ' XAF</span>';
+}
+
+async function calculateImportPrice() {
+  if (!currentImportId) return;
+  const fx = byId('productImportFxRate')?.value;
+  const logistics = byId('productImportLogistics')?.value;
+  const duty = byId('productImportDuty')?.value;
+  const fee = byId('productImportFee')?.value;
+  const margin = byId('productImportMargin')?.value;
+  const rounding = byId('productImportRounding')?.value;
+  const button = byId('productImportPriceBtn');
+
+  const pricing = {
+    fx_rate_to_xaf: fx,
+    logistics_xaf: logistics,
+    duty_rate: Number(duty || 0) / 100,
+    marketplace_fee_rate: Number(fee || 0) / 100,
+    target_margin_rate: Number(margin || 0) / 100,
+    rounding_increment_xaf: rounding
+  };
+
+  if (button) {
+    button.disabled = true;
+    button.textContent = 'Calcul…';
+  }
+
+  try {
+    const result = await priceProductImport(currentImportId, pricing);
+    renderPrice(result.pricing);
+    setStatus('Prix calculé et enregistré dans le staging : ' + result.pricing.rounded_price_xaf + ' XAF.', 'success');
+    showToast('💰 Prix calculé');
+    await refreshProductImports();
+  } catch (err) {
+    setStatus(err?.message || 'Calcul du prix impossible.', 'error');
+  } finally {
+    if (button) button.textContent = 'Calculer le prix →';
+    showPricingPanel({}, { category: { id: currentImportId }, classification: { overall_confidence: 1 } });
+  }
+}
+
 function renderImports(rows) {
   const list = byId('productImportsList');
   if (!list) return;
@@ -197,6 +279,9 @@ function renderImports(rows) {
     const status = STATUS_LABELS[row.status] || row.status || 'Inconnu';
     const title = row.product_name || (row.raw_text ? row.raw_text.split(/\r?\n/)[0] : '') || 'Import sans titre';
     const source = row.source_image ? 'Source image enregistrée' : 'Capture locale / texte';
+    const price = row.calculated_price != null
+      ? 'Prix : ' + String(row.calculated_price) + ' XAF'
+      : '';
     return (
       '<article class="product-import-row">' +
         '<div class="product-import-row-main">' +
@@ -204,6 +289,7 @@ function renderImports(rows) {
           '<div class="product-import-row-meta">' +
             '<span class="product-import-status-pill status-' + escapeHtml(String(row.status || '').toLowerCase()) + '">' + escapeHtml(status) + '</span>' +
             '<span>' + escapeHtml(source) + '</span>' +
+            (price ? '<span>' + escapeHtml(price) + '</span>' : '') +
             '<span>' + escapeHtml(formatDate(row.created_at)) + '</span>' +
           '</div>' +
         '</div>' +
@@ -252,7 +338,9 @@ async function prepareProductImport() {
 
     setStatus('Analyse terminée. Classement contre le catalogue en cours…');
     const classification = await classifyProductImport(row.id);
+    currentImportId = row.id;
     renderAnalysis(result.analysis, classification);
+    showPricingPanel(result.analysis, classification);
 
     const confidence = Number(classification?.classification?.overall_confidence || 0);
     setStatus(
@@ -327,6 +415,7 @@ export function initProductImportUI() {
 
   prepareBtn?.addEventListener('click', prepareProductImport);
   refreshBtn?.addEventListener('click', refreshProductImports);
+  byId('productImportPriceBtn')?.addEventListener('click', calculateImportPrice);
 
   list?.addEventListener('click', event => {
     const button = event.target.closest('[data-import-id]');
