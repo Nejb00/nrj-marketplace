@@ -19,7 +19,8 @@
     "check:test-intelligence": "node --test test/test-intelligence.test.js",
     "check:payments": "node --test test/payment-audit.test.js",
     "check:payment-attacks": "node --test test/payment-attack-matrix.test.js",
-    "check:test-health": "node --test test/test-health.test.js"
+    "check:test-health": "node --test test/test-health.test.js",
+    "check:rls": "node --test test/rls-security-audit.test.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.32.0",
