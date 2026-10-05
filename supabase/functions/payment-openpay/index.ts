@@ -243,17 +243,25 @@ async function findOwnedPaymentById(paymentId: string, token: string): Promise<P
 async function persistConfirmedPayment(
   paymentId: string,
   providerReference: string,
-  status: InternalStatus
+  status: InternalStatus,
+  auditSource = "payment_api",
+  auditReason: string | null = null
 ): Promise<boolean> {
   for (let attempt = 0; attempt < MAX_PERSIST_ATTEMPTS; attempt += 1) {
     const update = await supabaseRest<null>(
-      "payments?id=eq." + encodeURIComponent(paymentId),
+      "rpc/set_payment_status_with_audit",
       {
-        method: "PATCH",
+        method: "POST",
         headers: { "Prefer": "return=minimal" },
         body: JSON.stringify({
-          provider_reference: providerReference,
-          status
+          p_payment_id: paymentId,
+          p_status: status,
+          p_provider_reference: providerReference || null,
+          p_source: auditSource,
+          p_reason: auditReason,
+          p_metadata: {
+            component: "payment-openpay"
+          }
         })
       }
     );
@@ -277,13 +285,18 @@ async function persistPaymentFailure(
   failureReason: string
 ): Promise<boolean> {
   const failure = await supabaseRest<null>(
-    "payments?id=eq." + encodeURIComponent(paymentId),
+    "rpc/set_payment_status_with_audit",
     {
-      method: "PATCH",
+      method: "POST",
       headers: { "Prefer": "return=minimal" },
       body: JSON.stringify({
-        status: "failed",
-        failure_reason: failureReason
+        p_payment_id: paymentId,
+        p_status: "failed",
+        p_source: "provider_error",
+        p_reason: failureReason,
+        p_metadata: {
+          component: "payment-openpay"
+        }
       })
     }
   );
@@ -366,7 +379,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const persisted = await persistConfirmedPayment(
       payment.id,
       providerReference,
-      status
+      status,
+      "manual_reconciliation",
+      "payment_reconcile"
     );
 
     if (!persisted) {
@@ -418,7 +433,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
       const persisted = await persistConfirmedPayment(
         payment.id,
         payment.provider_reference || "",
-        status
+        status,
+        "status_poll",
+        "openpay_status_sync"
       );
       if (!persisted) {
         return json({
@@ -674,7 +691,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const persisted = await persistConfirmedPayment(
     localPayment.id,
     providerReference,
-    status
+    status,
+    "payment_create",
+    "openpay_create_success"
   );
 
   if (!persisted) {
