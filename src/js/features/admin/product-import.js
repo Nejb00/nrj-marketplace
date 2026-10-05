@@ -1,6 +1,6 @@
 // ═══ Admin — import produit intelligent (PR #2) ═══
 import { showToast } from '../../utils/dom-helpers.js';
-import { analyzeProductImport, classifyProductImport, fetchProductImports, insertProductImport, processProductImport, uploadProductImportMedia, publishProductImport, deleteProductImport } from '../../api/api.js';
+import { fetchProductImports, insertProductImport, processProductImport, uploadProductImportMedia, publishProductImport, deleteProductImport } from '../../api/api.js';
 
 const STATUS_LABELS = {
   RECEIVED: 'Reçu',
@@ -431,14 +431,14 @@ async function prepareProductImport() {
   const rawText = byId('productImportRawText')?.value.trim() || '';
 
   if (!selectedFile) {
-    setStatus('Ajoute une capture pour l’analyse Vision. Le texte Alibaba reste facultatif.', 'error');
+    setStatus('Ajoute une capture pour lancer la pipeline Vision.', 'error');
     return;
   }
 
   const button = byId('productImportPrepareBtn');
   if (button) {
     button.disabled = true;
-    button.textContent = 'Préparation…';
+    button.textContent = 'Pipeline…';
   }
   setStatus('Création du dossier sécurisé…');
 
@@ -451,49 +451,66 @@ async function prepareProductImport() {
       status: 'RECEIVED'
     });
 
-    setStatus('Import ' + row.id.slice(0, 8) + '… reçu. Analyse Vision en cours…');
-    const result = await analyzeProductImport(row.id, data, rawText);
-    renderAnalysis(result.analysis);
-
-    setStatus('Analyse terminée. Classement contre le catalogue en cours…');
-    const classification = await classifyProductImport(row.id);
     currentImportId = row.id;
-    renderAnalysis(result.analysis, classification);
-    showPricingPanel(result.analysis, classification);
+    setStatus('Import ' + row.id.slice(0, 8) + '… · Vision + classification automatiques…');
+
+    const result = await processProductImport(row.id, data, null, false);
+
+    const analysis = result?.analysis || null;
+    const classification = result?.classification
+      ? {
+          classification: result.classification,
+          category: result.category
+            ? {
+                name: result.category.name,
+                parent_name: result.category.parent_name
+              }
+            : null
+        }
+      : null;
+
+    if (analysis) renderAnalysis(analysis, classification);
+    if (classification) showPricingPanel(analysis || {}, classification);
     showMediaPanel(false);
 
-    const confidence = Number(classification?.classification?.overall_confidence || 0);
-    setStatus(
-      confidence >= 0.9
-        ? 'Catégorie validée automatiquement : ' + Math.round(confidence * 100) + '%.'
-        : confidence >= 0.7
-          ? 'Catégorie trouvée : validation humaine recommandée (' + Math.round(confidence * 100) + '%).'
-          : 'Import bloqué : classification insuffisamment fiable (' + Math.round(confidence * 100) + '%.',
-      confidence >= 0.7 ? 'success' : 'error'
-    );
-    showToast('🧠 Analyse + classification terminées');
+    if (result?.status === 'LOW_CONFIDENCE') {
+      setStatus('Import bloqué automatiquement : confiance insuffisante (' +
+        Math.round(Number(result?.classification?.overall_confidence || 0) * 100) + '%).', 'error');
+    } else if (result?.status === 'CLASSIFIED') {
+      setStatus(
+        Number(result?.classification?.overall_confidence || 0) >= 0.9
+          ? 'Classification automatique validée. Paramètres de prix prêts.'
+          : 'Classification trouvée. Validation humaine recommandée avant publication.',
+        'success'
+      );
+    } else {
+      setStatus('Pipeline reprise au statut ' + (result?.status || 'inconnu') + '.', 'success');
+    }
+
+    showToast('🤖 Pipeline Vision + classification terminée');
     await refreshProductImports();
 
     byId('productImportSourceUrl').value = '';
     byId('productImportRawText').value = '';
     selectedFile = null;
-    // Garder l’image compressée en mémoire jusqu’au pricing/media/publish.
-    // resetPreview efface l’aperçu et libère son URL, mais on restaure la data URL temporaire.
+    // Conserver la data URL compressée pour le pricing/media/retry pendant cette session.
     const preparedImageDataUrl = imageDataUrl;
     resetPreview();
     imageDataUrl = preparedImageDataUrl;
+
     const fileInput = byId('productImportFile');
     if (fileInput) fileInput.value = '';
   } catch (err) {
-    setStatus(err?.message || 'Impossible de créer l’import.', 'error');
-    showToast('❌ Impossible de préparer l’import');
+    setStatus(err?.message || 'Pipeline import impossible.', 'error');
+    showToast('❌ Pipeline interrompue');
   } finally {
     if (button) {
       button.disabled = false;
-      button.textContent = 'Analyser avec l’IA →';
+      button.textContent = 'Lancer la pipeline →';
     }
   }
 }
+
 
 async function handlePublishImport(id) {
   if (!id) return;
