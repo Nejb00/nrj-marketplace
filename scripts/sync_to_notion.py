@@ -3,6 +3,7 @@ import json
 import urllib.request
 import urllib.error
 import re
+import time
 
 NOTION_TOKEN = (os.environ.get("NOTION_TOKEN") or "").strip()
 RAW_PAGE_INPUT = (os.environ.get("NOTION_PAGE_ID") or "").strip()
@@ -64,6 +65,13 @@ MAX_CHILDREN_PER_TOGGLE = 100      # limite dure de l'API Notion
 CHILDREN_BATCH_SIZE = 40           # ~76 Ko max par requête (40 x 1900 car.)
 TOP_LEVEL_BATCH_SIZE = 25          # blocs racine (petits : titres de toggles)
 
+# Notion applique une limite de débit moyenne et peut répondre HTTP 429
+# pendant les longues synchronisations (beaucoup de DELETE/PATCH successifs).
+# On espace légèrement les requêtes et on respecte Retry-After avec backoff.
+NOTION_MIN_REQUEST_INTERVAL = 0.4  # ~2,5 requêtes/s maximum
+NOTION_RETRY_ATTEMPTS = 6
+NOTION_MAX_RETRY_DELAY = 30
+
 def get_language(filename):
     ext = os.path.splitext(filename)[1].lower()
     return LANG_MAP.get(ext, 'plain text')
@@ -73,21 +81,50 @@ def chunk_text(text, max_len=1900):
         return ["// Fichier vide"]
     return [text[i:i + max_len] for i in range(0, len(text), max_len)]
 
+_last_notion_request_at = 0.0
+
+
 def notion_request(method, url, payload=None):
-    """Requête Notion générique avec gestion d'erreur explicite."""
+    """Requête Notion avec pacing et retry ciblé des HTTP 429."""
+    global _last_notion_request_at
+
     headers = dict(BASE_HEADERS)
     data = None
     if payload is not None:
         headers["Content-Type"] = "application/json"
         data = json.dumps(payload).encode('utf-8')
-    req = urllib.request.Request(url, data=data, headers=headers, method=method)
-    try:
-        with urllib.request.urlopen(req) as resp:
-            body = resp.read().decode('utf-8')
-            return json.loads(body) if body else {}
-    except urllib.error.HTTPError as e:
-        print(f"Erreur HTTP {e.code}: {e.read().decode('utf-8')}")
-        raise
+
+    for attempt in range(NOTION_RETRY_ATTEMPTS):
+        # Évite les rafales de DELETE/PATCH qui déclenchent le rate limit.
+        elapsed = time.monotonic() - _last_notion_request_at
+        if elapsed < NOTION_MIN_REQUEST_INTERVAL:
+            time.sleep(NOTION_MIN_REQUEST_INTERVAL - elapsed)
+
+        req = urllib.request.Request(url, data=data, headers=headers, method=method)
+        try:
+            with urllib.request.urlopen(req) as resp:
+                _last_notion_request_at = time.monotonic()
+                body = resp.read().decode('utf-8')
+                return json.loads(body) if body else {}
+        except urllib.error.HTTPError as e:
+            _last_notion_request_at = time.monotonic()
+            body = e.read().decode('utf-8')
+            if e.code != 429 or attempt == NOTION_RETRY_ATTEMPTS - 1:
+                print(f"Erreur HTTP {e.code}: {body}")
+                raise
+
+            retry_after_raw = e.headers.get("Retry-After", "")
+            try:
+                retry_after = float(retry_after_raw)
+            except (TypeError, ValueError):
+                retry_after = 2 ** attempt
+
+            delay = min(max(retry_after, 1.0), NOTION_MAX_RETRY_DELAY)
+            print(
+                f"HTTP 429 Notion : nouvelle tentative "
+                f"{attempt + 2}/{NOTION_RETRY_ATTEMPTS} dans {delay:.1f}s"
+            )
+            time.sleep(delay)
 
 def clear_existing_blocks():
     """Supprime les anciens blocs de la page Notion pour repartir à zéro.
