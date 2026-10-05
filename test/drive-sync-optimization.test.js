@@ -1,6 +1,6 @@
-const test = require("node:test");
-const assert = require("node:assert/strict");
-const fs = require("node:fs");
+import test from "node:test";
+import assert from "node:assert/strict";
+import fs from "node:fs";
 
 const workflowPath = ".github/workflows/drive-sync.yml";
 const scriptPath = "scripts/drive-sync.mjs";
