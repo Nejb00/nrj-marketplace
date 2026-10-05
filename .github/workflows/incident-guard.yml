@@ -1,0 +1,103 @@
+name: Incident Guard
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+      - CodeQL
+      - Dependency Review
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: read
+  issues: write
+
+concurrency:
+  group: incident-guard-${{ github.event.workflow_run.workflow_id }}-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+
+jobs:
+  incident:
+    name: Incident Guard
+    if: ${{ github.event.workflow_run.head_branch == 'main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Create or close incident
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            const { owner, repo } = context.repo;
+            const title = '🚨 Incident — ' + run.name + ' #' + run.run_number;
+            const failureStates = new Set(['failure', 'timed_out', 'action_required']);
+
+            const labels = ['incident', 'automation'];
+            const definitions = {
+              incident: { color: 'D93F0B', description: 'Automated repository incident' },
+              automation: { color: '5319E7', description: 'Automation, CI/CD or repository tooling' },
+            };
+
+            for (const [name, meta] of Object.entries(definitions)) {
+              try {
+                await github.rest.issues.getLabel({ owner, repo, name });
+              } catch (error) {
+                if (error.status !== 404) throw error;
+                await github.rest.issues.createLabel({
+                  owner, repo, name, color: meta.color, description: meta.description,
+                });
+              }
+            }
+
+            const openIssues = await github.paginate(
+              github.rest.issues.listForRepo,
+              { owner, repo, state: 'open', labels: 'incident', per_page: 100 }
+            );
+
+            const existing = openIssues.find((issue) => issue.title === title);
+            const summary = [
+              'Workflow: ' + run.name,
+              'Run: #' + run.run_number,
+              'Commit: ' + run.head_sha,
+              'Conclusion: ' + run.conclusion,
+              'Run: ' + run.html_url,
+            ].join('\n');
+
+            if (failureStates.has(run.conclusion)) {
+              if (existing) {
+                await github.rest.issues.createComment({
+                  owner, repo, issue_number: existing.number,
+                  body: 'Nouvel échec détecté sur le même workflow.\n\n' + summary,
+                });
+                core.info('Incident déjà ouvert: #' + existing.number);
+                return;
+              }
+
+              const created = await github.rest.issues.create({
+                owner, repo, title, body: [
+                  '## Incident automatisé',
+                  '',
+                  'Un workflow critique a échoué sur main.',
+                  '',
+                  summary,
+                  '',
+                  'Cette issue sera automatiquement fermée lorsqu’un run réussi du même workflow sera détecté.',
+                ].join('\n'),
+                labels,
+              });
+              core.warning('Incident créé: #' + created.data.number);
+              return;
+            }
+
+            if (run.conclusion === 'success' && existing) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: existing.number,
+                body: '✅ Le workflow est de nouveau vert. Run: ' + run.html_url,
+              });
+              await github.rest.issues.update({
+                owner, repo, issue_number: existing.number, state: 'closed',
+              });
+              core.info('Incident résolu et fermé: #' + existing.number);
+            }
