@@ -168,8 +168,14 @@ test('AI diagnosis: rendered dossier stays machine-readable', () => {
   const rendered = renderDiagnosis(diagnosis);
   const fence = String.fromCharCode(96).repeat(3);
   const match = rendered.match(new RegExp(
-    '^NRJ_AI_DIAGNOSIS_START\\n' + fence + 'json\\n([\\s\\S]*?)\\n' + fence + '\\nNRJ_AI_DIAGNOSIS_END});
-
+    '^NRJ_AI_DIAGNOSIS_START\\n' + fence + 'json\\n([\\s\\S]*?)\\n' + fence + '\\nNRJ_AI_DIAGNOSIS_END$'
+  ));
+  assert.ok(match);
+  assert.equal(rendered.startsWith('<!--'), false);
+  assert.equal(rendered.includes('Authorization:'), false);
+  assert.equal(rendered.includes('SECRET'), false);
+  assert.deepEqual(JSON.parse(match[1]), diagnosis);
+});
 test('AI diagnosis: dossier non encapsulé dans un commentaire HTML', () => {
   const sourceDiagnosis = {
     schema_version: 1,
