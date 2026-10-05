@@ -47,7 +47,8 @@ test('repair verification is restricted to operator self-healing branches and re
 });
 
 
-test('business invariant signals stay diagnostic-only', () => {
+test('business and integrity signals stay diagnostic-only', () => {
   assert.ok(aiDiagnosisModule.includes('business_invariant_matches'));
+  assert.ok(aiDiagnosisModule.includes('integrity_matches'));
   assert.ok(selfHealing.includes("aiDiagnosis?.recommendation === 'self-healing'"));
 });
