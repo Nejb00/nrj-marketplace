@@ -171,6 +171,62 @@
             <button class="chat-send-btn" id="chatSendBtn" aria-label="Envoyer">➤</button>
         </div>
     </div>
+    <div class="modal-overlay" id="orderModalOverlay" role="dialog" aria-modal="true" aria-labelledby="orderModalTitle">
+        <div class="modal payment-modal">
+            <div class="payment-modal-header">
+                <div>
+                    <span class="payment-kicker">Commande sécurisée</span>
+                    <h2 id="orderModalTitle">Finaliser la commande</h2>
+                </div>
+                <button type="button" class="payment-close-btn" id="cancelOrderBtn" aria-label="Fermer">&times;</button>
+            </div>
+
+            <div class="payment-summary" id="orderSummary"></div>
+
+            <div class="payment-form">
+                <div class="form-group">
+                    <label for="customerName">Nom</label>
+                    <input id="customerName" type="text" maxlength="120" autocomplete="name" placeholder="Votre nom">
+                </div>
+
+                <div class="form-group">
+                    <label for="customerPhone">Téléphone Mobile Money</label>
+                    <input id="customerPhone" type="tel" inputmode="numeric" maxlength="12" autocomplete="tel" placeholder="242XXXXXXXXX">
+                    <small class="payment-help">Numéro Congo au format 242XXXXXXXXX</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="deliveryAddress">Adresse de livraison</label>
+                    <textarea id="deliveryAddress" rows="3" maxlength="500" placeholder="Ville, quartier, repère..."></textarea>
+                </div>
+
+                <fieldset class="payment-operators">
+                    <legend>Opérateur</legend>
+                    <label class="payment-operator-card">
+                        <input type="radio" name="paymentOperator" value="MTN" checked>
+                        <span><strong>MTN</strong><small>Mobile Money</small></span>
+                    </label>
+                    <label class="payment-operator-card">
+                        <input type="radio" name="paymentOperator" value="AIRTEL">
+                        <span><strong>AIRTEL</strong><small>Money</small></span>
+                    </label>
+                </fieldset>
+
+                <div class="payment-status" id="paymentStatus" role="status" aria-live="polite" hidden></div>
+
+                <button type="button" class="payment-primary-btn" id="payOrderBtn">
+                    ⚡ Payer avec Mobile Money
+                </button>
+
+                <button type="button" class="payment-secondary-btn" id="sendWhatsAppBtn">
+                    💬 Continuer sur WhatsApp
+                </button>
+
+                <p class="payment-security-note">Le total est recalculé côté serveur avant le paiement.</p>
+            </div>
+        </div>
+    </div>
+
     <div class="cart-panel" id="cartPanel" role="dialog" aria-label="Panier">
         <div class="cart-panel-header">
             <h2>Mon panier</h2>
