@@ -39,6 +39,7 @@ function positiveInteger(value) {
 }
 
 function finiteNonNegative(value) {
+  if (value === null || value === undefined || value === '') return false;
   const n = Number(value);
   return Number.isFinite(n) && n >= 0;
 }
@@ -268,7 +269,7 @@ export function validateOrders(orders = []) {
 
     if (
       finiteNonNegative(order.total) &&
-      Math.abs(roundMoney(computedTotal) - roundMoney(total)) > MONEY_EPSILON
+      Math.abs(roundMoney(computedTotal) - roundMoney(total)) > 0
     ) {
       violations.push(violation(
         'ORDER-009',
