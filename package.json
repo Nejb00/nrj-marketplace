@@ -20,7 +20,11 @@
     "check:payments": "node --test test/payment-audit.test.js",
     "check:payment-attacks": "node --test test/payment-attack-matrix.test.js",
     "check:test-health": "node --test test/test-health.test.js",
-    "check:rls": "node --test test/rls-security-audit.test.js"
+    "check:rls": "node --test test/rls-security-audit.test.js",
+    "check:self-healing-guard": "node --test test/self-healing-guard.test.js",
+    "check:recovery-guard": "node --test test/recovery-guard.test.js",
+    "check:incident-history": "node --test test/incident-history.test.js",
+    "check:correlation": "node --test test/cross-system-correlation.test.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.32.0",
