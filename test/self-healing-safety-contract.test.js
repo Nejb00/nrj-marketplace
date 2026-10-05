@@ -19,7 +19,7 @@ test('AI diagnosis cannot authorize arbitrary issues or stale failures', () => {
   assert.ok(aiDiagnosis.includes("const sourceAssociations = new Set(['OWNER', 'MEMBER', 'COLLABORATOR', 'BOT'])"));
   assert.ok(aiDiagnosis.includes("issue.title?.startsWith('🚨 Incident — ')"));
   assert.ok(aiDiagnosis.includes('run.head_branch === \'main\''));
-  assert.ok(aiDiagnosis.includes('Date.now() - new Date(run.updated_at).getTime() <= 24 * 60 * 60 * 1000'))));
+  assert.ok(aiDiagnosis.includes('Date.now() - new Date(run.updated_at).getTime() <= 24 * 60 * 60 * 1000'));
   assert.ok(aiDiagnosis.includes("workflow_id: 'self-healing.yml'"));
 });
 
