@@ -13,6 +13,10 @@ export const OPENPAY_FUNCTION_ENDPOINT =
 
 const SUPPORTED_OPERATORS = new Set(['MTN', 'AIRTEL']);
 
+export function isValidCongoPhone(value) {
+    return /^242\d{9}$/.test(String(value || '').trim());
+}
+
 function normalizeOperator(value) {
     const operator = String(value || '').trim().toUpperCase();
     if (!SUPPORTED_OPERATORS.has(operator)) {
@@ -96,7 +100,7 @@ export class OpenPayProvider extends PaymentProvider {
         );
         const phone = String(customer?.phone || metadata.paymentPhoneNumber || '').trim();
 
-        if (!/^242\\d{9}$/.test(phone)) {
+        if (!isValidCongoPhone(phone)) {
             throw new TypeError('OpenPay requires a Congo phone number in 242XXXXXXXXX format');
         }
 
