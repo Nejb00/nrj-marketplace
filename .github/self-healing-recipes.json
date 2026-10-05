@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "recipes": [
+    {
+      "id": "e2e-missing-refresh-cart-display-import",
+      "workflow": "Vercel Browser E2E",
+      "signatures": [
+        "refreshCartDisplay is not defined"
+      ],
+      "path": "src/js/features/app/click-delegation.js",
+      "find": "import { addToCart, changeQty, removeCartItem } from '../../services/cart-actions.js';\n",
+      "replace": "import { addToCart, changeQty, removeCartItem } from '../../services/cart-actions.js';\nimport { refreshCartDisplay } from '../../services/cart-panel.js';\n",
+      "title": "fix(e2e): restore refreshCartDisplay import",
+      "commit_message": "fix(e2e): restore refreshCartDisplay import",
+      "max_age_hours": 24
+    }
+  ]
+}
