@@ -1,12 +1,24 @@
 {
   "files": {
+    ".github/dependabot.yml": {
+      "githubSha": "d3982f2c29e83fa2b2d5d1d35082889308363923",
+      "driveMd5": "0916314f80d61ec293120431b3a33ff2"
+    },
     ".github/test-branch-marker-temp": {
       "githubSha": "3602361dafeea2cbec159128f5166a8428c0795c",
       "driveMd5": "3d801aa532c1cec3ee82d87a99fdf63f"
     },
     ".github/workflows/ci.yml": {
-      "githubSha": "915cdf650f8c3749d07463f0b7ad9a083a29095b",
-      "driveMd5": "1a2423ea24747c904ce4931130253d24"
+      "githubSha": "66800b21c1fb4fdd61001330fce0da63f85ef88c",
+      "driveMd5": "b6baaeff74f6c0cfabbd005c3c3f0b46"
+    },
+    ".github/workflows/codeql.yml": {
+      "githubSha": "7e2a0836136b9b010bd9bc7bdcf5ea81f5783fa5",
+      "driveMd5": "443799507b541299fe1f86d8972578f3"
+    },
+    ".github/workflows/dependency-review.yml": {
+      "githubSha": "d881866c6ab7819eb6b811e6bec74cbad9163561",
+      "driveMd5": "9df29765a15dd4d8d990d1ccd5838358"
     },
     ".github/workflows/drive-sync.yml": {
       "githubSha": "e87a8073e38174448cd4dd9dd1f2211d4076b861",
@@ -16,9 +28,33 @@
       "githubSha": "4df2e4a889d7225df2fc54a3d6c64a048141c85d",
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     },
+    ".github/workflows/incident-guard.yml": {
+      "githubSha": "f8974544d61dadd8ec2634fa6a47e246df13de32",
+      "driveMd5": "e2f8dd7e47029ddd46bd4bff1bcbb92b"
+    },
     ".github/workflows/notion-sync.yml": {
       "githubSha": "7a13aada8e437d76f01f9a56f73aea4a4b139e53",
       "driveMd5": "8c9bd72d39c67c3052c826eea0f363be"
+    },
+    ".github/workflows/pr-labeler.yml": {
+      "githubSha": "dd9c268814bfa6b41054f6ec4d738fca19bd80d3",
+      "driveMd5": "8df378c7b1643a3fa991881b794d6ca8"
+    },
+    ".github/workflows/pr-quality.yml": {
+      "githubSha": "ad37e2ffefbcb073f82a1131d08cc733e8571cfb",
+      "driveMd5": "5f99c8a6fed04d55cc5d17fd6795baa0"
+    },
+    ".github/workflows/project-report.yml": {
+      "githubSha": "a486729a53810ae333b14a8cba75266bf1a14dba",
+      "driveMd5": "87224cf85196a15432d9dc2de7dae57c"
+    },
+    ".github/workflows/release.yml": {
+      "githubSha": "43cca49ec7981d5675f95c37d1a1316c96a807d8",
+      "driveMd5": "294238f1fd0f19c7884086d4533735ef"
+    },
+    ".github/workflows/repo-health.yml": {
+      "githubSha": "6c3e322bb223b9358689e4f7a022f9fbf7aadfdf",
+      "driveMd5": "c0a377b308b246841d4416807125d712"
     },
     ".gitignore": {
       "githubSha": "7aaedd212125842e055efc0be8f486fd67fbfe1e",
@@ -49,8 +85,8 @@
       "driveMd5": "654914167c47c8f85ae4d936eb47d820"
     },
     "package.json": {
-      "githubSha": "1eb6a13123632821b8908b5a8ee08bab6c5f78e2",
-      "driveMd5": "ad71f3ba685849f57700cd3b831747c7"
+      "githubSha": "b302b6ed9b8b390a3035fc5c16a9259c3787dc16",
+      "driveMd5": "fa5d0727208fdeea87e7c849816ac3b5"
     },
     "public/Hr": {
       "githubSha": "755d0629ab9b927d669f2476729886bf48958b47",
@@ -100,9 +136,17 @@
       "githubSha": "ca71a986b92c25828983559f189c22a1c19c4991",
       "driveMd5": "bf16f4c11c05e3f7da584a4be7a9a8c6"
     },
+    "scripts/ci-check.mjs": {
+      "githubSha": "7ce58ba3218f42f8d4897991fac8321cdbfdf974",
+      "driveMd5": "edfa55323f526b7a818d8aac847bdc83"
+    },
     "scripts/drive-sync.mjs": {
       "githubSha": "d51b092ab918cd8aa58ab5fe9d89930a094037d4",
       "driveMd5": "47bbfb3f93069edf9ed407290fe514a0"
+    },
+    "scripts/smoke-test.mjs": {
+      "githubSha": "b4981fad80448ca19003816c44c962eebac9f9d5",
+      "driveMd5": "ad237c9efbf16219ea7fd2df1b769028"
     },
     "scripts/sync_to_gdrive.py": {
       "githubSha": "9d43e41e7a90148c44dad49486cab825e475bfe6",
@@ -528,6 +572,10 @@
       "githubSha": "51e0013acf2a93ab8a96546555fe7a17876452f4",
       "driveMd5": "6eee13bb40aa50e8f965855b51408a2e"
     },
+    "test/fuzzy-search.test.js": {
+      "githubSha": "0812dfef8529af76b35e15461e0d735856d0d2bd",
+      "driveMd5": "b3a85d688b4e63fa66d3feb6d298963a"
+    },
     "vercel.json": {
       "githubSha": "b16eb60657eb498912d183f20230eb5401ace826",
       "driveMd5": "b8658470ca689642450ef625326f37f2"
@@ -537,5 +585,5 @@
       "driveMd5": "ba96d156f4f2282a5e0fe5b742620aaf"
     }
   },
-  "updatedAt": "2026-10-04T00:25:56.904Z"
+  "updatedAt": "2026-10-05T02:07:02.785Z"
 }
