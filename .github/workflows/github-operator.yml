@@ -14,11 +14,12 @@ on:
           - status
           - diagnose
           - prs
+          - retry-failed
           - help
 
 permissions:
   contents: read
-  actions: read
+  actions: write
   deployments: read
   pull-requests: read
   issues: write
@@ -69,14 +70,15 @@ jobs:
                 ? process.env.MANUAL_COMMAND
                 : context.payload.comment?.body || '';
 
-            const command = rawCommand
-              .trim()
-              .split(/\\s+/)[1]?.toLowerCase() || 'help';
+            const tokens = rawCommand.trim().split(/\\s+/);
+            const command = tokens[1]?.toLowerCase() || 'help';
+            const confirmed = tokens[2]?.toLowerCase() === 'confirm';
 
             const validCommands = new Set([
               'status',
               'diagnose',
               'prs',
+              'retry-failed',
               'help',
             ]);
 
@@ -202,15 +204,83 @@ jobs:
             operatorLines.push(\`Main : **\${shortSha(branch.data.commit.sha)}**\`);
             operatorLines.push('');
 
+            if (command === 'retry-failed') {
+              if (context.eventName === 'issue_comment' && !confirmed) {
+                operatorLines.push('### 🔐 Confirmation requise');
+                operatorLines.push('');
+                operatorLines.push('Cette action peut relancer des jobs GitHub Actions. Pour confirmer, utilisez exactement :');
+                operatorLines.push('');
+                operatorLines.push('`/operator retry-failed confirm`');
+                operatorLines.push('');
+                operatorLines.push('Aucun job n’a été relancé.');
+              } else {
+                const recentRuns = await github.paginate(
+                  github.rest.actions.listWorkflowRunsForRepo,
+                  {
+                    owner,
+                    repo,
+                    event: 'push',
+                    branch: 'main',
+                    status: 'completed',
+                    per_page: 50,
+                  }
+                );
+
+                const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+                const failedMainRuns = recentRuns
+                  .filter((run) =>
+                    run.conclusion === 'failure' &&
+                    run.head_branch === 'main' &&
+                    new Date(run.updated_at).getTime() >= cutoff
+                  )
+                  .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
+                  .slice(0, 3);
+
+                operatorLines.push('### 🔧 Relance contrôlée');
+                operatorLines.push('');
+
+                if (!failedMainRuns.length) {
+                  operatorLines.push('✅ Aucun run `push` de `main` en échec dans les dernières 24 heures.');
+                  operatorLines.push('Aucune action effectuée.');
+                } else {
+                  operatorLines.push(
+                    `Runs inspectés : **${failedMainRuns.length}** (maximum 3, fenêtre 24 h).`
+                  );
+                  operatorLines.push('');
+
+                  for (const run of failedMainRuns) {
+                    const link = run.html_url
+                      ? `[${run.name} #${run.run_number}](${run.html_url})`
+                      : `${run.name} #${run.run_number}`;
+
+                    try {
+                      await github.request(
+                        'POST /repos/{owner}/{repo}/actions/runs/{run_id}/rerun-failed-jobs',
+                        {
+                          owner,
+                          repo,
+                          run_id: run.id,
+                        }
+                      );
+                      operatorLines.push(`- 🔄 ${link} — jobs échoués relancés.`);
+                    } catch (error) {
+                      operatorLines.push(`- ❌ ${link} — relance refusée : ${error.message}`);
+                    }
+                  }
+                }
+              }
+            }
+
             if (command === 'help') {
               operatorLines.push('### Commandes disponibles');
               operatorLines.push('');
               operatorLines.push('- \`/operator status\` — état général du dépôt');
               operatorLines.push('- \`/operator diagnose\` — anomalies récentes CI/déploiement');
               operatorLines.push('- \`/operator prs\` — PRs récemment actives vers main');
+              operatorLines.push('- \`/operator retry-failed confirm\` — relance contrôlée des jobs échoués de main');
               operatorLines.push('- \`/operator help\` — cette aide');
               operatorLines.push('');
-              operatorLines.push('> 🔒 Version 1 : lecture et diagnostic uniquement. Aucune commande opérateur ne modifie le code ou ne fusionne une PR.');
+              operatorLines.push('> 🔒 V2 : la seule action d’écriture autorisée est la relance de jobs échoués, avec confirmation pour les commentaires. Aucun code n’est modifié et aucun merge n’est effectué.');
             }
 
             if (command === 'status') {
@@ -324,7 +394,7 @@ jobs:
 
             operatorLines.push('');
             operatorLines.push('---');
-            operatorLines.push('🔒 **Garde-fou V1 :** aucune écriture sur le dépôt, aucune exécution de code fourni par un commentaire, aucun merge.');
+            operatorLines.push('🔒 **Garde-fou V2 :** aucune exécution de code fourni par un commentaire, aucune modification de fichiers, aucune création de branche et aucun merge. La seule action est la relance ciblée de jobs échoués de `main` après confirmation.');
 
             const response = operatorLines.join('\\n');
 
