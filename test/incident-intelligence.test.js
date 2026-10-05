@@ -1,0 +1,66 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { analyzeIncident, renderIncidentIntelligence } from '../scripts/incident-intelligence.mjs';
+
+const run = {
+  id: 123,
+  run_number: 45,
+  name: 'Vercel Browser E2E',
+  head_branch: 'main',
+  head_sha: 'abc123',
+  conclusion: 'failure',
+};
+
+const recipeCatalog = [{
+  id: 'e2e-missing-refresh-cart-display-import',
+  enabled: true,
+  workflow: 'Vercel Browser E2E',
+  signatures: ['refreshCartDisplay is not defined'],
+}];
+
+test('incident intelligence: classe une signature connue', () => {
+  const intel = analyzeIncident({
+    run,
+    failedJobs: [{ id: 10, name: 'E2E', conclusion: 'failure' }],
+    logTexts: ['ReferenceError: refreshCartDisplay is not defined'],
+    recipes: recipeCatalog,
+  });
+
+  assert.equal(intel.schema_version, 1);
+  assert.equal(intel.classification, 'known-repair-candidate');
+  assert.equal(intel.recipe_id, 'e2e-missing-refresh-cart-display-import');
+  assert.equal(intel.recommended_action, 'self-healing');
+  assert.deepEqual(intel.signature_matches, [{
+    recipe_id: 'e2e-missing-refresh-cart-display-import',
+    signature: 'refreshCartDisplay is not defined',
+  }]);
+});
+
+test('incident intelligence: refuse unclassified failure', () => {
+  const intel = analyzeIncident({
+    run,
+    failedJobs: [{ id: 11, name: 'Build', conclusion: 'failure' }],
+    logTexts: ['Error: unknown build failure'],
+    recipes: recipeCatalog,
+  });
+
+  assert.equal(intel.classification, 'unclassified-failure');
+  assert.equal(intel.recipe_id, null);
+  assert.equal(intel.recommended_action, 'operator-review');
+  assert.deepEqual(intel.signature_matches, []);
+});
+
+test('incident intelligence: aucun log brut dans le dossier', () => {
+  const intel = analyzeIncident({
+    run,
+    failedJobs: [{ id: 12, name: 'Build', conclusion: 'failure' }],
+    logTexts: ['SECRET_VALUE=should-not-appear'],
+    recipes: recipeCatalog,
+  });
+
+  const rendered = renderIncidentIntelligence(intel);
+  assert.equal(rendered.includes('SECRET_VALUE'), false);
+  assert.equal(rendered.includes('should-not-appear'), false);
+  assert.match(rendered, /^<!-- nrj-incident-intelligence\n/);
+  assert.match(rendered, /\n-->$/);
+});

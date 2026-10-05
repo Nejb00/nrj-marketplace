@@ -27,12 +27,22 @@ jobs:
     timeout-minutes: 5
 
     steps:
+      - name: Checkout automation definitions
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 1
+
       - name: Create or close incident
         uses: actions/github-script@v9
         with:
           script: |
             const run = context.payload.workflow_run;
             const { owner, repo } = context.repo;
+            const { analyzeIncident, renderIncidentIntelligence } = await import(
+              'file://' + process.env.GITHUB_WORKSPACE + '/scripts/incident-intelligence.mjs'
+            );
+
             const title = '🚨 Incident — ' + run.name + ' #' + run.run_number;
             const failureStates = new Set(['failure', 'timed_out', 'action_required']);
 
@@ -63,15 +73,85 @@ jobs:
               'Workflow: ' + run.name,
               'Run: #' + run.run_number,
               'Commit: ' + run.head_sha,
-              'Conclusion: ' + run.conclusion,
+              'Conclusion: ' + (run.conclusion || run.status),
               'Run: ' + run.html_url,
             ].join('\n');
 
             if (failureStates.has(run.conclusion)) {
+              const jobs = (await github.paginate(
+                github.rest.actions.listJobsForWorkflowRun,
+                { owner, repo, run_id: run.id, per_page: 100 }
+              )).filter((job) => job.conclusion === 'failure').slice(0, 3);
+
+              const logTexts = [];
+              for (const job of jobs) {
+                try {
+                  const response = await github.request(
+                    'GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs',
+                    { owner, repo, job_id: job.id }
+                  );
+                  logTexts.push(
+                    typeof response.data === 'string'
+                      ? response.data
+                      : String(response.data || '')
+                  );
+                } catch (error) {
+                  core.warning('Logs indisponibles pour le job ' + job.id + ': ' + error.message);
+                }
+              }
+
+              const recipesResponse = await github.rest.repos.getContent({
+                owner, repo, path: '.github/self-healing-recipes.json', ref: 'main'
+              });
+              const recipesFile = recipesResponse.data;
+              if (Array.isArray(recipesFile) || !recipesFile.content) {
+                throw new Error('Catalogue de recettes indisponible.');
+              }
+
+              const recipes = JSON.parse(
+                Buffer.from(
+                  recipesFile.content,
+                  recipesFile.encoding || 'base64'
+                ).toString('utf8')
+              );
+
+              const intelligence = analyzeIncident({
+                run,
+                failedJobs: jobs,
+                logTexts,
+                recipes: recipes.recipes || [],
+              });
+
+              const intelligenceBlock = renderIncidentIntelligence(intelligence);
+              const detail = [
+                '## 🧠 Incident Intelligence',
+                '',
+                '| Champ | Valeur |',
+                '|---|---|',
+                '| Classification | **' + intelligence.classification + '** |',
+                '| Workflow | `' + intelligence.workflow + '` |',
+                '| Run | #' + intelligence.run_number + ' |',
+                '| Commit | `' + intelligence.commit + '` |',
+                '| Failed jobs | ' + intelligence.failed_jobs.length + ' |',
+                '| Signature(s) | ' + (intelligence.signature_matches.length || 0) + ' |',
+                '| Recette candidate | ' + (intelligence.recipe_id ? '`' + intelligence.recipe_id + '`' : 'Aucune') + ' |',
+                '| Action recommandée | **' + intelligence.recommended_action + '** |',
+                '',
+                'Les logs bruts ne sont pas enregistrés dans l’issue.',
+              ].join('\n');
+
               if (existing) {
                 await github.rest.issues.createComment({
                   owner, repo, issue_number: existing.number,
-                  body: 'Nouvel échec détecté sur le même workflow.\n\n' + summary,
+                  body: [
+                    'Nouvel échec détecté sur le même workflow.',
+                    '',
+                    summary,
+                    '',
+                    detail,
+                    '',
+                    intelligenceBlock,
+                  ].join('\n')
                 });
                 core.info('Incident déjà ouvert: #' + existing.number);
                 return;
@@ -81,9 +161,13 @@ jobs:
                 owner, repo, title, body: [
                   '## Incident automatisé',
                   '',
-                  'Un workflow critique a échoué sur main.',
+                  'Un workflow critique a échoué sur `main`.',
                   '',
                   summary,
+                  '',
+                  detail,
+                  '',
+                  intelligenceBlock,
                   '',
                   'Cette issue sera automatiquement fermée lorsqu’un run réussi du même workflow sera détecté.',
                 ].join('\n'),
@@ -94,10 +178,34 @@ jobs:
             }
 
             if (run.conclusion === 'success' && existing) {
+              const resolution = {
+                schema_version: 1,
+                event: 'resolved',
+                workflow: run.name,
+                resolution_run_id: run.id,
+                resolution_run_number: run.run_number,
+                resolution_commit: run.head_sha,
+                resolution_status: 'success',
+              };
+
               await github.rest.issues.createComment({
                 owner, repo, issue_number: existing.number,
-                body: '✅ Le workflow est de nouveau vert. Run: ' + run.html_url,
+                body: [
+                  '✅ Le workflow est de nouveau vert.',
+                  '',
+                  'Run: ' + run.html_url,
+                  '',
+                  '## 🧠 Incident Intelligence — Résolution',
+                  '',
+                  '- Workflow : `' + run.name + '`',
+                  '- Run de résolution : #' + run.run_number,
+                  '- Commit : `' + run.head_sha + '`',
+                  '- Statut : **resolved**',
+                  '',
+                  renderIncidentIntelligence(resolution),
+                ].join('\n'),
               });
+
               await github.rest.issues.update({
                 owner, repo, issue_number: existing.number, state: 'closed',
               });
