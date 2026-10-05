@@ -205,3 +205,50 @@ test('global resilience: business invariant evidence never authorizes repair by 
   assert.equal(diagnosis.status, 'blocked');
   assert.equal(diagnosis.recommendation, 'operator-review');
 });
+
+
+test('global resilience: data integrity evidence never authorizes repair by itself', () => {
+  const run = {
+    id: 940001,
+    name: 'Data Integrity',
+    run_number: 9400,
+    head_branch: 'main',
+    head_sha: 'integrity-signal-sha',
+    conclusion: 'failure',
+  };
+
+  const intelligence = analyzeIncident({
+    run,
+    failedJobs: [{ id: 1, name: 'Duplicate + orphan audit', conclusion: 'failure' }],
+    logTexts: ['ORPHAN-001 product_views.product_id -> products.id'],
+    recipes: [],
+  });
+
+  assert.deepEqual(intelligence.integrity_matches, [{
+    rule_id: 'ORPHAN-001',
+    description: 'A child/reference row points to a missing parent row.',
+  }]);
+  assert.equal(intelligence.classification, 'unclassified-failure');
+  assert.equal(intelligence.recommended_action, 'operator-review');
+
+  const diagnosis = validateDiagnosis({
+    responseText: JSON.stringify({
+      schema_version: 1,
+      classification: 'unclassified-failure',
+      confidence: 0.99,
+      likely_root_cause: 'Orphan reference detected.',
+      recommended_recipe_id: null,
+      recommendation: 'self-healing',
+      evidence: ['ORPHAN-001'],
+      uncertainties: [],
+      run_id: run.id,
+      commit: run.head_sha,
+    }),
+    intelligence,
+    run,
+    recipeIds: [],
+  });
+
+  assert.equal(diagnosis.status, 'blocked');
+  assert.equal(diagnosis.recommendation, 'operator-review');
+});
