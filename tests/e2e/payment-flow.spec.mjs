@@ -85,7 +85,9 @@ async function installSafeBackendMocks(page) {
     const url = new URL(route.request().url());
 
     if (url.pathname.endsWith("/rest/v1/products")) {
-      await route.fulfill(jsonResponse([FAKE_PRODUCT]));
+      // Catalogue: tableau. Fiche produit via .single(): objet JSON.
+      const isSingleProduct = url.searchParams.get("id") === `eq.${FAKE_PRODUCT.id}`;
+      await route.fulfill(jsonResponse(isSingleProduct ? FAKE_PRODUCT : [FAKE_PRODUCT]));
       return;
     }
 
