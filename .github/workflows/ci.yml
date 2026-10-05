@@ -2,6 +2,7 @@
 # Chaque PR vers main (et chaque push sur main) doit builder sans erreur.
 # La CI reste volontairement minimale à ce stade : lint/tests seront ajoutés
 # dans une phase dédiée après validation de cette base.
+# Node 22 est utilisé car les dépendances Supabase actuelles exigent Node >=22.
 
 name: CI
 
@@ -35,7 +36,7 @@ jobs:
       - name: Installation de Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
 
       - name: Installation des dépendances
