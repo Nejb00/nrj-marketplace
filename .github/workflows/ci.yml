@@ -52,6 +52,9 @@ jobs:
       - name: Contrat de détection des migrations
         run: npm run check:migrations
 
+      - name: Contrat d’intégrité des données
+        run: npm run check:integrity
+
       - name: Build de production
         run: npm run build
 
