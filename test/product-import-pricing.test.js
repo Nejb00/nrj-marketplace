@@ -9,7 +9,7 @@ const edge = fs.readFileSync('supabase/functions/price-product-import/index.ts',
 
 test('pricing UI is connected to the protected pricing function', () => {
   assert.match(api, /functions\.invoke\('price-product-import'/);
-  assert.match(feature, /priceProductImport/);
+  assert.match(feature, /processProductImport\(currentImportId,\s*imageDataUrl,\s*pricing/);
   assert.match(feature, /productImportPriceBtn/);
   assert.match(html, /productImportPricing/);
 });
