@@ -34,3 +34,14 @@ test("Vercel Browser E2E runs automatically only for production deployments", ()
     true
   );
 });
+
+
+test("Vercel Browser E2E does not install unused project dependencies", () => {
+  const workflow = fs.readFileSync(WORKFLOW, "utf8");
+  assert.equal(workflow.includes("run: npm ci"), false);
+  assert.equal(workflow.includes("cache: npm"), false);
+  assert.equal(
+    workflow.includes("npm install --no-save --package-lock=false --ignore-scripts @playwright/test@1.63.0"),
+    true
+  );
+});

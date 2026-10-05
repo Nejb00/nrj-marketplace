@@ -50,10 +50,6 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: "22"
-          cache: npm
-
-      - name: Installation des dépendances du projet
-        run: npm ci
 
       - name: Installation de Playwright
         run: npm install --no-save --package-lock=false --ignore-scripts @playwright/test@1.63.0
