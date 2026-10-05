@@ -26,9 +26,7 @@ jobs:
         github.event.deployment_status.state == 'success' &&
         (
           github.event.deployment.environment == 'Production' ||
-          github.event.deployment.environment == 'production' ||
-          github.event.deployment.environment == 'Preview' ||
-          github.event.deployment.environment == 'preview'
+          github.event.deployment.environment == 'production'
         )
       )
     runs-on: ubuntu-latest
