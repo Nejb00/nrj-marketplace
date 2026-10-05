@@ -10,7 +10,8 @@ const edgePaths = [
   'supabase/functions/price-product-import/index.ts',
   'supabase/functions/process-product-import/index.ts',
   'supabase/functions/publish-product-import/index.ts',
-  'supabase/functions/recover-product-imports/index.ts'
+  'supabase/functions/recover-product-imports/index.ts',
+  'supabase/functions/upload-product-import-media/index.ts'
 ];
 
 const edges = Object.fromEntries(
