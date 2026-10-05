@@ -1,0 +1,45 @@
+name: Product Import Auto Recovery
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: product-import-auto-recovery
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    name: Recover staged imports
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Verify worker secret
+        id: secret
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -n "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run recovery worker
+        if: steps.secret.outputs.available == 'true'
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_URL: https://peojyqliwrtghomyukwn.supabase.co
+        run: |
+          set -euo pipefail
+          curl --fail-with-body --silent --show-error             -X POST "$SUPABASE_URL/functions/v1/recover-product-imports"             -H "apikey: $SUPABASE_SERVICE_ROLE_KEY"             -H "Content-Type: application/json"             -d '{}'
+
+      - name: Explain disabled automation
+        if: steps.secret.outputs.available != 'true'
+        run: |
+          echo "SUPABASE_SERVICE_ROLE_KEY is not configured; no background recovery was executed."
