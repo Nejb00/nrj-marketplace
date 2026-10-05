@@ -1,7 +1,5 @@
 # CI — vérification automatique du code
-# Chaque PR vers main (et chaque push sur main) doit builder sans erreur.
-# La CI reste volontairement minimale à ce stade : lint/tests seront ajoutés
-# dans une phase dédiée après validation de cette base.
+# Chaque PR vers main (et chaque push sur main) doit passer les contrôles techniques.
 # Node 22 est utilisé car les dépendances Supabase actuelles exigent Node >=22.
 
 name: CI
@@ -50,6 +48,9 @@ jobs:
 
       - name: Build de production
         run: npm run build
+
+      - name: Smoke test du build servi
+        run: npm run test:smoke
 
       - name: Vérification du livrable
         run: |
