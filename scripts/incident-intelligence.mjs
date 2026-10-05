@@ -39,7 +39,8 @@ const INTEGRITY_RULES = {
   'ORPHAN-001': 'A child/reference row points to a missing parent row.',
 };
 
-const BUSINESS_RULE_PATTERN = /\b(?:CART|ORDER|IMPORT|PAYMENT)-\d{3}\b/g;\nconst INTEGRITY_RULE_PATTERN = /\b(?:DUP|ORPHAN)-\d{3}\b/g;
+const BUSINESS_RULE_PATTERN = /\b(?:CART|ORDER|IMPORT|PAYMENT)-\d{3}\b/g;
+const INTEGRITY_RULE_PATTERN = /\b(?:DUP|ORPHAN)-\d{3}\b/g;
 
 export function extractBusinessInvariantMatches(logTexts = []) {
   const found = new Set();
