@@ -269,6 +269,6 @@ Deno.serve(async (req) => {
     } catch {
       // keep primary error
     }
-    return json({ ok: false, error: "media_failed", detail: message }, 500);
+    return json({ ok: false, error: "media_failed" }, 500);
   }
 });
