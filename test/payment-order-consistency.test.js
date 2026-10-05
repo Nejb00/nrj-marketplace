@@ -14,6 +14,10 @@ const stateMachineMigration = fs.readFileSync(
   'supabase/migrations/20261005161000_enforce_payment_order_state_machine.sql',
   'utf8',
 );
+const auditMigration = fs.readFileSync(
+  'supabase/migrations/20261005165000_payment_audit_observability.sql',
+  'utf8',
+);
 
 test('payment persistence synchronizes provider reference to its order', () => {
   assert.match(migration, /CREATE OR REPLACE FUNCTION public\.sync_order_payment_reference\(\)/);
@@ -102,5 +106,66 @@ test('ATTAQUE #20 protects the refund milestone as well', () => {
   assert.match(
     stateMachineMigration,
     /UPDATE public\.orders[\s\S]+status = 'refunded'/,
+  );
+});
+
+
+test('ATTAQUE #21 provides an append-only payment status audit trail', () => {
+  assert.match(
+    auditMigration,
+    /CREATE TABLE IF NOT EXISTS public\.payment_status_history/,
+  );
+  assert.match(
+    auditMigration,
+    /payment_id uuid NOT NULL REFERENCES public\.payments/,
+  );
+  assert.match(
+    auditMigration,
+    /from_status text/,
+  );
+  assert.match(
+    auditMigration,
+    /to_status text NOT NULL/,
+  );
+  assert.match(
+    auditMigration,
+    /provider_event_id text/,
+  );
+  assert.match(
+    auditMigration,
+    /changed_at timestamptz NOT NULL DEFAULT now\(\)/,
+  );
+  assert.match(
+    auditMigration,
+    /CREATE TRIGGER trigger_audit_payment_status_change[\s\S]+AFTER INSERT OR UPDATE OF status, provider_reference ON public\.payments/,
+  );
+  assert.match(
+    auditMigration,
+    /REVOKE EXECUTE[\s\S]+FROM PUBLIC, anon, authenticated/,
+  );
+  assert.match(
+    auditMigration,
+    /ALTER TABLE public\.payment_status_history ENABLE ROW LEVEL SECURITY/,
+  );
+});
+
+test('ATTAQUE #21 supports explicit audit context for provider callbacks', () => {
+  assert.match(
+    auditMigration,
+    /set_config\(
+    'app\.payment_audit_source'/,
+  );
+  assert.match(
+    auditMigration,
+    /set_config\(
+    'app\.payment_provider_event_id'/,
+  );
+  assert.match(
+    auditMigration,
+    /CREATE OR REPLACE FUNCTION public\.set_payment_status_with_audit/,
+  );
+  assert.match(
+    auditMigration,
+    /GRANT EXECUTE[\s\S]+TO service_role/,
   );
 });
