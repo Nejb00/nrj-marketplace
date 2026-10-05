@@ -102,6 +102,37 @@ export class PaymentService {
         };
     }
 
+    async reconcilePayment({
+        orderId,
+        paymentId,
+        providerReference
+    } = {}) {
+        if (!orderId || !paymentId || !providerReference) {
+            throw new TypeError('orderId, paymentId and providerReference are required');
+        }
+
+        const reconcile = this.provider.reconcilePayment;
+        if (typeof reconcile !== 'function') {
+            throw new Error('Payment provider does not support reconciliation');
+        }
+
+        const result = await reconcile.call(this.provider, {
+            orderId: String(orderId),
+            paymentId: String(paymentId),
+            providerReference: String(providerReference)
+        });
+        const status = normalizeStatus(result?.status);
+
+        return {
+            orderId: String(orderId),
+            provider: this.provider.name,
+            providerReference: result?.providerReference || String(providerReference),
+            status,
+            final: PAYMENT_FINAL_STATUSES.has(status),
+            raw: result?.raw ?? result ?? null
+        };
+    }
+
     async refundPayment(paymentReference, amount = null, metadata = {}) {
         if (!paymentReference || typeof paymentReference !== 'string') {
             throw new TypeError('paymentReference is required');
