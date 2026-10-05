@@ -1,6 +1,6 @@
 // ═══ Admin — import produit intelligent (PR #2) ═══
 import { showToast } from '../../utils/dom-helpers.js';
-import { analyzeProductImport, classifyProductImport, fetchProductImports, insertProductImport, priceProductImport, uploadProductImportMedia, deleteProductImport } from '../../api/api.js';
+import { analyzeProductImport, classifyProductImport, fetchProductImports, insertProductImport, priceProductImport, uploadProductImportMedia, publishProductImport, deleteProductImport } from '../../api/api.js';
 
 const STATUS_LABELS = {
   RECEIVED: 'Reçu',
@@ -386,8 +386,10 @@ function renderImports(rows) {
             (price ? '<span>' + escapeHtml(price) + '</span>' : '') +
             '<span>' + escapeHtml(formatDate(row.created_at)) + '</span>' +
           '</div>' +
-        '</div>' +
-        '<button type="button" class="product-import-delete" data-import-id="' + escapeHtml(row.id) + '" aria-label="Supprimer cet import">🗑️</button>' +
+        '<div class="product-import-row-actions">' +
+          ((row.status === 'MEDIA_READY' || row.status === 'READY') ? '<button type="button" class="product-import-publish" data-publish-import-id="' + escapeHtml(row.id) + '">Publier</button>' : '') +
+          '<button type="button" class="product-import-delete" data-import-id="' + escapeHtml(row.id) + '" aria-label="Supprimer cet import">🗑️</button>' +
+          '</div>' +
       '</article>'
     );
   }).join('');
@@ -466,6 +468,19 @@ async function prepareProductImport() {
   }
 }
 
+async function handlePublishImport(id) {
+  if (!id) return;
+  try {
+    const result = await publishProductImport(id, true);
+    showToast(result.mode === 'AUTO' ? '🚀 Produit publié automatiquement' : '✅ Produit publié');
+    setStatus('Produit publié dans le catalogue (#' + result.productId + ').', 'success');
+    await refreshProductImports();
+  } catch (err) {
+    setStatus(err?.message || 'Publication impossible.', 'error');
+    showToast('❌ Publication impossible');
+  }
+}
+
 async function handleDeleteImport(id) {
   if (!id) return;
   try {
@@ -514,6 +529,11 @@ export function initProductImportUI() {
   byId('productImportMediaBtn')?.addEventListener('click', uploadImportMedia);
 
   list?.addEventListener('click', event => {
+    const publishButton = event.target.closest('[data-publish-import-id]');
+    if (publishButton) {
+      handlePublishImport(publishButton.dataset.publishImportId);
+      return;
+    }
     const button = event.target.closest('[data-import-id]');
     if (button) handleDeleteImport(button.dataset.importId);
   });
