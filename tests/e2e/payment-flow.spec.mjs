@@ -187,6 +187,17 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
 
     await expect(page.locator("#productModal")).toHaveClass(/\bopen\b/);
     await page.locator("#addToCartStickyBtn").click();
+
+    // addToCart() persists asynchronously; wait for the browser's durable state
+    // before closing the product modal, otherwise the E2E can race the save.
+    await expect.poll(
+      async () => page.evaluate(() => {
+        const cart = JSON.parse(localStorage.getItem("nrj_cart_v32") || "[]");
+        return cart.length;
+      }),
+      { timeout: 10_000 }
+    ).toBe(1);
+
     await page.locator("#modalCloseBtn").click();
 
     await page.locator('a[data-nav="cart"]').click();
