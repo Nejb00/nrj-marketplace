@@ -160,13 +160,14 @@ jobs:
             }
             const recipes = JSON.parse(Buffer.from(recipesFile.content, recipesFile.encoding || 'base64').toString('utf8'));
             const recipe = (recipes.recipes || []).find((candidate) => {
+              const enabledOk = candidate.enabled !== false;
               const ageOk = Date.now() - new Date(run.updated_at).getTime() <=
                 (Number(candidate.max_age_hours || 24) * 60 * 60 * 1000);
               const workflowOk = candidate.workflow === run.name;
               const signatureOk = (candidate.signatures || []).some((signature) =>
                 logTexts.some((log) => log.includes(signature))
               );
-              return ageOk && workflowOk && signatureOk;
+              return enabledOk && ageOk && workflowOk && signatureOk;
             });
 
             if (!recipe) {
