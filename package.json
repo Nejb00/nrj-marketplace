@@ -12,7 +12,8 @@
     "test:smoke": "node scripts/smoke-test.mjs",
     "sync": "node scripts/drive-sync.mjs",
     "check:business": "node --test test/business-invariants.test.js",
-    "check:migrations": "node --test test/migration-drift.test.js"
+    "check:migrations": "node --test test/migration-drift.test.js",
+    "check:integrity": "node --test test/data-integrity.test.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.32.0",
