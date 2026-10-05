@@ -23,6 +23,20 @@ jobs:
     name: Payment E2E (safe simulation)
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: nrj_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d nrj_e2e"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
     env:
       VITE_PAYMENT_E2E_MODE: "true"
     steps:
@@ -37,6 +51,25 @@ jobs:
       - name: Installation des dépendances
         run: npm install --no-save --package-lock=false --ignore-scripts
 
+      - name: Installation du client PostgreSQL
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Validation SQL PostgreSQL transactionnelle
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          PGDATABASE: nrj_e2e
+        run: |
+          set -euo pipefail
+          psql -v ON_ERROR_STOP=1 -f test/payment-e2e-base-schema.sql
+          for migration in             supabase/migrations/20261005100000_create_payment_persistence.sql             supabase/migrations/20261005134207_harden_payment_order_consistency.sql             supabase/migrations/20261005140232_harden_payment_reconciliation.sql             supabase/migrations/20261005153000_apply_payment_provider_event.sql             supabase/migrations/20261005161000_enforce_payment_order_state_machine.sql             supabase/migrations/20261005165000_payment_audit_observability.sql             supabase/migrations/20261005171000_harden_checkout_idempotency.sql
+          do
+            echo "Applying $migration"
+            psql -v ON_ERROR_STOP=1 -f "$migration"
+          done
+          psql -v ON_ERROR_STOP=1 -f test/payment-e2e.sql
       - name: Installation de Playwright
         run: npm install --no-save --package-lock=false --ignore-scripts @playwright/test@1.63.0
 
