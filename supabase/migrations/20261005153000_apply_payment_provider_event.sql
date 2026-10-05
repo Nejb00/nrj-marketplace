@@ -59,7 +59,7 @@ BEGIN
     nullif(trim(p_event_type), ''),
     coalesce(p_payload, '{}'::jsonb)
   )
-  ON CONFLICT (provider, provider_event_id) DO NOTHING
+  ON CONFLICT (provider, provider_event_id) WHERE provider_event_id IS NOT NULL DO NOTHING
   RETURNING id INTO v_event_id;
 
   IF v_event_id IS NULL THEN
