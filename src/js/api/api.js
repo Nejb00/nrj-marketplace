@@ -450,6 +450,29 @@ export async function uploadProductImportMedia(importId, imageDataUrl) {
     }
 }
 
+export async function processProductImport(importId, imageDataUrl = null, pricing = null, approve = false) {
+    try {
+        const { data, error } = await fetchWithTimeout(
+            supabaseClient.functions.invoke('process-product-import', {
+                body: {
+                    importId,
+                    imageDataUrl,
+                    pricing,
+                    approve,
+                    publish: true
+                }
+            }),
+            120000
+        );
+        if (error) throw error;
+        if (!data?.ok) throw new Error(data?.detail || data?.error || 'Pipeline import impossible');
+        return data;
+    } catch (err) {
+        console.error('Erreur process product import:', err);
+        throw err;
+    }
+}
+
 export async function publishProductImport(importId, approve = false) {
     try {
         const { data, error } = await fetchWithTimeout(
