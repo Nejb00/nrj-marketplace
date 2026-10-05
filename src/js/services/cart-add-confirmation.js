@@ -126,15 +126,8 @@ function initEvents() {
             return;
         }
 
-        const favoriteButton = event.target.closest('[data-action="toggle-favorite"]');
-        if (favoriteButton) {
-            event.stopPropagation();
-            return;
-        }
-
-        const editButton = event.target.closest('[data-action="edit-product"]');
-        if (editButton) {
-            event.stopPropagation();
+        if (event.target.closest('[data-action="toggle-favorite"]') ||
+            event.target.closest('[data-action="edit-product"]')) {
             return;
         }
 
