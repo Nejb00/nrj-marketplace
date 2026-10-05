@@ -83,3 +83,26 @@ A migration drift is an evidence signal, not a self-healing authorization. In pa
 The duplicate audit checks integrity keys that the current schema declares unique or where the payment lifecycle requires a single live payment per order. The orphan audit checks both enforced relational links and important logical references that are not protected by a foreign key, notably `product_views.product_id → products.id`.
 
 Integrity evidence is diagnostic only. It does not authorize self-healing or data deletion. Pull-request audits may report existing production findings without blocking the PR; failures on `main`/scheduled audits are eligible for Incident Guard.
+
+
+## NRJ Self-Healing OS — nouvelle matrice de gouvernance
+
+| Axe | Contrôle | Nature |
+|---|---|---|
+| C3 | Cohérence paiement/commande, import/produit/catégorie, événements | Déterministe / lecture seule |
+| C4 | Valeurs impossibles et chronologies incohérentes | Déterministe / lecture seule |
+| D | Audit sécurité statique + CodeQL + règles Supabase existantes | Déterministe / revue requise selon le signal |
+| E | Classification des fichiers modifiés → périmètre de tests | Déterministe |
+| F | Garde-fou de réparation : fraîcheur, répétition, cible sensible, taille | Bloquant |
+| G | Budget de rollback + corrélation + âge de l’incident | Bloquant |
+| H | Santé globale limitée à `main`, incidents et runs en attente | Observabilité |
+| I | État PR : divergence, checks, taille, mergeabilité | Intelligence Git/PR |
+| J | Gate de promotion : déploiement, smoke, navigateur, incidents | Bloquant |
+| K | Historique de récurrence par signature métier | Mémoire |
+| L | Corrélation Git ↔ Supabase ↔ Vercel | Analyse transverse |
+
+### Règle de sûreté commune
+
+Les nouveaux signaux de données, sécurité, paiement et corrélation sont des **preuves diagnostiques**. Aucun de ces signaux ne donne à lui seul le droit de modifier des données métier, de supprimer une ligne, d’appliquer une migration ou de fusionner une PR.
+
+Le workflow `NRJ Governance Audit` exécute les contrats déterministes indépendamment du temps de réponse de la CI principale. Les sondes nécessitant une connexion privée restent explicitement conditionnelles si leurs secrets ne sont pas configurés.
