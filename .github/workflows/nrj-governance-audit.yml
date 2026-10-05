@@ -57,6 +57,9 @@ jobs:
       - name: Audit paiement
         run: npm run check:payments
 
+      - name: Matrice attaques paiement
+        run: npm run check:payment-attacks
+
       - name: Test suite complète
         run: npm test
 
