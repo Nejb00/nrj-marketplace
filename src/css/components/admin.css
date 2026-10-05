@@ -677,3 +677,17 @@
   font-size: 0.64rem;
   line-height: 1.4;
 }
+
+
+/* ═══ PR #9 — self-healing import recovery ═══ */
+.product-import-retry {
+  padding: 0.38rem 0.58rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.64rem;
+  font-weight: 900;
+  cursor: pointer;
+}
