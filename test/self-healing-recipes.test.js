@@ -14,8 +14,17 @@ function countOccurrences(source, needle) {
   return needle === '' ? 0 : source.split(needle).length - 1;
 }
 
-const forbiddenPath = /(^|\\/)(?:\\.env|secrets|credentials|id_rsa)(?:\\.|\\/|$)/i;
-const forbiddenExtension = /\\.(?:pem|key|p12|pfx)$/i;
+function isForbiddenRecipePath(value) {
+  const normalized = value.replaceAll('\\\\', '/').toLowerCase();
+  const segments = normalized.split('/');
+  const basename = segments.at(-1) || '';
+  const forbiddenSegments = new Set(['.env', 'secrets', 'credentials', 'id_rsa']);
+  const forbiddenExtensions = ['.pem', '.key', '.p12', '.pfx'];
+
+  return segments.some(
+    (segment) => forbiddenSegments.has(segment) || segment.startsWith('.env.')
+  ) || forbiddenExtensions.some((extension) => basename.endsWith(extension));
+}
 
 test('catalogue self-healing: structure minimale valide', () => {
   const catalog = loadCatalog();
@@ -37,8 +46,7 @@ test('catalogue self-healing: structure minimale valide', () => {
     assert.ok(Number(recipe.max_age_hours) > 0);
 
     assert.notEqual(recipe.find, recipe.replace);
-    assert.equal(forbiddenPath.test(recipe.path), false);
-    assert.equal(forbiddenExtension.test(recipe.path), false);
+    assert.equal(isForbiddenRecipePath(recipe.path), false);
     assert.notEqual(recipe.path, '.github/workflows/self-healing.yml');
     assert.notEqual(recipe.path, '.github/self-healing-recipes.json');
   }
