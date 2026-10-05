@@ -75,3 +75,11 @@ A business rule signal alone never selects a self-healing recipe. Automatic repa
 The detector is intentionally read-only: it never applies, repairs, reorders, or deletes migrations. Supabase itself compares local migration files with remote history by migration timestamp. The remote probe uses the Supabase Management API only when the repository has both `SUPABASE_ACCESS_TOKEN` and `SUPABASE_PROJECT_REF` configured. Without those credentials, the workflow remains installed but explicitly reports that the remote audit is not enabled.
 
 A migration drift is an evidence signal, not a self-healing authorization. In particular, a remote-only migration means the database has applied schema history that is not represented in the repository and must be reconciled deliberately before any automated repair is considered.
+
+
+### Data Integrity OS
+`PR/push/schedule → Data Integrity → duplicate + orphan snapshot → machine-readable integrity report → Incident Guard (main failures)`
+
+The duplicate audit checks integrity keys that the current schema declares unique or where the payment lifecycle requires a single live payment per order. The orphan audit checks both enforced relational links and important logical references that are not protected by a foreign key, notably `product_views.product_id → products.id`.
+
+Integrity evidence is diagnostic only. It does not authorize self-healing or data deletion. Pull-request audits may report existing production findings without blocking the PR; failures on `main`/scheduled audits are eligible for Incident Guard.
