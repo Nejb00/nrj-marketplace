@@ -82,6 +82,54 @@ async function readImport(importId) {
   return rows?.[0] || null;
 }
 
+async function updatePipeline(importId, patch) {
+  try {
+    const row = await readImport(importId);
+    const ai = row?.ai_analysis && typeof row.ai_analysis === "object" ? row.ai_analysis : {};
+    const pipeline = ai.pipeline && typeof ai.pipeline === "object" ? ai.pipeline : {};
+    await rest("product_imports?id=eq." + encodeURIComponent(importId), {
+      method: "PATCH",
+      headers: { Prefer: "return=minimal" },
+      body: JSON.stringify({
+        ai_analysis: {
+          ...ai,
+          pipeline: { ...pipeline, ...patch, updated_at: new Date().toISOString() }
+        }
+      })
+    });
+  } catch {
+    // Telemetry is best-effort and must never break the import pipeline.
+  }
+}
+
+async function executeStage(importId, stage, token, body, label) {
+  await updatePipeline(importId, {
+    current_stage: label,
+    stage_started_at: new Date().toISOString(),
+    last_error: null
+  });
+  try {
+    const result = await callStage(stage, token, body);
+    await updatePipeline(importId, {
+      current_stage: null,
+      last_stage: label,
+      last_attempts: result.attempts,
+      last_success_at: new Date().toISOString(),
+      last_error: null
+    });
+    return result;
+  } catch (error) {
+    await updatePipeline(importId, {
+      current_stage: label,
+      last_stage: label,
+      last_attempts: MAX_STAGE_RETRIES,
+      last_error: String(error?.message || error).slice(0, 500),
+      failed_at: new Date().toISOString()
+    });
+    throw error;
+  }
+}
+
 async function callStage(stage, token, body) {
   let lastError = null;
 
@@ -215,13 +263,13 @@ Deno.serve(async (req) => {
       if (!imageDataUrl) {
         return json({ ok: false, error: "image_requise_pour_analyse", status: row.status }, 409);
       }
-      const stage = await callStage("analyze-product-import", token, {
+      const stage = await executeStage(importId, "analyze-product-import", token, {
         importId,
         imageDataUrl,
         rawText: typeof body?.rawText === "string" && body.rawText.trim()
           ? body.rawText.slice(0, 12000)
           : String(row.raw_text || "").slice(0, 12000)
-      });
+      }, "analysis");
       steps.push({ stage: "ANALYZING", attempts: stage.attempts });
       row = await readImport(importId);
     }
@@ -236,7 +284,7 @@ Deno.serve(async (req) => {
       || shouldRetryClassification(row);
 
     if (classificationNeeded) {
-      const stage = await callStage("classify-product-import", token, { importId });
+      const stage = await executeStage(importId, "classify-product-import", token, { importId }, "classification");
       steps.push({ stage: "CLASSIFIED", attempts: stage.attempts });
       row = await readImport(importId);
     }
@@ -254,7 +302,9 @@ Deno.serve(async (req) => {
 
     // C) Pricing : cette étape reste pilotée par les paramètres commerciaux admin.
     if (row?.status === "FAILED" && String(row.error_code || "").startsWith("pricing")) {
-      if (!pricing) {
+      const savedPricing = row.ai_analysis?.pipeline?.last_pricing || null;
+      const retryPricing = pricing || savedPricing;
+      if (!retryPricing) {
         return json({
           ok: true,
           importId,
@@ -263,7 +313,11 @@ Deno.serve(async (req) => {
           steps
         });
       }
-      const stage = await callStage("price-product-import", token, { importId, pricing });
+      await updatePipeline(importId, {
+        last_pricing: retryPricing,
+        retry_count: Number(row.ai_analysis?.pipeline?.retry_count || 0) + 1
+      });
+      const stage = await executeStage(importId, "price-product-import", token, { importId, pricing: retryPricing }, "pricing");
       steps.push({ stage: "PRICED", attempts: stage.attempts, retry: true });
       row = await readImport(importId);
     }
@@ -279,10 +333,14 @@ Deno.serve(async (req) => {
         });
       }
 
-      const stage = await callStage("price-product-import", token, {
+      await updatePipeline(importId, {
+        last_pricing: pricing,
+        retry_count: Number(row.ai_analysis?.pipeline?.retry_count || 0)
+      });
+      const stage = await executeStage(importId, "price-product-import", token, {
         importId,
         pricing
-      });
+      }, "pricing");
       steps.push({ stage: "PRICED", attempts: stage.attempts });
       row = await readImport(importId);
     }
@@ -299,10 +357,10 @@ Deno.serve(async (req) => {
         });
       }
 
-      const stage = await callStage("upload-product-import-media", token, {
+      const stage = await executeStage(importId, "upload-product-import-media", token, {
         importId,
         imageDataUrl
-      });
+      }, "media");
       steps.push({ stage: "MEDIA_READY", attempts: stage.attempts });
       row = await readImport(importId);
     }
@@ -340,19 +398,19 @@ Deno.serve(async (req) => {
         });
       }
 
-      const stage = await callStage("publish-product-import", token, {
+      const stage = await executeStage(importId, "publish-product-import", token, {
         importId,
         approve
-      });
+      }, "publish");
       steps.push({ stage: "PUBLISHED", attempts: stage.attempts, mode: stage.data?.mode || null });
       row = await readImport(importId);
     }
 
     if (row?.status === "READY") {
-      const stage = await callStage("publish-product-import", token, {
+      const stage = await executeStage(importId, "publish-product-import", token, {
         importId,
         approve: true
-      });
+      }, "publish");
       steps.push({ stage: "PUBLISHED", attempts: stage.attempts, mode: stage.data?.mode || "HUMAN_APPROVED" });
       row = await readImport(importId);
     }
