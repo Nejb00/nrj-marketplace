@@ -559,7 +559,6 @@ export async function startMobileMoneyPayment() {
         } else {
             showToast('❌ Paiement indisponible pour le moment');
         }
-    }
     } finally {
         paymentStartInFlight = false;
     }
