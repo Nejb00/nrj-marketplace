@@ -49,6 +49,9 @@ jobs:
       - name: Contrats métier déterministes
         run: npm run check:business
 
+      - name: Contrat de détection des migrations
+        run: npm run check:migrations
+
       - name: Build de production
         run: npm run build
 
