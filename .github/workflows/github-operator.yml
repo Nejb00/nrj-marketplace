@@ -1,0 +1,351 @@
+name: GitHub Operator
+
+on:
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      command:
+        description: 'Commande opérateur'
+        required: true
+        default: status
+        type: choice
+        options:
+          - status
+          - diagnose
+          - prs
+          - help
+
+permissions:
+  contents: read
+  actions: read
+  deployments: read
+  pull-requests: read
+  issues: write
+
+concurrency:
+  group: github-operator
+  cancel-in-progress: true
+
+jobs:
+  operator:
+    name: GitHub Operator
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event_name == 'issue_comment' &&
+        startsWith(github.event.comment.body, '/operator')
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Run operator
+        env:
+          MANUAL_COMMAND: ${{ inputs.command || '' }}
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+
+            const allowedAssociations = new Set([
+              'OWNER',
+              'MEMBER',
+              'COLLABORATOR',
+            ]);
+
+            if (context.eventName === 'issue_comment') {
+              const association = context.payload.comment?.author_association;
+              if (!allowedAssociations.has(association)) {
+                core.setFailed(
+                  `Commande refusée : association GitHub non autorisée (${association || 'unknown'}).`
+                );
+                return;
+              }
+            }
+
+            const rawCommand =
+              context.eventName === 'workflow_dispatch'
+                ? process.env.MANUAL_COMMAND
+                : context.payload.comment?.body || '';
+
+            const command = rawCommand
+              .trim()
+              .split(/\\s+/)[1]?.toLowerCase() || 'help';
+
+            const validCommands = new Set([
+              'status',
+              'diagnose',
+              'prs',
+              'help',
+            ]);
+
+            if (!validCommands.has(command)) {
+              core.setFailed(
+                `Commande inconnue : /${command}. Utilisez /operator help.`
+              );
+              return;
+            }
+
+            const shortSha = (sha) => sha ? \`\${sha.slice(0, 12)}\` : '—';
+            const relativeTime = (value) => {
+              if (!value) return '—';
+              const unix = Math.floor(new Date(value).getTime() / 1000);
+              return \`<t:\${unix}:R>\`;
+            };
+
+            const branch = await github.rest.repos.getBranch({
+              owner,
+              repo,
+              branch: 'main',
+            });
+
+            const workflows = await github.paginate(
+              github.rest.actions.listRepoWorkflows,
+              { owner, repo, per_page: 100 }
+            );
+
+            const activeWorkflows = workflows
+              .filter((workflow) => workflow.state === 'active')
+              .sort((a, b) => a.name.localeCompare(b.name));
+
+            const workflowRows = await Promise.all(
+              activeWorkflows.map(async (workflow) => {
+                const runs = await github.rest.actions.listWorkflowRuns({
+                  owner,
+                  repo,
+                  workflow_id: workflow.id,
+                  per_page: 1,
+                });
+
+                const run = runs.data.workflow_runs[0];
+                return {
+                  name: workflow.name,
+                  status: run?.status || 'never',
+                  conclusion: run?.conclusion || 'never',
+                  updatedAt: run?.updated_at || null,
+                  url: run?.html_url || null,
+                };
+              })
+            );
+
+            const deployments = await github.rest.repos.listDeployments({
+              owner,
+              repo,
+              environment: 'Production',
+              per_page: 1,
+            });
+
+            let production = null;
+            if (deployments.data[0]) {
+              const deployment = deployments.data[0];
+              const statuses = await github.rest.repos.listDeploymentStatuses({
+                owner,
+                repo,
+                deployment_id: deployment.id,
+                per_page: 1,
+              });
+              production = {
+                deployment,
+                status: statuses.data[0] || null,
+              };
+            }
+
+            const incidents = await github.paginate(
+              github.rest.issues.listForRepo,
+              {
+                owner,
+                repo,
+                state: 'open',
+                labels: 'incident',
+                per_page: 100,
+              }
+            );
+
+            const openPrs = await github.paginate(
+              github.rest.pulls.list,
+              {
+                owner,
+                repo,
+                state: 'open',
+                base: 'main',
+                sort: 'updated',
+                direction: 'desc',
+                per_page: 100,
+              }
+            );
+
+            const releases = await github.rest.repos.listReleases({
+              owner,
+              repo,
+              per_page: 5,
+            });
+
+            const latestRelease = releases.data[0] || null;
+
+            const failedRuns = workflowRows
+              .filter((item) =>
+                ['failure', 'timed_out', 'action_required'].includes(item.conclusion)
+              )
+              .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
+
+            const cancelledRuns = workflowRows
+              .filter((item) => item.conclusion === 'cancelled')
+              .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
+
+            const operatorLines = [];
+
+            operatorLines.push('<!-- nrj-github-operator -->');
+            operatorLines.push('## 🤖 GitHub Operator');
+            operatorLines.push('');
+            operatorLines.push(\`Commande exécutée : **\\/operator \${command}**\`);
+            operatorLines.push(\`Main : **\${shortSha(branch.data.commit.sha)}**\`);
+            operatorLines.push('');
+
+            if (command === 'help') {
+              operatorLines.push('### Commandes disponibles');
+              operatorLines.push('');
+              operatorLines.push('- \`/operator status\` — état général du dépôt');
+              operatorLines.push('- \`/operator diagnose\` — anomalies récentes CI/déploiement');
+              operatorLines.push('- \`/operator prs\` — PRs récemment actives vers main');
+              operatorLines.push('- \`/operator help\` — cette aide');
+              operatorLines.push('');
+              operatorLines.push('> 🔒 Version 1 : lecture et diagnostic uniquement. Aucune commande opérateur ne modifie le code ou ne fusionne une PR.');
+            }
+
+            if (command === 'status') {
+              const productionState =
+                production?.status?.state ||
+                production?.deployment?.state ||
+                'unknown';
+
+              const e2e = workflowRows.find(
+                (item) => item.name === 'Vercel Browser E2E'
+              );
+
+              operatorLines.push('### 🏰 État général');
+              operatorLines.push('');
+              operatorLines.push('| Élément | État |');
+              operatorLines.push('|---|---|');
+              operatorLines.push(\`| Main | ✅ \${shortSha(branch.data.commit.sha)} |\`);
+              operatorLines.push(\`| Production | \${productionState === 'success' ? '✅' : productionState === 'error' || productionState === 'failure' ? '❌' : '🟡'} \${productionState} |\`);
+              operatorLines.push(\`| E2E Vercel | \${e2e?.conclusion === 'success' ? '✅' : e2e?.conclusion === 'failure' ? '❌' : '🟡'} \${e2e?.conclusion || 'never'} |\`);
+              operatorLines.push(\`| Incidents | \${incidents.length ? '🚨' : '✅'} \${incidents.length} ouvert(s) |\`);
+              operatorLines.push(\`| PRs vers main | 🟡 \${openPrs.length} ouverte(s) |\`);
+              operatorLines.push(\`| Release | 🚀 \${latestRelease?.tag_name || 'aucune'} |\`);
+              operatorLines.push('');
+
+              operatorLines.push('### 🤖 Automations');
+              operatorLines.push('');
+              operatorLines.push(\`Workflows actifs : **\${activeWorkflows.length}**\`);
+              operatorLines.push('');
+              operatorLines.push('| Workflow | Dernier run | Mis à jour |');
+              operatorLines.push('|---|---|---|');
+              for (const item of workflowRows) {
+                const icon =
+                  item.conclusion === 'success' ? '✅' :
+                  ['failure', 'timed_out', 'action_required'].includes(item.conclusion) ? '❌' :
+                  item.conclusion === 'cancelled' ? '⏹️' : '🟡';
+                const run = item.url
+                  ? \`[\${icon} \${item.conclusion}](\${item.url})\`
+                  : \`\${icon} \${item.conclusion}\`;
+                operatorLines.push(\`| \${item.name} | \${run} | \${relativeTime(item.updatedAt)} |\`);
+              }
+            }
+
+            if (command === 'diagnose') {
+              operatorLines.push('### 🚨 Diagnostic');
+              operatorLines.push('');
+
+              if (failedRuns.length === 0 && incidents.length === 0) {
+                operatorLines.push('✅ Aucune anomalie évidente détectée dans les données GitHub consultées.');
+              } else {
+                if (failedRuns.length) {
+                  operatorLines.push('**Runs en échec :**');
+                  for (const item of failedRuns) {
+                    const link = item.url ? \`[\${item.name}](\${item.url})\` : item.name;
+                    operatorLines.push(\`- ❌ \${link} — \${item.conclusion}, \${relativeTime(item.updatedAt)}\`);
+                  }
+                  operatorLines.push('');
+                }
+
+                if (cancelledRuns.length) {
+                  operatorLines.push('**Runs annulés :**');
+                  for (const item of cancelledRuns) {
+                    const link = item.url ? \`[\${item.name}](\${item.url})\` : item.name;
+                    operatorLines.push(\`- ⏹️ \${link} — \${relativeTime(item.updatedAt)}\`);
+                  }
+                  operatorLines.push('');
+                }
+
+                if (incidents.length) {
+                  operatorLines.push('**Incidents ouverts :**');
+                  for (const issue of incidents) {
+                    operatorLines.push(\`- 🚨 [#\${issue.number} — \${issue.title}](\${issue.html_url})\`);
+                  }
+                  operatorLines.push('');
+                }
+
+                const productionState = production?.status?.state || production?.deployment?.state;
+                if (productionState && !['success', 'inactive'].includes(productionState)) {
+                  operatorLines.push(\`**Production :** ⚠️ état **\${productionState}** sur le dernier déploiement.\`);
+                  operatorLines.push('');
+                }
+              }
+
+              operatorLines.push('> L’opérateur diagnostique seulement. La correction doit passer par une branche + PR.');
+            }
+
+            if (command === 'prs') {
+              const recentCutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+              const recentPrs = openPrs.filter(
+                (pr) => new Date(pr.updated_at).getTime() >= recentCutoff
+              );
+
+              operatorLines.push('### 🔀 PRs récemment actives vers main');
+              operatorLines.push('');
+              if (!recentPrs.length) {
+                operatorLines.push('✅ Aucune PR active ou mise à jour dans les 30 derniers jours.');
+              } else {
+                for (const pr of recentPrs.slice(0, 10)) {
+                  const draft = pr.draft ? '📝' : '🔎';
+                  operatorLines.push(
+                    \`- \${draft} [#\${pr.number} — \${pr.title}](\${pr.html_url}) — \${relativeTime(pr.updated_at)}\`
+                  );
+                }
+              }
+
+              const olderCount = openPrs.length - recentPrs.length;
+              if (olderCount > 0) {
+                operatorLines.push('');
+                operatorLines.push(\`> \${olderCount} PR(s) ouverte(s) n’ont pas été détaillées car elles sont inactives depuis plus de 30 jours.\`);
+              }
+            }
+
+            operatorLines.push('');
+            operatorLines.push('---');
+            operatorLines.push('🔒 **Garde-fou V1 :** aucune écriture sur le dépôt, aucune exécution de code fourni par un commentaire, aucun merge.');
+
+            const response = operatorLines.join('\\n');
+
+            core.summary
+              .addHeading('GitHub Operator')
+              .addTable([
+                ['Command', command],
+                ['Main', shortSha(branch.data.commit.sha)],
+                ['Production', production?.status?.state || production?.deployment?.state || 'unknown'],
+                ['Open incidents', String(incidents.length)],
+                ['Open PRs', String(openPrs.length)],
+              ])
+              .addRaw(response)
+              .write();
+
+            if (context.eventName === 'issue_comment') {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: context.payload.issue.number,
+                body: response,
+              });
+              core.info(\`Réponse opérateur publiée dans #\${context.payload.issue.number}.\`);
+            }
