@@ -132,7 +132,7 @@ Deno.serve(async (req) => {
           importId: row.id,
           before: row.status,
           ok: false,
-          error: String(error?.message || error).slice(0, 400)
+          error: "recovery_failed"
         });
       }
     }
