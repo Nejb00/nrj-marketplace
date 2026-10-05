@@ -166,7 +166,7 @@ async function watchPayment(paymentService, providerReference) {
                 document.getElementById('orderModalOverlay')?.classList.remove('open');
                 setPaymentBusy(false);
                 showToast('✅ Paiement confirmé — commande enregistrée');
-                return;
+                return false;
             }
 
             if (result.status === 'failed' || result.status === 'cancelled') {
@@ -175,7 +175,7 @@ async function watchPayment(paymentService, providerReference) {
                     ? '❌ Le paiement a échoué. Vous pouvez réessayer.'
                     : '⚠️ Le paiement a été annulé.'
                 );
-                return;
+                return false;
             }
 
             if (statusElement) {
@@ -188,7 +188,10 @@ async function watchPayment(paymentService, providerReference) {
             if (attempts >= 18) {
                 stopPaymentPolling();
                 setPaymentBusy(false, '⏱️ Validation toujours en attente. Le statut pourra être vérifié plus tard.');
+                return false;
             }
+
+            return true;
         } catch {
             if (statusElement) {
                 statusElement.textContent =
@@ -199,12 +202,15 @@ async function watchPayment(paymentService, providerReference) {
             if (attempts >= 18) {
                 stopPaymentPolling();
                 setPaymentBusy(false, '📡 Vérification interrompue. Le paiement peut encore être traité par l’opérateur.');
+                return false;
             }
+
+            return true;
         }
     };
 
-    await check();
-    if (!paymentPollTimer) {
+    const shouldContinue = await check();
+    if (shouldContinue) {
         paymentPollTimer = setInterval(check, 5000);
     }
 }
