@@ -43,3 +43,17 @@
 ## Safety rule
 
 No optimization should remove a detection, security, verification, or rollback boundary unless an equivalent control demonstrably replaces it.
+
+
+## Business contract gate
+
+The CI suite now includes deterministic business invariants for the three state
+surfaces already present in the application:
+
+- cart quantity/MOQ, identifiers and duplicate variant lines;
+- stored order arithmetic and duplicate variant lines;
+- product-import lifecycle consistency and confidence bounds.
+
+The invariant engine is pure and machine-readable. It is a detection boundary,
+not an authorization to mutate production state. Future incident intelligence
+can consume its `rule_id` values without allowing the AI layer to invent fixes.
