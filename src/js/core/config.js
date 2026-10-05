@@ -25,5 +25,11 @@ export const SEARCH_HISTORY_KEY = 'nrj_search_history';
 export const MAX_HISTORY_ITEMS = 5;
 export const MAX_PLACEHOLDER_SUGGESTIONS = 10;
 
-/** Paiement réel : à activer uniquement après validation migration + secrets + tests. */
-export const MOBILE_MONEY_PAYMENT_ENABLED = false;
+/**
+ * Paiement réel désactivé par défaut.
+ * Le build CI peut activer uniquement l'interface E2E avec
+ * VITE_PAYMENT_E2E_MODE=true ; les appels provider sont alors mockés
+ * dans Playwright et aucun paiement réel n'est possible.
+ */
+const PAYMENT_E2E_MODE = import.meta.env.VITE_PAYMENT_E2E_MODE === 'true';
+export const MOBILE_MONEY_PAYMENT_ENABLED = PAYMENT_E2E_MODE ? true : false;
