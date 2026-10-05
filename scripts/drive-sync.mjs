@@ -31,7 +31,12 @@ const CONFIG = {
   googleRefreshToken: requireEnv("GOOGLE_REFRESH_TOKEN"),
   statePath: ".drive-sync/state.json",
   // Dossiers/fichiers ignorés des deux côtés
-  ignorePatterns: [/^\.git\//, /^node_modules\//, /^\.drive-sync\//],
+  ignorePatterns: [
+    /^\.git\//,
+    /^node_modules\//,
+    /^\.drive-sync\//,
+    /\.drive-version(?:\.[^/]+)?$/,
+  ],
 };
 
 function requireEnv(name) {
