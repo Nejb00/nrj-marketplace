@@ -49,6 +49,28 @@ CREATE INDEX IF NOT EXISTS payment_status_history_provider_event_idx
   ON public.payment_status_history(provider, provider_event_id)
   WHERE provider_event_id IS NOT NULL;
 
+CREATE OR REPLACE FUNCTION public.prevent_payment_audit_mutation()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = public
+AS $function$
+BEGIN
+  RAISE EXCEPTION 'payment_status_history is append-only';
+END;
+$function$;
+
+DROP TRIGGER IF EXISTS trigger_prevent_payment_audit_mutation
+  ON public.payment_status_history;
+
+CREATE TRIGGER trigger_prevent_payment_audit_mutation
+BEFORE UPDATE OR DELETE ON public.payment_status_history
+FOR EACH ROW
+EXECUTE FUNCTION public.prevent_payment_audit_mutation();
+
+REVOKE EXECUTE
+  ON FUNCTION public.prevent_payment_audit_mutation()
+  FROM PUBLIC, anon, authenticated, service_role;
+
 CREATE OR REPLACE FUNCTION public.audit_payment_status_change()
 RETURNS trigger
 LANGUAGE plpgsql
