@@ -353,7 +353,7 @@ export async function fetchProductImports(limit = 10) {
         const { data, error } = await fetchWithTimeout(
             supabaseClient
                 .from('product_imports')
-                .select('id, source_image, raw_text, product_name, status, created_at, updated_at')
+                .select('id, source_image, raw_text, product_name, description, supplier_price, supplier_currency, moq, variants, overall_confidence, ai_analysis, status, error_code, error_message, created_at, updated_at')
                 .order('created_at', { ascending: false })
                 .limit(limit)
         );
@@ -378,6 +378,23 @@ export async function insertProductImport(productImport) {
         return data;
     } catch (err) {
         console.error('Erreur insert product import:', err);
+        throw err;
+    }
+}
+
+export async function analyzeProductImport(importId, imageDataUrl = null, rawText = '') {
+    try {
+        const { data, error } = await fetchWithTimeout(
+            supabaseClient.functions.invoke('analyze-product-import', {
+                body: { importId, imageDataUrl, rawText }
+            }),
+            30000
+        );
+        if (error) throw error;
+        if (!data?.ok) throw new Error(data?.error || 'Analyse IA impossible');
+        return data;
+    } catch (err) {
+        console.error('Erreur analyze product import:', err);
         throw err;
     }
 }
