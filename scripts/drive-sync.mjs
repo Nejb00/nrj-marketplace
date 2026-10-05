@@ -406,23 +406,37 @@ async function main() {
     if (!gh && !dr) continue; // supprimé des deux côtés, rien à faire
 
     if (gh && !dr) {
-      // Nouveau (ou jamais synchronisé) côté GitHub -> on pousse vers Drive
-      const buffer = await getGithubBlobContent(octokit, gh.sha);
-      driveUploadQueue.push({ relPath: path, buffer });
-      newState[path] = { githubSha: gh.sha, driveMd5: md5(buffer) };
-      summary.githubToDrive.push(path);
+      const githubChanged = !prev || prev.githubSha !== gh.sha;
+
+      // Nouveau fichier GitHub, ou fichier recréé/modifié après une
+      // suppression côté Drive : on le recrée dans Drive.
+      if (!prev?.driveMd5 || githubChanged) {
+        const buffer = await getGithubBlobContent(octokit, gh.sha);
+        driveUploadQueue.push({ relPath: path, buffer });
+        newState[path] = { githubSha: gh.sha, driveMd5: md5(buffer) };
+        summary.githubToDrive.push(path);
+      } else {
+        // Suppression côté Drive : ne pas recréer silencieusement le
+        // fichier tant que GitHub n'a pas lui-même changé.
+        newState[path] = prev;
+      }
       continue;
     }
 
     if (!gh && dr) {
-      // Nouveau côté Drive uniquement -> à committer sur GitHub
-      // (on ne le fait que si ce n'est pas une suppression GitHub qu'on
-      // ne veut pas annuler : ici prev n'a pas githubSha donc c'est un ajout)
-      if (!prev?.githubSha) {
+      const driveChanged = !prev || prev.driveMd5 !== dr.md5Checksum;
+
+      // Nouveau fichier Drive, ou fichier Drive recréé/modifié après
+      // une suppression côté GitHub : dans ce cas on le remonte.
+      if (!prev?.githubSha || driveChanged) {
         const buffer = await downloadDriveFile(drive, dr.id);
         toWriteOnGithub.set(path, buffer);
         newState[path] = { githubSha: null, driveMd5: dr.md5Checksum };
         summary.driveToGithub.push(path);
+      } else {
+        // Suppression côté GitHub : ne pas ressusciter silencieusement le
+        // fichier depuis Drive. On conserve le dernier état connu.
+        newState[path] = prev;
       }
       continue;
     }
@@ -463,6 +477,12 @@ async function main() {
     summary.unchanged++;
   }
 
+  const normalizeFiles = (files) =>
+    Object.fromEntries(Object.entries(files).sort(([a], [b]) => a.localeCompare(b)));
+
+  const stateChanged =
+    JSON.stringify(normalizeFiles(prevState)) !== JSON.stringify(normalizeFiles(newState));
+
   // 1) Appliquer les changements côté Drive
   for (const { relPath, buffer } of driveUploadQueue) {
     await uploadOrUpdateDriveFile(
@@ -498,15 +518,18 @@ async function main() {
     }
   }
 
-  // 3) Sauvegarder le nouvel état sur la branche drive-sync
-  const stateBuffer = Buffer.from(
-    JSON.stringify({ files: newState, updatedAt: new Date().toISOString() }, null, 2)
-  );
-  await commitFilesToSyncBranch(
-    octokit,
-    new Map([[CONFIG.statePath, stateBuffer]]),
-    "Mise à jour de l'état de synchronisation"
-  );
+  // 3) Sauvegarder l'état uniquement s'il a réellement changé.
+  // Cela évite un commit toutes les heures lorsque rien n'a bougé.
+  if (stateChanged) {
+    const stateBuffer = Buffer.from(
+      JSON.stringify({ files: newState, updatedAt: new Date().toISOString() }, null, 2)
+    );
+    await commitFilesToSyncBranch(
+      octokit,
+      new Map([[CONFIG.statePath, stateBuffer]]),
+      "Mise à jour de l'état de synchronisation"
+    );
+  }
 
   // 4) Résumé
   console.log("=== Résumé de la synchronisation ===");
