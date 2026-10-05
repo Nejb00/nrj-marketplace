@@ -264,6 +264,48 @@
         <div class="filters-overlay" id="filtersOverlay"></div>
     </div>
 
+
+    <div class="order-modal-overlay" id="orderModalOverlay" aria-hidden="true">
+        <section class="order-modal" role="dialog" aria-modal="true" aria-labelledby="orderModalTitle">
+            <div class="order-modal-handle" aria-hidden="true"></div>
+            <div class="order-modal-header">
+                <div>
+                    <span class="order-modal-kicker">NRJ CHECKOUT</span>
+                    <h2 id="orderModalTitle">Finaliser ma commande</h2>
+                </div>
+                <button type="button" class="order-modal-close" id="cancelOrderBtn" aria-label="Fermer">&times;</button>
+            </div>
+
+            <div class="order-summary" id="orderSummary"></div>
+
+            <div class="order-form-grid">
+                <label class="order-field">
+                    <span>Nom</span>
+                    <input type="text" id="customerName" maxlength="120" autocomplete="name" placeholder="Votre nom">
+                </label>
+                <label class="order-field">
+                    <span>Téléphone Mobile Money</span>
+                    <input type="tel" id="customerPhone" inputmode="tel" maxlength="12" autocomplete="tel" placeholder="24206...">
+                </label>
+            </div>
+
+            <div class="order-payment-note">
+                <strong>Paiement Mobile Money</strong>
+                <span>MTN Money et Airtel Money arrivent après validation finale du provider.</span>
+            </div>
+
+            <div class="order-modal-actions">
+                <button type="button" class="order-whatsapp-btn" id="sendWhatsAppBtn">
+                    💬 Envoyer sur WhatsApp
+                </button>
+                <button type="button" class="order-payment-btn" id="startMobileMoneyBtn" disabled title="Paiement bientôt disponible">
+                    ⚡ Payer par Mobile Money
+                </button>
+            </div>
+            <p class="order-modal-footnote">Aucun paiement n’est déclenché depuis cette version de l’interface.</p>
+        </section>
+    </div>
+
     <div id="accountView" style="display:none;">
         <div id="accountContent"></div>
     </div>
