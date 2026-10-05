@@ -76,6 +76,8 @@ function getJwtPayload(req) {
 }
 
 function isAdmin(req) {
+  const internalToken = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
+  if (SERVICE_KEY && internalToken === SERVICE_KEY) return true;
   const payload = getJwtPayload(req);
   if (!payload) return false;
   const metadata = payload.app_metadata;
