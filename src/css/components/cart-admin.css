@@ -582,3 +582,239 @@
   animation: none;
  }
 }
+
+
+/* ═══ CHECKOUT MOBILE MONEY — passerelle paiement ═══ */
+.payment-modal {
+ max-width: 460px;
+ max-height: min(92dvh, 760px);
+ overflow-y: auto;
+ padding: 1.15rem;
+}
+
+.payment-modal-header {
+ display: flex;
+ align-items: flex-start;
+ justify-content: space-between;
+ gap: 0.75rem;
+ margin-bottom: 1rem;
+}
+
+.payment-kicker {
+ display: block;
+ margin-bottom: 0.2rem;
+ font-size: 0.68rem;
+ font-weight: 800;
+ letter-spacing: 0.08em;
+ text-transform: uppercase;
+ color: var(--primary);
+}
+
+.payment-modal-header h2 {
+ margin: 0;
+ font-size: 1.18rem;
+ font-weight: 900;
+ color: var(--text);
+}
+
+.payment-close-btn {
+ width: 36px;
+ height: 36px;
+ flex: 0 0 36px;
+ border: 1px solid var(--border);
+ border-radius: 50%;
+ background: var(--surface-light);
+ color: var(--text);
+ font-size: 1.2rem;
+ line-height: 1;
+ cursor: pointer;
+}
+
+.payment-close-btn:disabled {
+ opacity: 0.4;
+ cursor: not-allowed;
+}
+
+.payment-summary {
+ padding: 0.85rem;
+ margin-bottom: 1rem;
+ border: 1px solid var(--border);
+ border-radius: 16px;
+ background: var(--surface-light);
+ color: var(--text-secondary);
+ font-size: 0.78rem;
+ line-height: 1.55;
+}
+
+.payment-summary strong {
+ color: var(--text);
+}
+
+.payment-estimated-total,
+.payment-authoritative-total {
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ gap: 1rem;
+ margin-top: 0.8rem;
+ padding-top: 0.7rem;
+ border-top: 1px solid var(--border);
+}
+
+.payment-estimated-total strong {
+ color: var(--text);
+}
+
+.payment-authoritative-total strong {
+ color: var(--primary);
+ font-size: 1rem;
+}
+
+.payment-form .form-group {
+ margin-bottom: 0.85rem;
+}
+
+.payment-form .form-group label {
+ margin-bottom: 0.35rem;
+}
+
+.payment-form .form-group input,
+.payment-form .form-group textarea {
+ border-radius: 14px;
+ background: var(--surface-light);
+}
+
+.payment-form .form-group textarea {
+ min-height: 82px;
+ resize: vertical;
+ border-radius: 16px;
+}
+
+.payment-help {
+ display: block;
+ margin-top: 0.3rem;
+ font-size: 0.68rem;
+ color: var(--text-secondary);
+}
+
+.payment-operators {
+ display: grid;
+ grid-template-columns: repeat(2, minmax(0, 1fr));
+ gap: 0.65rem;
+ padding: 0;
+ margin: 0 0 0.9rem;
+ border: 0;
+}
+
+.payment-operators legend {
+ grid-column: 1 / -1;
+ margin-bottom: 0.15rem;
+ font-size: 0.82rem;
+ font-weight: 800;
+ color: var(--text);
+}
+
+.payment-operator-card {
+ position: relative;
+ display: flex;
+ align-items: center;
+ gap: 0.65rem;
+ min-height: 58px;
+ padding: 0.7rem;
+ border: 1px solid var(--border);
+ border-radius: 15px;
+ background: var(--surface-light);
+ cursor: pointer;
+ color: var(--text);
+}
+
+.payment-operator-card input {
+ position: absolute;
+ opacity: 0;
+ pointer-events: none;
+}
+
+.payment-operator-card:has(input:checked) {
+ border-color: var(--primary);
+ box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+
+.payment-operator-card span {
+ display: flex;
+ flex-direction: column;
+ gap: 0.1rem;
+}
+
+.payment-operator-card strong {
+ font-size: 0.84rem;
+}
+
+.payment-operator-card small {
+ font-size: 0.66rem;
+ color: var(--text-secondary);
+}
+
+.payment-status {
+ margin: 0 0 0.8rem;
+ padding: 0.7rem 0.8rem;
+ border-radius: 13px;
+ background: var(--surface-light);
+ border: 1px solid var(--border);
+ color: var(--text-secondary);
+ font-size: 0.75rem;
+ line-height: 1.45;
+}
+
+.payment-primary-btn,
+.payment-secondary-btn {
+ width: 100%;
+ min-height: 46px;
+ border-radius: 14px;
+ font-family: inherit;
+ font-size: 0.85rem;
+ font-weight: 850;
+ cursor: pointer;
+ -webkit-tap-highlight-color: transparent;
+}
+
+.payment-primary-btn {
+ border: 0;
+ background: var(--primary);
+ color: #fff;
+}
+
+.payment-secondary-btn {
+ margin-top: 0.55rem;
+ border: 1px solid var(--border);
+ background: var(--surface-light);
+ color: var(--text);
+}
+
+.payment-primary-btn:disabled,
+.payment-secondary-btn:disabled {
+ opacity: 0.45;
+ cursor: not-allowed;
+}
+
+.payment-security-note {
+ margin: 0.7rem 0 0;
+ text-align: center;
+ font-size: 0.66rem;
+ line-height: 1.4;
+ color: var(--text-secondary);
+}
+
+@media (max-width: 480px) {
+ .payment-modal {
+  max-height: 95dvh;
+  padding: 1rem;
+ }
+}
+
+@media (prefers-reduced-motion: reduce) {
+ .payment-primary-btn,
+ .payment-secondary-btn,
+ .payment-close-btn {
+  transition: none;
+ }
+}
