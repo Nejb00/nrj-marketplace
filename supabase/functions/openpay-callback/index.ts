@@ -103,20 +103,51 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const payment = await supabase<Array<{
     id: string;
+    order_id: string;
     provider: string;
+    payment_method: string;
     provider_reference: string | null;
     amount: number | string;
     currency: string;
     status: string;
   }>>(
-    "payments?select=id,provider,provider_reference,amount,currency,status&provider=eq.openpay&provider_reference=eq." +
+    "payments?select=id,order_id,provider,payment_method,provider_reference,amount,currency,status&provider=eq.openpay&provider_reference=eq." +
       encodeURIComponent(reference) +
       "&limit=1"
   );
 
-  const row = payment.data?.[0];
-  if (!row) return json({ ok: false, error: "payment_not_found" }, 404);
+  let row = payment.data?.[0] || null;
 
+  // ATTAQUE #18: if the browser lost the create-payment response, the
+  // callback still carries the authoritative OpenPay reference + metadata.
+  // Bind that reference to the single pending NRJ payment for this order.
+  if (!row) {
+    const orderId = String(
+      body.metadata && typeof body.metadata === "object"
+        ? (body.metadata as { order_id?: unknown }).order_id || ""
+        : ""
+    ).trim();
+
+    if (orderId) {
+      const recovery = await supabase<Array<{
+        id: string;
+        order_id: string;
+        provider: string;
+        payment_method: string;
+        provider_reference: string | null;
+        amount: number | string;
+        currency: string;
+        status: string;
+      }>>(
+        "payments?select=id,order_id,provider,payment_method,provider_reference,amount,currency,status&provider=eq.openpay&order_id=eq." +
+          encodeURIComponent(orderId) +
+          "&provider_reference=is.null&status=in.(pending,processing)&limit=1"
+      );
+      row = recovery.data?.[0] || null;
+    }
+  }
+
+  if (!row) return json({ ok: false, error: "payment_not_found" }, 404);
   const remote = await openPay<OpenPayStatusResponse>(
     "/transaction/status/" + encodeURIComponent(reference)
   );
@@ -125,13 +156,46 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json({ ok: false, error: "provider_revalidation_failed" }, 502);
   }
 
+  const remoteReference = String(remote.data.reference || "").trim();
   const remoteAmount = Number(remote.data.amount);
   const remoteCurrency = String(remote.data.currency || "").toUpperCase();
 
-  if (!Number.isFinite(remoteAmount) ||
+  if (!remoteReference ||
+      remoteReference !== reference ||
+      !Number.isFinite(remoteAmount) ||
       remoteAmount !== Number(row.amount) ||
       remoteCurrency !== String(row.currency).toUpperCase()) {
     return json({ ok: false, error: "payment_mismatch" }, 409);
+  }
+
+  const remoteMetadata =
+    remote.data.metadata && typeof remote.data.metadata === "object"
+      ? remote.data.metadata as { order_id?: unknown }
+      : null;
+  const callbackOrderId =
+    body.metadata && typeof body.metadata === "object"
+      ? String((body.metadata as { order_id?: unknown }).order_id || "").trim()
+      : "";
+  const remoteOrderId = String(remoteMetadata?.order_id || "").trim();
+
+  if (
+    !row.order_id ||
+    (callbackOrderId && callbackOrderId !== row.order_id) ||
+    (remoteOrderId && remoteOrderId !== row.order_id)
+  ) {
+    return json({ ok: false, error: "payment_order_mismatch" }, 409);
+  }
+
+  const expectedProvider =
+    row.payment_method === "openpay_mtn"
+      ? "MTN"
+      : row.payment_method === "openpay_airtel"
+        ? "AIRTEL"
+        : null;
+  const remoteProvider = String(remote.data.provider || "").trim().toUpperCase();
+
+  if (expectedProvider && remoteProvider && remoteProvider !== expectedProvider) {
+    return json({ ok: false, error: "payment_provider_mismatch" }, 409);
   }
 
   const status = mapStatus(remote.data.status);
