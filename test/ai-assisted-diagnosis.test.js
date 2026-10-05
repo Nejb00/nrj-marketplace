@@ -146,13 +146,13 @@ test('AI diagnosis: refuse unclassified failure from triggering repair', () => {
   assert.equal(diagnosis.deterministic_agreement, true);
 });
 
-test('AI diagnosis: rendered dossier stays machine-readable', () => {
+test('AI diagnosis: rendered dossier stays machine-readable and safe', () => {
   const diagnosis = validateDiagnosis({
     responseText: JSON.stringify({
       schema_version: 1,
       classification: 'known-repair-candidate',
       confidence: 0.9,
-      likely_root_cause: 'Known failure.',
+      likely_root_cause: 'Known failure. <!-- injected --> --!> \`code\`',
       recommended_recipe_id: 'recipe-a',
       recommendation: 'self-healing',
       evidence: ['Safe evidence.'],
@@ -166,7 +166,47 @@ test('AI diagnosis: rendered dossier stays machine-readable', () => {
   });
 
   const rendered = renderDiagnosis(diagnosis);
-  assert.match(rendered, /^<!-- nrj-ai-diagnosis\n/);
+  const fence = String.fromCharCode(96).repeat(3);
+  const match = rendered.match(new RegExp(
+    '^NRJ_AI_DIAGNOSIS_START\\n' + fence + 'json\\n([\\s\\S]*?)\\n' + fence + '\\nNRJ_AI_DIAGNOSIS_END$'
+  ));
+
+  assert.ok(match);
+  assert.equal(rendered.startsWith('<!--'), false);
   assert.equal(rendered.includes('Authorization:'), false);
   assert.equal(rendered.includes('SECRET'), false);
+  assert.equal(rendered.includes('\\`code\\`'), false);
+  assert.deepEqual(JSON.parse(match[1]), diagnosis);
+});
+
+test('AI diagnosis: dossier non encapsulé dans un commentaire HTML', () => {
+  const sourceDiagnosis = {
+    schema_version: 1,
+    status: 'validated',
+    workflow: run.name,
+    run_id: run.id,
+    run_number: run.run_number,
+    commit: run.head_sha,
+    classification: 'known-repair-candidate',
+    confidence: 0.91,
+    likely_root_cause: '<!-- injected --> --!> \`code\`',
+    recommended_recipe_id: 'recipe-a',
+    recommendation: 'self-healing',
+    deterministic_recipe_id: 'recipe-a',
+    deterministic_agreement: true,
+    evidence: [],
+    uncertainties: [],
+  };
+
+  const rendered = renderDiagnosis(sourceDiagnosis);
+  const fence = String.fromCharCode(96).repeat(3);
+  const match = rendered.match(new RegExp(
+    '^NRJ_AI_DIAGNOSIS_START\\n' + fence + 'json\\n([\\s\\S]*?)\\n' + fence + '\\nNRJ_AI_DIAGNOSIS_END$'
+  ));
+
+  assert.ok(match);
+  assert.equal(rendered.startsWith('<!--'), false);
+  assert.equal(rendered.includes('\\n-->'), false);
+  assert.equal(rendered.includes('\\`code\\`'), false);
+  assert.deepEqual(JSON.parse(match[1]), sourceDiagnosis);
 });
