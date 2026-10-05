@@ -483,7 +483,6 @@ Deno.serve(async (req) => {
     return json({
       ok: false,
       error: "orchestrator_failed",
-      detail: message,
       importId,
       steps,
       retryable: Number(error?.status || 0) === 0 || Number(error?.status || 0) >= 500
