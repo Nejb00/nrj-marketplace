@@ -186,12 +186,22 @@ async function renderPreview(file) {
   resetPreview();
   previewUrl = URL.createObjectURL(file);
   preview.hidden = false;
-  preview.innerHTML =
-    '<img src="' + previewUrl + '" alt="Aperçu de la capture importée">' +
-    '<div class="product-import-preview-meta">' +
-      '<strong>' + escapeHtml(file.name) + '</strong>' +
-      '<span>' + Math.max(1, Math.round(file.size / 1024)) + ' Ko</span>' +
-    '</div>';
+
+  const image = document.createElement('img');
+  image.src = previewUrl;
+  image.alt = 'Aperçu de la capture importée';
+
+  const meta = document.createElement('div');
+  meta.className = 'product-import-preview-meta';
+
+  const name = document.createElement('strong');
+  name.textContent = file.name;
+
+  const size = document.createElement('span');
+  size.textContent = Math.max(1, Math.round(file.size / 1024)) + ' Ko';
+
+  meta.append(name, size);
+  preview.replaceChildren(image, meta);
 }
 
 function setPricingDefaults(analysis) {
