@@ -29,7 +29,7 @@ export function isMergedRepairCandidate({
     !pullRequest ||
     pullRequest.base?.ref !== 'main' ||
     pullRequest.head?.ref?.startsWith(OPERATOR_REPAIR_PREFIX) !== true ||
-    pullRequest.merged !== true ||
+    !(pullRequest.merged === true || Boolean(pullRequest.merged_at)) ||
     typeof pullRequest.merge_commit_sha !== 'string' ||
     !/^[0-9a-f]{7,40}$/i.test(pullRequest.merge_commit_sha)
   ) {
