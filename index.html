@@ -291,18 +291,28 @@
 
             <div class="order-payment-note">
                 <strong>Paiement Mobile Money</strong>
-                <span>MTN Money et Airtel Money arrivent après validation finale du provider.</span>
+                <span id="mobileMoneyAvailability">MTN Money et Airtel Money arrivent après validation finale du provider.</span>
             </div>
+
+            <label class="order-field">
+                <span>Opérateur</span>
+                <select id="paymentOperator" class="order-select" disabled>
+                    <option value="MTN">MTN Money</option>
+                    <option value="AIRTEL">Airtel Money</option>
+                </select>
+            </label>
+
+            <div id="mobileMoneyStatus" class="mobile-money-status" hidden aria-live="polite"></div>
 
             <div class="order-modal-actions">
                 <button type="button" class="order-whatsapp-btn" id="sendWhatsAppBtn">
                     💬 Envoyer sur WhatsApp
                 </button>
-                <button type="button" class="order-payment-btn" id="startMobileMoneyBtn" disabled title="Paiement bientôt disponible">
+                <button type="button" class="order-payment-btn" id="startMobileMoneyBtn" disabled title="Paiement Mobile Money bientôt disponible">
                     ⚡ Payer par Mobile Money
                 </button>
             </div>
-            <p class="order-modal-footnote">Aucun paiement n’est déclenché depuis cette version de l’interface.</p>
+            <p class="order-modal-footnote">Le paiement Mobile Money reste verrouillé tant que la couche de production n’est pas validée.</p>
         </section>
     </div>
 
