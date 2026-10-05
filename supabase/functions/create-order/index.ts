@@ -270,8 +270,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   const orderFingerprint = stableSerialize({
-    items: orderItems,
-    total,
+    items,
     payment_method: paymentMethod,
     phone
   });
@@ -288,8 +287,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
       phone: string | null;
       items: unknown;
       checkout_idempotency_key: string | null;
+      checkout_fingerprint: string | null;
     }>>(
-      "orders?select=id,user_id,total,status,payment_method,phone,items,checkout_idempotency_key&user_id=eq." +
+      "orders?select=id,user_id,total,status,payment_method,phone,items,checkout_idempotency_key,checkout_fingerprint&user_id=eq." +
         encodeURIComponent(userId) +
         "&checkout_idempotency_key=eq." +
         encodeURIComponent(idempotencyKey) +
@@ -299,9 +299,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const existingOrder = existing.data?.[0] || null;
     if (!existingOrder) return null;
 
-    const existingFingerprint = stableSerialize({
-      items: existingOrder.items,
-      total: Number(existingOrder.total),
+    const existingFingerprint = existingOrder.checkout_fingerprint || stableSerialize({
+      items: (existingOrder.items as unknown),
       payment_method: existingOrder.payment_method,
       phone: existingOrder.phone
     });
@@ -358,7 +357,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
         status: "pending",
         payment_method: paymentMethod,
         phone,
-        checkout_idempotency_key: idempotencyKey
+        checkout_idempotency_key: idempotencyKey,
+        checkout_fingerprint: orderFingerprint
       })
     }
   );
