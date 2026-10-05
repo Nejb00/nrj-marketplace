@@ -85,7 +85,7 @@ test.describe("NRJ Marketplace — critical browser flows", () => {
     if (await colorGroup.isVisible()) {
       const moqText = await page.locator("#modalMoq").textContent();
       const moq = Number(moqText?.match(/\d+/)?.[0] ?? 1);
-      const plus = page.locator(".mini-qty-btn[data-action="plus"]").first();
+      const plus = page.locator('.mini-qty-btn[data-action="plus"]').first();
       await expect(plus).toBeVisible();
       await plus.click({ clickCount: Math.max(1, Math.min(moq, 120)) });
       if (moq > 120) {
