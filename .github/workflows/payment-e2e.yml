@@ -1,0 +1,61 @@
+name: Payment E2E
+
+on:
+  pull_request:
+    paths:
+      - "index.html"
+      - "src/**"
+      - "supabase/**"
+      - "tests/e2e/payment-flow.spec.mjs"
+      - "playwright.config.mjs"
+      - ".github/workflows/payment-e2e.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: payment-e2e-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  payment-e2e:
+    name: Payment E2E (safe simulation)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VITE_PAYMENT_E2E_MODE: "true"
+    steps:
+      - name: Checkout du dépôt
+        uses: actions/checkout@v7
+
+      - name: Installation de Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Installation des dépendances
+        run: npm install --no-save --package-lock=false --ignore-scripts
+
+      - name: Installation de Playwright
+        run: npm install --no-save --package-lock=false --ignore-scripts @playwright/test@1.63.0
+
+      - name: Installation de Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Build E2E
+        run: npm run build
+
+      - name: Test E2E paiement complet
+        run: npx playwright test tests/e2e/payment-flow.spec.mjs --config=playwright.config.mjs --reporter=list
+
+      - name: Publier les rapports Playwright
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: payment-e2e-report
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
