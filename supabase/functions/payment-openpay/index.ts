@@ -5,6 +5,7 @@ const PUBLIC_KEY =
   Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ||
   "";
 const OPENPAY_API_KEY = Deno.env.get("OPENPAY_API_KEY") || "";
+const OPENPAY_PAYMENT_ENABLED = Deno.env.get("OPENPAY_PAYMENT_ENABLED") === "true";
 const OPENPAY_BASE_URL = "https://api.openpay-cg.com/v1";
 
 const CORS = {
@@ -234,6 +235,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const action = body.action || "create";
 
+  if (!OPENPAY_PAYMENT_ENABLED) {
+    return json({ ok: false, error: "openpay_payment_disabled" }, 503);
+  }
+
   if (action === "status") {
     if (!body.provider_reference) {
       return json({ ok: false, error: "provider_reference_required" }, 400);
@@ -386,6 +391,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
         payment_phone_number: body.payment_phone_number,
         provider: body.operator,
         customer_external_id: order.id,
+        customer: {
+          name: body.customer_name || "Client NRJ",
+          phone: body.payment_phone_number
+        },
         metadata: { order_id: order.id }
       })
     }
