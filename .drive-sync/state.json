@@ -4,9 +4,29 @@
       "githubSha": "d3982f2c29e83fa2b2d5d1d35082889308363923",
       "driveMd5": "0916314f80d61ec293120431b3a33ff2"
     },
+    ".github/release.yml": {
+      "githubSha": "5e5c2d00d37fac6d63090c78e00dddef9a1fd134",
+      "driveMd5": "f2ff749413794be2c5b320f68a5284f6"
+    },
+    ".github/self-healing-recipes.json": {
+      "githubSha": "f5e5e3fefa60fa2ab4b6a6c265dfc270b3cb3a75",
+      "driveMd5": "8c8b3eb6ba017ef2c5aa64b6058f989c"
+    },
     ".github/test-branch-marker-temp": {
       "githubSha": "3602361dafeea2cbec159128f5166a8428c0795c",
       "driveMd5": "3d801aa532c1cec3ee82d87a99fdf63f"
+    },
+    ".github/workflows/ai-assisted-diagnosis.yml": {
+      "githubSha": "f2969c45acfec580cc71153dfb92bfdd1c61b11e",
+      "driveMd5": "a266343992b97e5978acb2b0ba89ff55"
+    },
+    ".github/workflows/automation-dashboard.yml": {
+      "githubSha": "6a5adddf6b47d41e2960c17d8e4f15629feeae00",
+      "driveMd5": "81821dad32215e7d5283e50500598209"
+    },
+    ".github/workflows/branch-maintenance.yml": {
+      "githubSha": "7cc1742ee2e2dba173516b80c2dd72415a705163",
+      "driveMd5": "4cee50df82cc1805b5ed20b638962aae"
     },
     ".github/workflows/ci.yml": {
       "githubSha": "66800b21c1fb4fdd61001330fce0da63f85ef88c",
@@ -20,17 +40,21 @@
       "githubSha": "d881866c6ab7819eb6b811e6bec74cbad9163561",
       "driveMd5": "9df29765a15dd4d8d990d1ccd5838358"
     },
-    ".github/workflows/drive-sync.yml": {
-      "githubSha": "e87a8073e38174448cd4dd9dd1f2211d4076b861",
-      "driveMd5": "f99281934fdca8d0930cef584c4f6992"
+    ".github/workflows/deployment-safety-net.yml": {
+      "githubSha": "3b920cb3c8412d245c0cb12a8d5beaf3613e6e40",
+      "driveMd5": "430d9cc87e3e005ae8084c5c4f77588c"
     },
-    ".github/workflows/gdrive-sync.yml": {
-      "githubSha": "4df2e4a889d7225df2fc54a3d6c64a048141c85d",
-      "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
+    ".github/workflows/drive-sync.yml": {
+      "githubSha": "99a6d32396ddbb3481802185fe1897c33183602d",
+      "driveMd5": "bd2221a960c884ac3743bc16f0283009"
+    },
+    ".github/workflows/github-operator.yml": {
+      "githubSha": "8657e05c4334a1b8d8fc9881a0633bad3d87039d",
+      "driveMd5": "1ea4bbe130861324591c519b24df05ee"
     },
     ".github/workflows/incident-guard.yml": {
-      "githubSha": "f8974544d61dadd8ec2634fa6a47e246df13de32",
-      "driveMd5": "e2f8dd7e47029ddd46bd4bff1bcbb92b"
+      "githubSha": "9e87ddd61c120f556a78989356f291cf17e940ea",
+      "driveMd5": "6ea768c783211ad2a2e09d690983f3af"
     },
     ".github/workflows/notion-sync.yml": {
       "githubSha": "7a13aada8e437d76f01f9a56f73aea4a4b139e53",
@@ -49,12 +73,32 @@
       "driveMd5": "87224cf85196a15432d9dc2de7dae57c"
     },
     ".github/workflows/release.yml": {
-      "githubSha": "43cca49ec7981d5675f95c37d1a1316c96a807d8",
-      "driveMd5": "294238f1fd0f19c7884086d4533735ef"
+      "githubSha": "4357fb00caea888e6f6679557e5ed7fcb9a2067a",
+      "driveMd5": "88463f0f22971cc3314a01767c340ecd"
     },
     ".github/workflows/repo-health.yml": {
-      "githubSha": "6c3e322bb223b9358689e4f7a022f9fbf7aadfdf",
-      "driveMd5": "c0a377b308b246841d4416807125d712"
+      "githubSha": "2453aac63041c797e8c73f14fe3cb5dfc9901c25",
+      "driveMd5": "afb38dccece86f2aa7f1c1d3a73c77b6"
+    },
+    ".github/workflows/self-healing-dry-run.yml": {
+      "githubSha": "f1ddcc1fb60a4e1937f2aa5893df74e32e013999",
+      "driveMd5": "e6605e93b02f6333b7208d4d7e70dc4b"
+    },
+    ".github/workflows/self-healing-full-e2e.yml": {
+      "githubSha": "720188771ba1d3c53a39769bf4b46aba9a601600",
+      "driveMd5": "31516b823104bbc3dbbe6cb2a03e194b"
+    },
+    ".github/workflows/self-healing-verification.yml": {
+      "githubSha": "89690c9b7c745ed5110881f8417007900c08216a",
+      "driveMd5": "2e7c4c837de318457fc0866f09f1cf0f"
+    },
+    ".github/workflows/self-healing.yml": {
+      "githubSha": "ae80e1868a3c0c9ae913d36c1db657b790fe85c4",
+      "driveMd5": "c93e5fa6985e3513cf3f4cab370fb6de"
+    },
+    ".github/workflows/vercel-browser-e2e.yml": {
+      "githubSha": "45a5cf267a0b6c700e144a8eb46493ebe3c6ef02",
+      "driveMd5": "40e62b0561b1b5b3bbd6b0f745f36d4e"
     },
     ".gitignore": {
       "githubSha": "7aaedd212125842e055efc0be8f486fd67fbfe1e",
@@ -136,21 +180,41 @@
       "githubSha": "ca71a986b92c25828983559f189c22a1c19c4991",
       "driveMd5": "bf16f4c11c05e3f7da584a4be7a9a8c6"
     },
+    "scripts/ai-assisted-diagnosis.mjs": {
+      "githubSha": "b6ea6d11b6c906c21f0d8e7ae0ea9eca3fe3db4a",
+      "driveMd5": "38d451c5ebf1c0486829c568841de4b8"
+    },
     "scripts/ci-check.mjs": {
       "githubSha": "7ce58ba3218f42f8d4897991fac8321cdbfdf974",
       "driveMd5": "edfa55323f526b7a818d8aac847bdc83"
     },
     "scripts/drive-sync.mjs": {
-      "githubSha": "d51b092ab918cd8aa58ab5fe9d89930a094037d4",
-      "driveMd5": "47bbfb3f93069edf9ed407290fe514a0"
+      "githubSha": "e096f186b1676fce8b39a7ef5e848a43b0fde9c6",
+      "driveMd5": "7f9708f0e3517853f643a0e1468e6e49"
+    },
+    "scripts/incident-intelligence.mjs": {
+      "githubSha": "52710f2d19c5cbaba9ed65edec3014e72b3b66c3",
+      "driveMd5": "d08bc5172d20fc81fd37b1726ebc3427"
+    },
+    "scripts/self-healing-e2e.mjs": {
+      "githubSha": "938bc4ad414e8d4b4616b00d74dc9294f0740961",
+      "driveMd5": "20a0ff48d176b52682d963c57317acb1"
+    },
+    "scripts/self-healing-rollback.mjs": {
+      "githubSha": "3b673df4f0ace27bc7b6f72732c44933327788c5",
+      "driveMd5": "3593122abf06be5b9850a47db4fb2138"
+    },
+    "scripts/self-healing-simulation.mjs": {
+      "githubSha": "a9ca965d7b30395ff1e98fb5c996eabcd9178306",
+      "driveMd5": "31cc73032e79743ab6895239345a71e7"
+    },
+    "scripts/self-healing-verification.mjs": {
+      "githubSha": "3aac9cb1186da976be43cc68c112fdbe8cac6f61",
+      "driveMd5": "d256844db52d711bd15258734a5e4a03"
     },
     "scripts/smoke-test.mjs": {
       "githubSha": "b4981fad80448ca19003816c44c962eebac9f9d5",
       "driveMd5": "ad237c9efbf16219ea7fd2df1b769028"
-    },
-    "scripts/sync_to_gdrive.py": {
-      "githubSha": "9d43e41e7a90148c44dad49486cab825e475bfe6",
-      "driveMd5": "8b085f087095fe2df782e3f84b5959b4"
     },
     "scripts/sync_to_notion.py": {
       "githubSha": "83021759676f75d2295c1d98229004fc65e048f0",
@@ -269,8 +333,8 @@
       "driveMd5": "2def19fc9cc31e344cdf2c1f547e0909"
     },
     "src/js/features/app/click-delegation.js": {
-      "githubSha": "bc82aa1ca157894c3850d722298062d53701dd03",
-      "driveMd5": "a7fb02056a9c4db1d3d2afd300823851"
+      "githubSha": "512ede6d3d639e742a67f698540686529edf5ee9",
+      "driveMd5": "7fbc0ff049886b14f128c090d7b98aff"
     },
     "src/js/features/app/filter-bar.js": {
       "githubSha": "e63288ce35d4d6262c2fbe4e18f3b2f10402c4b7",
@@ -572,9 +636,49 @@
       "githubSha": "51e0013acf2a93ab8a96546555fe7a17876452f4",
       "driveMd5": "6eee13bb40aa50e8f965855b51408a2e"
     },
+    "test/ai-assisted-diagnosis.test.js": {
+      "githubSha": "52d53aef4531add8c5c14e50e2135e20e1ee87b6",
+      "driveMd5": "671b54d4ee6b0f6c75b658f180f8486d"
+    },
+    "test/drive-sync-optimization.test.js": {
+      "githubSha": "80532e3c3553345fcf64de1156b4e60d1e713565",
+      "driveMd5": "0975ef1c4c3ec7bd88bdde865a819a87"
+    },
     "test/fuzzy-search.test.js": {
       "githubSha": "0812dfef8529af76b35e15461e0d735856d0d2bd",
       "driveMd5": "b3a85d688b4e63fa66d3feb6d298963a"
+    },
+    "test/incident-intelligence.test.js": {
+      "githubSha": "e44a6c81e2943cecdcaf35ece6b9b55e6673fbfa",
+      "driveMd5": "5d9938dc78daeb20ceee22725688f022"
+    },
+    "test/self-healing-ai-comment-parser.test.js": {
+      "githubSha": "c9b6dbc46ccc814ac48e5f7d06f20a9e59097dca",
+      "driveMd5": "cf6af2e1d876f37f3379c71e18ef21c1"
+    },
+    "test/self-healing-e2e.test.js": {
+      "githubSha": "88751a581673540a5de3288775fd816101970494",
+      "driveMd5": "e399aaf878e05a1d5c3f9ce3147afe4c"
+    },
+    "test/self-healing-recipes.test.js": {
+      "githubSha": "4ca3552fe1315eec5cdb147e5c3d3b7e51869e8e",
+      "driveMd5": "eac52a98bc6ba840087055e57fc6ae7b"
+    },
+    "test/self-healing-rollback.test.js": {
+      "githubSha": "e600c40c072e8489af9676325ff10f5bea036c9f",
+      "driveMd5": "53aae155aeda6a5805429a9c93b58ec6"
+    },
+    "test/self-healing-simulation.test.js": {
+      "githubSha": "f67638a6e1c7ccea215876a6c7d415c7462bca0d",
+      "driveMd5": "8f8e49155ad8d52cc15ac1552029936e"
+    },
+    "test/self-healing-verification.test.js": {
+      "githubSha": "33aa0a9c7692a93781dec0c2e2930715680cacce",
+      "driveMd5": "08de7a1bd6243c1cdf5e82afe5b45a80"
+    },
+    "tests/e2e/production.spec.mjs": {
+      "githubSha": "95893bd4efcee16eab126e51b69b0a1070a2334d",
+      "driveMd5": "1acf90963ce71e8dcfdbffacfd67f068"
     },
     "vercel.json": {
       "githubSha": "b16eb60657eb498912d183f20230eb5401ace826",
@@ -583,7 +687,15 @@
     "vite.config.js": {
       "githubSha": "610c4be52446afa97857f6a11b16f6ebb15c2d3d",
       "driveMd5": "ba96d156f4f2282a5e0fe5b742620aaf"
+    },
+    "scripts/sync_to_gdrive.py": {
+      "githubSha": "9d43e41e7a90148c44dad49486cab825e475bfe6",
+      "driveMd5": "8b085f087095fe2df782e3f84b5959b4"
+    },
+    ".github/workflows/gdrive-sync.yml": {
+      "githubSha": "4df2e4a889d7225df2fc54a3d6c64a048141c85d",
+      "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-05T02:07:02.785Z"
+  "updatedAt": "2026-10-05T06:34:49.843Z"
 }
