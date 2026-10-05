@@ -49,6 +49,52 @@ test('missing OpenPay reference stays pending instead of becoming failed', () =>
   assert.doesNotMatch(referenceBlock, /openpay_reference_missing/);
 });
 
+
+test('ATTAQUE #19 stores and deduplicates provider callbacks atomically', () => {
+  const callback = fs.readFileSync(
+    'supabase/functions/openpay-callback/index.ts',
+    'utf8',
+  );
+  const eventMigration = fs.readFileSync(
+    'supabase/migrations/20261005153000_apply_payment_provider_event.sql',
+    'utf8',
+  );
+
+  assert.match(callback, /rpc\/apply_payment_provider_event/);
+  assert.match(callback, /providerEventId/);
+  assert.match(callback, /processed/);
+  assert.match(callback, /duplicate/);
+  assert.doesNotMatch(callback, /payments\?id=eq\./);
+
+  assert.match(eventMigration, /CREATE OR REPLACE FUNCTION public\.apply_payment_provider_event/);
+  assert.match(
+    eventMigration,
+    /ON CONFLICT \(provider, provider_event_id\) WHERE provider_event_id IS NOT NULL DO NOTHING/,
+  );
+  assert.match(eventMigration, /UPDATE public\.payment_events/);
+  assert.match(eventMigration, /processed_at = now\(\)/);
+  assert.match(eventMigration, /duplicate boolean/);
+  assert.match(eventMigration, /GRANT EXECUTE[\s\S]*TO service_role/);
+  assert.match(eventMigration, /REVOKE EXECUTE[\s\S]*FROM PUBLIC, anon, authenticated/);
+});
+
+test('ATTAQUE #19 revalidates status server-side before event application', () => {
+  const callback = fs.readFileSync(
+    'supabase/functions/openpay-callback/index.ts',
+    'utf8',
+  );
+
+  const statusIndex = callback.indexOf('/transaction/status/');
+  const rpcIndex = callback.indexOf('rpc/apply_payment_provider_event');
+  assert.ok(statusIndex >= 0);
+  assert.ok(rpcIndex > statusIndex);
+  assert.match(callback, /remoteReference !== reference/);
+  assert.match(callback, /remoteAmount !== Number\(row\.amount\)/);
+  assert.match(callback, /remoteCurrency !== String\(row\.currency\)\.toUpperCase\(\)/);
+  assert.match(callback, /payment_order_mismatch/);
+  assert.match(callback, /payment_provider_mismatch/);
+});
+
 test('OpenPay callback can recover a reference using callback metadata without creating a new payment', () => {
   const callback = fs.readFileSync(
     'supabase/functions/openpay-callback/index.ts',
