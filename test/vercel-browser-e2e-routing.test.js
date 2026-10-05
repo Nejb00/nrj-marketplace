@@ -4,7 +4,7 @@ import fs from "node:fs";
 
 const WORKFLOW = ".github/workflows/vercel-browser-e2e.yml";
 
-test("Vercel Browser E2E runs automatically only for production deployments", () => {
+test("Vercel Browser E2E runs automatically for production and preview deployments", () => {
   const workflow = fs.readFileSync(WORKFLOW, "utf8");
 
   assert.equal(
@@ -22,11 +22,11 @@ test("Vercel Browser E2E runs automatically only for production deployments", ()
 
   assert.equal(
     workflow.includes("github.event.deployment.environment == 'Preview'"),
-    false
+    true
   );
   assert.equal(
     workflow.includes("github.event.deployment.environment == 'preview'"),
-    false
+    true
   );
 
   assert.equal(
