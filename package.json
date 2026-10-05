@@ -24,7 +24,7 @@
     "check:self-healing-guard": "node --test test/self-healing-guard.test.js",
     "check:recovery-guard": "node --test test/recovery-guard.test.js",
     "check:incident-history": "node --test test/incident-history.test.js",
-    "check:correlation": "node --test test/cross-system-correlation.test.js"
+    "check:correlation": "node --test test/correlation-contract.test.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.32.0",
