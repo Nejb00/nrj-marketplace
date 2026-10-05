@@ -18,9 +18,12 @@ const edges = Object.fromEntries(
 );
 
 test('product import preview never interprets a dynamic value as HTML', () => {
-  assert.doesNotMatch(feature, /preview\.innerHTML\s*=/);
-  assert.match(feature, /document\.createElement\(['"]img['"]\)/);
-  assert.match(feature, /img\.src\s*=\s*previewUrl/);
+  const renderPreview = feature.match(/function renderPreview\(file\) \{[\s\S]*?\n\}/)?.[0] || '';
+  assert.notEqual(renderPreview, '');
+  assert.doesNotMatch(renderPreview, /innerHTML\s*=/);
+  assert.match(renderPreview, /document\.createElement\(['"]img['"]\)/);
+  assert.match(renderPreview, /img\.src\s*=\s*previewUrl/);
+  assert.match(renderPreview, /\.textContent\s*=\s*file\.name/);
 });
 
 test('product import Edge Functions do not return raw exception details', () => {
