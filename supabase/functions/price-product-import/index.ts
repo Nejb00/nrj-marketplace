@@ -239,6 +239,6 @@ Deno.serve(async (req) => {
       // keep primary error
     }
     const status = /_required|_invalid|_low|_must_be_1/.test(message) ? 400 : 500;
-    return json({ ok: false, error: "pricing_failed", detail: message }, status);
+    return json({ ok: false, error: "pricing_failed" }, status);
   }
 });
