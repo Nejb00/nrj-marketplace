@@ -129,14 +129,21 @@ function initEvents() {
         const cartButton = event.target.closest('[data-cart-add-action="cart"]');
         if (cartButton) {
             event.preventDefault();
+            lastFocusedElement = null;
             closeAndRestoreFocus();
             document.querySelectorAll('.nav-item').forEach(button => button.classList.remove('active'));
             document.querySelector('.nav-item[data-nav="cart"]')?.classList.add('active');
             import('../features/product/modal-render.js')
-                .then(({ closeProductModal }) => closeProductModal())
-                .catch(() => {});
-            document.getElementById('cartPanel')?.classList.add('open');
-            document.getElementById('cartOverlay')?.classList.add('open');
+                .then(({ closeProductModal }) => {
+                    closeProductModal();
+                    document.getElementById('cartPanel')?.classList.add('open');
+                    document.getElementById('cartOverlay')?.classList.add('open');
+                    document.getElementById('cartCloseBtn')?.focus();
+                })
+                .catch(() => {
+                    document.getElementById('cartPanel')?.classList.add('open');
+                    document.getElementById('cartOverlay')?.classList.add('open');
+                });
             return;
         }
 
@@ -145,6 +152,7 @@ function initEvents() {
             event.preventDefault();
             event.stopPropagation();
             const productId = Number(recCard.dataset.productId);
+            lastFocusedElement = null;
             closeAndRestoreFocus();
             if (Number.isInteger(productId)) {
                 import('../features/product/modal-render.js')
