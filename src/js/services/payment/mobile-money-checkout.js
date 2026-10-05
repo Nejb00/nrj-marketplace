@@ -13,6 +13,9 @@ const MAX_POLLS = 10;
 
 const provider = new OpenPayProvider();
 const paymentService = new PaymentService(provider);
+let pendingPaymentReference = null;
+let pendingPaymentOrder = null;
+let pendingPaymentCustomer = null;
 
 function setPaymentUi({ busy = false, message = '' } = {}) {
     const button = document.getElementById('startMobileMoneyBtn');
@@ -154,16 +157,20 @@ export async function startMobileMoneyPayment() {
         localStorage.setItem('fluo_customer_name', customer.name);
         localStorage.setItem('fluo_customer_phone', customer.phone);
 
-        setPaymentUi({
-            busy: true,
-            message: 'Création de la commande sécurisée…'
-        });
+        let remoteOrder = pendingPaymentOrder;
 
-        const remoteOrder = await createRemoteOrder({
-            items: buildRemoteItems(selected),
-            phone: customer.phone,
-            paymentMethod: 'openpay_' + customer.operator.toLowerCase()
-        });
+        if (!pendingPaymentReference) {
+            setPaymentUi({
+                busy: true,
+                message: 'Création de la commande sécurisée…'
+            });
+
+            remoteOrder = await createRemoteOrder({
+                items: buildRemoteItems(selected),
+                phone: customer.phone,
+                paymentMethod: 'openpay_' + customer.operator.toLowerCase()
+            });
+        }
 
         if (!remoteOrder?.order_id || !Number.isFinite(Number(remoteOrder.total)) ||
             Number(remoteOrder.total) <= 0) {
@@ -175,19 +182,24 @@ export async function startMobileMoneyPayment() {
             message: 'Demande de paiement ' + customer.operator + ' en cours…'
         });
 
-        const payment = await paymentService.createPayment({
-            orderId: remoteOrder.order_id,
-            amount: Number(remoteOrder.total),
-            currency: 'XAF',
-            customer: {
-                name: customer.name,
-                phone: customer.phone
-            },
-            metadata: {
-                operator: customer.operator,
-                customerName: customer.name
+        const payment = pendingPaymentReference
+            ? {
+                providerReference: pendingPaymentReference,
+                status: 'pending'
             }
-        });
+            : await paymentService.createPayment({
+                orderId: remoteOrder.order_id,
+                amount: Number(remoteOrder.total),
+                currency: 'XAF',
+                customer: {
+                    name: customer.name,
+                    phone: customer.phone
+                },
+                metadata: {
+                    operator: customer.operator,
+                    customerName: customer.name
+                }
+            });
 
         if (!payment.providerReference) {
             throw new Error('provider_reference_missing');
@@ -207,10 +219,17 @@ export async function startMobileMoneyPayment() {
             await saveCart();
             refreshCartDisplay();
 
+            pendingPaymentReference = null;
+            pendingPaymentOrder = null;
+            pendingPaymentCustomer = null;
             document.getElementById('orderModalOverlay')?.classList.remove('open');
             showToast('✅ Paiement confirmé');
             return;
         }
+
+        pendingPaymentReference = payment.providerReference;
+        pendingPaymentOrder = remoteOrder;
+        pendingPaymentCustomer = customer;
 
         const finalStatus = await waitForPayment(payment.providerReference);
 
@@ -218,7 +237,7 @@ export async function startMobileMoneyPayment() {
             recordPaidOrder({
                 remoteOrder,
                 selected,
-                customer
+                customer: pendingPaymentCustomer || customer
             });
 
             await saveOrders();
@@ -259,6 +278,11 @@ export async function startMobileMoneyPayment() {
         });
 
         const code = error instanceof Error ? error.message : String(error);
+
+        if (!pendingPaymentReference) {
+            pendingPaymentOrder = null;
+            pendingPaymentCustomer = null;
+        }
 
         if (code === 'phone_invalid') {
             showToast('⚠️ Numéro congolais invalide');
