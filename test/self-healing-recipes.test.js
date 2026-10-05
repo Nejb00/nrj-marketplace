@@ -85,3 +85,50 @@ test('garde-fou: une recette ne doit jamais remplacer plusieurs occurrences', ()
   assert.equal(countOccurrences(duplicated, recipe.find), 2);
   assert.notEqual(countOccurrences(duplicated, recipe.find), 1);
 });
+
+test('catalogue self-healing: gouvernance de bibliothèque', () => {
+  const catalog = loadCatalog();
+  const allowedWorkflows = new Set([
+    'CI',
+    'CodeQL',
+    'Dependency Review',
+    'Deployment Safety Net',
+    'Vercel Browser E2E',
+  ]);
+
+  assert.equal(Number.isInteger(catalog.max_recipes), true);
+  assert.ok(catalog.max_recipes > 0);
+  assert.ok(catalog.max_recipes <= 32);
+  assert.ok(catalog.recipes.length <= catalog.max_recipes);
+
+  const ids = new Set();
+  const recipeKeys = new Set();
+  for (const recipe of catalog.recipes) {
+    assert.equal(typeof recipe.enabled, 'boolean');
+    assert.equal(allowedWorkflows.has(recipe.workflow), true);
+    assert.equal(ids.has(recipe.id), false);
+    ids.add(recipe.id);
+
+    const key = [
+      recipe.workflow,
+      ...(recipe.signatures || []),
+      recipe.path,
+      recipe.find,
+    ].join('\0');
+    assert.equal(recipeKeys.has(key), false);
+    recipeKeys.add(key);
+
+    assert.ok(recipe.max_age_hours >= 1);
+    assert.ok(recipe.max_age_hours <= 24);
+    assert.ok(recipe.find.length <= 20000);
+    assert.ok(recipe.replace.length <= 20000);
+    assert.equal(recipe.path.startsWith('/'), false);
+    assert.equal(recipe.path.includes('\\\\'), false);
+    assert.equal(recipe.path.split('/').includes('..'), false);
+
+    for (const signature of recipe.signatures) {
+      assert.ok(signature.length > 0);
+      assert.ok(signature.length <= 2000);
+    }
+  }
+});
