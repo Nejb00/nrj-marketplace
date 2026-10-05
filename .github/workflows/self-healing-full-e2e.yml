@@ -1,4 +1,5 @@
 name: Self-Healing Full E2E
+# Controlled manual E2E gate; no production writes.
 
 on:
   workflow_dispatch:
