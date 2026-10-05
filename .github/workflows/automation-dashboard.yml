@@ -1,26 +1,13 @@
 name: Automation Dashboard
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
-    types: [opened, closed, reopened, synchronize]
+    types: [opened, closed, reopened]
   workflow_run:
     workflows:
       - CI
-      - CodeQL
-      - Dependency Review
-      - PR Labels
-      - PR Quality
-      - Project Report
-      - Release
-      - Repo Health
-      - Deployment Safety Net
-      - Vercel Browser E2E
-      - Incident Guard
     types: [completed]
-  deployment_status:
   release:
     types: [published, edited, deleted]
   schedule:
