@@ -29,7 +29,7 @@ function json(data: unknown, status = 200): Response {
 
 function getBearerToken(req: Request): string | null {
   const value = req.headers.get("authorization") || "";
-  const match = value.match(/^Bearer\\s+(.+)$/i);
+  const match = value.match(/^Bearer\s+(.+)$/i);
   return match?.[1] || null;
 }
 
@@ -38,7 +38,7 @@ function validOperator(value: unknown): value is "MTN" | "AIRTEL" {
 }
 
 function validPhone(value: unknown): value is string {
-  return typeof value === "string" && /^242\\d{9}$/.test(value);
+  return typeof value === "string" && /^242\d{9}$/.test(value);
 }
 
 function mapOpenPayStatus(status: unknown): InternalStatus {
@@ -310,8 +310,17 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json({ ok: false, error: "idempotency_key_invalid" }, 400);
   }
 
+  const expectedMethod = "openpay_" + body.operator.toLowerCase();
   const existing = await findPaymentByIdempotency(idempotencyKey);
+
   if (existing) {
+    if (existing.order_id !== order.id) {
+      return json({ ok: false, error: "idempotency_key_conflict" }, 409);
+    }
+    if (existing.payment_method !== expectedMethod) {
+      return json({ ok: false, error: "payment_operator_conflict" }, 409);
+    }
+
     return json({
       ok: true,
       reused: true,
@@ -331,7 +340,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         order_id: order.id,
         provider: "openpay",
-        payment_method: "openpay_" + body.operator.toLowerCase(),
+        payment_method: expectedMethod,
         provider_reference: null,
         idempotency_key: idempotencyKey,
         amount,
@@ -349,7 +358,15 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   if (!localPayment) {
     const concurrent = await findPaymentByIdempotency(idempotencyKey);
-    if (!concurrent) return json({ ok: false, error: "payment_persistence_failed" }, 500);
+    if (!concurrent) {
+      return json({ ok: false, error: "payment_persistence_failed" }, 500);
+    }
+    if (concurrent.order_id !== order.id) {
+      return json({ ok: false, error: "idempotency_key_conflict" }, 409);
+    }
+    if (concurrent.payment_method !== expectedMethod) {
+      return json({ ok: false, error: "payment_operator_conflict" }, 409);
+    }
 
     return json({
       ok: true,
