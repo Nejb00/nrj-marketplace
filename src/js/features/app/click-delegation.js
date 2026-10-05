@@ -7,6 +7,7 @@ import { applyFilter, clearSubcategorySelection } from '../catalogue/category-bu
 import { switchView } from '../catalogue/categories-page.js';
 import { refreshCatalogue } from '../catalogue/catalogue-init.js';
 import { addToCart, changeQty, removeCartItem } from '../../services/cart-actions.js';
+import { refreshCartDisplay } from '../../services/cart-panel.js';
 import { toggleFavorite } from '../../services/favorites.js';
 import { openOrderModal, sendWhatsAppOrder } from '../../services/checkout.js';
 import { openProductModal, closeProductModal } from '../product/modal-render.js';
