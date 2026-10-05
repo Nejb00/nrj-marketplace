@@ -179,7 +179,6 @@ Deno.serve(async (req) => {
     const categories = Array.isArray(categoriesResult.data) ? categoriesResult.data : [];
     if (!categories.length) throw new Error("catalogue_categories_vide");
 
-    const byId = new Map(categories.map((category) => [category.id, category]));
     // Le modèle voit le catalogue sémantique, mais jamais les UUID à écrire.
     // La clé de chemin évite les collisions de slugs réutilisés sous plusieurs parents.
     const byId = new Map(categories.map((category) => [category.id, category]));
