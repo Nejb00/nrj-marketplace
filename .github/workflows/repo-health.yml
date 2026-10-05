@@ -48,6 +48,7 @@ jobs:
               "Project Report",
               "Release",
               "Repo Health",
+              "Deployment Safety Net",
             ]);
 
             const workflows = await github.paginate(
