@@ -10,7 +10,8 @@
     "check:syntax": "node scripts/ci-check.mjs",
     "test": "node --test test/*.test.js",
     "test:smoke": "node scripts/smoke-test.mjs",
-    "sync": "node scripts/drive-sync.mjs"
+    "sync": "node scripts/drive-sync.mjs",
+    "check:business": "node --test test/business-invariants.test.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.32.0",
