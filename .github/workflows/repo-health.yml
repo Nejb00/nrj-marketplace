@@ -49,6 +49,8 @@ jobs:
               "Release",
               "Repo Health",
               "Deployment Safety Net",
+              "Vercel Browser E2E",
+              "Automation Dashboard",
             ]);
 
             const workflows = await github.paginate(

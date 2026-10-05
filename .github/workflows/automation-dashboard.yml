@@ -1,0 +1,284 @@
+name: Automation Dashboard
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [opened, closed, reopened, synchronize]
+  workflow_run:
+    workflows:
+      - CI
+      - CodeQL
+      - Dependency Review
+      - PR Labels
+      - PR Quality
+      - Project Report
+      - Release
+      - Repo Health
+      - Deployment Safety Net
+      - Vercel Browser E2E
+      - Incident Guard
+    types: [completed]
+  deployment_status:
+  release:
+    types: [published, edited, deleted]
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  deployments: read
+  issues: write
+
+concurrency:
+  group: automation-dashboard
+  cancel-in-progress: true
+
+jobs:
+  dashboard:
+    name: Refresh automation dashboard
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Générer le tableau de bord
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const dashboardTitle = '📊 NRJ Automation Dashboard';
+            const dashboardLabel = 'automation-dashboard';
+
+            const labelMeta = {
+              name: dashboardLabel,
+              color: '0E8A16',
+              description: 'Live repository automation dashboard',
+            };
+
+            try {
+              await github.rest.issues.getLabel({ owner, repo, name: dashboardLabel });
+            } catch (error) {
+              if (error.status !== 404) throw error;
+              await github.rest.issues.createLabel({ owner, repo, ...labelMeta });
+            }
+
+            const branch = await github.rest.repos.getBranch({
+              owner,
+              repo,
+              branch: 'main',
+            });
+
+            const workflows = await github.paginate(
+              github.rest.actions.listRepoWorkflows,
+              { owner, repo, per_page: 100 }
+            );
+
+            const workflowRows = await Promise.all(
+              workflows
+                .filter((workflow) => workflow.state === 'active')
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map(async (workflow) => {
+                  const runs = await github.rest.actions.listWorkflowRuns({
+                    owner,
+                    repo,
+                    workflow_id: workflow.id,
+                    per_page: 1,
+                  });
+
+                  const run = runs.data.workflow_runs[0];
+                  const conclusion = run?.conclusion || run?.status || 'never';
+                  const icon = conclusion === 'success'
+                    ? '✅'
+                    : ['failure', 'timed_out', 'action_required'].includes(conclusion)
+                      ? '❌'
+                      : conclusion === 'cancelled'
+                        ? '⏹️'
+                        : '🟡';
+                  const link = run
+                    ? `[${icon} ${conclusion}](${run.html_url})`
+                    : `${icon} never`;
+
+                  return {
+                    name: workflow.name,
+                    row: `|${workflow.name}|${link}|${run ? '<t:' + Math.floor(new Date(run.updated_at).getTime() / 1000) + ':R>' : '—'}|`,
+                    conclusion,
+                  };
+                })
+            );
+
+            const deployments = await github.rest.repos.listDeployments({
+              owner,
+              repo,
+              environment: 'Production',
+              per_page: 1,
+            });
+
+            let productionDeployment = null;
+            let productionStatus = null;
+
+            if (deployments.data[0]) {
+              productionDeployment = deployments.data[0];
+              const statuses = await github.rest.repos.listDeploymentStatuses({
+                owner,
+                repo,
+                deployment_id: productionDeployment.id,
+                per_page: 1,
+              });
+              productionStatus = statuses.data[0] || null;
+            }
+
+            const openPrs = await github.paginate(
+              github.rest.pulls.list,
+              { owner, repo, state: 'open', base: 'main', per_page: 100 }
+            );
+
+            const incidents = await github.paginate(
+              github.rest.issues.listForRepo,
+              { owner, repo, state: 'open', labels: 'incident', per_page: 100 }
+            );
+
+            const releases = await github.rest.repos.listReleases({
+              owner,
+              repo,
+              per_page: 5,
+            });
+
+            const latestRelease = releases.data[0] || null;
+            const e2e = workflowRows.find((item) => item.name === 'Vercel Browser E2E');
+
+            const productionIcon =
+              productionStatus?.state === 'success' ? '✅' :
+              ['error', 'failure'].includes(productionStatus?.state) ? '❌' :
+              productionStatus?.state ? '🟡' : '⚪';
+
+            const incidentText = incidents.length
+              ? incidents.map((issue) => `[${issue.title}]([${issue.html_url}])`).join('<br>')
+              : '✅ Aucun incident ouvert';
+
+            const prText = openPrs.length
+              ? openPrs.map((pr) => `[#${pr.number} — ${pr.title}]([${pr.html_url}])`).join('<br>')
+              : '✅ Aucune PR ouverte vers main';
+
+            const versionText = latestRelease
+              ? `[${latestRelease.tag_name}]([${latestRelease.html_url}])`
+              : 'Aucune release';
+
+            const e2eText = e2e
+              ? `[${e2e.conclusion}](${e2e.name})`
+              : '—';
+
+            const rows = workflowRows
+              .map((item) => item.row)
+              .join('\n');
+
+            const body = [
+              '<!-- nrj-automation-dashboard -->',
+              '# 📊 NRJ Automation Dashboard',
+              '',
+              `> Tableau de bord automatique du dépôt **${owner}/${repo}**.`,
+              `> Dernière actualisation : <t:${Math.floor(Date.now() / 1000)}:F>`,
+              '',
+              '## 🏰 État général',
+              '',
+              '| Élément | État | Détail |',
+              '|---|---|---|',
+              `| Branche main | ✅ | \`${branch.data.commit.sha.slice(0, 12)}\` |`,
+              `| Production Vercel | ${productionIcon} | ${productionDeployment ? '<t:' + Math.floor(new Date(productionDeployment.updated_at || productionDeployment.created_at).getTime() / 1000) + ':R>' : 'Aucun déploiement'} |`,
+              `| Dernière release | 🚀 | ${versionText} |`,
+              `| E2E Vercel | ${e2e?.conclusion === 'success' ? '✅' : e2e?.conclusion === 'failure' ? '❌' : '🟡'} | ${e2e?.conclusion || 'never'} |`,
+              `| PRs ouvertes vers main | ${openPrs.length ? '🟡' : '✅'} | ${openPrs.length} |`,
+              `| Incidents ouverts | ${incidents.length ? '🚨' : '✅'} | ${incidents.length} |`,
+              '',
+              '## 🤖 Workflows',
+              '',
+              '| Workflow | Dernier run | Mis à jour |',
+              '|---|---|---|',
+              rows || '| — | — | — |',
+              '',
+              '## 🚀 Déploiement production',
+              '',
+              productionDeployment
+                ? [
+                    `- Commit : \`${productionDeployment.sha?.slice(0, 12) || 'unknown'}\``,
+                    `- État : **${productionStatus?.state || productionDeployment.state || 'unknown'}**`,
+                    productionStatus?.target_url ? `- URL : [ouvrir](${productionStatus.target_url})` : '',
+                  ].filter(Boolean).join('\n')
+                : 'Aucun déploiement Production trouvé.',
+              '',
+              '## 🧪 E2E',
+              '',
+              e2e
+                ? `Dernier run : **${e2e.conclusion}** — la suite couvre accueil, catégories, recherche et panier.`
+                : 'Aucun run E2E trouvé.',
+              '',
+              '## 🔀 Pull Requests',
+              '',
+              prText,
+              '',
+              '## 🚨 Incidents',
+              '',
+              incidentText,
+              '',
+              '## 🔖 Release',
+              '',
+              versionText,
+              '',
+              '## 🔗 Liens',
+              '',
+              `- [Dépôt](https://github.com/${owner}/${repo})`,
+              '- [Production](https://nrj-marketplace.vercel.app)',
+              '- [Actions](https://github.com/' + owner + '/' + repo + '/actions)',
+            ].join('\n');
+
+            const allIssues = await github.paginate(
+              github.rest.issues.listForRepo,
+              { owner, repo, state: 'all', per_page: 100 }
+            );
+
+            const dashboardIssue = allIssues.find(
+              (issue) =>
+                !issue.pull_request &&
+                issue.title === dashboardTitle
+            );
+
+            if (dashboardIssue) {
+              await github.rest.issues.update({
+                owner,
+                repo,
+                issue_number: dashboardIssue.number,
+                state: 'open',
+                body,
+              });
+
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: dashboardIssue.number,
+                labels: [dashboardLabel],
+              });
+
+              core.info(`Dashboard mis à jour dans #${dashboardIssue.number}`);
+            } else {
+              const created = await github.rest.issues.create({
+                owner,
+                repo,
+                title: dashboardTitle,
+                body,
+                labels: [dashboardLabel],
+              });
+              core.info(`Dashboard créé dans #${created.data.number}`);
+            }
+
+            core.summary
+              .addHeading('Automation Dashboard')
+              .addTable([
+                ['Main', branch.data.commit.sha.slice(0, 12)],
+                ['Production', productionStatus?.state || 'unknown'],
+                ['Latest release', latestRelease?.tag_name || 'none'],
+                ['Open PRs', String(openPrs.length)],
+                ['Open incidents', String(incidents.length)],
+              ])
+              .write();
