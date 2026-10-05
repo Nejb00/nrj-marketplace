@@ -10,12 +10,63 @@ import { PaymentService } from './payment-service.js';
 
 const POLL_INTERVAL_MS = 4000;
 const MAX_POLLS = 10;
+const ORDER_IDEMPOTENCY_STORAGE_KEY = 'nrj_checkout_order_idempotency_key';
+const PAYMENT_IDEMPOTENCY_STORAGE_KEY = 'nrj_payment_idempotency_key';
 
 const provider = new OpenPayProvider();
 const paymentService = new PaymentService(provider);
 let pendingPaymentReference = null;
 let pendingPaymentOrder = null;
 let pendingPaymentCustomer = null;
+let paymentStartInFlight = false;
+
+function createIdempotencyKey(prefix) {
+    const random = globalThis.crypto?.randomUUID?.();
+    if (random) {
+        return prefix + ':' + random;
+    }
+
+    return prefix + ':' + Date.now() + ':' + Math.random().toString(36).slice(2);
+}
+
+function getSessionKey(storageKey, prefix) {
+    try {
+        const existing = sessionStorage.getItem(storageKey);
+        if (existing) return existing;
+
+        const created = createIdempotencyKey(prefix);
+        sessionStorage.setItem(storageKey, created);
+        return created;
+    } catch {
+        return createIdempotencyKey(prefix);
+    }
+}
+
+function clearSessionKey(storageKey) {
+    try {
+        sessionStorage.removeItem(storageKey);
+    } catch {
+        // Session storage may be unavailable; in-memory state still protects
+        // the active attempt.
+    }
+}
+
+function getOrderIdempotencyKey() {
+    return getSessionKey(ORDER_IDEMPOTENCY_STORAGE_KEY, 'order');
+}
+
+function getPaymentIdempotencyKey() {
+    return getSessionKey(PAYMENT_IDEMPOTENCY_STORAGE_KEY, 'payment');
+}
+
+function resetPaymentAttemptKey() {
+    clearSessionKey(PAYMENT_IDEMPOTENCY_STORAGE_KEY);
+}
+
+function resetCheckoutKeys() {
+    clearSessionKey(PAYMENT_IDEMPOTENCY_STORAGE_KEY);
+    clearSessionKey(ORDER_IDEMPOTENCY_STORAGE_KEY);
+}
 
 function setPaymentUi({ busy = false, message = '' } = {}) {
     const button = document.getElementById('startMobileMoneyBtn');
@@ -149,7 +200,9 @@ export async function startMobileMoneyPayment() {
     }
 
     const button = document.getElementById('startMobileMoneyBtn');
-    if (button?.disabled) return;
+    if (button?.disabled || paymentStartInFlight) return;
+
+    paymentStartInFlight = true;
 
     try {
         const customer = getPaymentInput();
@@ -165,11 +218,34 @@ export async function startMobileMoneyPayment() {
                 message: 'Création de la commande sécurisée…'
             });
 
-            remoteOrder = await createRemoteOrder({
-                items: buildRemoteItems(selected),
-                phone: customer.phone,
-                paymentMethod: 'openpay_' + customer.operator.toLowerCase()
-            });
+            const orderIdempotencyKey = getOrderIdempotencyKey();
+
+            try {
+                remoteOrder = await createRemoteOrder({
+                    items: buildRemoteItems(selected),
+                    phone: customer.phone,
+                    paymentMethod: 'openpay_' + customer.operator.toLowerCase(),
+                    idempotencyKey: orderIdempotencyKey
+                });
+            } catch (error) {
+                const code = error?.code || (error instanceof Error ? error.message : String(error));
+
+                // A reused browser key with changed cart/price/operator is a
+                // safe conflict, not a reason to duplicate the old order.
+                // Rotate only the ORDER key, then create a fresh checkout intent.
+                if (code !== 'order_idempotency_conflict') {
+                    throw error;
+                }
+
+                clearSessionKey(ORDER_IDEMPOTENCY_STORAGE_KEY);
+
+                remoteOrder = await createRemoteOrder({
+                    items: buildRemoteItems(selected),
+                    phone: customer.phone,
+                    paymentMethod: 'openpay_' + customer.operator.toLowerCase(),
+                    idempotencyKey: getOrderIdempotencyKey()
+                });
+            }
         }
 
         if (!remoteOrder?.order_id || !Number.isFinite(Number(remoteOrder.total)) ||
@@ -202,7 +278,8 @@ export async function startMobileMoneyPayment() {
                     metadata: {
                         operator: customer.operator,
                         customerName: customer.name
-                    }
+                    },
+                    idempotencyKey: getPaymentIdempotencyKey()
                 });
             } catch (error) {
                 const code = error?.code || (error instanceof Error ? error.message : String(error));
@@ -271,8 +348,27 @@ export async function startMobileMoneyPayment() {
             pendingPaymentReference = null;
             pendingPaymentOrder = null;
             pendingPaymentCustomer = null;
+            resetCheckoutKeys();
             document.getElementById('orderModalOverlay')?.classList.remove('open');
             showToast('✅ Paiement confirmé');
+            return;
+        }
+
+        if (payment.status === 'failed' || payment.status === 'cancelled') {
+            pendingPaymentReference = null;
+            pendingPaymentOrder = remoteOrder;
+            pendingPaymentCustomer = customer;
+            resetPaymentAttemptKey();
+
+            setPaymentUi({
+                busy: false,
+                message: payment.status === 'failed'
+                    ? 'Paiement refusé. Vous pouvez réessayer.'
+                    : 'Paiement annulé.'
+            });
+            showToast(payment.status === 'failed'
+                ? '❌ Paiement refusé'
+                : '⚠️ Paiement annulé');
             return;
         }
 
@@ -299,12 +395,16 @@ export async function startMobileMoneyPayment() {
             pendingPaymentReference = null;
             pendingPaymentOrder = null;
             pendingPaymentCustomer = null;
+            resetCheckoutKeys();
             document.getElementById('orderModalOverlay')?.classList.remove('open');
             showToast('✅ Paiement confirmé');
             return;
         }
 
         if (finalStatus === 'failed' || finalStatus === 'cancelled') {
+            pendingPaymentReference = null;
+            resetPaymentAttemptKey();
+
             setPaymentUi({
                 busy: false,
                 message: finalStatus === 'failed'
@@ -331,8 +431,7 @@ export async function startMobileMoneyPayment() {
 
         const code = error instanceof Error ? error.message : String(error);
 
-        if (!pendingPaymentReference) {
-            pendingPaymentOrder = null;
+        if (!pendingPaymentReference && !pendingPaymentOrder) {
             pendingPaymentCustomer = null;
         }
 
@@ -343,5 +442,8 @@ export async function startMobileMoneyPayment() {
         } else {
             showToast('❌ Paiement indisponible pour le moment');
         }
+    }
+    } finally {
+        paymentStartInFlight = false;
     }
 }
