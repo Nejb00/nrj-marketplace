@@ -123,7 +123,7 @@ async function executeStage(importId, stage, token, body, label) {
     await updatePipeline(importId, {
       current_stage: label,
       last_stage: label,
-      last_attempts: MAX_STAGE_RETRIES,
+      last_attempts: Number(error?.attempts || MAX_STAGE_RETRIES),
       last_error: String(error?.message || error).slice(0, 500),
       failed_at: new Date().toISOString()
     });
@@ -159,6 +159,7 @@ async function callStage(stage, token, body) {
       const detail = parsed?.detail || parsed?.error || raw.slice(0, 500) || "stage_failed";
       const error = new Error(detail);
       error.status = response.status;
+      error.attempts = attempt;
 
       // Retry uniquement les erreurs transitoires. Les validations restent définitives.
       if (response.status < 500 || attempt === MAX_STAGE_RETRIES) throw error;
@@ -273,6 +274,11 @@ Deno.serve(async (req) => {
       if (!recoveryAllowed(row)) {
         return json({ ok: true, importId, status: row.status, next_action: "manual_review", recovery_exhausted: true, steps });
       }
+      if (row.status === "FAILED") {
+        await updatePipeline(importId, {
+          retry_count: Math.min(MAX_RECOVERY_RETRIES, recoveryCount(row) + 1)
+        });
+      }
       if (!imageDataUrl) {
         return json({ ok: false, error: "image_requise_pour_analyse", status: row.status }, 409);
       }
@@ -299,6 +305,11 @@ Deno.serve(async (req) => {
     if (classificationNeeded) {
       if (!recoveryAllowed(row)) {
         return json({ ok: true, importId, status: row.status, next_action: "manual_review", recovery_exhausted: true, steps });
+      }
+      if (row.status === "FAILED") {
+        await updatePipeline(importId, {
+          retry_count: Math.min(MAX_RECOVERY_RETRIES, recoveryCount(row) + 1)
+        });
       }
       const stage = await executeStage(importId, "classify-product-import", token, { importId }, "classification");
       steps.push({ stage: "CLASSIFIED", attempts: stage.attempts });
