@@ -424,6 +424,40 @@ export function validatePayments(payments = []) {
     }
   });
 
+  // advanced payment chronology checks
+  const paidAt = payment.paid_at ? Date.parse(String(payment.paid_at)) : null;
+    const refundedAt = payment.refunded_at ? Date.parse(String(payment.refunded_at)) : null;
+
+    if (paidAt !== null && !Number.isNaN(paidAt) && refundedAt !== null && !Number.isNaN(refundedAt) && refundedAt < paidAt) {
+      violations.push(violation(
+        'PAYMENT-012',
+        entity,
+        'refunded_at must not precede paid_at.',
+        { paid_at: payment.paid_at, refunded_at: payment.refunded_at }
+      ));
+    }
+
+    if (paidAt !== null && !Number.isNaN(paidAt) && payment.created_at) {
+      const createdAt = Date.parse(String(payment.created_at));
+      if (!Number.isNaN(createdAt) && paidAt < createdAt) {
+        violations.push(violation(
+          'PAYMENT-013',
+          entity,
+          'paid_at must not precede created_at.',
+          { created_at: payment.created_at, paid_at: payment.paid_at }
+        ));
+      }
+    }
+
+    if (payment.status === 'refunded' && !payment.paid_at) {
+      violations.push(violation(
+        'PAYMENT-014',
+        entity,
+        'A refunded payment must have a settled payment timestamp.'
+      ));
+    }
+  });
+
   return violations;
 }
 
