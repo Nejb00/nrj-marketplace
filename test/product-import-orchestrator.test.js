@@ -55,6 +55,14 @@ test('orchestrator can recover pricing failures without new pricing input', () =
   assert.match(edge, /const retryPricing = pricing \|\| savedPricing/);
 });
 
+test('self-healing retries are bounded and stage-aware', () => {
+  assert.match(edge, /MAX_RECOVERY_RETRIES = 3/);
+  assert.match(edge, /recoveryAllowed\(row\)/);
+  assert.match(edge, /next_action: "manual_review"/);
+  assert.match(edge, /error\.attempts = attempt/);
+  assert.match(edge, /last_attempts: Number\(error\?\.attempts/);
+});
+
 test('orchestrator keeps secrets server-side', () => {
   assert.match(edge, /SERVICE_KEY/);
   assert.match(edge, /CLOUDINARY/);
