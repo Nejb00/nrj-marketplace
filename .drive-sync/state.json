@@ -249,8 +249,8 @@
       "driveMd5": "ad237c9efbf16219ea7fd2df1b769028"
     },
     "scripts/sync_to_notion.py": {
-      "githubSha": "83021759676f75d2295c1d98229004fc65e048f0",
-      "driveMd5": "e2e1cbb5d4dbac45d01b40647b9d06ba"
+      "githubSha": "345f6e3456991770d82afa931b46d6afcd617d79",
+      "driveMd5": "c8ef2e55a2b3d608f7cfff8479c4e898"
     },
     "src/css/base/base.css": {
       "githubSha": "23de71ad38f820ad84939cd2298ed9eb72f79f35",
@@ -704,6 +704,10 @@
       "githubSha": "e44a6c81e2943cecdcaf35ece6b9b55e6673fbfa",
       "driveMd5": "5d9938dc78daeb20ceee22725688f022"
     },
+    "test/notion-sync-resilience.test.js": {
+      "githubSha": "02812637bdc153b22d48128fd68ae3bc80de7274",
+      "driveMd5": "2fead946d70c715b2805930dc06334b6"
+    },
     "test/project-report-routing.test.js": {
       "githubSha": "2daf4ccffdb6739aa05d3f0c956d5cb47a8c2fb9",
       "driveMd5": "d3ea51f4b3bc309d4709dd6d22041767"
@@ -765,5 +769,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-05T08:08:44.362Z"
+  "updatedAt": "2026-10-05T08:28:49.450Z"
 }
