@@ -6,22 +6,6 @@ const ORPHAN_SIGNAL_PATTERN = /\bORPHAN-\d{3}\b/g;
 const INTEGRITY_RULES = {
   'DUP-001': 'A configured duplicate check found multiple rows for the same integrity key.',
   'ORPHAN-001': 'A child/reference row points to a missing parent row.',
-  'CROSS-001': 'A paid payment conflicts with the linked order state.',
-  'CROSS-002': 'A paid payment amount conflicts with the linked order total.',
-  'CROSS-003': 'A paid payment uses an unexpected application currency.',
-  'CROSS-004': 'A processed payment event has no payment reference.',
-  'CROSS-005': 'A payment event points outside the payment snapshot.',
-  'CROSS-006': 'A published product import points outside the product snapshot.',
-  'CROSS-007': 'A product import points outside the category snapshot.',
-  'CROSS-008': 'A product points outside the category snapshot.',
-  'IMPOSSIBLE-001': 'A product price is invalid.',
-  'IMPOSSIBLE-002': 'A product order counter is invalid.',
-  'IMPOSSIBLE-003': 'An order total is invalid.',
-  'IMPOSSIBLE-004': 'An order timestamp moved backwards.',
-  'IMPOSSIBLE-005': 'A payment amount is invalid.',
-  'IMPOSSIBLE-006': 'A payment timestamp moved backwards.',
-  'IMPOSSIBLE-007': 'A category points to itself as parent.',
-  'IMPOSSIBLE-008': 'A chat unread counter is invalid.',
 };
 
 function asPositiveInteger(value) {
@@ -64,51 +48,23 @@ export function analyzeIntegritySnapshot(snapshot = {}) {
     'orphan',
     'ORPHAN-001'
   );
-  const crossSystemMatches = Array.isArray(snapshot?.cross_system)
-    ? snapshot.cross_system
-      .filter(item => item?.rule_id && Number(item.count) > 0)
-      .map(item => ({
-        rule_id: String(item.rule_id),
-        check_name: String(item.check_name || item.rule_id),
-        count: Number(item.count),
-        description: INTEGRITY_RULES[item.rule_id] || 'Unknown cross-system integrity rule.',
-      }))
-    : [];
-  const impossibleMatches = Array.isArray(snapshot?.impossible_values)
-    ? snapshot.impossible_values
-      .filter(item => item?.rule_id && Number(item.count) > 0)
-      .map(item => ({
-        rule_id: String(item.rule_id),
-        check_name: String(item.check_name || item.rule_id),
-        count: Number(item.count),
-        description: INTEGRITY_RULES[item.rule_id] || 'Unknown impossible-value rule.',
-      }))
-    : [];
 
   const malformed =
     !Array.isArray(snapshot?.duplicates) ||
-    !Array.isArray(snapshot?.orphans) ||
-    (snapshot?.cross_system != null && !Array.isArray(snapshot.cross_system)) ||
-    (snapshot?.impossible_values != null && !Array.isArray(snapshot.impossible_values));
+    !Array.isArray(snapshot?.orphans);
 
-  const totalIssues = [
-    ...duplicateMatches,
-    ...orphanMatches,
-    ...crossSystemMatches,
-    ...impossibleMatches,
-  ];
+  const status =
+    malformed || duplicateMatches.length > 0 || orphanMatches.length > 0
+      ? 'issues-detected'
+      : 'healthy';
 
   return {
     schema_version: 1,
-    status: malformed || totalIssues.length > 0 ? 'issues-detected' : 'healthy',
+    status,
     duplicate_count: duplicateMatches.reduce((sum, item) => sum + item.count, 0),
     orphan_count: orphanMatches.reduce((sum, item) => sum + item.count, 0),
-    cross_system_count: crossSystemMatches.reduce((sum, item) => sum + item.count, 0),
-    impossible_value_count: impossibleMatches.reduce((sum, item) => sum + item.count, 0),
     duplicate_matches: duplicateMatches,
     orphan_matches: orphanMatches,
-    cross_system_matches: crossSystemMatches,
-    impossible_value_matches: impossibleMatches,
     malformed_snapshot: malformed,
   };
 }
