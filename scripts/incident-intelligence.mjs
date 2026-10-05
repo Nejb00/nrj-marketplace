@@ -21,9 +21,20 @@ const BUSINESS_RULES = {
   'IMPORT-004': 'Failed import has no error evidence.',
   'IMPORT-005': 'Ready import has no product name.',
   'IMPORT-006': 'Ready import has no valid calculated price.',
+  'PAYMENT-001': 'Payment has no order reference.',
+  'PAYMENT-002': 'Payment has no provider.',
+  'PAYMENT-003': 'Payment has no idempotency key.',
+  'PAYMENT-004': 'Payment amount is not positive and finite.',
+  'PAYMENT-005': 'Payment currency is not a three-letter uppercase code.',
+  'PAYMENT-006': 'Payment status is outside the known lifecycle.',
+  'PAYMENT-007': 'Settled payment has no paid_at timestamp.',
+  'PAYMENT-008': 'Refunded payment has no refunded_at timestamp.',
+  'PAYMENT-009': 'Non-settled payment exposes paid_at.',
+  'PAYMENT-010': 'Payment paid_at timestamp is invalid.',
+  'PAYMENT-011': 'Payment refunded_at timestamp is invalid.',
 };
 
-const BUSINESS_RULE_PATTERN = /\b(?:CART|ORDER|IMPORT)-\d{3}\b/g;
+const BUSINESS_RULE_PATTERN = /\b(?:CART|ORDER|IMPORT|PAYMENT)-\d{3}\b/g;
 
 export function extractBusinessInvariantMatches(logTexts = []) {
   const found = new Set();
