@@ -206,6 +206,15 @@ async function findPaymentByIdempotency(key: string): Promise<PaymentRow | null>
   return result.data?.[0] || null;
 }
 
+async function findLivePaymentForOrder(orderId: string): Promise<PaymentRow | null> {
+  const result = await supabaseRest<PaymentRow[]>(
+    "payments?select=id,order_id,provider,payment_method,provider_reference,idempotency_key,amount,currency,status&provider=eq.openpay&order_id=eq." +
+      encodeURIComponent(orderId) +
+      "&status=in.(pending,processing,paid,refund_pending,refunded)&limit=1"
+  );
+  return result.data?.[0] || null;
+}
+
 async function findOwnedPayment(reference: string, token: string): Promise<PaymentRow | null> {
   const result = await supabaseRest<PaymentRow[]>(
     "payments?select=id,order_id,provider,payment_method,provider_reference,idempotency_key,amount,currency,status&provider=eq.openpay&provider_reference=eq." +
@@ -336,6 +345,21 @@ Deno.serve(async (req: Request): Promise<Response> => {
     });
   }
 
+  const livePayment = await findLivePaymentForOrder(order.id);
+  if (livePayment) {
+    if (livePayment.payment_method !== expectedMethod) {
+      return json({ ok: false, error: "payment_operator_conflict" }, 409);
+    }
+    return json({
+      ok: true,
+      reused: true,
+      concurrent_live: true,
+      payment_id: livePayment.id,
+      provider_reference: livePayment.provider_reference,
+      status: livePayment.status
+    });
+  }
+
   const insert = await supabaseRest<PaymentRow[]>(
     "payments",
     {
@@ -357,6 +381,20 @@ Deno.serve(async (req: Request): Promise<Response> => {
   );
 
   if (insert.error) {
+    const concurrent = await findLivePaymentForOrder(order.id);
+    if (concurrent) {
+      if (concurrent.payment_method !== expectedMethod) {
+        return json({ ok: false, error: "payment_operator_conflict" }, 409);
+      }
+      return json({
+        ok: true,
+        reused: true,
+        concurrent_live: true,
+        payment_id: concurrent.id,
+        provider_reference: concurrent.provider_reference,
+        status: concurrent.status
+      });
+    }
     return json({ ok: false, error: "payment_persistence_failed" }, 500);
   }
 
