@@ -450,6 +450,23 @@ export async function uploadProductImportMedia(importId, imageDataUrl) {
     }
 }
 
+export async function publishProductImport(importId, approve = false) {
+    try {
+        const { data, error } = await fetchWithTimeout(
+            supabaseClient.functions.invoke('publish-product-import', {
+                body: { importId, approve }
+            }),
+            30000
+        );
+        if (error) throw error;
+        if (!data?.ok) throw new Error(data?.detail || data?.error || 'Publication impossible');
+        return data;
+    } catch (err) {
+        console.error('Erreur publish product import:', err);
+        throw err;
+    }
+}
+
 export async function deleteProductImport(id) {
     try {
         const { error } = await fetchWithTimeout(
