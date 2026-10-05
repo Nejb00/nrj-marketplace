@@ -106,6 +106,7 @@ export class OpenPayProvider extends PaymentProvider {
             currency,
             payment_phone_number: phone,
             operator,
+            customer_name: customer?.name || metadata.customerName || null,
             idempotency_key: idempotencyKey || null
         });
 
