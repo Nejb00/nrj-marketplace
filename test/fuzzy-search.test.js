@@ -14,7 +14,7 @@ test('normalizeString normalise les accents et espaces', () => {
 test('levenshteinDistance calcule correctement la distance', () => {
   assert.equal(levenshteinDistance('chat', 'chat'), 0);
   assert.equal(levenshteinDistance('chat', 'chats'), 1);
-  assert.equal(levenshteinDistance('chat', 'chien'), 4);
+  assert.equal(levenshteinDistance('chat', 'chien'), 3);
 });
 
 test('calculateSearchScore favorise une correspondance exacte du nom', () => {
