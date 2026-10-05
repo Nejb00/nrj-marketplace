@@ -17,6 +17,7 @@ on:
           - inspect
           - retry-failed
           - prepare-fix
+          - repair
           - help
       run_id:
         description: 'ID du run à inspecter (pour inspect)'
@@ -33,6 +34,11 @@ on:
         required: false
         default: false
         type: boolean
+      repair_payload:
+        description: 'JSON du patch pour repair'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: write
@@ -63,6 +69,7 @@ jobs:
           MANUAL_COMMAND: ${{ inputs.command || '' }}
           MANUAL_RUN_ID: ${{ inputs.run_id || '' }}
           MANUAL_FIX_PAYLOAD: ${{ inputs.fix_payload || '' }}
+          MANUAL_REPAIR_PAYLOAD: ${{ inputs.repair_payload || '' }}
           MANUAL_CONFIRM: ${{ inputs.confirm || false }}
         uses: actions/github-script@v9
         with:
@@ -107,6 +114,7 @@ jobs:
               'inspect',
               'retry-failed',
               'prepare-fix',
+              'repair',
               'help',
             ]);
 
@@ -350,6 +358,121 @@ jobs:
               }
             }
 
+            if (command === 'repair') {
+              const confirmed = context.eventName === 'workflow_dispatch'
+                ? manualConfirmed
+                : /^confirm\b/i.test(argText);
+
+              if (!confirmed) {
+                operatorLines.push('### 🧭 Repair Pipeline');
+                operatorLines.push('');
+                operatorLines.push('🔐 Confirmation requise.');
+                operatorLines.push('Cette commande enchaîne : inspection → validation du patch → branche → Draft PR.');
+                operatorLines.push('');
+                operatorLines.push('Pour un commentaire : `/operator repair confirm {"run_id":123,"fix":{"path":"...","find":"...","replace":"..."}}`');
+              } else {
+                const payloadText = context.eventName === 'workflow_dispatch'
+                  ? (process.env.MANUAL_REPAIR_PAYLOAD || '')
+                  : argText.replace(/^confirm\s+/i, '').trim();
+
+                let pipeline = null;
+                try {
+                  pipeline = JSON.parse(payloadText);
+                } catch (error) {
+                  operatorLines.push('### 🧭 Repair Pipeline');
+                  operatorLines.push('');
+                  operatorLines.push('❌ Payload JSON invalide : ' + error.message);
+                }
+
+                if (pipeline) {
+                  const runId = Number.parseInt(String(pipeline.run_id || ''), 10);
+                  const fix = pipeline.fix || {};
+
+                  try {
+                    operatorLines.push('### 🧭 Repair Pipeline');
+                    operatorLines.push('');
+                    operatorLines.push('**Phase 1/3 — Inspection**');
+
+                    const run = (await github.rest.actions.getWorkflowRun({
+                      owner, repo, run_id: runId
+                    })).data;
+
+                    if (!Number.isSafeInteger(runId) || runId <= 0) throw new Error('run_id invalide.');
+                    if (run.head_branch !== 'main') throw new Error('Le run ciblé ne provient pas de main.');
+                    if (run.conclusion !== 'failure') throw new Error('Le run ciblé n’est pas en échec.');
+                    if (Date.now() - new Date(run.updated_at).getTime() > 30 * 24 * 60 * 60 * 1000) throw new Error('Le run est trop ancien (> 30 jours).');
+
+                    const jobs = (await github.rest.actions.listJobsForWorkflowRun({
+                      owner, repo, run_id: runId, per_page: 100
+                    })).data.jobs || [];
+                    const failedJobs = jobs.filter((job) => job.conclusion === 'failure');
+                    if (!failedJobs.length) throw new Error('Aucun job échoué détecté.');
+                    operatorLines.push('✅ Run #' + run.id + ' confirmé en échec sur `main`.');
+                    operatorLines.push('');
+
+                    operatorLines.push('**Phase 2/3 — Validation du patch**');
+                    const path = typeof fix.path === 'string' ? fix.path.trim() : '';
+                    const findText = typeof fix.find === 'string' ? fix.find : '';
+                    const replaceText = typeof fix.replace === 'string' ? fix.replace : '';
+                    const title = typeof fix.title === 'string' && fix.title.trim()
+                      ? fix.title.trim()
+                      : 'fix(automation): operator repair';
+                    const allowedPath = path.startsWith('src/') || path.startsWith('tests/') ||
+                      path.startsWith('.github/workflows/') || path === 'package.json' || path.startsWith('vite.config.');
+                    const forbiddenPath = path === '.github/workflows/github-operator.yml' ||
+                      /(^|\/)(?:\.env|secrets|credentials|id_rsa)(?:\.|\/|$)/i.test(path) ||
+                      /\.(?:pem|key|p12|pfx)$/i.test(path);
+                    if (!allowedPath || forbiddenPath) throw new Error('Chemin de fichier non autorisé : ' + path);
+                    if (!findText) throw new Error('find ne peut pas être vide.');
+                    if (findText.length > 20000 || replaceText.length > 20000) throw new Error('Patch trop volumineux.');
+
+                    const file = (await github.rest.repos.getContent({
+                      owner, repo, path, ref: 'main'
+                    })).data;
+                    if (Array.isArray(file) || !file.content) throw new Error('Fichier cible inaccessible.');
+                    const current = Buffer.from(file.content, file.encoding || 'base64').toString('utf8');
+                    const occurrences = current.split(findText).length - 1;
+                    if (occurrences !== 1) throw new Error('Le texte ciblé doit apparaître exactement une fois ; trouvé : ' + occurrences);
+                    const next = current.replace(findText, replaceText);
+                    operatorLines.push('✅ Patch déterministe validé sur `' + path + '` (1 occurrence).');
+                    operatorLines.push('');
+
+                    operatorLines.push('**Phase 3/3 — Création isolée**');
+                    const branchName = 'operator/repair-' + runId + '-' + Date.now();
+                    await github.rest.git.createRef({
+                      owner, repo, ref: 'refs/heads/' + branchName, sha: branch.data.commit.sha
+                    });
+                    await github.rest.repos.createOrUpdateFileContents({
+                      owner, repo, path, branch: branchName,
+                      message: title.slice(0, 120),
+                      content: Buffer.from(next, 'utf8').toString('base64'),
+                      sha: file.sha
+                    });
+
+                    const pr = (await github.rest.pulls.create({
+                      owner, repo, title, head: branchName, base: 'main', draft: true,
+                      body: [
+                        '## 🧭 Operator Repair Pipeline',
+                        '',
+                        'Run source : #' + runId,
+                        'Fichier : `' + path + '`',
+                        'Branche : `' + branchName + '`',
+                        'Pipeline : inspection → patch validé → Draft PR',
+                        '',
+                        'Aucun changement direct sur `main`. Les checks doivent valider cette PR avant toute fusion.'
+                      ].join('\n')
+                    })).data;
+
+                    operatorLines.push('✅ Branche créée : `' + branchName + '`');
+                    operatorLines.push('✅ Draft PR créée : [#' + pr.number + '](' + pr.html_url + ')');
+                    operatorLines.push('');
+                    operatorLines.push('🏁 Pipeline terminé sans écrire directement dans `main`.');
+                  } catch (error) {
+                    operatorLines.push('❌ Pipeline interrompu : ' + error.message);
+                  }
+                }
+              }
+            }
             if (command === 'prepare-fix') {
               const confirmed = context.eventName === 'workflow_dispatch'
                 ? manualConfirmed
@@ -469,7 +592,8 @@ jobs:
               operatorLines.push('- `/operator prs` — PRs récentes vers main');
               operatorLines.push('- `/operator inspect <run_id>` — analyse d’un run');
               operatorLines.push('- `/operator retry-failed confirm` — relance contrôlée');
-              operatorLines.push('- `/operator prepare-fix confirm {"path":"...","find":"...","replace":"..."}` — prépare une correction en Draft PR');
+              operatorLines.push('- `/operator prepare-fix confirm {"path":"...","find":"...","replace":"..."}` — prépare une correction');
+              operatorLines.push('- `/operator repair confirm {"run_id":123,"fix":{"path":"...","find":"...","replace":"..."}}` — orchestre inspection → réparation → Draft PR');
               operatorLines.push('- `/operator help` — cette aide');
               operatorLines.push('');
               operatorLines.push('> 🔒 Aucune modification directe de `main`, aucun shell depuis un commentaire et aucune fusion automatique.');
@@ -537,7 +661,7 @@ jobs:
 
             operatorLines.push('');
             operatorLines.push('---');
-            operatorLines.push('🔒 **Garde-fou :** pas de shell depuis les commentaires, pas de modification directe de `main`, pas de merge automatique. Les réparations passent par une Draft PR.');
+            operatorLines.push('🔒 **Garde-fou :** aucun shell depuis les commentaires, aucune modification directe de `main` et aucun merge automatique. Le pipeline s’arrête dès qu’une phase échoue.');
 
             const response = operatorLines.join('\n');
 
