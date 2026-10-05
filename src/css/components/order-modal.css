@@ -1,0 +1,144 @@
+/* Checkout / commande */
+
+.order-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  display: none;
+  place-items: center;
+  z-index: 1200;
+  padding: 1rem;
+}
+
+.order-modal-overlay.open {
+  display: grid;
+}
+
+.order-modal {
+  width: min(100%, 560px);
+  max-height: min(92vh, 760px);
+  overflow: auto;
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 22px;
+  box-shadow: 0 18px 60px rgba(0,0,0,.28);
+}
+
+.order-modal-header,
+.order-modal-content {
+  padding: 1rem 1.1rem;
+}
+
+.order-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.order-modal-close {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 1.6rem;
+  cursor: pointer;
+}
+
+.order-summary {
+  border: 1px solid rgba(127,127,127,.18);
+  border-radius: 16px;
+  padding: .9rem;
+  margin-bottom: 1rem;
+  font-size: .88rem;
+  line-height: 1.5;
+}
+
+.order-form-grid {
+  display: grid;
+  gap: .85rem;
+}
+
+.order-form-grid label {
+  display: grid;
+  gap: .35rem;
+  font-size: .82rem;
+  font-weight: 700;
+}
+
+.order-form-grid input,
+.order-form-grid select {
+  min-height: 48px;
+  border: 1px solid rgba(127,127,127,.25);
+  border-radius: 14px;
+  padding: 0 .9rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.order-payment-note {
+  display: grid;
+  gap: .2rem;
+  margin-top: .9rem;
+  padding: .8rem .9rem;
+  border-radius: 14px;
+  background: rgba(255, 166, 0, 0.1);
+  font-size: .8rem;
+}
+
+.order-payment-note span {
+  opacity: .75;
+}
+
+.order-modal-actions {
+  display: grid;
+  gap: .65rem;
+  margin-top: 1rem;
+}
+
+.order-whatsapp-btn,
+.order-payment-btn {
+  min-height: 50px;
+  border: 0;
+  border-radius: 15px;
+  padding: 0 1rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.order-whatsapp-btn {
+  background: #25d366;
+  color: #07130b;
+}
+
+.order-payment-btn {
+  background: rgba(127,127,127,.14);
+  color: inherit;
+}
+
+.order-payment-btn:disabled {
+  cursor: not-allowed;
+  opacity: .48;
+}
+
+.order-modal-footnote {
+  margin: .8rem 0 0;
+  text-align: center;
+  font-size: .72rem;
+  opacity: .52;
+}
+
+@media (min-width: 640px) {
+  .order-modal-overlay {
+    align-items: center;
+  }
+
+  .order-modal {
+    border-radius: 24px;
+  }
+
+  .order-form-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

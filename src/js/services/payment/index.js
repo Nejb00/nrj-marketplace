@@ -6,7 +6,13 @@ export {
 
 export { PaymentService } from './payment-service.js';
 export { MockPaymentProvider } from './mock-payment-provider.js';
+
 export {
     OpenPayProvider,
     OPENPAY_FUNCTION_ENDPOINT
 } from './openpay-provider.js';
+
+export {
+    createRemoteOrder,
+    CREATE_ORDER_FUNCTION_ENDPOINT
+} from './order-service.js';
