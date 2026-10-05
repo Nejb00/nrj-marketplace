@@ -20,9 +20,21 @@
       "githubSha": "f2969c45acfec580cc71153dfb92bfdd1c61b11e",
       "driveMd5": "a266343992b97e5978acb2b0ba89ff55"
     },
+    ".github/workflows/automation-cost-benchmark.yml": {
+      "githubSha": "3888d682fba358ab58ec7d4ceab9980b5bf29820",
+      "driveMd5": "ab2815b1f1c49bc356dcf94cb4f155cf"
+    },
     ".github/workflows/automation-dashboard.yml": {
-      "githubSha": "6a5adddf6b47d41e2960c17d8e4f15629feeae00",
-      "driveMd5": "81821dad32215e7d5283e50500598209"
+      "githubSha": "01797bfcc1a68417006893b89db8197286393f6b",
+      "driveMd5": "bf98ae3df4e2c1ea506e7ba12fbb1e20"
+    },
+    ".github/workflows/automation-debug-benchmark.yml": {
+      "githubSha": "e0c43a1d2593f845e486871b43a65b45a5ccdc9e",
+      "driveMd5": "95fe078e0ea1f0e78f3575f73c583d0c"
+    },
+    ".github/workflows/automation-real-incident-observer.yml": {
+      "githubSha": "e95a974b1603a30a1a47072233c12001c51e4baa",
+      "driveMd5": "ce2444ebea0986ee2c3670c76eaafca5"
     },
     ".github/workflows/branch-maintenance.yml": {
       "githubSha": "7cc1742ee2e2dba173516b80c2dd72415a705163",
@@ -69,8 +81,8 @@
       "driveMd5": "5f99c8a6fed04d55cc5d17fd6795baa0"
     },
     ".github/workflows/project-report.yml": {
-      "githubSha": "a486729a53810ae333b14a8cba75266bf1a14dba",
-      "driveMd5": "87224cf85196a15432d9dc2de7dae57c"
+      "githubSha": "ecb83787b5a573a8bdb2e98c88fc9e7afb72b0a9",
+      "driveMd5": "3d59a7918f2df3994ea453de8878ec6f"
     },
     ".github/workflows/release.yml": {
       "githubSha": "4357fb00caea888e6f6679557e5ed7fcb9a2067a",
@@ -97,8 +109,8 @@
       "driveMd5": "c93e5fa6985e3513cf3f4cab370fb6de"
     },
     ".github/workflows/vercel-browser-e2e.yml": {
-      "githubSha": "45a5cf267a0b6c700e144a8eb46493ebe3c6ef02",
-      "driveMd5": "40e62b0561b1b5b3bbd6b0f745f36d4e"
+      "githubSha": "94ef15919ce7e1109d847e05ac22d05538490443",
+      "driveMd5": "e01e4a21f86b40b87a09231b71ce24b7"
     },
     ".gitignore": {
       "githubSha": "7aaedd212125842e055efc0be8f486fd67fbfe1e",
@@ -119,6 +131,10 @@
     "api/og-product.js": {
       "githubSha": "30ead57d3aa214884c0f14d491e01bd7cd1f8216",
       "driveMd5": "bfc6fe004c6c18f027fc6178c21772b6"
+    },
+    "docs/automation-workflow-topology.md": {
+      "githubSha": "0402cbf4cb3972401c5a2234aa6439791be54893",
+      "driveMd5": "05e682d6c81ef02f6c8f9c9e4eeff948"
     },
     "index.html": {
       "githubSha": "f9a00f7f032814ca396c56250714182b554b725c",
@@ -184,13 +200,29 @@
       "githubSha": "b6ea6d11b6c906c21f0d8e7ae0ea9eca3fe3db4a",
       "driveMd5": "38d451c5ebf1c0486829c568841de4b8"
     },
+    "scripts/automation-benchmark.mjs": {
+      "githubSha": "344653df949ede56e7fff3f5cb0fdb141a946ee0",
+      "driveMd5": "4acb0ba1e08ca564599ba5eb28ed0fef"
+    },
+    "scripts/automation-cost-benchmark.mjs": {
+      "githubSha": "cb44f179e044119504c3197a050003581c41b5b1",
+      "driveMd5": "f98d7726ca10e747f96fb76a25d49cc8"
+    },
+    "scripts/automation-real-incident-observer.mjs": {
+      "githubSha": "9cc2bab85f8c0b959a7ceb2b8bf4fc39d39a9e1d",
+      "driveMd5": "6634abc74f4bf035f8900266404f018b"
+    },
+    "scripts/automation-topology.mjs": {
+      "githubSha": "b046c914b33446df3d63690ee601ee14f288151c",
+      "driveMd5": "deb1fa0f249be07cd4ad7e956171135a"
+    },
     "scripts/ci-check.mjs": {
       "githubSha": "7ce58ba3218f42f8d4897991fac8321cdbfdf974",
       "driveMd5": "edfa55323f526b7a818d8aac847bdc83"
     },
     "scripts/drive-sync.mjs": {
-      "githubSha": "e096f186b1676fce8b39a7ef5e848a43b0fde9c6",
-      "driveMd5": "7f9708f0e3517853f643a0e1468e6e49"
+      "githubSha": "bf668574dc2ec2f93f7ddc50c9314a3b326df28e",
+      "driveMd5": "6703e5ca7409710394b9feb6248ea949"
     },
     "scripts/incident-intelligence.mjs": {
       "githubSha": "52710f2d19c5cbaba9ed65edec3014e72b3b66c3",
@@ -640,9 +672,29 @@
       "githubSha": "52d53aef4531add8c5c14e50e2135e20e1ee87b6",
       "driveMd5": "671b54d4ee6b0f6c75b658f180f8486d"
     },
+    "test/automation-benchmark.test.js": {
+      "githubSha": "bbea12001bc50780253eb562835cc9b4f2d28f5e",
+      "driveMd5": "5844f32bec5aff131a40750ed12dcfe8"
+    },
+    "test/automation-cost-benchmark.test.js": {
+      "githubSha": "c1db6404ef7240d3afed6ce116eb171fb5a66631",
+      "driveMd5": "435eb1b4889ecc786672054d0681402c"
+    },
+    "test/automation-dashboard-routing.test.js": {
+      "githubSha": "c6806cb9b2500fbada441220f0ea0df9088fdd4b",
+      "driveMd5": "e0d605c0aec01198e9ebcb102950c4cc"
+    },
+    "test/automation-real-incident-observer.test.js": {
+      "githubSha": "3e9551e444243271825c263487f3ba4a1d4fccd1",
+      "driveMd5": "f200bfab0bfd7c7d0116f879232b239f"
+    },
+    "test/automation-topology.test.js": {
+      "githubSha": "1e4ad027fedb80779e7682d8ccaf8486173fc03b",
+      "driveMd5": "5ff881c3e3ab16027592b1dfdbac7ab5"
+    },
     "test/drive-sync-optimization.test.js": {
-      "githubSha": "80532e3c3553345fcf64de1156b4e60d1e713565",
-      "driveMd5": "0975ef1c4c3ec7bd88bdde865a819a87"
+      "githubSha": "e4866d521e40c05bde0955ef36f2d7ebcba9aab6",
+      "driveMd5": "d1beac4773ff9456fd7fbdd1adabb0a9"
     },
     "test/fuzzy-search.test.js": {
       "githubSha": "0812dfef8529af76b35e15461e0d735856d0d2bd",
@@ -651,6 +703,10 @@
     "test/incident-intelligence.test.js": {
       "githubSha": "e44a6c81e2943cecdcaf35ece6b9b55e6673fbfa",
       "driveMd5": "5d9938dc78daeb20ceee22725688f022"
+    },
+    "test/project-report-routing.test.js": {
+      "githubSha": "2daf4ccffdb6739aa05d3f0c956d5cb47a8c2fb9",
+      "driveMd5": "d3ea51f4b3bc309d4709dd6d22041767"
     },
     "test/self-healing-ai-comment-parser.test.js": {
       "githubSha": "c9b6dbc46ccc814ac48e5f7d06f20a9e59097dca",
@@ -668,6 +724,10 @@
       "githubSha": "e600c40c072e8489af9676325ff10f5bea036c9f",
       "driveMd5": "53aae155aeda6a5805429a9c93b58ec6"
     },
+    "test/self-healing-safety-contract.test.js": {
+      "githubSha": "b1c8403581ca22db3f06bcc157239fc5119afc68",
+      "driveMd5": "d1aa70a487e190e0e6b4078b0e94119f"
+    },
     "test/self-healing-simulation.test.js": {
       "githubSha": "f67638a6e1c7ccea215876a6c7d415c7462bca0d",
       "driveMd5": "8f8e49155ad8d52cc15ac1552029936e"
@@ -675,6 +735,10 @@
     "test/self-healing-verification.test.js": {
       "githubSha": "33aa0a9c7692a93781dec0c2e2930715680cacce",
       "driveMd5": "08de7a1bd6243c1cdf5e82afe5b45a80"
+    },
+    "test/vercel-browser-e2e-routing.test.js": {
+      "githubSha": "c01e4524748114cc42a298fc27b06a86d2605d7b",
+      "driveMd5": "d8af5109a8fb2ebc65c4a4cf2964474e"
     },
     "tests/e2e/production.spec.mjs": {
       "githubSha": "95893bd4efcee16eab126e51b69b0a1070a2334d",
@@ -697,5 +761,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-05T06:34:49.843Z"
+  "updatedAt": "2026-10-05T08:07:45.339Z"
 }
