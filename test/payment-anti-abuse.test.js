@@ -24,6 +24,7 @@ const migration = fs.readFileSync(
 );
 
 test('ATTAQUE #22 adds durable checkout idempotency per user', () => {
+  assert.match(migration, /orders_checkout_idempotency_uidx/);
   assert.match(
     migration,
     /ALTER TABLE public\.orders[\s\S]+ADD COLUMN IF NOT EXISTS checkout_idempotency_key text/,
