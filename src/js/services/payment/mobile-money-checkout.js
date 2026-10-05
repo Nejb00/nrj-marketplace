@@ -146,6 +146,12 @@ function buildRemoteItems(selected) {
 }
 
 function recordPaidOrder({ remoteOrder, selected, customer }) {
+    const alreadyRecorded = (state.orders || []).some(
+        order => order.remoteOrderId === remoteOrder.order_id
+    );
+
+    if (alreadyRecorded) return;
+
     const productMap = new Map(
         state.products.map(product => [Number(product.id), product])
     );
