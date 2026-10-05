@@ -24,3 +24,26 @@ ALTER TABLE public.orders
 CREATE UNIQUE INDEX IF NOT EXISTS orders_checkout_idempotency_uidx
   ON public.orders(user_id, checkout_idempotency_key)
   WHERE checkout_idempotency_key IS NOT NULL;
+
+
+-- A single account may have at most one active OpenPay transaction at a time.
+-- Failed/cancelled payments are excluded so a normal retry remains possible.
+ALTER TABLE public.payments
+  ADD COLUMN IF NOT EXISTS user_id text;
+
+ALTER TABLE public.payments
+  DROP CONSTRAINT IF EXISTS payments_openpay_user_id_check;
+
+ALTER TABLE public.payments
+  ADD CONSTRAINT payments_openpay_user_id_check
+  CHECK (provider <> 'openpay' OR user_id IS NOT NULL);
+
+CREATE INDEX IF NOT EXISTS payments_user_id_lookup_idx
+  ON public.payments(user_id)
+  WHERE user_id IS NOT NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS payments_one_active_per_user_uidx
+  ON public.payments(user_id)
+  WHERE provider = 'openpay'
+    AND user_id IS NOT NULL
+    AND status IN ('pending', 'processing', 'refund_pending');
