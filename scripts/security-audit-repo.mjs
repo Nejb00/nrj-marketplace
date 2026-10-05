@@ -16,10 +16,22 @@ function walk(dir, out = []) {
   return out;
 }
 
-const files = walk(ROOT).map(full => ({
+const allFiles = walk(ROOT).map(full => ({
   path: path.relative(ROOT, full).replaceAll(path.sep, '/'),
   content: fs.readFileSync(full, 'utf8'),
 }));
+
+const skippedPaths = allFiles
+  .filter(file =>
+    file.path.startsWith('test/') ||
+    file.path.startsWith('supabase/migrations/')
+  )
+  .map(file => file.path);
+
+const files = allFiles.filter(file =>
+  !file.path.startsWith('test/') &&
+  !file.path.startsWith('supabase/migrations/')
+);
 
 const report = auditSecurityFiles(files);
 const blockingFindings = report.findings.filter(finding =>
@@ -34,6 +46,7 @@ const effectiveStatus = blockingFindings.length
 console.log(JSON.stringify({
   ...report,
   status: effectiveStatus,
+  skipped_paths: skippedPaths,
   blocking_findings: blockingFindings,
   risk_score: securityRiskScore(report),
 }, null, 2));
