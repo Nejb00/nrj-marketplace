@@ -70,4 +70,50 @@ test.describe("NRJ Marketplace — critical browser flows", () => {
     await expect(page.locator("#cartPanel")).not.toHaveClass(/\bopen\b/);
     await expect(page.locator("#cartOverlay")).not.toHaveClass(/\bopen\b/);
   });
+
+  test("ajout au panier → confirmation → panneau panier", async ({ page }) => {
+    const productCard = page.locator(".product-card").first();
+    await expect(productCard).toBeVisible({ timeout: 30_000 });
+    await productCard.click();
+
+    await expect(page.locator("#productModal")).toHaveClass(/\bopen\b/, {
+      timeout: 10_000,
+    });
+    await expect(page.locator("#addToCartStickyBtn")).toBeVisible();
+
+    const colorGroup = page.locator("#modalCouleurGroup");
+    if (await colorGroup.isVisible()) {
+      const moqText = await page.locator("#modalMoq").textContent();
+      const moq = Number(moqText?.match(/\d+/)?.[0] ?? 1);
+      const plus = page.locator(".mini-qty-btn[data-action="plus"]").first();
+      await expect(plus).toBeVisible();
+      await plus.click({ clickCount: Math.max(1, Math.min(moq, 120)) });
+      if (moq > 120) {
+        throw new Error(`MOQ trop élevé pour ce test E2E: ${moq}`);
+      }
+    }
+
+    await page.locator("#addToCartStickyBtn").click();
+
+    const confirmation = page.locator("#cartAddConfirmation");
+    await expect(confirmation).toHaveClass(/\bis-open\b/, { timeout: 10_000 });
+    await expect(confirmation.locator("h2")).toHaveText("Ajouté au panier");
+    await expect(
+      confirmation.locator('[data-cart-add-action="cart"]'),
+    ).toBeVisible();
+    await expect(
+      confirmation.locator('[data-cart-add-action="continue"]'),
+    ).toBeVisible();
+
+    await confirmation.locator('[data-cart-add-action="cart"]').click();
+
+    await expect(page.locator("#cartAddConfirmation")).not.toHaveClass(/\bis-open\b/);
+    await expect(page.locator("#productModal")).not.toHaveClass(/\bopen\b/);
+    await expect(page.locator("#cartPanel")).toHaveClass(/\bopen\b/, {
+      timeout: 10_000,
+    });
+    await expect(page.locator(".cart-item").first()).toBeVisible({
+      timeout: 10_000,
+    });
+  });
 });
