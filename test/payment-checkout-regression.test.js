@@ -13,17 +13,17 @@ const openPayProvider = fs.readFileSync(
 );
 
 test('checkout phone validation uses the intended Congo format', () => {
-    assert.ok(
-        createOrder.includes(String.raw`const PHONE_PATTERN = /^242\\d{9}$/;`)
-    );
-    assert.ok(
-        openPayProvider.includes(String.raw`return /^242\\d{9}$/.test(String(value || '').trim());`)
+    assert.match(createOrder, /const PHONE_PATTERN = \/\^242\\d\{9\}\$\//);
+    assert.match(
+        openPayProvider,
+        /return \/\^242\\d\{9\}\$\/\.test\(String\(value \|\| ''\)\.trim\(\)\)/
     );
 });
 
 test('checkout bearer parsing accepts the standard Authorization header', () => {
-    assert.ok(
-        createOrder.includes(String.raw`const match = value.match(/^Bearer\\s+(.+)$/i);`)
+    assert.match(
+        createOrder,
+        /const match = value\.match\(\/\^Bearer\\s\+ \(\.\+\)\$\/i\)/
     );
 });
 
