@@ -136,6 +136,10 @@
       "githubSha": "0402cbf4cb3972401c5a2234aa6439791be54893",
       "driveMd5": "05e682d6c81ef02f6c8f9c9e4eeff948"
     },
+    "docs/payment-architecture.md": {
+      "githubSha": "55cfba982e5c6cfb2fe1ac63b00215fa556e660d",
+      "driveMd5": "eefec29bbd6ab8970dc27d425ab5e4a6"
+    },
     "index.html": {
       "githubSha": "f9a00f7f032814ca396c56250714182b554b725c",
       "driveMd5": "04c2ef2d77aa1098b36dd0cdc88f8b19"
@@ -580,6 +584,22 @@
       "githubSha": "50e09dbcf3ad7c63e3f465caa430d7a5b84d4832",
       "driveMd5": "4a10cbcb77a6aeae75215731b5319dff"
     },
+    "src/js/services/payment/index.js": {
+      "githubSha": "da055199a3009a852895a12b1c65779dd9eca59e",
+      "driveMd5": "ff76427dd6ea7448735b898beb7b2415"
+    },
+    "src/js/services/payment/mock-payment-provider.js": {
+      "githubSha": "e3ed9d0b228bd6369e1ec7aa7038b4386e4ca732",
+      "driveMd5": "68502c95a63cd1d929a55e1be4aa9f6b"
+    },
+    "src/js/services/payment/payment-provider.js": {
+      "githubSha": "acad9d378af168e998f17e29ad10bffc9926d824",
+      "driveMd5": "b85787d1dc1d2f24a8f336e36775e679"
+    },
+    "src/js/services/payment/payment-service.js": {
+      "githubSha": "8ddde41a61782de009d5c5933fc4e843f594a66b",
+      "driveMd5": "e3ea771e0a281c75beb7cd98cfa121c4"
+    },
     "src/js/services/reco.js": {
       "githubSha": "197bf27077ba0746157915f27dc4493611a66ee1",
       "driveMd5": "423c1e48232dbed2c0ee43c0a9088f6e"
@@ -644,6 +664,14 @@
       "githubSha": "1e63b5716ae844062c4e5bdd70bccd34871091e0",
       "driveMd5": "ea1dbc984c6949001daa675a482eb1fc"
     },
+    "supabase/functions/payment-webhook/README.md": {
+      "githubSha": "1d2506f81dfa909185b7b7d7a387a4a09a6f0678",
+      "driveMd5": "b87f9d7be6ef381e1483f4ebfbb05c1f"
+    },
+    "supabase/functions/payment-webhook/index.ts": {
+      "githubSha": "d874c093161aa327bd204126178fc2c98fc42bce",
+      "driveMd5": "c40c117be299c40a8dc32efbc3a99fd1"
+    },
     "supabase/migrations/20261002192115_harden_rls_and_fk_indexes.sql": {
       "githubSha": "5f3706cba2e0c63b5897bc894e336b8cb5c5ac61",
       "driveMd5": "330d78071d420028846112948b0a28d1"
@@ -675,6 +703,10 @@
     "supabase/migrations/20261005083252_harden_product_imports_rls.sql": {
       "githubSha": "041cb006693bd2e1dc4d73eba3c75cfe692b8950",
       "driveMd5": "f282d574e7dd90793c55b5f4ca786786"
+    },
+    "supabase/migrations/20261005100000_create_payment_persistence.sql": {
+      "githubSha": "c969da986f8ecdbf33c5a89e803ce8748ce1a024",
+      "driveMd5": "7eaf94e3eb1c64be75f0cd5e48dcb5d2"
     },
     "test/ai-assisted-diagnosis.test.js": {
       "githubSha": "52d53aef4531add8c5c14e50e2135e20e1ee87b6",
@@ -715,6 +747,14 @@
     "test/notion-sync-resilience.test.js": {
       "githubSha": "02812637bdc153b22d48128fd68ae3bc80de7274",
       "driveMd5": "2fead946d70c715b2805930dc06334b6"
+    },
+    "test/payment-core.test.js": {
+      "githubSha": "fd38d2e151c9908d6efb56436fc715168d822228",
+      "driveMd5": "6f2d974d460c2bf7f45f6130027bdf86"
+    },
+    "test/payment-webhook-security.test.js": {
+      "githubSha": "29cd591716d927ab6076a3619c05cc67fc63c34a",
+      "driveMd5": "f49d199e9e87eb419a44fdabbafed496"
     },
     "test/project-report-routing.test.js": {
       "githubSha": "2daf4ccffdb6739aa05d3f0c956d5cb47a8c2fb9",
@@ -777,5 +817,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-05T10:10:34.276Z"
+  "updatedAt": "2026-10-05T18:27:41.294Z"
 }
