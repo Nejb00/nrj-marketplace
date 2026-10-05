@@ -1,0 +1,54 @@
+name: Supabase RLS Security Audit
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    - cron: "53 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-rls-audit-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: RLS + function security audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout du repo
+        uses: actions/checkout@v7
+
+      - name: Vérifier la connexion
+        id: config
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "${SUPABASE_DB_URL}" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "ℹ️ Audit RLS distant non activé : SUPABASE_DB_URL absent."
+            exit 0
+          fi
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+
+      - name: Installer psql
+        if: steps.config.outputs.enabled == 'true'
+        run: psql --version
+
+      - name: Générer le snapshot RLS
+        if: steps.config.outputs.enabled == 'true'
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          psql "${SUPABASE_DB_URL}" --no-password --tuples-only --no-align --command="$(cat scripts/rls-security-snapshot.sql)" > /tmp/rls-security.json
+
+      - name: Évaluer la politique RLS
+        if: steps.config.outputs.enabled == 'true'
+        run: node scripts/run-rls-audit.mjs /tmp/rls-security.json
