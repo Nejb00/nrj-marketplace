@@ -66,7 +66,7 @@ function renderSummary(data) {
     return '<div class="cart-add-confirmation-product">' +
         '<div class="cart-add-confirmation-image">' + image + '</div>' +
         '<div class="cart-add-confirmation-product-info">' +
-            '<h3 id="cartAddConfirmationTitle">' + escapeHtml(product.name || 'Produit ajouté') + '</h3>' +
+            '<h3>' + escapeHtml(product.name || 'Produit ajouté') + '</h3>' +
             '<div class="cart-add-confirmation-meta">' + renderAddedLines(data) + '</div>' +
         '</div>' +
     '</div>' +
@@ -123,6 +123,18 @@ function initEvents() {
     el.addEventListener('click', event => {
         if (event.target === el || event.target.closest('[data-cart-add-close]')) {
             closeCartAddConfirmation();
+            return;
+        }
+
+        const favoriteButton = event.target.closest('[data-action="toggle-favorite"]');
+        if (favoriteButton) {
+            event.stopPropagation();
+            return;
+        }
+
+        const editButton = event.target.closest('[data-action="edit-product"]');
+        if (editButton) {
+            event.stopPropagation();
             return;
         }
 
