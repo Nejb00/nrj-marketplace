@@ -1,7 +1,8 @@
 # CI — vérification automatique du code
-# Chaque PR vers main (et chaque push sur main) doit buildé sans erreur.
-# Objectif : plus jamais un build cassé mergé à l'aveugle (voir les
-# aventures du parseur CSS — un import mort ou une syntaxe tuée = CI rouge).
+# Chaque PR vers main (et chaque push sur main) doit builder sans erreur.
+# La CI reste volontairement minimale à ce stade : lint/tests seront ajoutés
+# dans une phase dédiée après validation de cette base.
+# Node 22 est utilisé car les dépendances Supabase actuelles exigent Node >=22.
 
 name: CI
 
@@ -10,11 +11,24 @@ on:
     branches: [main]
   push:
     branches: [main]
+  workflow_dispatch:
+
+# Principe de moindre privilège : la CI ne fait que lire le dépôt.
+permissions:
+  contents: read
+
+# Une seule exécution active par branche/PR.
+# Une nouvelle mise à jour rend la précédente inutile.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+
     steps:
       - name: Checkout du repo
         uses: actions/checkout@v4
@@ -22,11 +36,17 @@ jobs:
       - name: Installation de Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
 
       - name: Installation des dépendances
         run: npm ci
+
+      - name: Contrôle syntaxique JavaScript
+        run: npm run check:syntax
+
+      - name: Tests unitaires
+        run: npm test
 
       - name: Build de production
         run: npm run build
