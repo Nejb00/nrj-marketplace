@@ -22,7 +22,7 @@ test('product import preview never interprets a dynamic value as HTML', () => {
   assert.notEqual(renderPreview, '');
   assert.doesNotMatch(renderPreview, /innerHTML\s*=/);
   assert.match(renderPreview, /document\.createElement\(['"]img['"]\)/);
-  assert.match(renderPreview, /img\.src\s*=\s*previewUrl/);
+  assert.match(renderPreview, /image\.src\s*=\s*previewUrl/);
   assert.match(renderPreview, /\.textContent\s*=\s*file\.name/);
 });
 
