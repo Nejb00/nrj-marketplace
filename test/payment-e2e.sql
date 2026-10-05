@@ -68,6 +68,7 @@ BEGIN
     NULL,
     'payment_create',
     'e2e_payment_create',
+    NULL,
     '{"test":"attack-23","phase":"processing"}'::jsonb
   );
 
