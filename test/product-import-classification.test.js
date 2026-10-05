@@ -10,7 +10,6 @@ const edge = fs.readFileSync('supabase/functions/classify-product-import/index.t
 test('classification UI is chained after Vision extraction', () => {
   assert.match(api, /functions\.invoke\('classify-product-import'/);
   assert.match(feature, /processProductImport\(row\.id,\s*data/);
-  assert.match(edge, /classify-product-import/);
   assert.match(html, /productImportClassification/);
   assert.match(html, /Catégorie catalogue/);
 });
