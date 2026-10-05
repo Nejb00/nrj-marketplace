@@ -39,7 +39,7 @@ test('ATTAQUE #22 adds durable checkout idempotency per user', () => {
   );
   assert.match(
     createOrder,
-    /paymentMethod\.startsWith\('openpay_'\) && !idempotencyKey/,
+    /paymentMethod\.startsWith\((['"])openpay_\1\) && !idempotencyKey/,
   );
   assert.match(
     createOrder,
