@@ -41,6 +41,12 @@ jobs:
       - name: Installation des dépendances
         run: npm ci
 
+      - name: Contrôle syntaxique JavaScript
+        run: npm run check:syntax
+
+      - name: Tests unitaires
+        run: npm test
+
       - name: Build de production
         run: npm run build
 
