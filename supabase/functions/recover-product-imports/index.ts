@@ -147,8 +147,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     return json({
       ok: false,
-      error: "worker_failed",
-      detail: String(error?.message || error).slice(0, 500)
+      error: "worker_failed"
     }, 500);
   }
 });
