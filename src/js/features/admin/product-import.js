@@ -1,6 +1,6 @@
 // ═══ Admin — import produit intelligent (PR #2) ═══
 import { showToast } from '../../utils/dom-helpers.js';
-import { analyzeProductImport, classifyProductImport, fetchProductImports, insertProductImport, priceProductImport, deleteProductImport } from '../../api/api.js';
+import { analyzeProductImport, classifyProductImport, fetchProductImports, insertProductImport, priceProductImport, uploadProductImportMedia, deleteProductImport } from '../../api/api.js';
 
 const STATUS_LABELS = {
   RECEIVED: 'Reçu',
@@ -21,6 +21,7 @@ let imageDataUrl = null;
 let initialized = false;
 let currentImportId = null;
 let pricingReady = false;
+let mediaReady = false;
 
 function byId(id) {
   return document.getElementById(id);
@@ -175,6 +176,7 @@ function clearAnalysis() {
   if (pricingResult) pricingResult.textContent = '';
   currentImportId = null;
   pricingReady = false;
+  mediaReady = false;
 }
 
 async function renderPreview(file) {
@@ -222,7 +224,78 @@ function showPricingPanel(analysis, classification) {
   if (button) button.disabled = !pricingReady;
 }
 
-function renderPrice(pricing) {
+function showMediaPanel(ready = false) {
+  const panel = byId('productImportMedia');
+  const button = byId('productImportMediaBtn');
+  const note = byId('productImportMediaNote');
+  if (!panel) return;
+
+  panel.hidden = false;
+  mediaReady = Boolean(ready);
+  if (note) {
+    note.textContent = ready
+      ? 'Image persistante enregistrée dans Cloudinary.'
+      : 'L’image sera envoyée à Cloudinary après le calcul du prix.';
+  }
+  if (button) {
+    button.disabled = !currentImportId || !pricingReady || mediaReady;
+    button.textContent = ready ? 'Média prêt ✓' : 'Finaliser le média →';
+  }
+}
+
+function renderMedia(media) {
+  const note = byId('productImportMediaNote');
+  const button = byId('productImportMediaBtn');
+  if (!media) return;
+  mediaReady = true;
+  if (note) {
+    const url = media?.images?.[0]?.delivery_url || media?.images?.[0]?.secure_url || '';
+    note.innerHTML = url
+      ? 'Cloudinary OK · <a href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer">voir l’image optimisée</a>.'
+      : 'Image persistante enregistrée dans Cloudinary.';
+  }
+  if (button) {
+    button.disabled = true;
+    button.textContent = 'Média prêt ✓';
+  }
+}
+
+async function uploadImportMedia() {
+  if (!currentImportId || mediaReady) return;
+  const button = byId('productImportMediaBtn');
+  if (button) {
+    button.disabled = true;
+    button.textContent = 'Upload…';
+  }
+  try {
+    const data = imageDataUrl || (selectedFile ? await buildAnalysisImage(selectedFile) : null);
+    if (!data) throw new Error('Capture locale indisponible pour Cloudinary.');
+    const result = await uploadProductImportMedia(currentImportId, data);
+    renderMedia(result.media);
+    setStatus('Média persistant prêt. Import : MEDIA_READY.', 'success');
+    showToast('☁️ Média Cloudinary prêt');
+    await refreshProductImports();
+
+    byId('productImportSourceUrl').value = '';
+    byId('productImportRawText').value = '';
+    selectedFile = null;
+    resetPreview();
+    const fileInput = byId('productImportFile');
+    if (fileInput) fileInput.value = '';
+    currentImportId = null;
+    pricingReady = false;
+  } catch (err) {
+    setStatus(err?.message || 'Upload Cloudinary impossible.', 'error');
+    showMediaPanel(false);
+  } finally {
+    if (button) {
+      button.disabled = !currentImportId || !pricingReady || mediaReady;
+      button.textContent = mediaReady ? 'Média prêt ✓' : 'Finaliser le média →';
+    }
+  }
+}
+
+async function renderPrice(pricing) {
   const result = byId('productImportPriceResult');
   if (!result || !pricing) return;
   result.innerHTML =
@@ -258,9 +331,25 @@ async function calculateImportPrice() {
   try {
     const result = await priceProductImport(currentImportId, pricing);
     renderPrice(result.pricing);
-    setStatus('Prix calculé et enregistré dans le staging : ' + result.pricing.rounded_price_xaf + ' XAF.', 'success');
-    showToast('💰 Prix calculé');
+    setPricingDefaults({});
+    showMediaPanel(false);
+    setStatus('Prix calculé. Persistance Cloudinary en cours…', 'success');
+    const data = imageDataUrl || (selectedFile ? await buildAnalysisImage(selectedFile) : null);
+    if (!data) throw new Error('Capture locale indisponible pour Cloudinary.');
+    const media = await uploadProductImportMedia(currentImportId, data);
+    renderMedia(media.media);
+    setStatus('Prix + média enregistrés. Import : MEDIA_READY.', 'success');
+    showToast('💰☁️ Prix + média prêts');
     await refreshProductImports();
+
+    byId('productImportSourceUrl').value = '';
+    byId('productImportRawText').value = '';
+    selectedFile = null;
+    resetPreview();
+    const fileInput = byId('productImportFile');
+    if (fileInput) fileInput.value = '';
+    currentImportId = null;
+    pricingReady = false;
   } catch (err) {
     setStatus(err?.message || 'Calcul du prix impossible.', 'error');
   } finally {
@@ -346,6 +435,7 @@ async function prepareProductImport() {
     currentImportId = row.id;
     renderAnalysis(result.analysis, classification);
     showPricingPanel(result.analysis, classification);
+    showMediaPanel(false);
 
     const confidence = Number(classification?.classification?.overall_confidence || 0);
     setStatus(
@@ -421,6 +511,7 @@ export function initProductImportUI() {
   prepareBtn?.addEventListener('click', prepareProductImport);
   refreshBtn?.addEventListener('click', refreshProductImports);
   byId('productImportPriceBtn')?.addEventListener('click', calculateImportPrice);
+  byId('productImportMediaBtn')?.addEventListener('click', uploadImportMedia);
 
   list?.addEventListener('click', event => {
     const button = event.target.closest('[data-import-id]');
