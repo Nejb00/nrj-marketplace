@@ -92,3 +92,15 @@ test('ATTAQUE #20 prevents payment terminal states from regressing the order', (
     /status IN \('pending', 'failed', 'cancelled'\)/,
   );
 });
+
+
+test('ATTAQUE #20 protects the refund milestone as well', () => {
+  assert.match(
+    stateMachineMigration,
+    /NEW\.status = 'refunded'[\s\S]+OLD\.status <> 'paid'/,
+  );
+  assert.match(
+    stateMachineMigration,
+    /UPDATE public\.orders[\s\S]+status = 'refunded'/,
+  );
+});
