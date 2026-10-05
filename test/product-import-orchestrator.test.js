@@ -39,6 +39,22 @@ test('orchestrator returns resumable media and pricing payloads', () => {
   assert.match(feature, /processProductImport\(currentImportId, imageDataUrl/);
 });
 
+test('orchestrator records bounded self-healing telemetry', () => {
+  assert.match(edge, /async function updatePipeline/);
+  assert.match(edge, /current_stage/);
+  assert.match(edge, /last_attempts/);
+  assert.match(edge, /last_error/);
+  assert.match(edge, /last_pricing/);
+  assert.match(edge, /Telemetry is best-effort/);
+  assert.match(feature, /data-retry-import-id/);
+  assert.match(feature, /handleRetryImport/);
+});
+
+test('orchestrator can recover pricing failures without new pricing input', () => {
+  assert.match(edge, /const savedPricing = row\.ai_analysis\?\.pipeline\?\.last_pricing/);
+  assert.match(edge, /const retryPricing = pricing \|\| savedPricing/);
+});
+
 test('orchestrator keeps secrets server-side', () => {
   assert.match(edge, /SERVICE_KEY/);
   assert.match(edge, /CLOUDINARY/);
