@@ -18,8 +18,8 @@ document.addEventListener('click', e => {
 
 async function init() {
     await fetchProducts();
-    await checkAdminSession();
-    initProductImportUI();
+    const isAdmin = await checkAdminSession();
+    if (isAdmin) initProductImportUI();
     await initAdminChat();
 }
 
