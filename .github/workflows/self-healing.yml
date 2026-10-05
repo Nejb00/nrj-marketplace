@@ -47,12 +47,28 @@ jobs:
               owner, repo, issue_number: issueNumber
             })).data;
 
+            const sourceAssociations = new Set([
+              'OWNER',
+              'MEMBER',
+              'COLLABORATOR',
+              'BOT',
+            ]);
+
+            const sourceAssociation = issue.user?.type === 'Bot'
+              ? 'BOT'
+              : (issue.author_association || 'NONE');
+
             const isIncident = issue.labels?.some((label) => {
               const name = typeof label === 'string' ? label : label.name;
               return name === 'incident';
             });
 
-            if (!isIncident) {
+            const isGuardIncident =
+              isIncident &&
+              sourceAssociations.has(sourceAssociation) &&
+              issue.title?.startsWith('🚨 Incident — ');
+
+            if (!isGuardIncident) {
               core.info('Issue non incidente : aucune action.');
               return;
             }
