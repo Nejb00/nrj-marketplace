@@ -709,8 +709,8 @@
       "driveMd5": "8d96cc6eb461c20b20efa2e9a36e9f53"
     },
     "supabase/functions/openpay-callback/index.ts": {
-      "githubSha": "690c59c7d47194a44626c520c707ae83e2073614",
-      "driveMd5": "3ee2b23733a3476739730d06fd860a56"
+      "githubSha": "bdab1b1611624240313da1fcadc163be539821a4",
+      "driveMd5": "deccc5559be09473133f7372a1a7c566"
     },
     "supabase/functions/payment-openpay/index.ts": {
       "githubSha": "d6586ccbaca7ef7cae71d4e67d4b25db11ae07e1",
@@ -767,6 +767,10 @@
     "supabase/migrations/20261005140232_harden_payment_reconciliation.sql": {
       "githubSha": "b682581229be2e78c72f3225024f10e878de2f4e",
       "driveMd5": "5584b343d5a0ca9131b2e204ca6a4c71"
+    },
+    "supabase/migrations/20261005153000_apply_payment_provider_event.sql": {
+      "githubSha": "099fd9529126d11a2038cc6ebe7376ed3cfc6f71",
+      "driveMd5": "130ff050d2585a78a279e6fb8d1ce1d3"
     },
     "test/ai-assisted-diagnosis.test.js": {
       "githubSha": "52d53aef4531add8c5c14e50e2135e20e1ee87b6",
@@ -845,8 +849,8 @@
       "driveMd5": "d671cf537334787ff947fb07b4195bd8"
     },
     "test/payment-reconciliation.test.js": {
-      "githubSha": "3967bf78da10631d4b030b0d62a29882ee3d2fab",
-      "driveMd5": "4c98854e39951b15b454c92b566d4963"
+      "githubSha": "12fe3f87bddce6c022ece14de09205f0d62e64a8",
+      "driveMd5": "9b00d2d4955780321feb3f9edd52d542"
     },
     "test/payment-webhook-security.test.js": {
       "githubSha": "29cd591716d927ab6076a3619c05cc67fc63c34a",
@@ -913,5 +917,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-05T18:47:56.643Z"
+  "updatedAt": "2026-10-05T18:50:04.228Z"
 }
