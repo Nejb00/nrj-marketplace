@@ -57,3 +57,14 @@ surfaces already present in the application:
 The invariant engine is pure and machine-readable. It is a detection boundary,
 not an authorization to mutate production state. Future incident intelligence
 can consume its `rule_id` values without allowing the AI layer to invent fixes.
+
+
+## Business incident intelligence
+
+Business invariant violations are treated as **evidence**, not as automatic repair authorization.
+
+The flow is:
+
+`business invariant test/audit → CART-*/ORDER-*/IMPORT-* signal → Incident Intelligence → AI Diagnosis context`
+
+A business rule signal alone never selects a self-healing recipe. Automatic repair still requires an existing deterministic recipe, a validated AI diagnosis, exact run/commit correlation, and all repair verification gates.
