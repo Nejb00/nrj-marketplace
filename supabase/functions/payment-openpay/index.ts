@@ -655,18 +655,18 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const providerReference = String(remote.data.reference || "").trim();
 
   if (!providerReference) {
-    await supabaseRest<null>(
-      "payments?id=eq." + encodeURIComponent(localPayment.id),
-      {
-        method: "PATCH",
-        headers: { "Prefer": "return=minimal" },
-        body: JSON.stringify({
-          status: "failed",
-          failure_reason: "openpay_reference_missing"
-        })
-      }
-    );
-    return json({ ok: false, error: "openpay_reference_missing" }, 502);
+    // A successful/ambiguous provider response without its reference is NOT
+    // evidence of failure. Keep the local payment pending so no retry can
+    // create a second provider transaction. Recovery is completed when the
+    // provider callback brings back the authoritative reference.
+    return json({
+      ok: false,
+      error: "payment_reconciliation_required",
+      payment_id: localPayment.id,
+      provider_reference: null,
+      status: localPayment.status,
+      reason: "provider_reference_missing"
+    }, 409);
   }
 
   const status = mapOpenPayStatus(remote.data.status);
