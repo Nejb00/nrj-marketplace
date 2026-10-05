@@ -22,13 +22,13 @@ function flyToCart(sourceEl) {
     const tRect = target.getBoundingClientRect();
     const ghost = document.createElement('div');
     ghost.className = 'fly-to-cart-ghost';
-    ghost.style.cssText = \`position:fixed;left:\${rect.left + rect.width/2}px;top:\${rect.top + rect.height/2}px;width:28px;height:28px;border-radius:50%;background:var(--primary);z-index:9999;pointer-events:none;transform:translate(-50%,-50%);transition:transform 0.7s cubic-bezier(0.2,0.8,0.2,1),opacity 0.7s;\`;
+    ghost.style.cssText = `position:fixed;left:${rect.left + rect.width/2}px;top:${rect.top + rect.height/2}px;width:28px;height:28px;border-radius:50%;background:var(--primary);z-index:9999;pointer-events:none;transform:translate(-50%,-50%);transition:transform 0.7s cubic-bezier(0.2,0.8,0.2,1),opacity 0.7s;`;
     document.body.appendChild(ghost);
 
     requestAnimationFrame(() => {
         const dx = tRect.left + tRect.width/2 - (rect.left + rect.width/2);
         const dy = tRect.top + tRect.height/2 - (rect.top + rect.height/2);
-        ghost.style.transform = \`translate(\${dx}px, \${dy}px) scale(0.25)\`;
+        ghost.style.transform = `translate(${dx}px, ${dy}px) scale(0.25)`;
         ghost.style.opacity = '0.2';
     });
 
@@ -168,9 +168,9 @@ export async function addToCart(pid, t = '', c = '', sourceEl = null, qty = null
         if (err?.message === 'CART_MOQ_NOT_MET') {
             showToast("⚠️ Minimum d'achat non atteint");
         } else if (err?.message === 'CART_INVALID_BATCH' || err?.message === 'CART_EMPTY_BATCH') {
-            showToast('⚠️ Impossible d\\'ajouter cet article');
+            showToast('⚠️ Impossible d\'ajouter cet article');
         } else {
-            showToast('⚠️ Impossible d\\'ajouter au panier');
+            showToast('⚠️ Impossible d\'ajouter au panier');
         }
         return null;
     }
@@ -236,7 +236,7 @@ export async function clearCart() {
 export async function removeSelectedItems() {
     const selected = getSelectedItems();
     if (selected.length === 0) return showToast('⚠️ Aucun article sélectionné');
-    if (!confirm(\`Supprimer \${selected.length} article\${selected.length > 1 ? 's' : ''} sélectionné\${selected.length > 1 ? 's' : ''} ?\`)) return;
+    if (!confirm(`Supprimer ${selected.length} article${selected.length > 1 ? 's' : ''} sélectionné${selected.length > 1 ? 's' : ''} ?`)) return;
     state.cart = state.cart.filter(i => i.selected === false);
     await saveCart();
     refreshCartDisplay();
