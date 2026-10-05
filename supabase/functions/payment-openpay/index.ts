@@ -181,6 +181,7 @@ interface RequestBody {
   currency?: string;
   payment_phone_number?: string;
   operator?: "MTN" | "AIRTEL";
+  customer_name?: string | null;
   idempotency_key?: string | null;
   provider_reference?: string;
 }
