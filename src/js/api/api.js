@@ -353,7 +353,7 @@ export async function fetchProductImports(limit = 10) {
         const { data, error } = await fetchWithTimeout(
             supabaseClient
                 .from('product_imports')
-                .select('id, source_image, raw_text, product_name, description, supplier_price, supplier_currency, moq, variants, category_id, category_confidence, overall_confidence, ai_analysis, status, error_code, error_message, created_at, updated_at')
+                .select('id, source_image, raw_text, product_name, description, supplier_price, supplier_currency, moq, variants, category_id, category_confidence, calculated_price, overall_confidence, ai_analysis, status, error_code, error_message, created_at, updated_at')
                 .order('created_at', { ascending: false })
                 .limit(limit)
         );
@@ -412,6 +412,23 @@ export async function classifyProductImport(importId) {
         return data;
     } catch (err) {
         console.error('Erreur classify product import:', err);
+        throw err;
+    }
+}
+
+export async function priceProductImport(importId, pricing) {
+    try {
+        const { data, error } = await fetchWithTimeout(
+            supabaseClient.functions.invoke('price-product-import', {
+                body: { importId, pricing }
+            }),
+            30000
+        );
+        if (error) throw error;
+        if (!data?.ok) throw new Error(data?.detail || data?.error || 'Calcul du prix impossible');
+        return data;
+    } catch (err) {
+        console.error('Erreur price product import:', err);
         throw err;
     }
 }
