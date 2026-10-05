@@ -286,6 +286,147 @@ export function validateOrders(orders = []) {
   return violations;
 }
 
+export function validatePayments(payments = []) {
+  const violations = [];
+  const knownStatuses = new Set([
+    'pending',
+    'processing',
+    'paid',
+    'failed',
+    'cancelled',
+    'refund_pending',
+    'refunded',
+  ]);
+
+  if (!Array.isArray(payments)) {
+    return [violation(
+      'PAYMENT-000',
+      'payments',
+      'Payment state must be an array.',
+      { received_type: typeof payments }
+    )];
+  }
+
+  payments.forEach((payment, index) => {
+    const entity = `payments[${index}]`;
+    if (!payment || typeof payment !== 'object') {
+      violations.push(violation('PAYMENT-000', entity, 'Payment must be an object.'));
+      return;
+    }
+
+    if (!String(payment.order_id ?? '').trim()) {
+      violations.push(violation(
+        'PAYMENT-001',
+        entity,
+        'Payment must reference an order.',
+        { order_id: payment.order_id }
+      ));
+    }
+
+    if (!String(payment.provider ?? '').trim()) {
+      violations.push(violation(
+        'PAYMENT-002',
+        entity,
+        'Payment must identify a provider.'
+      ));
+    }
+
+    if (!String(payment.idempotency_key ?? '').trim()) {
+      violations.push(violation(
+        'PAYMENT-003',
+        entity,
+        'Payment must carry an idempotency key.'
+      ));
+    }
+
+    if (!finiteNonNegative(payment.amount) || Number(payment.amount) <= 0) {
+      violations.push(violation(
+        'PAYMENT-004',
+        entity,
+        'Payment amount must be a finite positive number.',
+        { amount: payment.amount }
+      ));
+    }
+
+    const currency = String(payment.currency ?? '');
+    if (!/^[A-Z]{3}$/.test(currency)) {
+      violations.push(violation(
+        'PAYMENT-005',
+        entity,
+        'Payment currency must be a three-letter uppercase code.',
+        { currency: payment.currency }
+      ));
+    }
+
+    if (!knownStatuses.has(payment.status)) {
+      violations.push(violation(
+        'PAYMENT-006',
+        entity,
+        'Payment status must belong to the known lifecycle.',
+        { status: payment.status }
+      ));
+    }
+
+    const settled = new Set(['paid', 'refund_pending', 'refunded']);
+    if (settled.has(payment.status) && !String(payment.paid_at ?? '').trim()) {
+      violations.push(violation(
+        'PAYMENT-007',
+        entity,
+        'A settled payment must have paid_at.',
+        { status: payment.status }
+      ));
+    }
+
+    if (payment.status === 'refunded' && !String(payment.refunded_at ?? '').trim()) {
+      violations.push(violation(
+        'PAYMENT-008',
+        entity,
+        'A refunded payment must have refunded_at.'
+      ));
+    }
+
+    if (
+      ['failed', 'cancelled', 'pending', 'processing'].includes(payment.status) &&
+      String(payment.paid_at ?? '').trim()
+    ) {
+      violations.push(violation(
+        'PAYMENT-009',
+        entity,
+        'A non-settled payment must not expose paid_at.',
+        { status: payment.status }
+      ));
+    }
+
+    if (
+      payment.paid_at !== undefined &&
+      payment.paid_at !== null &&
+      Number.isNaN(Date.parse(String(payment.paid_at)))
+    ) {
+      violations.push(violation(
+        'PAYMENT-010',
+        entity,
+        'paid_at must be a parseable timestamp when present.',
+        { paid_at: payment.paid_at }
+      ));
+    }
+
+    if (
+      payment.refunded_at !== undefined &&
+      payment.refunded_at !== null &&
+      Number.isNaN(Date.parse(String(payment.refunded_at)))
+    ) {
+      violations.push(violation(
+        'PAYMENT-011',
+        entity,
+        'refunded_at must be a parseable timestamp when present.',
+        { refunded_at: payment.refunded_at }
+      ));
+    }
+  });
+
+  return violations;
+}
+
 export function validateProductImports(imports = []) {
   const violations = [];
   if (!Array.isArray(imports)) {
@@ -367,11 +508,13 @@ export function validateBusinessState({
   cart = [],
   orders = [],
   imports = [],
+  payments = [],
 } = {}) {
   const violations = [
     ...validateCart(cart),
     ...validateOrders(orders),
     ...validateProductImports(imports),
+    ...validatePayments(payments),
   ];
 
   const byRule = {};
@@ -386,6 +529,7 @@ export function validateBusinessState({
       cart_lines: Array.isArray(cart) ? cart.length : 0,
       orders: Array.isArray(orders) ? orders.length : 0,
       product_imports: Array.isArray(imports) ? imports.length : 0,
+      payments: Array.isArray(payments) ? payments.length : 0,
     },
     violation_count: violations.length,
     rules_triggered: Object.keys(byRule).sort(),
