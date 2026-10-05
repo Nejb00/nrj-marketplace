@@ -1,4 +1,5 @@
 name: Self-Healing Repair Verification
+# Verification gate: deterministic validation before any repair promotion.
 
 on:
   pull_request:
