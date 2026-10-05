@@ -6,7 +6,7 @@ import { formatPrice } from '../../utils/format.js';
 import { showToast } from '../../utils/dom-helpers.js';
 import { trackPopularity } from '../../api/api.js';
 import { toggleFavorite } from '../../services/favorites.js';
-import { addToCart } from '../../services/cart-actions.js';
+import { addToCart, addItemsToCart } from '../../services/cart-actions.js';
 import { openChat } from '../chat/chat-ui.js';
 import { modalCtx } from './modal-state.js';
 import { pauseModalVideos } from './modal-carousel.js';
@@ -36,7 +36,7 @@ export function bindStickyActions() {
     const p = modalCtx.p;
     const { tailles, couleurs, moq, uPrice } = modalCtx;
 
-    document.getElementById('addToCartStickyBtn').onclick = (e) => {
+    document.getElementById('addToCartStickyBtn').onclick = async (e) => {
         if (tailles.length && !modalCtx.sT) return showToast('⚠️ Sélectionnez une taille');
 
         if (couleurs.length) {
@@ -50,11 +50,31 @@ export function bindStickyActions() {
                 showToast(`⚠️ Minimum d'achat : ${moq} pièce(s)`);
                 return;
             }
-            selected.forEach(([color, qty], i) => {
-                addToCart(p.id, modalCtx.sT, color, i === 0 ? e.currentTarget : null, qty);
-            });
+
+            const items = selected.map(([color, qty]) => ({
+                productId: p.id,
+                taille: modalCtx.sT,
+                couleur: color,
+                quantity: qty
+            }));
+
+            try {
+                await addItemsToCart(items, e.currentTarget);
+            } catch (err) {
+                if (err?.message === 'CART_MOQ_NOT_MET') {
+                    showToast(`⚠️ Minimum d'achat : ${moq} pièce(s)`);
+                } else {
+                    showToast('⚠️ Impossible d\'ajouter au panier');
+                }
+            }
         } else {
-            addToCart(p.id, modalCtx.sT, '', e.currentTarget, modalCtx.currentQty);
+            await addToCart(
+                p.id,
+                modalCtx.sT,
+                '',
+                e.currentTarget,
+                modalCtx.currentQty
+            );
         }
     };
 
