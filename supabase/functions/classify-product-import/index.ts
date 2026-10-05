@@ -366,6 +366,6 @@ Deno.serve(async (req) => {
     } catch {
       // keep the primary error
     }
-    return json({ ok: false, error: "classification_failed", detail: message }, 500);
+    return json({ ok: false, error: "classification_failed" }, 500);
   }
 });
