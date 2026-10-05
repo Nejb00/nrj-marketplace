@@ -1,6 +1,6 @@
 // ═══ Admin — import produit intelligent (PR #2) ═══
 import { showToast } from '../../utils/dom-helpers.js';
-import { analyzeProductImport, classifyProductImport, fetchProductImports, insertProductImport, priceProductImport, uploadProductImportMedia, publishProductImport, deleteProductImport } from '../../api/api.js';
+import { analyzeProductImport, classifyProductImport, fetchProductImports, insertProductImport, processProductImport, uploadProductImportMedia, publishProductImport, deleteProductImport } from '../../api/api.js';
 
 const STATUS_LABELS = {
   RECEIVED: 'Reçu',
@@ -265,28 +265,41 @@ async function uploadImportMedia() {
   const button = byId('productImportMediaBtn');
   if (button) {
     button.disabled = true;
-    button.textContent = 'Upload…';
+    button.textContent = 'Reprise…';
   }
   try {
-    const data = imageDataUrl || (selectedFile ? await buildAnalysisImage(selectedFile) : null);
-    if (!data) throw new Error('Capture locale indisponible pour Cloudinary.');
-    const result = await uploadProductImportMedia(currentImportId, data);
-    renderMedia(result.media);
-    setStatus('Média persistant prêt. Import : MEDIA_READY.', 'success');
-    showToast('☁️ Média Cloudinary prêt');
+    if (!imageDataUrl) throw new Error('Capture locale indisponible pour la reprise Cloudinary.');
+    const result = await processProductImport(currentImportId, imageDataUrl, null, false);
+    if (result?.status === 'PUBLISHED') {
+      showToast('🚀 Produit publié automatiquement');
+      setStatus('Produit publié dans le catalogue (#' + result.productId + ').', 'success');
+    } else if (result?.status === 'MEDIA_READY') {
+      if (result.media) renderMedia(result.media);
+      setStatus(
+        result.review_required
+          ? 'Média prêt. Validation admin requise avant publication.'
+          : 'Média persistant prêt.',
+        'success'
+      );
+      showToast('☁️ Média Cloudinary prêt');
+    } else {
+      setStatus('Reprise terminée au statut ' + (result?.status || 'inconnu') + '.', 'success');
+    }
     await refreshProductImports();
 
-    byId('productImportSourceUrl').value = '';
-    byId('productImportRawText').value = '';
-    selectedFile = null;
-    resetPreview();
-    const fileInput = byId('productImportFile');
-    if (fileInput) fileInput.value = '';
-    currentImportId = null;
-    pricingReady = false;
+    if (result?.status === 'PUBLISHED' || result?.media) {
+      currentImportId = null;
+      pricingReady = false;
+      mediaReady = result?.status === 'MEDIA_READY' || Boolean(result?.media);
+      imageDataUrl = null;
+      selectedFile = null;
+      resetPreview();
+      const fileInput = byId('productImportFile');
+      if (fileInput) fileInput.value = '';
+    }
   } catch (err) {
-    setStatus(err?.message || 'Upload Cloudinary impossible.', 'error');
-    showMediaPanel(false);
+    setStatus(err?.message || 'Reprise Cloudinary impossible.', 'error');
+    showToast('❌ Reprise interrompue');
   } finally {
     if (button) {
       button.disabled = !currentImportId || !pricingReady || mediaReady;
@@ -295,67 +308,77 @@ async function uploadImportMedia() {
   }
 }
 
-async function renderPrice(pricing) {
-  const result = byId('productImportPriceResult');
-  if (!result || !pricing) return;
-  result.innerHTML =
-    '<strong>Prix conseillé : ' + escapeHtml(String(pricing.rounded_price_xaf)) + ' XAF</strong>' +
-    '<span>Coût rendu : ' + escapeHtml(String(pricing.cost_before_margin_xaf)) + ' XAF · Profit estimé : ' +
-      escapeHtml(String(pricing.actual_profit_xaf)) + ' XAF</span>';
-}
-
 async function calculateImportPrice() {
   if (!currentImportId) return;
-  const fx = byId('productImportFxRate')?.value;
-  const logistics = byId('productImportLogistics')?.value;
-  const duty = byId('productImportDuty')?.value;
-  const fee = byId('productImportFee')?.value;
-  const margin = byId('productImportMargin')?.value;
-  const rounding = byId('productImportRounding')?.value;
-  const button = byId('productImportPriceBtn');
-
   const pricing = {
-    fx_rate_to_xaf: fx,
-    logistics_xaf: logistics,
-    duty_rate: Number(duty || 0) / 100,
-    marketplace_fee_rate: Number(fee || 0) / 100,
-    target_margin_rate: Number(margin || 0) / 100,
-    rounding_increment_xaf: rounding
+    fx_rate_to_xaf: byId('productImportFxRate')?.value,
+    logistics_xaf: byId('productImportLogistics')?.value,
+    duty_rate: Number(byId('productImportDuty')?.value || 0) / 100,
+    marketplace_fee_rate: Number(byId('productImportFee')?.value || 0) / 100,
+    target_margin_rate: Number(byId('productImportMargin')?.value || 0) / 100,
+    rounding_increment_xaf: byId('productImportRounding')?.value
   };
-
+  const button = byId('productImportPriceBtn');
   if (button) {
     button.disabled = true;
-    button.textContent = 'Calcul…';
+    button.textContent = 'Pipeline…';
   }
 
   try {
-    const result = await priceProductImport(currentImportId, pricing);
-    renderPrice(result.pricing);
-    setPricingDefaults({});
-    showMediaPanel(false);
-    setStatus('Prix calculé. Persistance Cloudinary en cours…', 'success');
-    const data = imageDataUrl || (selectedFile ? await buildAnalysisImage(selectedFile) : null);
-    if (!data) throw new Error('Capture locale indisponible pour Cloudinary.');
-    const media = await uploadProductImportMedia(currentImportId, data);
-    renderMedia(media.media);
-    setStatus('Prix + média enregistrés. Import : MEDIA_READY.', 'success');
-    showToast('💰☁️ Prix + média prêts');
-    await refreshProductImports();
+    const result = await processProductImport(currentImportId, imageDataUrl, pricing, false);
+    if (result?.pricing) await renderPrice(result.pricing);
 
-    byId('productImportSourceUrl').value = '';
-    byId('productImportRawText').value = '';
-    selectedFile = null;
-    resetPreview();
-    const fileInput = byId('productImportFile');
-    if (fileInput) fileInput.value = '';
-    currentImportId = null;
-    pricingReady = false;
+    if (result?.status === 'PUBLISHED') {
+      showToast('🚀 Produit publié automatiquement');
+      setStatus('Pipeline terminée. Produit publié dans le catalogue (#' + result.productId + ').', 'success');
+      currentImportId = null;
+      pricingReady = false;
+      mediaReady = true;
+      imageDataUrl = null;
+      selectedFile = null;
+      resetPreview();
+      const fileInput = byId('productImportFile');
+      if (fileInput) fileInput.value = '';
+      await refreshProductImports();
+      return;
+    }
+
+    if (result?.status === 'MEDIA_READY') {
+      if (result.media) renderMedia(result.media);
+      showToast(result.review_required ? '☁️ Média prêt · validation requise' : '☁️ Média prêt');
+      setStatus(
+        result.review_required
+          ? 'Pipeline arrêtée : approbation admin requise avant publication.'
+          : 'Pipeline terminée : média prêt.',
+        'success'
+      );
+      if (result.media) {
+        currentImportId = null;
+        pricingReady = false;
+        imageDataUrl = null;
+        selectedFile = null;
+        resetPreview();
+        const fileInput = byId('productImportFile');
+        if (fileInput) fileInput.value = '';
+      }
+      await refreshProductImports();
+      return;
+    }
+
+    setStatus(
+      result?.status === 'CLASSIFIED'
+        ? 'Classification terminée. Paramètres de prix prêts.'
+        : 'Pipeline reprise au statut ' + (result?.status || 'inconnu') + '.',
+      'success'
+    );
+    await refreshProductImports();
   } catch (err) {
-    setStatus(err?.message || 'Calcul du prix impossible.', 'error');
+    setStatus(err?.message || 'Pipeline import impossible.', 'error');
+    showToast('❌ Pipeline interrompue');
   } finally {
     if (button) {
-      button.disabled = !pricingReady;
-      button.textContent = 'Calculer le prix →';
+      button.disabled = !pricingReady || mediaReady;
+      button.textContent = 'Lancer la pipeline →';
     }
   }
 }
@@ -455,6 +478,11 @@ async function prepareProductImport() {
     byId('productImportRawText').value = '';
     selectedFile = null;
     resetPreview();
+    // Garder l’image compressée en mémoire jusqu’au pricing/media/publish.
+    // resetPreview efface l’aperçu et libère son URL, mais on restaure la data URL temporaire.
+    const preparedImageDataUrl = imageDataUrl;
+    resetPreview();
+    imageDataUrl = preparedImageDataUrl;
     const fileInput = byId('productImportFile');
     if (fileInput) fileInput.value = '';
   } catch (err) {
