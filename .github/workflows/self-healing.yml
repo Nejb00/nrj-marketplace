@@ -49,6 +49,7 @@ jobs:
             })).data;
 
             let intelligenceRecipeId = null;
+            let aiDiagnosis = null;
             const intelligenceMatch = issue.body?.match(
               /<!-- nrj-incident-intelligence\n([\s\S]*?)\n-->/
             );
@@ -88,6 +89,24 @@ jobs:
               github.rest.issues.listComments,
               { owner, repo, issue_number: issueNumber, per_page: 100 }
             );
+
+            const aiDiagnosisComment = [...comments].reverse().find((comment) =>
+              comment.user?.type === 'Bot' &&
+              comment.body?.includes('NRJ_AI_DIAGNOSIS_START')
+            );
+            if (aiDiagnosisComment?.body) {
+              const fence = String.fromCharCode(96).repeat(3);
+              const aiDiagnosisMatch = aiDiagnosisComment.body.match(new RegExp(
+                'NRJ_AI_DIAGNOSIS_START\\n' + fence + 'json\\n([\\s\\S]*?)\\n' + fence + '\\nNRJ_AI_DIAGNOSIS_END'
+              ));
+              if (aiDiagnosisMatch) {
+                try {
+                  aiDiagnosis = JSON.parse(aiDiagnosisMatch[1]);
+                } catch (error) {
+                  core.warning('Dossier AI-Assisted Diagnosis illisible : ' + error.message);
+                }
+              }
+            }
 
             if (comments.some((comment) => comment.body?.includes(repairMarker))) {
               core.info('Une réparation automatique a déjà été tentée pour cette issue.');
@@ -150,6 +169,37 @@ jobs:
               return;
             }
 
+            const aiDiagnosisValidated =
+              aiDiagnosis?.schema_version === 1 &&
+              aiDiagnosis?.status === 'validated' &&
+              aiDiagnosis?.recommendation === 'self-healing' &&
+              typeof aiDiagnosis?.recommended_recipe_id === 'string' &&
+              Number(aiDiagnosis?.run_id) === runId;
+            const aiDiagnosisCommitOk =
+              !aiDiagnosis?.commit || aiDiagnosis.commit === run.head_sha;
+
+            if (!aiDiagnosisValidated || !aiDiagnosisCommitOk) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issueNumber,
+                body: [
+                  retryMarker,
+                  '## 🤖 Self-Healing V2',
+                  '',
+                  '🛑 Réparation automatique bloquée : un diagnostic IA validé et lié au run source est requis.',
+                  '',
+                  '- Diagnostic IA : **' + (aiDiagnosis?.status || 'absent') + '**',
+                  '- Action IA : **' + (aiDiagnosis?.recommendation || 'operator-review') + '**',
+                  '- Run cohérent : **' + (Number(aiDiagnosis?.run_id) === runId ? 'OUI' : 'NON') + '**',
+                  '- Commit cohérent : **' + (aiDiagnosisCommitOk ? 'OUI' : 'NON') + '**',
+                  '',
+                  'Aucune modification effectuée. Le diagnostic IA reste consultatif et les garde-fous déterministes demeurent obligatoires.'
+                ].join('\n')
+              });
+              return;
+            }
+
+            const aiRecipeHint = aiDiagnosis.recommended_recipe_id;
+
             const jobs = (await github.rest.actions.listJobsForWorkflowRun({
               owner, repo, run_id: runId, per_page: 100
             })).data.jobs || [];
@@ -182,10 +232,11 @@ jobs:
                 (Number(candidate.max_age_hours || 24) * 60 * 60 * 1000);
               const workflowOk = candidate.workflow === run.name;
               const recipeHintOk = !intelligenceRecipeId || candidate.id === intelligenceRecipeId;
+              const aiRecipeOk = candidate.id === aiRecipeHint;
               const signatureOk = (candidate.signatures || []).some((signature) =>
                 logTexts.some((log) => log.includes(signature))
               );
-              return enabledOk && ageOk && workflowOk && recipeHintOk && signatureOk;
+              return enabledOk && ageOk && workflowOk && recipeHintOk && aiRecipeOk && signatureOk;
             });
 
             if (!recipe) {
