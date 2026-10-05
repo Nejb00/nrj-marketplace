@@ -12,7 +12,7 @@ const CORS = {
   "Content-Type": "application/json"
 };
 
-const PHONE_PATTERN = /^242\d{9}$/;
+const PHONE_PATTERN = /^242\\d{9}$/;
 const ALLOWED_PAYMENT_METHODS = new Set([
   "whatsapp",
   "openpay_mtn",
@@ -28,7 +28,6 @@ type CartItemInput = {
 
 type RequestBody = {
   items?: CartItemInput[];
-  customer_name?: string;
   phone?: string;
   payment_method?: string;
 };
@@ -45,7 +44,7 @@ function json(data: unknown, status = 200): Response {
 
 function getBearerToken(req: Request): string | null {
   const value = req.headers.get("authorization") || "";
-  const match = value.match(/^Bearer\s+(.+)$/i);
+  const match = value.match(/^Bearer\\s+(.+)$/i);
   return match?.[1] || null;
 }
 
@@ -80,6 +79,7 @@ async function supabaseRest<T>(
 
     const text = await response.text();
     let data: unknown = null;
+
     try {
       data = text ? JSON.parse(text) : null;
     } catch {
@@ -111,7 +111,15 @@ function normalizeItems(items: CartItemInput[] | undefined) {
     throw new TypeError("items_invalid");
   }
 
-  const map = new Map<number, { productId: number; quantity: number; taille: string | null; couleur: string | null }>();
+  const map = new Map<
+    string,
+    {
+      productId: number;
+      quantity: number;
+      taille: string | null;
+      couleur: string | null;
+    }
+  >();
 
   for (const raw of items) {
     const productId = Number(raw.productId);
@@ -120,19 +128,24 @@ function normalizeItems(items: CartItemInput[] | undefined) {
     if (!Number.isSafeInteger(productId) || productId <= 0) {
       throw new TypeError("product_id_invalid");
     }
+
     if (!Number.isSafeInteger(quantity) || quantity <= 0 || quantity > 1000) {
       throw new TypeError("quantity_invalid");
     }
 
-    const existing = map.get(productId);
+    const taille = raw.taille ? String(raw.taille).slice(0, 100) : null;
+    const couleur = raw.couleur ? String(raw.couleur).slice(0, 100) : null;
+    const key = [productId, couleur || "", taille || ""].join("\\u001f");
+    const existing = map.get(key);
+
     if (existing) {
       existing.quantity += quantity;
     } else {
-      map.set(productId, {
+      map.set(key, {
         productId,
         quantity,
-        taille: raw.taille ? String(raw.taille).slice(0, 100) : null,
-        couleur: raw.couleur ? String(raw.couleur).slice(0, 100) : null
+        taille,
+        couleur
       });
     }
   }
@@ -159,11 +172,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
     body = await req.json();
   } catch {
     return json({ ok: false, error: "json_invalid" }, 400);
-  }
-
-  const customerName = String(body.customer_name || "").trim();
-  if (customerName.length < 2 || customerName.length > 120) {
-    return json({ ok: false, error: "customer_name_invalid" }, 400);
   }
 
   const phone = String(body.phone || "").trim();
@@ -216,8 +224,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       return json({ ok: false, error: "product_price_invalid" }, 409);
     }
 
-    const lineTotal = unitPrice * item.quantity;
-    total += lineTotal;
+    total += unitPrice * item.quantity;
 
     orderItems.push({
       productId: item.productId,
