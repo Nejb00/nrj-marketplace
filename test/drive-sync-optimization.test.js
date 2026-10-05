@@ -53,7 +53,7 @@ test("Drive sync ignores generated conflict-version artifacts", () => {
 
   assert.match(
     script,
-    /\\.drive-version(?:\\.[^/]+)?$/,
+    /\.drive-version(?:\.[^/]+)?$/,
     "generated .drive-version artifacts must be ignored"
   );
 });
