@@ -14,6 +14,14 @@ const mobileMoneyCheckout = fs.readFileSync(
   'src/js/services/payment/mobile-money-checkout.js',
   'utf8',
 );
+const openPayProvider = fs.readFileSync(
+  'src/js/services/payment/openpay-provider.js',
+  'utf8',
+);
+const paymentService = fs.readFileSync(
+  'src/js/services/payment/payment-service.js',
+  'utf8',
+);
 
 test('payment status transition accepts an immediate OpenPay success', () => {
   assert.match(
@@ -29,18 +37,32 @@ test('payment-openpay retries local persistence after a confirmed provider succe
   assert.match(paymentOpenPay, /status/);
 });
 
-test('payment-openpay exposes reconciliation instead of recreating an ambiguous charge', () => {
+test('payment-openpay exposes reconciliation without creating a second transaction', () => {
   assert.match(paymentOpenPay, /action\?: "create" \| "status" \| "reconcile"/);
   assert.match(paymentOpenPay, /payment_reconciliation_required/);
-  assert.match(paymentOpenPay, /action === "reconcile"/);
-  assert.doesNotMatch(
-    paymentOpenPay,
-    /reconciliation_required[\s\S]{0,600}openPay<OpenPayPaymentResponse>\([\s\S]{0,600}\/transaction\/payment/,
-  );
+
+  const start = paymentOpenPay.indexOf('if (action === "reconcile")');
+  const end = paymentOpenPay.indexOf('if (action === "status")', start);
+  assert.ok(start >= 0 && end > start);
+  const reconcileBlock = paymentOpenPay.slice(start, end);
+  assert.doesNotMatch(reconcileBlock, /\/transaction\/payment/);
 });
 
 test('mobile money checkout can recover a confirmed provider reference', () => {
   assert.match(mobileMoneyCheckout, /reconcilePayment/);
   assert.match(mobileMoneyCheckout, /reconciliation_required/);
   assert.match(mobileMoneyCheckout, /providerReference/);
+});
+
+test('OpenPay provider preserves reconciliation details and exposes a reconcile operation', () => {
+  assert.match(openPayProvider, /class PaymentFunctionError extends Error/);
+  assert.match(openPayProvider, /this\.details = details/);
+  assert.match(openPayProvider, /async reconcilePayment/);
+  assert.match(openPayProvider, /callPaymentFunction\('reconcile'/);
+});
+
+test('PaymentService exposes the provider-neutral reconciliation boundary', () => {
+  assert.match(paymentService, /async reconcilePayment/);
+  assert.match(paymentService, /this\.provider\.reconcilePayment/);
+  assert.match(paymentService, /providerReference/);
 });
