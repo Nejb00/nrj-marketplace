@@ -140,6 +140,10 @@
       "githubSha": "55cfba982e5c6cfb2fe1ac63b00215fa556e660d",
       "driveMd5": "eefec29bbd6ab8970dc27d425ab5e4a6"
     },
+    "docs/payment-openpay.md": {
+      "githubSha": "c998da7c2a3b7a219217a0b08bacf05b85ff8fc3",
+      "driveMd5": "d3261d47b9e7d1a773a0cd94e1ecc47d"
+    },
     "index.html": {
       "githubSha": "f9a00f7f032814ca396c56250714182b554b725c",
       "driveMd5": "04c2ef2d77aa1098b36dd0cdc88f8b19"
@@ -585,12 +589,16 @@
       "driveMd5": "4a10cbcb77a6aeae75215731b5319dff"
     },
     "src/js/services/payment/index.js": {
-      "githubSha": "da055199a3009a852895a12b1c65779dd9eca59e",
-      "driveMd5": "ff76427dd6ea7448735b898beb7b2415"
+      "githubSha": "4194f5aea7b4b544d3b3c31aa89eda550a6db33c",
+      "driveMd5": "0839364441d5b9815d51b26c10a98b40"
     },
     "src/js/services/payment/mock-payment-provider.js": {
       "githubSha": "e3ed9d0b228bd6369e1ec7aa7038b4386e4ca732",
       "driveMd5": "68502c95a63cd1d929a55e1be4aa9f6b"
+    },
+    "src/js/services/payment/openpay-provider.js": {
+      "githubSha": "4ad2af3a8fc72049be71ae4f33785ba3d1980c95",
+      "driveMd5": "0f90facda91e1e014e00a9ada677b4f6"
     },
     "src/js/services/payment/payment-provider.js": {
       "githubSha": "acad9d378af168e998f17e29ad10bffc9926d824",
@@ -663,6 +671,18 @@
     "supabase/functions/chat-ai/index.ts": {
       "githubSha": "1e63b5716ae844062c4e5bdd70bccd34871091e0",
       "driveMd5": "ea1dbc984c6949001daa675a482eb1fc"
+    },
+    "supabase/functions/openpay-callback/config.toml": {
+      "githubSha": "4d867863b17b69c7d8551401790f1e4888a28f9e",
+      "driveMd5": "8d96cc6eb461c20b20efa2e9a36e9f53"
+    },
+    "supabase/functions/openpay-callback/index.ts": {
+      "githubSha": "506d5da9a621018d7697edc2b443e8bfb14e7041",
+      "driveMd5": "adcff495bac339e35b84bd40db5b2708"
+    },
+    "supabase/functions/payment-openpay/index.ts": {
+      "githubSha": "a22e29007bf8355328ac72e53fc56c71cafb95a3",
+      "driveMd5": "ea5345b0bac6b6e433d5af88974beb50"
     },
     "supabase/functions/payment-webhook/README.md": {
       "githubSha": "1d2506f81dfa909185b7b7d7a387a4a09a6f0678",
@@ -748,6 +768,10 @@
       "githubSha": "02812637bdc153b22d48128fd68ae3bc80de7274",
       "driveMd5": "2fead946d70c715b2805930dc06334b6"
     },
+    "test/openpay-provider.test.js": {
+      "githubSha": "9301bcc769dcae3fab4a73bd257de7068ced6ccf",
+      "driveMd5": "889f4d3809bc0299b052ca51d5272588"
+    },
     "test/payment-core.test.js": {
       "githubSha": "fd38d2e151c9908d6efb56436fc715168d822228",
       "driveMd5": "6f2d974d460c2bf7f45f6130027bdf86"
@@ -817,5 +841,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-05T18:27:41.294Z"
+  "updatedAt": "2026-10-05T18:29:47.981Z"
 }
