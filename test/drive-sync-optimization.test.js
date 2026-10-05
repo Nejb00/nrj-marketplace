@@ -46,3 +46,13 @@ test("Drive sync avoids no-op state commits and protects deletion semantics", ()
     "the legacy duplicate sync script must stay removed"
   );
 });
+
+
+test("Drive sync ignores generated conflict-version artifacts", () => {
+  const script = fs.readFileSync(scriptPath, "utf8");
+
+  assert.ok(
+    script.includes("/\\.drive-version"),
+    "generated .drive-version artifacts must be ignored"
+  );
+});
