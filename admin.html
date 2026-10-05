@@ -93,8 +93,17 @@
 
                 <div class="product-import-actions">
                     <div class="product-import-status" id="productImportStatus" aria-live="polite"></div>
-                    <button type="button" class="product-import-submit" id="productImportPrepareBtn">Préparer l’analyse →</button>
+                    <button type="button" class="product-import-submit" id="productImportPrepareBtn">Analyser avec l’IA →</button>
                 </div>
+
+                <section class="product-import-analysis" id="productImportAnalysis" hidden aria-live="polite">
+                    <div class="product-import-analysis-head">
+                        <h3>🧠 Analyse extraite</h3>
+                        <span id="productImportConfidence" class="product-import-confidence">—</span>
+                    </div>
+                    <dl class="product-import-analysis-grid" id="productImportAnalysisGrid"></dl>
+                    <div class="product-import-analysis-variants" id="productImportAnalysisVariants"></div>
+                </section>
 
                 <div class="product-import-list-wrap">
                     <div class="product-import-list-head">
