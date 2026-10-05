@@ -107,6 +107,26 @@
                         <div class="product-import-classification-label">🏷️ Catégorie catalogue</div>
                         <div class="product-import-classification-hint" id="productImportClassificationHint"></div>
                     </div>
+
+                    <section class="product-import-pricing" id="productImportPricing" hidden>
+                        <div class="product-import-pricing-head">
+                            <div>
+                                <div class="product-import-classification-label">💰 Prix universel</div>
+                                <p id="productImportPricingNote">Paramètres modifiables avant calcul.</p>
+                            </div>
+                            <span class="product-import-pricing-currency">XAF</span>
+                        </div>
+                        <div class="product-import-pricing-grid">
+                            <label>Taux vers XAF<input id="productImportFxRate" type="number" min="0" step="0.000001" placeholder="Ex. 1 pour XAF"></label>
+                            <label>Logistique (XAF)<input id="productImportLogistics" type="number" min="0" step="1" value="0"></label>
+                            <label>Droits (%)<input id="productImportDuty" type="number" min="0" max="100" step="0.1" value="0"></label>
+                            <label>Frais marketplace (%)<input id="productImportFee" type="number" min="0" max="100" step="0.1" value="0"></label>
+                            <label>Marge cible (%)<input id="productImportMargin" type="number" min="0" max="94.9" step="0.1" value="30"></label>
+                            <label>Arrondi (XAF)<input id="productImportRounding" type="number" min="1" step="1" value="500"></label>
+                        </div>
+                        <button type="button" class="product-import-price-btn" id="productImportPriceBtn">Calculer le prix →</button>
+                        <div class="product-import-price-result" id="productImportPriceResult" aria-live="polite"></div>
+                    </section>
                 </section>
 
                 <div class="product-import-list-wrap">
