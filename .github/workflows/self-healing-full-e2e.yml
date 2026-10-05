@@ -1,0 +1,34 @@
+name: Self-Healing Full E2E
+# Controlled manual E2E gate; no production writes.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: self-healing-full-e2e
+  cancel-in-progress: false
+
+jobs:
+  full-e2e:
+    name: Controlled Self-Healing E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Run controlled Self-Healing E2E
+        run: node scripts/self-healing-e2e.mjs
+
+      - name: Run focused tests
+        run: node --test test/incident-intelligence.test.js test/self-healing-simulation.test.js test/ai-assisted-diagnosis.test.js test/self-healing-e2e.test.js

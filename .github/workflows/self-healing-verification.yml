@@ -1,0 +1,198 @@
+name: Self-Healing Repair Verification
+# Verification gate: deterministic validation before any repair promotion.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+permissions:
+  contents: read
+  actions: read
+  deployments: read
+  issues: write
+  pull-requests: read
+
+concurrency:
+  group: self-healing-verification-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify Self-Healing repair
+    if: startsWith(github.event.pull_request.head.ref, 'operator/self-heal-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    steps:
+      - name: Aggregate repository checks without executing PR code
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const pr = context.payload.pull_request;
+            const requiredChecks = [
+              'Build',
+              'PR Quality Gate',
+              'Dependency Review',
+              'CodeQL',
+              'CodeQL (javascript-typescript)',
+              'CodeQL (actions)',
+            ];
+
+            async function listChecks() {
+              return (await github.rest.checks.listForRef({
+                owner,
+                repo,
+                ref: pr.head.sha,
+                per_page: 100,
+              })).data.check_runs || [];
+            }
+
+            async function browserRequired() {
+              const deployments = (await github.rest.repos.listDeployments({
+                owner,
+                repo,
+                sha: pr.head.sha,
+                per_page: 20,
+              })).data || [];
+
+              for (const deployment of deployments) {
+                if (!['Preview', 'preview', 'Production', 'production'].includes(deployment.environment || '')) {
+                  continue;
+                }
+                const statuses = (await github.rest.repos.listDeploymentStatuses({
+                  owner,
+                  repo,
+                  deployment_id: deployment.id,
+                  per_page: 20,
+                })).data || [];
+                if (statuses.some((status) => status.state === 'success')) return true;
+              }
+              return false;
+            }
+
+            function evaluate(checks, browser) {
+              const required = [...requiredChecks];
+              if (browser) required.push('Vercel Browser E2E');
+
+              const byName = new Map(checks.filter((c) => c?.name).map((c) => [c.name, c]));
+              const failed = [];
+              const pending = [];
+              const passed = [];
+
+              for (const name of required) {
+                const check = byName.get(name);
+                if (!check || check.status !== 'completed') {
+                  pending.push(name);
+                } else if (check.conclusion === 'success') {
+                  passed.push(name);
+                } else {
+                  failed.push({
+                    name,
+                    conclusion: check.conclusion || 'unknown',
+                  });
+                }
+              }
+
+              return {
+                schema_version: 1,
+                status: failed.length ? 'rejected' : pending.length ? 'pending' : 'verified',
+                required_checks: required,
+                failed_checks: failed,
+                pending_checks: pending,
+                passed_checks: passed,
+                browser_required: browser,
+                pull_request: pr.number,
+                commit: pr.head.sha,
+              };
+            }
+
+            const deadline = Date.now() + 8 * 60 * 1000;
+            let browser = await browserRequired();
+            let result = null;
+
+            while (Date.now() < deadline) {
+              const checks = await listChecks();
+              if (!browser) browser = await browserRequired();
+
+              result = evaluate(checks, browser);
+              if (result.status !== 'pending') break;
+
+              await new Promise((resolve) => setTimeout(resolve, 20000));
+            }
+
+            if (!result) {
+              result = evaluate(await listChecks(), browser);
+            }
+
+            if (result.status === 'pending') {
+              result.status = 'rejected';
+              result.failure_reason = 'verification-timeout';
+            }
+
+            const marker = '<!-- nrj-self-healing-repair-verification';
+            const markerForCommit = marker + '\n' + pr.head.sha;
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              {
+                owner,
+                repo,
+                issue_number: pr.number,
+                per_page: 100,
+              }
+            );
+
+            if (comments.some((comment) => comment.body?.includes(markerForCommit))) {
+              core.info('Vérification déjà publiée pour ce commit.');
+              return;
+            }
+
+            const passed = result.passed_checks.length
+              ? result.passed_checks.map((name) => '- ✅ ' + name).join('\n')
+              : '- Aucun';
+            const failed = result.failed_checks.length
+              ? result.failed_checks.map((item) => '- ❌ ' + item.name + ' — ' + item.conclusion).join('\n')
+              : '- Aucun';
+            const pending = result.pending_checks.length
+              ? result.pending_checks.map((name) => '- ⏳ ' + name).join('\n')
+              : '- Aucun';
+
+            const verified = result.status === 'verified';
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: pr.number,
+              body: [
+                marker,
+                pr.head.sha,
+                '',
+                '## 🛡️ Self-Healing Repair Verification',
+                '',
+                verified
+                  ? '✅ Réparation **VERIFIED** : tous les checks requis sont verts.'
+                  : '❌ Réparation **REJECTED** : la validation automatique n’est pas satisfaite.',
+                '',
+                '- PR : #' + pr.number,
+                '- Commit : `' + pr.head.sha + '`',
+                '- Browser E2E requis : **' + (result.browser_required ? 'OUI' : 'NON') + '**',
+                '',
+                '### Checks verts',
+                passed,
+                '',
+                '### Checks en échec',
+                failed,
+                '',
+                '### Checks en attente',
+                pending,
+                '',
+                verified
+                  ? '🛡️ Cette étape certifie uniquement la qualité de la réparation. Aucun merge automatique.'
+                  : '🛑 Aucun merge et aucune nouvelle réparation automatique ne sont autorisés par cette étape.',
+              ].join('\n'),
+            });
+
+            if (!verified) {
+              core.setFailed('Repair Verification rejetée.');
+            }
