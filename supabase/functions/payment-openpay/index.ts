@@ -6,6 +6,18 @@ const PUBLIC_KEY =
   "";
 const OPENPAY_API_KEY = Deno.env.get("OPENPAY_API_KEY") || "";
 const OPENPAY_PAYMENT_ENABLED = Deno.env.get("OPENPAY_PAYMENT_ENABLED") === "true";
+const OPENPAY_ACTIVATION_MODE = (Deno.env.get("OPENPAY_ACTIVATION_MODE") || "disabled")
+  .trim()
+  .toLowerCase();
+const OPENPAY_MAX_TRANSACTION_XAF = Number(
+  Deno.env.get("OPENPAY_MAX_TRANSACTION_XAF") || "0"
+);
+const OPENPAY_CANARY_USER_IDS = new Set(
+  (Deno.env.get("OPENPAY_CANARY_USER_IDS") || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean)
+);
 const OPENPAY_BASE_URL = "https://api.openpay-cg.com/v1";
 const MAX_PERSIST_ATTEMPTS = 3;
 const PERSIST_RETRY_DELAYS_MS = [0, 100, 250];
@@ -55,6 +67,46 @@ function mapOpenPayStatus(status: unknown): InternalStatus {
     case "pending":
     default: return "pending";
   }
+}
+
+type ActivationDecision = {
+  enabled: boolean;
+  mode: "disabled" | "canary" | "live";
+  reason: string;
+};
+
+function getActivationDecision(userId: string | null): ActivationDecision {
+  const mode =
+    OPENPAY_ACTIVATION_MODE === "canary" || OPENPAY_ACTIVATION_MODE === "live"
+      ? OPENPAY_ACTIVATION_MODE
+      : "disabled";
+
+  if (!OPENPAY_PAYMENT_ENABLED) {
+    return { enabled: false, mode, reason: "master_switch_disabled" };
+  }
+
+  if (mode === "disabled") {
+    return { enabled: false, mode, reason: "activation_mode_disabled" };
+  }
+
+  if (!Number.isFinite(OPENPAY_MAX_TRANSACTION_XAF) || OPENPAY_MAX_TRANSACTION_XAF <= 0) {
+    return { enabled: false, mode, reason: "max_transaction_not_configured" };
+  }
+
+  if (mode === "canary" && (!userId || !OPENPAY_CANARY_USER_IDS.has(userId))) {
+    return { enabled: false, mode, reason: "user_not_in_canary_allowlist" };
+  }
+
+  return { enabled: true, mode, reason: "ok" };
+}
+
+function activationJson(decision: ActivationDecision, status = 503): Response {
+  return json({
+    ok: false,
+    error: "openpay_activation_not_ready",
+    activation_mode: decision.mode,
+    reason: decision.reason
+  }, status);
 }
 
 async function supabaseRest<T>(
@@ -332,8 +384,21 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const action = body.action || "create";
 
-  if (!OPENPAY_PAYMENT_ENABLED) {
-    return json({ ok: false, error: "openpay_payment_disabled" }, 503);
+  if (action === "readiness") {
+    const decision = getActivationDecision(null);
+    return json({
+      ok: true,
+      provider: "openpay",
+      enabled: decision.enabled,
+      activation_mode: decision.mode,
+      reason: decision.reason,
+      max_transaction_xaf: decision.enabled ? OPENPAY_MAX_TRANSACTION_XAF : 0
+    });
+  }
+
+  const baseDecision = getActivationDecision(null);
+  if (!baseDecision.enabled && baseDecision.reason !== "user_not_in_canary_allowlist") {
+    return activationJson(baseDecision);
   }
 
   if (action === "reconcile") {
@@ -349,6 +414,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
     const order = await findOwnedOrder(body.order_id, token);
     if (!order) return json({ ok: false, error: "order_not_found_or_not_owned" }, 404);
+
+    const activation = getActivationDecision(order.user_id);
+    if (!activation.enabled) return activationJson(activation, 403);
 
     const payment = await findOwnedPaymentById(body.payment_id, token);
     if (!payment) return json({ ok: false, error: "payment_not_found" }, 404);
@@ -420,6 +488,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const payment = await findOwnedPayment(body.provider_reference, token);
     if (!payment) return json({ ok: false, error: "payment_not_found" }, 404);
 
+    const paymentOrder = await findOwnedOrder(payment.order_id, token);
+    if (!paymentOrder) return json({ ok: false, error: "order_not_found_or_not_owned" }, 404);
+
+    const activation = getActivationDecision(paymentOrder.user_id);
+    if (!activation.enabled) return activationJson(activation, 403);
+
     const remote = await openPay<OpenPayPaymentResponse>(
       "/transaction/status/" + encodeURIComponent(payment.provider_reference || ""),
       { method: "GET" }
@@ -482,9 +556,20 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const order = await findOwnedOrder(body.order_id, token);
   if (!order) return json({ ok: false, error: "order_not_found_or_not_owned" }, 404);
 
+  const activation = getActivationDecision(order.user_id);
+  if (!activation.enabled) return activationJson(activation, 403);
+
   const amount = Number(order.total);
   if (!Number.isFinite(amount) || amount <= 0) {
     return json({ ok: false, error: "order_total_invalid" }, 409);
+  }
+
+  if (amount > OPENPAY_MAX_TRANSACTION_XAF) {
+    return json({
+      ok: false,
+      error: "openpay_transaction_limit_exceeded",
+      max_transaction_xaf: OPENPAY_MAX_TRANSACTION_XAF
+    }, 409);
   }
 
   const idempotencyKey = String(
