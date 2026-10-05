@@ -98,6 +98,27 @@ BEGIN
     WHERE id = v_event_id;
   END IF;
 
+  PERFORM set_config(
+    'app.payment_audit_source',
+    'provider_callback',
+    true
+  );
+  PERFORM set_config(
+    'app.payment_audit_reason',
+    nullif(trim(p_event_type), ''),
+    true
+  );
+  PERFORM set_config(
+    'app.payment_provider_event_id',
+    trim(p_provider_event_id),
+    true
+  );
+  PERFORM set_config(
+    'app.payment_audit_metadata',
+    coalesce(p_payload, '{}'::jsonb)::text,
+    true
+  );
+
   UPDATE public.payments
   SET
     provider_reference = trim(p_provider_reference),
