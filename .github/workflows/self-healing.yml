@@ -56,16 +56,6 @@ jobs:
 
             let intelligenceRecipeId = null;
             let aiDiagnosis = null;
-            const aiDiagnosisMatch = issue.body?.match(
-              /<!-- nrj-ai-diagnosis\n([\s\S]*?)\n-->/
-            );
-            if (aiDiagnosisMatch) {
-              try {
-                aiDiagnosis = JSON.parse(aiDiagnosisMatch[1]);
-              } catch (error) {
-                core.warning('Dossier AI-Assisted Diagnosis illisible : ' + error.message);
-              }
-            }
             const intelligenceMatch = issue.body?.match(
               /<!-- nrj-incident-intelligence\n([\s\S]*?)\n-->/
             );
@@ -106,7 +96,30 @@ jobs:
               { owner, repo, issue_number: issueNumber, per_page: 100 }
             );
 
+            const aiDiagnosisComment = [...comments].reverse().find((comment) =>
+              comment.user?.type === 'Bot' &&
+              comment.body?.includes('NRJ_AI_DIAGNOSIS_START')
+            );
+            if (aiDiagnosisComment?.body) {
+              const fence = String.fromCharCode(96).repeat(3);
+              const aiDiagnosisMatch = aiDiagnosisComment.body.match(new RegExp(
+                'NRJ_AI_DIAGNOSIS_START\\n' +
+                fence +
+                'json\\n([\\s\\S]*?)\\n' +
+                fence +
+                '\\nNRJ_AI_DIAGNOSIS_END'
+              ));
+              if (aiDiagnosisMatch) {
+                try {
+                  aiDiagnosis = JSON.parse(aiDiagnosisMatch[1]);
+                } catch (error) {
+                  core.warning('Dossier AI-Assisted Diagnosis illisible : ' + error.message);
+                }
+              }
+            }
+
             if (comments.some((comment) => comment.body?.includes(repairMarker))) {
+
               core.info('Une réparation automatique a déjà été tentée pour cette issue.');
               return;
             }
