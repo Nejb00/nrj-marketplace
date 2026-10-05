@@ -497,6 +497,15 @@ Deno.serve(async (req: Request): Promise<Response> => {
       return json({ ok: false, error: "payment_operator_conflict" }, 409);
     }
 
+    if (["failed", "cancelled", "refund_pending", "refunded"].includes(existing.status)) {
+      return json({
+        ok: false,
+        error: "payment_attempt_terminal",
+        payment_id: existing.id,
+        status: existing.status
+      }, 409);
+    }
+
     if (!existing.provider_reference) {
       return json({
         ok: false,
