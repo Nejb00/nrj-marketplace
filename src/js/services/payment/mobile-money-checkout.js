@@ -182,24 +182,52 @@ export async function startMobileMoneyPayment() {
             message: 'Demande de paiement ' + customer.operator + ' en cours…'
         });
 
-        const payment = pendingPaymentReference
-            ? {
+        let payment;
+
+        if (pendingPaymentReference) {
+            payment = {
                 providerReference: pendingPaymentReference,
                 status: 'pending'
-            }
-            : await paymentService.createPayment({
-                orderId: remoteOrder.order_id,
-                amount: Number(remoteOrder.total),
-                currency: 'XAF',
-                customer: {
-                    name: customer.name,
-                    phone: customer.phone
-                },
-                metadata: {
-                    operator: customer.operator,
-                    customerName: customer.name
+            };
+        } else {
+            try {
+                payment = await paymentService.createPayment({
+                    orderId: remoteOrder.order_id,
+                    amount: Number(remoteOrder.total),
+                    currency: 'XAF',
+                    customer: {
+                        name: customer.name,
+                        phone: customer.phone
+                    },
+                    metadata: {
+                        operator: customer.operator,
+                        customerName: customer.name
+                    }
+                });
+            } catch (error) {
+                const code = error?.code || (error instanceof Error ? error.message : String(error));
+                const details = error?.details || {};
+
+                if (
+                    code !== 'payment_reconciliation_required' ||
+                    !details.payment_id ||
+                    !details.provider_reference
+                ) {
+                    throw error;
                 }
-            });
+
+                setPaymentUi({
+                    busy: true,
+                    message: 'Récupération sécurisée du paiement…'
+                });
+
+                payment = await paymentService.reconcilePayment({
+                    orderId: remoteOrder.order_id,
+                    paymentId: details.payment_id,
+                    providerReference: details.provider_reference
+                });
+            }
+        }
 
         if (!payment.providerReference) {
             throw new Error('provider_reference_missing');
