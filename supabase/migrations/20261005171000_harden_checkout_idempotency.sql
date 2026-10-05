@@ -31,6 +31,12 @@ CREATE UNIQUE INDEX IF NOT EXISTS orders_checkout_idempotency_uidx
 ALTER TABLE public.payments
   ADD COLUMN IF NOT EXISTS user_id text;
 
+UPDATE public.payments p
+SET user_id = o.user_id
+FROM public.orders o
+WHERE p.user_id IS NULL
+  AND p.order_id = o.id;
+
 ALTER TABLE public.payments
   DROP CONSTRAINT IF EXISTS payments_openpay_user_id_check;
 
