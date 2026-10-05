@@ -12,7 +12,7 @@ const CORS = {
   "Content-Type": "application/json"
 };
 
-const PHONE_PATTERN = /^242\\d{9}$/;
+const PHONE_PATTERN = /^242\d{9}$/;
 const ALLOWED_PAYMENT_METHODS = new Set([
   "whatsapp",
   "openpay_mtn",
@@ -44,7 +44,7 @@ function json(data: unknown, status = 200): Response {
 
 function getBearerToken(req: Request): string | null {
   const value = req.headers.get("authorization") || "";
-  const match = value.match(/^Bearer\\s+(.+)$/i);
+  const match = value.match(/^Bearer\s+(.+)$/i);
   return match?.[1] || null;
 }
 
@@ -135,7 +135,7 @@ function normalizeItems(items: CartItemInput[] | undefined) {
 
     const taille = raw.taille ? String(raw.taille).slice(0, 100) : null;
     const couleur = raw.couleur ? String(raw.couleur).slice(0, 100) : null;
-    const key = [productId, couleur || "", taille || ""].join("\\u001f");
+    const key = [productId, couleur || "", taille || ""].join("\u001f");
     const existing = map.get(key);
 
     if (existing) {
