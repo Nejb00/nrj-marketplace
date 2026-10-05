@@ -61,6 +61,50 @@
                 </div>
             </section>
 
+            <section class="product-import-card" id="productImportSection" aria-labelledby="productImportTitle">
+                <div class="product-import-head">
+                    <div>
+                        <span class="product-import-eyebrow">NRJ PRODUCT IMPORT OS</span>
+                        <h2 id="productImportTitle">✨ Import intelligent</h2>
+                        <p>Prépare une capture Alibaba dans le sas sécurisé avant son analyse IA.</p>
+                    </div>
+                    <span class="product-import-badge">STAGING</span>
+                </div>
+
+                <div class="product-import-source-grid">
+                    <div class="product-import-dropzone" id="productImportDropzone">
+                        <input type="file" id="productImportFile" accept="image/*" hidden>
+                        <button type="button" class="product-import-file-btn" id="productImportChooseBtn">📷 Ajouter une capture</button>
+                        <div class="product-import-preview" id="productImportPreview" hidden></div>
+                        <p class="product-import-help">Aperçu local uniquement à cette étape. L’envoi média persistant sera branché dans la pipeline Cloudinary.</p>
+                    </div>
+
+                    <div class="product-import-fields">
+                        <div class="form-group">
+                            <label for="productImportSourceUrl">URL source de l’image</label>
+                            <input type="url" id="productImportSourceUrl" placeholder="https://.../capture.jpg" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label for="productImportRawText">Texte Alibaba / notes (facultatif)</label>
+                            <textarea id="productImportRawText" rows="5" maxlength="12000" placeholder="Colle ici le titre, le prix, le MOQ ou tout texte visible sur la capture…"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="product-import-actions">
+                    <div class="product-import-status" id="productImportStatus" aria-live="polite"></div>
+                    <button type="button" class="product-import-submit" id="productImportPrepareBtn">Préparer l’analyse →</button>
+                </div>
+
+                <div class="product-import-list-wrap">
+                    <div class="product-import-list-head">
+                        <h3>Imports récents</h3>
+                        <button type="button" class="product-import-refresh" id="productImportRefreshBtn">Actualiser</button>
+                    </div>
+                    <div class="product-import-list" id="productImportsList"></div>
+                </div>
+            </section>
+
             <h2 style="margin-bottom:1rem;color:var(--primary);">Ajouter un nouveau produit</h2>
             <div class="form-group"><label>Nom</label><input type="text" id="adminName" placeholder="Ex: Écouteurs Pro"></div>
 
