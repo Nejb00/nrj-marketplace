@@ -81,6 +81,12 @@ BEGIN
     END IF;
 
     IF v_processed_at IS NOT NULL THEN
+      UPDATE public.payment_events
+      SET
+        delivery_count = delivery_count + 1,
+        last_received_at = now()
+      WHERE id = v_event_id;
+
       SELECT status
       INTO v_payment_status
       FROM public.payments
