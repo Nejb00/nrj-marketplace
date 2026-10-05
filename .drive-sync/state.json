@@ -716,6 +716,10 @@
       "githubSha": "88751a581673540a5de3288775fd816101970494",
       "driveMd5": "e399aaf878e05a1d5c3f9ce3147afe4c"
     },
+    "test/self-healing-global-resilience.test.js": {
+      "githubSha": "8e2b4be92ab59b4f2525f009aa8c61681112ec80",
+      "driveMd5": "6d5758dbe571456c8e691467eecc1e62"
+    },
     "test/self-healing-recipes.test.js": {
       "githubSha": "4ca3552fe1315eec5cdb147e5c3d3b7e51869e8e",
       "driveMd5": "eac52a98bc6ba840087055e57fc6ae7b"
@@ -761,5 +765,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-05T08:07:45.339Z"
+  "updatedAt": "2026-10-05T08:08:44.362Z"
 }
