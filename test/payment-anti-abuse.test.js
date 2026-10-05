@@ -65,6 +65,25 @@ test('ATTAQUE #22 handles the unique-key race without creating another order', (
   assert.match(block, /reused: true/);
 });
 
+test('ATTAQUE #22 blocks a second active OpenPay payment across orders for one user', () => {
+  assert.match(
+    migration,
+    /CREATE UNIQUE INDEX IF NOT EXISTS payments_one_active_per_user_uidx/,
+  );
+  assert.match(
+    migration,
+    /status IN \('pending', 'processing', 'refund_pending'\)/,
+  );
+  assert.match(
+    paymentOpenPay,
+    /payment_active_elsewhere/,
+  );
+  assert.match(
+    paymentOpenPay,
+    /findLivePaymentForUser/,
+  );
+});
+
 test('ATTAQUE #22 requires a fresh payment idempotency key after a terminal attempt', () => {
   assert.match(
     paymentOpenPay,
