@@ -228,7 +228,7 @@ jobs:
               const signatureOk = (candidate.signatures || []).some((signature) =>
                 logTexts.some((log) => log.includes(signature))
               );
-              return enabledOk && ageOk && workflowOk && recipeHintOk && signatureOk;
+              return enabledOk && ageOk && workflowOk && recipeHintOk && aiRecipeOk && signatureOk;
             });
 
             if (!recipe) {
