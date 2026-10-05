@@ -65,6 +65,6 @@ test('self-healing retries are bounded and stage-aware', () => {
 
 test('orchestrator keeps secrets server-side', () => {
   assert.match(edge, /SERVICE_KEY/);
-  assert.match(edge, /CLOUDINARY/);
+  assert.match(edge, /upload-product-import-media/);
   assert.doesNotMatch(edge, /CLOUDINARY_API_SECRET\s*=\s*["'][^"']/);
 });
