@@ -15,6 +15,9 @@ test.describe("NRJ Marketplace — critical browser flows", () => {
 
     await page.goto(BASE_URL, { waitUntil: "domcontentloaded" });
     await expect(page.locator("#tapToSearch")).toBeVisible({ timeout: 30_000 });
+    // Le bouton est présent avant le bootstrap asynchrone. #filterBar est rempli
+    // seulement après fetchCategories(), juste avant le binding de la recherche.
+    await expect(page.locator("#filterBar .filter-btn").first()).toBeVisible({ timeout: 30_000 });
   });
 
   test.afterEach(() => {
