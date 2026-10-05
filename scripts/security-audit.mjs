@@ -8,8 +8,8 @@ const RULES = [
   {
     id: 'SEC-002',
     pattern: /security\s+definer/i,
-    severity: 'high',
-    description: 'SECURITY DEFINER requires privileged review.',
+    severity: 'medium',
+    description: 'SECURITY DEFINER requires privileged review.'
   },
   {
     id: 'SEC-003',
