@@ -310,7 +310,15 @@ Deno.serve(async (req) => {
     // E) Publication : automatique seulement lorsque le classifier l'a explicitement autorisée.
     if (row?.status === "MEDIA_READY") {
       if (!publish) {
-        return json({ ok: true, importId, status: "MEDIA_READY", next_action: "publish", steps });
+        return json({
+          ok: true,
+          importId,
+          status: "MEDIA_READY",
+          media: row.cloudinary_urls || null,
+          pricing: row.ai_analysis?.pricing || null,
+          next_action: "publish",
+          steps
+        });
       }
 
       const classification = row.ai_analysis?.classification;
@@ -324,6 +332,8 @@ Deno.serve(async (req) => {
           ok: true,
           importId,
           status: "MEDIA_READY",
+          media: row.cloudinary_urls || null,
+          pricing: row.ai_analysis?.pricing || null,
           review_required: true,
           next_action: "human_approval",
           steps
