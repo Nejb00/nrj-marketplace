@@ -1,4 +1,7 @@
-import { MOBILE_MONEY_PAYMENT_ENABLED } from '../../core/config.js';
+import {
+    MOBILE_MONEY_PAYMENT_ENABLED,
+    supabaseClient
+} from '../../core/config.js';
 import { state, saveCart, saveOrders } from '../../core/state.js';
 import { showToast } from '../../utils/dom-helpers.js';
 import { getSelectedItems } from '../cart-storage.js';
@@ -21,6 +24,32 @@ let pendingPaymentCustomer = null;
 let pendingPaymentItems = null;
 let pendingPaymentStatus = null;
 let paymentStartInFlight = false;
+let activeStorageUserId = null;
+
+async function ensureStorageUserScope() {
+    let { data: { session } } = await supabaseClient.auth.getSession();
+
+    if (!session) {
+        const { data, error } = await supabaseClient.auth.signInAnonymously();
+        if (error) throw error;
+        session = data.session;
+    }
+
+    const userId = session?.user?.id;
+    if (!userId) {
+        throw new Error('payment_session_unavailable');
+    }
+
+    activeStorageUserId = userId;
+}
+
+function scopedStorageKey(baseKey) {
+    if (!activeStorageUserId) {
+        throw new Error('payment_session_unavailable');
+    }
+
+    return baseKey + ':' + activeStorageUserId;
+}
 
 function createIdempotencyKey(prefix) {
     const random = globalThis.crypto?.randomUUID?.();
@@ -75,20 +104,22 @@ function clearDurableKey(storageKey) {
 }
 
 function getOrderIdempotencyKey() {
-    return getDurableKey(ORDER_IDEMPOTENCY_STORAGE_KEY, 'order');
+    return getDurableKey(scopedStorageKey(ORDER_IDEMPOTENCY_STORAGE_KEY), 'order');
 }
 
 function getPaymentIdempotencyKey() {
-    return getDurableKey(PAYMENT_IDEMPOTENCY_STORAGE_KEY, 'payment');
+    return getDurableKey(scopedStorageKey(PAYMENT_IDEMPOTENCY_STORAGE_KEY), 'payment');
 }
 
 function resetPaymentAttemptKey() {
-    clearDurableKey(PAYMENT_IDEMPOTENCY_STORAGE_KEY);
+    if (!activeStorageUserId) return;
+    clearDurableKey(scopedStorageKey(PAYMENT_IDEMPOTENCY_STORAGE_KEY));
 }
 
 function resetCheckoutKeys() {
-    clearDurableKey(PAYMENT_IDEMPOTENCY_STORAGE_KEY);
-    clearDurableKey(ORDER_IDEMPOTENCY_STORAGE_KEY);
+    if (!activeStorageUserId) return;
+    clearDurableKey(scopedStorageKey(PAYMENT_IDEMPOTENCY_STORAGE_KEY));
+    clearDurableKey(scopedStorageKey(ORDER_IDEMPOTENCY_STORAGE_KEY));
 }
 
 function resetTerminalCheckoutState() {
@@ -244,6 +275,8 @@ export async function startMobileMoneyPayment() {
 
     try {
         const customer = getPaymentInput();
+
+        await ensureStorageUserScope();
 
         const currentItems = buildRemoteItems(selected);
 
@@ -518,6 +551,11 @@ export async function startMobileMoneyPayment() {
             showToast('⚠️ Numéro congolais invalide');
         } else if (code === 'operator_invalid') {
             showToast('⚠️ Choisissez MTN ou Airtel');
+        } else if (code === 'payment_active_elsewhere') {
+            showToast('⏳ Un autre paiement est déjà en cours pour ce compte');
+        } else if (code === 'payment_attempt_terminal') {
+            resetPaymentAttemptKey();
+            showToast('⚠️ Cette tentative est terminée. Vous pouvez réessayer.');
         } else {
             showToast('❌ Paiement indisponible pour le moment');
         }
