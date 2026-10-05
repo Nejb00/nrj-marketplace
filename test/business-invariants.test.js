@@ -5,6 +5,7 @@ import {
   validateCart,
   validateOrders,
   validateProductImports,
+  validatePayments,
   validateBusinessState,
 } from '../scripts/business-invariants.mjs';
 
@@ -140,4 +141,77 @@ test('business validation is deterministic and machine-readable', () => {
   assert.equal(first.status, 'violations-detected');
   assert.equal(first.violation_count, 1);
   assert.deepEqual(first.rules_triggered, ['CART-004']);
+});
+
+
+test('payment invariants accept a healthy payment lifecycle state', () => {
+  const violations = validatePayments([{
+    order_id: 'order-42',
+    provider: 'openpay',
+    idempotency_key: 'order-42-attempt-1',
+    amount: 12500,
+    currency: 'XAF',
+    status: 'paid',
+    paid_at: '2026-10-05T10:00:00.000Z',
+    refunded_at: null,
+  }]);
+
+  assert.deepEqual(violations, []);
+});
+
+test('payment invariants detect missing idempotency, invalid lifecycle and inconsistent timestamps', () => {
+  const violations = validatePayments([{
+    order_id: '',
+    provider: '',
+    idempotency_key: '',
+    amount: 0,
+    currency: 'xaf',
+    status: 'refunded',
+    paid_at: 'not-a-date',
+    refunded_at: null,
+  }]);
+
+  assert.deepEqual(
+    violations.map(({ rule_id }) => rule_id),
+    [
+      'PAYMENT-001',
+      'PAYMENT-002',
+      'PAYMENT-003',
+      'PAYMENT-004',
+      'PAYMENT-005',
+      'PAYMENT-008',
+      'PAYMENT-010',
+      'PAYMENT-011',
+    ]
+  );
+});
+
+test('payment invariants block paid_at on a non-settled payment', () => {
+  const violations = validatePayments([{
+    order_id: 'order-7',
+    provider: 'openpay',
+    idempotency_key: 'attempt-7',
+    amount: 1000,
+    currency: 'XAF',
+    status: 'failed',
+    paid_at: '2026-10-05T10:00:00.000Z',
+  }]);
+
+  assert.deepEqual(violations.map(({ rule_id }) => rule_id), ['PAYMENT-009']);
+});
+
+test('business state includes payment coverage in machine-readable counts', () => {
+  const result = validateBusinessState({
+    payments: [{
+      order_id: 'order-1',
+      provider: 'openpay',
+      idempotency_key: 'attempt-1',
+      amount: 1000,
+      currency: 'XAF',
+      status: 'pending',
+    }],
+  });
+
+  assert.equal(result.status, 'healthy');
+  assert.equal(result.checked.payments, 1);
 });
