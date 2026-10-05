@@ -10,8 +10,7 @@ import { addToCart, changeQty, removeCartItem } from '../../services/cart-action
 import { refreshCartDisplay } from '../../services/cart-panel.js';
 import { toggleFavorite } from '../../services/favorites.js';
 import { openOrderModal, sendWhatsAppOrder } from '../../services/checkout.js';
-import { startMobileMoneyPayment } from '../../services/payment/mobile-money-checkout.js';
-import { initMobileMoneyPaymentUi } from '../../services/payment/mobile-money-checkout.js';
+import { startMobileMoneyPayment, initMobileMoneyPaymentUi } from '../../services/payment/mobile-money-checkout.js';
 import { openProductModal, closeProductModal } from '../product/modal-render.js';
 import { openEditModal } from '../product/product-edit-form.js';
 import { updateProduct } from '../product/product-edit-save.js';
