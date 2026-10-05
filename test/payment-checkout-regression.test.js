@@ -21,9 +21,8 @@ test('checkout phone validation uses the intended Congo format', () => {
 });
 
 test('checkout bearer parsing accepts the standard Authorization header', () => {
-    assert.match(
-        createOrder,
-        /const match = value\.match\(\/\^Bearer\\s\+ \(\.\+\)\$\/i\)/
+    assert.ok(
+        createOrder.includes('const match = value.match(/^Bearer\\s+(.+)$/i);')
     );
 });
 
