@@ -32,5 +32,6 @@ test('payment persistence prevents more than one live payment per order', () => 
 
 test('payment-openpay reuses a live order payment when an idempotent insert loses a race', () => {
   assert.match(paymentOpenPay, /findLivePaymentForOrder/);
-  assert.match(paymentOpenPay, /status=in\.\(pending,processing,paid,refund_pending,refunded\)/);\n  assert.match(paymentOpenPay, /concurrent_live/);
+  assert.match(paymentOpenPay, /status=in\.\(pending,processing,paid,refund_pending,refunded\)/);
+  assert.match(paymentOpenPay, /concurrent_live/);
 });
