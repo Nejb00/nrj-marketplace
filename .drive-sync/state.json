@@ -772,6 +772,10 @@
       "githubSha": "099fd9529126d11a2038cc6ebe7376ed3cfc6f71",
       "driveMd5": "130ff050d2585a78a279e6fb8d1ce1d3"
     },
+    "supabase/migrations/20261005161000_enforce_payment_order_state_machine.sql": {
+      "githubSha": "d3ffc7864d0b7ef55b1842b2a384b89f758600e0",
+      "driveMd5": "b8955a77157442b04699446c43c25368"
+    },
     "test/ai-assisted-diagnosis.test.js": {
       "githubSha": "52d53aef4531add8c5c14e50e2135e20e1ee87b6",
       "driveMd5": "671b54d4ee6b0f6c75b658f180f8486d"
@@ -845,8 +849,8 @@
       "driveMd5": "1fa71fbeae4608bb10a4961179ca4520"
     },
     "test/payment-order-consistency.test.js": {
-      "githubSha": "65bc1aab2af975a4f42d7844c3c6e93eb8defd89",
-      "driveMd5": "d671cf537334787ff947fb07b4195bd8"
+      "githubSha": "a6f28299f7a908c53a526bb492be634e9b053052",
+      "driveMd5": "5714c3ce530b9c19820b769e135fa7f7"
     },
     "test/payment-reconciliation.test.js": {
       "githubSha": "12fe3f87bddce6c022ece14de09205f0d62e64a8",
@@ -917,5 +921,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-05T18:50:04.228Z"
+  "updatedAt": "2026-10-05T18:52:31.771Z"
 }
