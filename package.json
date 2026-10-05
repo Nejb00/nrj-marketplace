@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "check:syntax": "node scripts/ci-check.mjs",
-    "test": "node --test test",
+    "test": "node --test test/*.test.js",
     "test:smoke": "node scripts/smoke-test.mjs",
     "sync": "node scripts/drive-sync.mjs"
   },
