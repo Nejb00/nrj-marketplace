@@ -138,3 +138,21 @@ test('PaymentService exposes the provider-neutral reconciliation boundary', () =
   assert.match(paymentService, /this\.provider\.reconcilePayment/);
   assert.match(paymentService, /providerReference/);
 });
+
+
+test('ATTAQUE #21 tracks duplicate provider deliveries without reapplying payment state', () => {
+  const eventMigration = fs.readFileSync(
+    'supabase/migrations/20261005153000_apply_payment_provider_event.sql',
+    'utf8',
+  );
+  const auditMigration = fs.readFileSync(
+    'supabase/migrations/20261005165000_payment_audit_observability.sql',
+    'utf8',
+  );
+
+  assert.match(eventMigration, /delivery_count = delivery_count \+ 1/);
+  assert.match(eventMigration, /last_received_at = now\(\)/);
+  assert.match(auditMigration, /ADD COLUMN IF NOT EXISTS delivery_count integer NOT NULL DEFAULT 1/);
+  assert.match(auditMigration, /ADD COLUMN IF NOT EXISTS last_received_at timestamptz NOT NULL DEFAULT now\(\)/);
+  assert.match(auditMigration, /payment_events_delivery_count_check/);
+});
