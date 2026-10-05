@@ -37,6 +37,32 @@ test('payment-openpay retries local persistence after a confirmed provider succe
   assert.match(paymentOpenPay, /status/);
 });
 
+test('missing OpenPay reference stays pending instead of becoming failed', () => {
+  const start = paymentOpenPay.indexOf('const providerReference = String(remote.data.reference || "").trim();');
+  const end = paymentOpenPay.indexOf('const status = mapOpenPayStatus(remote.data.status);', start);
+  assert.ok(start >= 0 && end > start);
+
+  const referenceBlock = paymentOpenPay.slice(start, end);
+  assert.match(referenceBlock, /payment_reconciliation_required/);
+  assert.match(referenceBlock, /reason: "provider_reference_missing"/);
+  assert.doesNotMatch(referenceBlock, /status: "failed"/);
+  assert.doesNotMatch(referenceBlock, /openpay_reference_missing/);
+});
+
+test('OpenPay callback can recover a reference using callback metadata without creating a new payment', () => {
+  const callback = fs.readFileSync(
+    'supabase/functions/openpay-callback/index.ts',
+    'utf8',
+  );
+
+  assert.match(callback, /body\.metadata/);
+  assert.match(callback, /provider_reference=is\.null/);
+  assert.match(callback, /status=in\.\(pending,processing\)/);
+  assert.match(callback, /\/transaction\/status\//);
+  assert.match(callback, /remoteReference !== reference/);
+  assert.doesNotMatch(callback, /\/transaction\/payment/);
+});
+
 test('payment-openpay exposes reconciliation without creating a second transaction', () => {
   assert.match(paymentOpenPay, /action\?: "create" \| "status" \| "reconcile"/);
   assert.match(paymentOpenPay, /payment_reconciliation_required/);
