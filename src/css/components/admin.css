@@ -95,3 +95,330 @@
   border-radius: 50%; transition: color var(--transition), background var(--transition);
 }
 .ms-tag-x:hover { color: var(--favorites); background: rgba(239, 68, 68, 0.12); }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ✨ NRJ PRODUCT IMPORT OS — PR #2
+   Interface de staging sécurisée, mobile-first.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.product-import-card {
+  margin-bottom: 2rem;
+  padding: 1.15rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(145deg, rgba(255, 140, 66, 0.10), transparent 46%),
+    var(--surface);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.16);
+}
+
+.product-import-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.product-import-head h2 {
+  margin: 0.15rem 0 0.25rem;
+  color: var(--text);
+  font-size: 1.15rem;
+}
+
+.product-import-head p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.product-import-eyebrow {
+  color: var(--primary);
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.product-import-badge {
+  flex: 0 0 auto;
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 140, 66, 0.12);
+  border: 1px solid rgba(255, 140, 66, 0.25);
+  color: var(--primary);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.product-import-source-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 0.9rem;
+}
+
+.product-import-dropzone {
+  min-height: 230px;
+  padding: 1rem;
+  border: 1px dashed var(--border);
+  border-radius: 18px;
+  background: var(--surface-light);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.product-import-file-btn {
+  min-height: 46px;
+  padding: 0.7rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #fff;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.product-import-file-btn:active,
+.product-import-submit:active {
+  transform: scale(0.98);
+}
+
+.product-import-file-btn:hover,
+.product-import-submit:hover {
+  filter: brightness(1.04);
+}
+
+.product-import-preview {
+  width: 100%;
+  margin-top: 0.8rem;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.product-import-preview img {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+}
+
+.product-import-preview-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.product-import-preview-meta strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.product-import-help {
+  margin: 0.75rem 0 0;
+  max-width: 340px;
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.product-import-fields textarea {
+  resize: vertical;
+  min-height: 122px;
+  border-radius: 18px;
+}
+
+.product-import-fields input,
+.product-import-fields textarea {
+  box-sizing: border-box;
+}
+
+.product-import-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-top: 0.95rem;
+}
+
+.product-import-status {
+  min-height: 20px;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.product-import-status.is-success { color: #22c55e; }
+.product-import-status.is-error { color: #ef4444; }
+
+.product-import-submit {
+  flex: 0 0 auto;
+  min-height: 46px;
+  padding: 0.7rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #fff;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
+}
+
+.product-import-submit:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.product-import-list-wrap {
+  margin-top: 1.15rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.product-import-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-bottom: 0.65rem;
+}
+
+.product-import-list-head h3 {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text);
+}
+
+.product-import-refresh {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.product-import-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.product-import-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+  padding: 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-light);
+}
+
+.product-import-row-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.product-import-row-title {
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-import-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.3rem;
+  color: var(--text-secondary);
+  font-size: 0.63rem;
+}
+
+.product-import-status-pill {
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(255, 140, 66, 0.11);
+  color: var(--primary);
+  font-weight: 900;
+}
+
+.product-import-delete {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.product-import-empty {
+  padding: 0.9rem;
+  text-align: center;
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+}
+
+:root.light-theme .product-import-card {
+  background:
+    linear-gradient(145deg, rgba(255, 140, 66, 0.08), transparent 46%),
+    rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+@media (max-width: 680px) {
+  .product-import-source-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .product-import-dropzone {
+    min-height: 200px;
+  }
+
+  .product-import-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .product-import-submit {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-import-file-btn,
+  .product-import-submit {
+    transition: none;
+  }
+}
