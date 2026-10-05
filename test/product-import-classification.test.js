@@ -14,11 +14,13 @@ test('classification UI is chained after Vision extraction', () => {
   assert.match(html, /Catégorie catalogue/);
 });
 
-test('classification resolves only against the real category catalog', () => {
+test('classification resolves against unique real catalog path keys', () => {
   assert.match(edge, /categories\?select=id,name,parent_id,slug/);
-  assert.match(edge, /validSlugs/);
-  assert.match(edge, /bySlug\.get\(classification\.category_slug\)/);
+  assert.match(edge, /validKeys/);
+  assert.match(edge, /byKey\.get\(classification\.category_key\)/);
   assert.match(edge, /category_id:\s*matchedCategory\?\.id/);
+  assert.match(edge, /category_key/);
+  assert.match(edge, /parent\.slug.*category\.slug/);
   assert.match(edge, /Jamais un UUID/);
 });
 
@@ -31,6 +33,6 @@ test('classification gates automation with 90 percent and review with 70 percent
 });
 
 test('classifier does not write directly to products', () => {
-  assert.doesNotMatch(edge, /from\("products"\)/);
+  assert.doesNotMatch(edge, /from\(["']products["']\)/);
   assert.doesNotMatch(edge, /products\?/);
 });
