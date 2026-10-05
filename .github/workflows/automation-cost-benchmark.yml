@@ -1,0 +1,90 @@
+name: Automation Cost Benchmark
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "45 3 * * 1"
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  benchmark:
+    name: Measure workflow activity
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Collect recent workflow runs
+        uses: actions/github-script@v9
+        env:
+          DAYS: "7"
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const days = Number(process.env.DAYS || 7);
+            const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+            const workflows = await github.paginate(
+              github.rest.actions.listRepoWorkflows,
+              { owner, repo, per_page: 100 }
+            );
+
+            const allRuns = [];
+            for (const workflow of workflows) {
+              const runs = await github.paginate(
+                github.rest.actions.listWorkflowRuns,
+                {
+                  owner,
+                  repo,
+                  workflow_id: workflow.id,
+                  per_page: 100,
+                  created: '>=' + cutoff.toISOString(),
+                }
+              );
+              allRuns.push(...runs);
+            }
+
+            const benchmarkPath = require('node:path').join(
+              process.env.RUNNER_TEMP,
+              'automation-cost-input.json'
+            );
+            require('node:fs').writeFileSync(
+              benchmarkPath,
+              JSON.stringify({ days, runs: allRuns }),
+              { mode: 0o600 }
+            );
+            core.info('Workflow runs collected: ' + allRuns.length);
+
+      - name: Calculate activity metrics
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { summarize } from './scripts/automation-cost-benchmark.mjs';
+          const input = JSON.parse(
+            fs.readFileSync(process.env.RUNNER_TEMP + '/automation-cost-input.json', 'utf8')
+          );
+          const rows = summarize(input.runs);
+          const total = rows.reduce((s, row) => s + row.wall_minutes, 0);
+          const failed = rows.reduce((s, row) => s + row.failures, 0);
+          const cancelled = rows.reduce((s, row) => s + row.cancellations, 0);
+          const runs = rows.reduce((s, row) => s + row.runs, 0);
+
+          let out = '# ⚙️ Automation Activity Benchmark\n\n';
+          out += '**Fenêtre:** ' + input.days + ' jours\n\n';
+          out += '| Workflow | Runs | Wall min | Moy. min | Échecs | Annulations |\n';
+          out += '|---|---:|---:|---:|---:|---:|\n';
+          for (const row of rows) {
+            out += '| ' + row.workflow.replace(/\|/g, '\\|') + ' | ' +
+              row.runs + ' | ' + row.wall_minutes.toFixed(1) + ' | ' +
+              (row.avg_minutes == null ? 'N/A' : row.avg_minutes.toFixed(1)) + ' | ' +
+              row.failures + ' (' + row.failure_pct.toFixed(1) + '%) | ' +
+              row.cancellations + ' (' + row.cancellation_pct.toFixed(1) + '%) |\n';
+          }
+          out += '\n**Total wall-clock observé:** ' + total.toFixed(1) + ' min.\n';
+          out += '**Runs:** ' + runs + ' · **échecs:** ' + failed + ' · **annulations:** ' + cancelled + '.\n\n';
+          out += '> Cette métrique est une approximation de charge basée sur la durée des runs, pas une facture GitHub Actions. Elle sert à cibler les workflows à optimiser.\n';
+
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, out);
+          console.log(out);
+          NODE
