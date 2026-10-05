@@ -77,7 +77,7 @@ async function rest(path, init) {
 async function readImport(importId) {
   const rows = await rest(
     "product_imports?id=eq." + encodeURIComponent(importId) +
-    "&select=id,status,error_code,error_message,product_name,raw_text,overall_confidence,category_confidence,calculated_price,cloudinary_urls,published_product_id&limit=1"
+    "&select=id,status,error_code,error_message,product_name,raw_text,overall_confidence,category_confidence,calculated_price,cloudinary_urls,ai_analysis,published_product_id&limit=1"
   );
   return rows?.[0] || null;
 }
@@ -218,7 +218,9 @@ Deno.serve(async (req) => {
       const stage = await callStage("analyze-product-import", token, {
         importId,
         imageDataUrl,
-        rawText: typeof body?.rawText === "string" ? body.rawText.slice(0, 12000) : ""
+        rawText: typeof body?.rawText === "string" && body.rawText.trim()
+          ? body.rawText.slice(0, 12000)
+          : String(row.raw_text || "").slice(0, 12000)
       });
       steps.push({ stage: "ANALYZING", attempts: stage.attempts });
       row = await readImport(importId);
@@ -230,7 +232,7 @@ Deno.serve(async (req) => {
     }
 
     const classificationNeeded =
-      row?.status === "CLASSIFIED" && !row.category_confidence
+      (row?.status === "CLASSIFIED" && !row.category_confidence)
       || shouldRetryClassification(row);
 
     if (classificationNeeded) {
@@ -251,6 +253,21 @@ Deno.serve(async (req) => {
     }
 
     // C) Pricing : cette étape reste pilotée par les paramètres commerciaux admin.
+    if (row?.status === "FAILED" && String(row.error_code || "").startsWith("pricing")) {
+      if (!pricing) {
+        return json({
+          ok: true,
+          importId,
+          status: "FAILED",
+          next_action: "pricing_required",
+          steps
+        });
+      }
+      const stage = await callStage("price-product-import", token, { importId, pricing });
+      steps.push({ stage: "PRICED", attempts: stage.attempts, retry: true });
+      row = await readImport(importId);
+    }
+
     if (row?.status === "CLASSIFIED") {
       if (!pricing) {
         return json({
@@ -296,9 +313,11 @@ Deno.serve(async (req) => {
         return json({ ok: true, importId, status: "MEDIA_READY", next_action: "publish", steps });
       }
 
+      const classification = row.ai_analysis?.classification;
       const autoEligible =
         Number(row.overall_confidence) >= 0.90 &&
-        Number(row.category_confidence) >= 0.90;
+        Number(row.category_confidence) >= 0.90 &&
+        classification?.auto_publish_eligible === true;
 
       if (!autoEligible && !approve) {
         return json({
@@ -328,11 +347,14 @@ Deno.serve(async (req) => {
       row = await readImport(importId);
     }
 
+    const ai = row?.ai_analysis && typeof row.ai_analysis === "object" ? row.ai_analysis : {};
     return json({
       ok: true,
       importId,
       status: row?.status || "UNKNOWN",
       productId: row?.published_product_id || null,
+      pricing: ai.pricing || null,
+      media: row?.cloudinary_urls || null,
       review_required: row?.status === "MEDIA_READY",
       steps
     });
