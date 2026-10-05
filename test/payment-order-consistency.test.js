@@ -147,6 +147,14 @@ test('ATTAQUE #21 provides an append-only payment status audit trail', () => {
     auditMigration,
     /ALTER TABLE public\.payment_status_history ENABLE ROW LEVEL SECURITY/,
   );
+  assert.match(
+    auditMigration,
+    /CREATE TRIGGER trigger_prevent_payment_audit_mutation[\s\S]+BEFORE UPDATE OR DELETE ON public\.payment_status_history/,
+  );
+  assert.match(
+    auditMigration,
+    /payment_status_history is append-only/,
+  );
 });
 
 test('ATTAQUE #21 supports explicit audit context for provider callbacks', () => {
