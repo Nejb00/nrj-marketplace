@@ -1,0 +1,81 @@
+name: Automation Real Incident Observer
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "10 4 * * 1"
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  observe:
+    name: Observe real workflow failures
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Collect failed runs from main
+        uses: actions/github-script@v9
+        env:
+          DAYS: "7"
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const days = Number(process.env.DAYS || 7);
+            const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+            const runs = await github.paginate(
+              github.rest.actions.listWorkflowRunsForRepo,
+              {
+                owner,
+                repo,
+                branch: 'main',
+                status: 'failure',
+                created: '>=' + cutoff.toISOString(),
+                per_page: 100,
+              }
+            );
+            require('node:fs').writeFileSync(
+              process.env.RUNNER_TEMP + '/real-incident-runs.json',
+              JSON.stringify({ days, runs }),
+              { mode: 0o600 }
+            );
+            core.info('Failed main runs observed: ' + runs.length);
+
+      - name: Analyze Self-Healing coverage
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { summarizeFailures } from './scripts/automation-real-incident-observer.mjs';
+          const input = JSON.parse(
+            fs.readFileSync(process.env.RUNNER_TEMP + '/real-incident-runs.json', 'utf8')
+          );
+          const report = summarizeFailures(input.runs);
+          const byWorkflow = new Map();
+          for (const row of report.rows) {
+            const current = byWorkflow.get(row.workflow) || {
+              workflow: row.workflow,
+              failures: 0,
+              supported: row.supported_by_self_healing,
+            };
+            current.failures += 1;
+            byWorkflow.set(row.workflow, current);
+          }
+
+          let out = '# Real Incident / Self-Healing Coverage\n\n';
+          out += 'Window: ' + input.days + ' days on main\n\n';
+          out += '| Workflow | Failures | Current Self-Healing |\n|---|---:|---|\n';
+          for (const row of [...byWorkflow.values()].sort((a,b) => b.failures-a.failures)) {
+            out += '| ' + row.workflow.replace(/\|/g, '\\|') + ' | ' + row.failures +
+              ' | ' + (row.supported ? 'covered' : 'out of scope') + ' |\n';
+          }
+          out += '\nObserved failures: ' + report.sample_size +
+            ' · covered: ' + report.supported_failures +
+            ' · out of scope: ' + report.unsupported_failures + '.\n';
+          out += '\nNo recipe is created automatically. New recipes require evidence of a deterministic real failure.\n';
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, out);
+          console.log(out);
+          NODE
