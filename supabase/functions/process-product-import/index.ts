@@ -6,6 +6,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const MAX_INLINE_IMAGE_CHARS = 15 * 1024 * 1024;
 const MAX_STAGE_RETRIES = 2;
+const MAX_RECOVERY_RETRIES = 3;
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -197,6 +198,15 @@ function normalizePricing(value) {
   };
 }
 
+function recoveryCount(row) {
+  const value = Number(row?.ai_analysis?.pipeline?.retry_count);
+  return Number.isFinite(value) && value >= 0 ? value : 0;
+}
+
+function recoveryAllowed(row) {
+  return recoveryCount(row) < MAX_RECOVERY_RETRIES;
+}
+
 function shouldRetryAnalysis(row) {
   return row.status === "RECEIVED"
     || row.status === "ANALYZING"
@@ -260,6 +270,9 @@ Deno.serve(async (req) => {
 
     // A) Vision : reprise sûre d'un import reçu/en cours d'analyse.
     if (shouldRetryAnalysis(row)) {
+      if (!recoveryAllowed(row)) {
+        return json({ ok: true, importId, status: row.status, next_action: "manual_review", recovery_exhausted: true, steps });
+      }
       if (!imageDataUrl) {
         return json({ ok: false, error: "image_requise_pour_analyse", status: row.status }, 409);
       }
@@ -284,6 +297,9 @@ Deno.serve(async (req) => {
       || shouldRetryClassification(row);
 
     if (classificationNeeded) {
+      if (!recoveryAllowed(row)) {
+        return json({ ok: true, importId, status: row.status, next_action: "manual_review", recovery_exhausted: true, steps });
+      }
       const stage = await executeStage(importId, "classify-product-import", token, { importId }, "classification");
       steps.push({ stage: "CLASSIFIED", attempts: stage.attempts });
       row = await readImport(importId);
@@ -302,6 +318,9 @@ Deno.serve(async (req) => {
 
     // C) Pricing : cette étape reste pilotée par les paramètres commerciaux admin.
     if (row?.status === "FAILED" && String(row.error_code || "").startsWith("pricing")) {
+      if (!recoveryAllowed(row)) {
+        return json({ ok: true, importId, status: row.status, next_action: "manual_review", recovery_exhausted: true, steps });
+      }
       const savedPricing = row.ai_analysis?.pipeline?.last_pricing || null;
       const retryPricing = pricing || savedPricing;
       if (!retryPricing) {
@@ -315,7 +334,7 @@ Deno.serve(async (req) => {
       }
       await updatePipeline(importId, {
         last_pricing: retryPricing,
-        retry_count: Number(row.ai_analysis?.pipeline?.retry_count || 0) + 1
+        retry_count: Math.min(MAX_RECOVERY_RETRIES, Number(row.ai_analysis?.pipeline?.retry_count || 0) + 1)
       });
       const stage = await executeStage(importId, "price-product-import", token, { importId, pricing: retryPricing }, "pricing");
       steps.push({ stage: "PRICED", attempts: stage.attempts, retry: true });
