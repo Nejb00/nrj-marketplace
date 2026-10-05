@@ -1,5 +1,4 @@
 // ═══ Panier — actions (ajout / suppression / quantités) ═══
-// Éclaté de cart.js (refacto-archi) — logique strictement identique.
 import { state, saveCart } from '../core/state.js';
 import { showToast } from '../utils/dom-helpers.js';
 import { trackPopularity } from '../api/api.js';
@@ -8,6 +7,7 @@ import { syncAllOfflineData } from './sync.js';
 import { closeCartMenu } from './cart-menu.js';
 import { refreshCartDisplay } from './cart-panel.js';
 import { getSelectedItems } from './cart-storage.js';
+import { openCartAddConfirmation } from './cart-add-confirmation.js';
 
 function syncSoon() {
     if (navigator.onLine) syncAllOfflineData().catch(() => {});
@@ -22,13 +22,13 @@ function flyToCart(sourceEl) {
     const tRect = target.getBoundingClientRect();
     const ghost = document.createElement('div');
     ghost.className = 'fly-to-cart-ghost';
-    ghost.style.cssText = `position:fixed;left:${rect.left + rect.width/2}px;top:${rect.top + rect.height/2}px;width:28px;height:28px;border-radius:50%;background:var(--primary);z-index:9999;pointer-events:none;transform:translate(-50%,-50%);transition:transform 0.7s cubic-bezier(0.2,0.8,0.2,1),opacity 0.7s;`;
+    ghost.style.cssText = \`position:fixed;left:\${rect.left + rect.width/2}px;top:\${rect.top + rect.height/2}px;width:28px;height:28px;border-radius:50%;background:var(--primary);z-index:9999;pointer-events:none;transform:translate(-50%,-50%);transition:transform 0.7s cubic-bezier(0.2,0.8,0.2,1),opacity 0.7s;\`;
     document.body.appendChild(ghost);
 
     requestAnimationFrame(() => {
         const dx = tRect.left + tRect.width/2 - (rect.left + rect.width/2);
         const dy = tRect.top + tRect.height/2 - (rect.top + rect.height/2);
-        ghost.style.transform = `translate(${dx}px, ${dy}px) scale(0.25)`;
+        ghost.style.transform = \`translate(\${dx}px, \${dy}px) scale(0.25)\`;
         ghost.style.opacity = '0.2';
     });
 
@@ -40,26 +40,141 @@ function flyToCart(sourceEl) {
     }, 850);
 }
 
-export async function addToCart(pid, t = '', c = '', sourceEl = null, qty = null) {
-    const p = state.products.find(pr => pr.id === pid);
-    if (!p) return;
-    if (sourceEl) flyToCart(sourceEl);
-    signalCart(p);
-
-    const moq = Number(p.moq) || 1;
-    const amount = Math.max(moq, Number(qty) || moq);
-    const exist = state.cart.find(i => i.productId === pid && i.taille === t && i.couleur === c);
-    if (exist) {
-        exist.quantity = Number(exist.quantity) + amount;
-        exist.selected = true;
-    } else {
-        state.cart.push({ productId: pid, quantity: amount, taille: t, couleur: c, moq, selected: true });
+function normalizeBatch(items) {
+    if (!Array.isArray(items) || items.length === 0) {
+        throw new Error('CART_EMPTY_BATCH');
     }
-    trackPopularity(pid, 5);
+
+    const normalized = items.map(item => {
+        const productId = Number(item?.productId);
+        const product = state.products.find(p => p.id === productId);
+        if (!product) return null;
+
+        const moq = Number(product.moq) || 1;
+        const rawQty = Number(item?.quantity);
+        if (!Number.isFinite(rawQty) || rawQty <= 0) return null;
+
+        return {
+            product,
+            productId,
+            taille: String(item?.taille || ''),
+            couleur: String(item?.couleur || ''),
+            quantity: Math.floor(rawQty),
+            moq
+        };
+    }).filter(Boolean);
+
+    if (!normalized.length) throw new Error('CART_INVALID_BATCH');
+    return normalized;
+}
+
+/**
+ * Ajoute plusieurs lignes en une seule mutation/persistance.
+ * Pour un ajout simple, le MOQ est appliqué directement.
+ * Pour une sélection de variantes d'un même produit, le MOQ est évalué
+ * sur la quantité totale afin de conserver le comportement multi-couleurs.
+ */
+export async function addItemsToCart(items, sourceEl = null) {
+    const batch = normalizeBatch(items);
+
+    if (batch.length === 1) {
+        batch[0].quantity = Math.max(batch[0].moq, batch[0].quantity);
+    } else {
+        const totalsByProduct = new Map();
+        batch.forEach(item => {
+            totalsByProduct.set(
+                item.productId,
+                (totalsByProduct.get(item.productId) || 0) + item.quantity
+            );
+        });
+        for (const item of batch) {
+            if ((totalsByProduct.get(item.productId) || 0) < item.moq) {
+                throw new Error('CART_MOQ_NOT_MET');
+            }
+        }
+    }
+
+    if (sourceEl) flyToCart(sourceEl);
+
+    const addedLines = [];
+    const affectedProducts = new Map();
+
+    for (const item of batch) {
+        const existing = state.cart.find(i =>
+            i.productId === item.productId &&
+            i.taille === item.taille &&
+            i.couleur === item.couleur
+        );
+
+        if (existing) {
+            existing.quantity = Number(existing.quantity) + item.quantity;
+            existing.selected = true;
+        } else {
+            state.cart.push({
+                productId: item.productId,
+                quantity: item.quantity,
+                taille: item.taille,
+                couleur: item.couleur,
+                moq: item.moq,
+                selected: true
+            });
+        }
+
+        addedLines.push({
+            productId: item.productId,
+            taille: item.taille,
+            couleur: item.couleur,
+            quantity: item.quantity
+        });
+
+        affectedProducts.set(item.productId, item.product);
+    }
+
+    for (const [productId, product] of affectedProducts) {
+        signalCart(product);
+        trackPopularity(productId, 5);
+    }
+
     await saveCart();
     refreshCartDisplay();
     syncSoon();
-    showToast(amount > 1 ? `🛒 ${amount} ajoutés au panier` : '🛒 Ajouté au panier');
+
+    const totalQuantity = addedLines.reduce((sum, item) => sum + item.quantity, 0);
+    const totalAmount = addedLines.reduce((sum, item) => {
+        const product = state.products.find(p => p.id === item.productId);
+        return sum + ((Number(product?.price) || 0) * item.quantity);
+    }, 0);
+    const primaryProduct = affectedProducts.values().next().value;
+
+    const result = {
+        product: primaryProduct,
+        itemsAdded: addedLines,
+        totalQuantity,
+        totalAmount
+    };
+
+    openCartAddConfirmation(result);
+    return result;
+}
+
+export async function addToCart(pid, t = '', c = '', sourceEl = null, qty = null) {
+    try {
+        return await addItemsToCart([{
+            productId: pid,
+            taille: t,
+            couleur: c,
+            quantity: Number(qty) || 1
+        }], sourceEl);
+    } catch (err) {
+        if (err?.message === 'CART_MOQ_NOT_MET') {
+            showToast('⚠️ Minimum d\\'achat non atteint');
+        } else if (err?.message === 'CART_INVALID_BATCH' || err?.message === 'CART_EMPTY_BATCH') {
+            showToast('⚠️ Impossible d\\'ajouter cet article');
+        } else {
+            showToast('⚠️ Impossible d\\'ajouter au panier');
+        }
+        return null;
+    }
 }
 
 export async function changeQty(idx, d) {
@@ -72,7 +187,6 @@ export async function changeQty(idx, d) {
     syncSoon();
 }
 
-/** Fixe une quantité exacte (respecte le MOQ). qty <= 0 → supprimer. */
 export async function setCartQty(idx, qty) {
     const it = state.cart[idx];
     if (!it) return;
@@ -123,7 +237,7 @@ export async function clearCart() {
 export async function removeSelectedItems() {
     const selected = getSelectedItems();
     if (selected.length === 0) return showToast('⚠️ Aucun article sélectionné');
-    if (!confirm(`Supprimer ${selected.length} article${selected.length > 1 ? 's' : ''} sélectionné${selected.length > 1 ? 's' : ''} ?`)) return;
+    if (!confirm(\`Supprimer \${selected.length} article\${selected.length > 1 ? 's' : ''} sélectionné\${selected.length > 1 ? 's' : ''} ?\`)) return;
     state.cart = state.cart.filter(i => i.selected === false);
     await saveCart();
     refreshCartDisplay();
