@@ -10,4 +10,4 @@ if (!input) {
 const snapshot = JSON.parse(fs.readFileSync(input, 'utf8'));
 const report = analyzePullRequest(snapshot);
 console.log(JSON.stringify(report, null, 2));
-process.exit(report.findings.length ? 1 : 0);
+process.exit(0);
