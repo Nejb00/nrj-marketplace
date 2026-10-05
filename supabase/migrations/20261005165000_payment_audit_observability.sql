@@ -22,6 +22,23 @@ CREATE TABLE IF NOT EXISTS public.payment_status_history (
 
 ALTER TABLE public.payment_status_history ENABLE ROW LEVEL SECURITY;
 
+-- Count provider deliveries without applying the financial state more than once.
+ALTER TABLE public.payment_events
+  ADD COLUMN IF NOT EXISTS delivery_count integer NOT NULL DEFAULT 1;
+
+ALTER TABLE public.payment_events
+  ADD COLUMN IF NOT EXISTS last_received_at timestamptz NOT NULL DEFAULT now();
+
+ALTER TABLE public.payment_events
+  DROP CONSTRAINT IF EXISTS payment_events_delivery_count_check;
+
+ALTER TABLE public.payment_events
+  ADD CONSTRAINT payment_events_delivery_count_check
+  CHECK (delivery_count > 0);
+
+CREATE INDEX IF NOT EXISTS payment_events_last_received_at_idx
+  ON public.payment_events(last_received_at DESC);
+
 CREATE INDEX IF NOT EXISTS payment_status_history_payment_id_idx
   ON public.payment_status_history(payment_id, changed_at DESC);
 
