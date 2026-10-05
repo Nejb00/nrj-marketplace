@@ -358,11 +358,20 @@ Deno.serve(async (req) => {
     }
 
     const ai = row?.ai_analysis && typeof row.ai_analysis === "object" ? row.ai_analysis : {};
+    const classification = ai.classification && typeof ai.classification === "object"
+      ? ai.classification
+      : null;
     return json({
       ok: true,
       importId,
       status: row?.status || "UNKNOWN",
       productId: row?.published_product_id || null,
+      classification,
+      category: row?.category_id ? {
+        id: row.category_id,
+        name: classification?.category_name || null,
+        parent_name: classification?.parent_name || null
+      } : null,
       pricing: ai.pricing || null,
       media: row?.cloudinary_urls || null,
       review_required: row?.status === "MEDIA_READY",
