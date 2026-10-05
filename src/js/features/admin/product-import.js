@@ -477,7 +477,6 @@ async function prepareProductImport() {
     byId('productImportSourceUrl').value = '';
     byId('productImportRawText').value = '';
     selectedFile = null;
-    resetPreview();
     // Garder l’image compressée en mémoire jusqu’au pricing/media/publish.
     // resetPreview efface l’aperçu et libère son URL, mais on restaure la data URL temporaire.
     const preparedImageDataUrl = imageDataUrl;
