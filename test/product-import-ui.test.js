@@ -21,6 +21,6 @@ test('product import UI exposes the staging workflow', () => {
 
 test('local file selection is preview-only until the media pipeline', () => {
   assert.match(feature, /URL\.createObjectURL/);
-  assert.match(feature, /sera envoyée durablement/);
+  assert.match(html, /sera envoyée à Cloudinary après le calcul du prix/);
   assert.doesNotMatch(feature, /source_image:\s*previewUrl/);
 });
