@@ -26,3 +26,10 @@ test('checkout bearer parsing accepts the standard Authorization header', () => 
         createOrder.includes(String.raw`const match = value.match(/^Bearer\s+(.+)$/i);`)
     );
 });
+
+
+test('OpenPay provider uses the centralized phone validator', () => {
+    assert.ok(
+        openPayProvider.includes('if (!isValidCongoPhone(phone)) {')
+    );
+});
