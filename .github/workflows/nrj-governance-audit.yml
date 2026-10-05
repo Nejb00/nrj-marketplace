@@ -51,6 +51,9 @@ jobs:
       - name: Sécurité déterministe
         run: npm run check:security
 
+      - name: Contrat RLS
+        run: npm run check:rls
+
       - name: Intelligence des tests
         run: npm run check:test-intelligence
 
