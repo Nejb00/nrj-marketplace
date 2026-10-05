@@ -20,6 +20,7 @@ let previewUrl = null;
 let imageDataUrl = null;
 let initialized = false;
 let currentImportId = null;
+let pricingReady = false;
 
 function byId(id) {
   return document.getElementById(id);
@@ -173,6 +174,7 @@ function clearAnalysis() {
   const pricingResult = byId('productImportPriceResult');
   if (pricingResult) pricingResult.textContent = '';
   currentImportId = null;
+  pricingReady = false;
 }
 
 async function renderPreview(file) {
@@ -216,7 +218,8 @@ function showPricingPanel(analysis, classification) {
       ? 'Paramètres modifiables. Pour une devise étrangère, saisis le taux vers XAF.'
       : 'Le calcul reste verrouillé tant qu’une catégorie fiable n’est pas validée.';
   }
-  if (button) button.disabled = !categoryReady || !currentImportId;
+  pricingReady = categoryReady && Boolean(currentImportId);
+  if (button) button.disabled = !pricingReady;
 }
 
 function renderPrice(pricing) {
@@ -261,8 +264,10 @@ async function calculateImportPrice() {
   } catch (err) {
     setStatus(err?.message || 'Calcul du prix impossible.', 'error');
   } finally {
-    if (button) button.textContent = 'Calculer le prix →';
-    showPricingPanel({}, { category: { id: currentImportId }, classification: { overall_confidence: 1 } });
+    if (button) {
+      button.disabled = !pricingReady;
+      button.textContent = 'Calculer le prix →';
+    }
   }
 }
 
