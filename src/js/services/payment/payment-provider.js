@@ -21,6 +21,10 @@ export class PaymentProvider {
         throw new Error('PaymentProvider.getPaymentStatus() must be implemented');
     }
 
+    async reconcilePayment() {
+        throw new Error('PaymentProvider.reconcilePayment() must be implemented');
+    }
+
     async refundPayment() {
         throw new Error('PaymentProvider.refundPayment() must be implemented');
     }
