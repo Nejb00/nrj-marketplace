@@ -4,8 +4,10 @@ const BASE_URL =
   process.env.E2E_BASE_URL ?? "https://nrj-marketplace.vercel.app";
 
 test.describe("NRJ Marketplace — critical browser flows", () => {
+  let pageErrors = [];
+
   test.beforeEach(async ({ page }) => {
-    const pageErrors = [];
+    pageErrors = [];
 
     page.on("pageerror", (error) => {
       pageErrors.push(error);
@@ -13,15 +15,15 @@ test.describe("NRJ Marketplace — critical browser flows", () => {
 
     await page.goto(BASE_URL, { waitUntil: "domcontentloaded" });
     await expect(page.locator("#tapToSearch")).toBeVisible({ timeout: 30_000 });
+  });
 
-    page.on("close", () => {
-      if (pageErrors.length) {
-        throw new Error(
-          "Erreurs JavaScript non gérées: " +
-            pageErrors.map((error) => error.message).join(" | "),
-        );
-      }
-    });
+  test.afterEach(() => {
+    if (pageErrors.length) {
+      throw new Error(
+        "Erreurs JavaScript non gérées: " +
+          pageErrors.map((error) => error.message).join(" | "),
+      );
+    }
   });
 
   test("accueil et navigation principale", async ({ page }) => {
