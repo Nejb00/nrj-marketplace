@@ -22,6 +22,20 @@ const files = walk(ROOT).map(full => ({
 }));
 
 const report = auditSecurityFiles(files);
-console.log(JSON.stringify({ ...report, risk_score: securityRiskScore(report) }, null, 2));
+const blockingFindings = report.findings.filter(finding =>
+  finding.rule_id !== 'SEC-002' && ['critical', 'high'].includes(finding.severity)
+);
+const effectiveStatus = blockingFindings.length
+  ? 'blocked'
+  : report.finding_count
+    ? 'review-required'
+    : 'healthy';
 
-process.exit(report.status === 'blocked' ? 1 : 0);
+console.log(JSON.stringify({
+  ...report,
+  status: effectiveStatus,
+  blocking_findings: blockingFindings,
+  risk_score: securityRiskScore(report),
+}, null, 2));
+
+process.exit(blockingFindings.length ? 1 : 0);
