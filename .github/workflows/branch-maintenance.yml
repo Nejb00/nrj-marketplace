@@ -1,0 +1,116 @@
+name: Branch Maintenance
+
+on:
+  schedule:
+    - cron: '15 4 * * 1'
+  workflow_dispatch:
+    inputs:
+      execute:
+        description: 'Supprimer les branches éligibles (sinon rapport seulement)'
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: branch-maintenance
+  cancel-in-progress: false
+
+jobs:
+  maintenance:
+    name: Branch Maintenance
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Analyze merged branches
+        uses: actions/github-script@v9
+        env:
+          EXECUTE: ${{ github.event_name == 'workflow_dispatch' && inputs.execute || false }}
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const execute = process.env.EXECUTE === 'true';
+            const defaultBranch = context.payload.repository.default_branch;
+            const protectedNames = new Set([defaultBranch, 'main', 'master', 'develop']);
+            const cutoffMs = 14 * 24 * 60 * 60 * 1000;
+
+            const branches = await github.paginate(
+              github.rest.repos.listBranches,
+              { owner, repo, protected: false, per_page: 100 }
+            );
+
+            const candidates = [];
+            const skipped = [];
+
+            for (const branch of branches) {
+              const name = branch.name;
+              if (protectedNames.has(name)) continue;
+              if (name.startsWith('release/')) continue;
+
+              const prs = await github.paginate(
+                github.rest.pulls.list,
+                { owner, repo, state: 'closed', head: `${owner}:${name}`, per_page: 100 }
+              );
+
+              const merged = prs
+                .filter((pr) => pr.merged_at && pr.base.ref === defaultBranch)
+                .sort((a, b) => new Date(b.merged_at) - new Date(a.merged_at))[0];
+
+              if (!merged) {
+                skipped.push({ name, reason: 'aucune PR fusionnée vers la branche par défaut' });
+                continue;
+              }
+
+              const ageMs = Date.now() - new Date(merged.merged_at).getTime();
+              if (ageMs < cutoffMs) {
+                skipped.push({ name, reason: 'PR fusionnée depuis moins de 14 jours' });
+                continue;
+              }
+
+              const openCheck = await github.paginate(
+                github.rest.pulls.list,
+                { owner, repo, state: 'open', head: `${owner}:${name}`, per_page: 100 }
+              );
+              if (openCheck.length) {
+                skipped.push({ name, reason: 'PR encore ouverte' });
+                continue;
+              }
+
+              candidates.push({ name, pr: merged.number, mergedAt: merged.merged_at });
+            }
+
+            core.summary
+              .addHeading('Branch Maintenance')
+              .addTable([
+                [{ data: 'Élément', header: true }, { data: 'Valeur', header: true }],
+                ['Mode', execute ? 'SUPPRESSION' : 'RAPPORT SEULEMENT'],
+                ['Branches candidates', String(candidates.length)],
+                ['Branches ignorées', String(skipped.length)],
+              ])
+              .addHeading('Candidates')
+              .addList(candidates.length ? candidates.map((item) => `${item.name} (PR #${item.pr}, fusionnée le ${item.mergedAt})`) : ['Aucune'])
+              .write();
+
+            core.info(`Candidats détectés: ${candidates.length}`);
+
+            if (!execute) {
+              core.notice('Aucune branche supprimée. Utilisez workflow_dispatch avec execute=true pour appliquer le nettoyage.');
+              return;
+            }
+
+            for (const candidate of candidates) {
+              try {
+                await github.rest.git.deleteRef({
+                  owner,
+                  repo,
+                  ref: `heads/${candidate.name}`,
+                });
+                core.info(`Branche supprimée: ${candidate.name}`);
+              } catch (error) {
+                core.warning(`Impossible de supprimer ${candidate.name}: ${error.message}`);
+              }
+            }
