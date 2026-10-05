@@ -96,7 +96,7 @@ export class OpenPayProvider extends PaymentProvider {
         );
         const phone = String(customer?.phone || metadata.paymentPhoneNumber || '').trim();
 
-        if (!/^242\\d{9}$/.test(phone)) {
+        if (!/^242\d{9}$/.test(phone)) {
             throw new TypeError('OpenPay requires a Congo phone number in 242XXXXXXXXX format');
         }
 

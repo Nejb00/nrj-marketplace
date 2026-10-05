@@ -1,4 +1,3 @@
-// ═══ Commande — partage panier + création de commande serveur ═══
 import { state, saveCart, saveOrders } from '../core/state.js';
 import { escapeHtml } from '../utils/escape-html.js';
 import { formatPrice } from '../utils/format.js';

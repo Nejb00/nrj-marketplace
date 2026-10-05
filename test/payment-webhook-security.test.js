@@ -1,1 +1,19 @@
-import test from "node:test";\nimport assert from "node:assert/strict";\n\nfunction timingSafeEqual(a, b) {\n  if (a.length !== b.length) return false;\n  let diff = 0;\n  for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];\n  return diff === 0;\n}\n\ntest("webhook signature comparison rejects different lengths", () => {\n  assert.equal(timingSafeEqual(new Uint8Array([1]), new Uint8Array([1, 2])), false);\n});\n\ntest("webhook signature comparison accepts identical bytes", () => {\n  assert.equal(timingSafeEqual(new Uint8Array([1, 2, 3]), new Uint8Array([1, 2, 3])), true);\n});\n
+import test from "node:test";
+import assert from "node:assert/strict";
+
+function timingSafeEqual(a, b) {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
+  return diff === 0;
+}
+
+test("webhook signature comparison rejects different lengths", () => {
+  assert.equal(timingSafeEqual(new Uint8Array([1]), new Uint8Array([1, 2])), false);
+});
+
+test("webhook signature comparison accepts identical bytes", () => {
+  assert.equal(timingSafeEqual(new Uint8Array([1, 2, 3]), new Uint8Array([1, 2, 3])), true);
+});
+
+// Regression coverage: signature comparison must remain length-safe and deterministic.
