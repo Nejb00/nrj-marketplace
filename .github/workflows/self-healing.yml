@@ -48,6 +48,23 @@ jobs:
               owner, repo, issue_number: issueNumber
             })).data;
 
+            let intelligenceRecipeId = null;
+            const intelligenceMatch = issue.body?.match(
+              /<!-- nrj-incident-intelligence\n([\s\S]*?)\n-->/
+            );
+            if (intelligenceMatch) {
+              try {
+                const intelligence = JSON.parse(intelligenceMatch[1]);
+                if (intelligence.schema_version === 1 &&
+                    intelligence.classification === 'known-repair-candidate' &&
+                    typeof intelligence.recipe_id === 'string') {
+                  intelligenceRecipeId = intelligence.recipe_id;
+                }
+              } catch (error) {
+                core.warning('Dossier Incident Intelligence illisible : ' + error.message);
+              }
+            }
+
             const sourceAssociations = new Set(['OWNER', 'MEMBER', 'COLLABORATOR', 'BOT']);
             const sourceAssociation = issue.user?.type === 'Bot'
               ? 'BOT'
@@ -164,10 +181,11 @@ jobs:
               const ageOk = Date.now() - new Date(run.updated_at).getTime() <=
                 (Number(candidate.max_age_hours || 24) * 60 * 60 * 1000);
               const workflowOk = candidate.workflow === run.name;
+              const recipeHintOk = !intelligenceRecipeId || candidate.id === intelligenceRecipeId;
               const signatureOk = (candidate.signatures || []).some((signature) =>
                 logTexts.some((log) => log.includes(signature))
               );
-              return enabledOk && ageOk && workflowOk && signatureOk;
+              return enabledOk && ageOk && workflowOk && recipeHintOk && signatureOk;
             });
 
             if (!recipe) {
