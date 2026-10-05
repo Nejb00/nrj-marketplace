@@ -503,10 +503,15 @@ async function main() {
       `Synchro Drive -> GitHub (${toWriteOnGithub.size} fichier(s))`
     );
     if (commitSha) {
+      const { data: committed } = await octokit.git.getCommit({
+        owner: CONFIG.owner,
+        repo: CONFIG.repo,
+        commit_sha: commitSha,
+      });
       const { data: newTree } = await octokit.git.getTree({
         owner: CONFIG.owner,
         repo: CONFIG.repo,
-        tree_sha: commitSha,
+        tree_sha: committed.tree.sha,
         recursive: "true",
       });
       for (const entry of newTree.tree) {
