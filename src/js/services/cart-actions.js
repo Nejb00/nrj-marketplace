@@ -167,7 +167,7 @@ export async function addToCart(pid, t = '', c = '', sourceEl = null, qty = null
         }], sourceEl);
     } catch (err) {
         if (err?.message === 'CART_MOQ_NOT_MET') {
-            showToast('⚠️ Minimum d\\'achat non atteint');
+            showToast("⚠️ Minimum d'achat non atteint");
         } else if (err?.message === 'CART_INVALID_BATCH' || err?.message === 'CART_EMPTY_BATCH') {
             showToast('⚠️ Impossible d\\'ajouter cet article');
         } else {
