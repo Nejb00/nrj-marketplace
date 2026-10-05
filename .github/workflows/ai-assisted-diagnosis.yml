@@ -1,1 +1,331 @@
-name: AI-Assisted Diagnosis\n\non:\n  issues:\n    types: [opened]\n  workflow_dispatch:\n    inputs:\n      issue_number:\n        description: 'Issue incident à diagnostiquer'\n        required: true\n        type: number\n\npermissions:\n  contents: read\n  actions: write\n  issues: write\n  pull-requests: read\n\nconcurrency:\n  group: ai-assisted-diagnosis\n  cancel-in-progress: false\n\njobs:\n  diagnose:\n    name: Diagnose incident with AI\n    runs-on: ubuntu-latest\n    timeout-minutes: 10\n\n    steps:\n      - name: Checkout automation definitions\n        uses: actions/checkout@v7\n        with:\n          ref: main\n          fetch-depth: 1\n\n      - name: Collect bounded diagnostic context\n        uses: actions/github-script@v9\n        env:\n          ISSUE_NUMBER_INPUT: ${{ inputs.issue_number }}\n        with:\n          script: |\n            const fs = require('node:fs');\n            const path = require('node:path');\n            const { owner, repo } = context.repo;\n            const issueNumber = context.eventName === 'workflow_dispatch'\n              ? Number(process.env.ISSUE_NUMBER_INPUT)\n              : context.payload.issue.number;\n\n            if (!Number.isSafeInteger(issueNumber) || issueNumber <= 0) {\n              core.setFailed('Numéro d’issue invalide.');\n              return;\n            }\n\n            const issue = (await github.rest.issues.get({\n              owner, repo, issue_number: issueNumber\n            })).data;\n\n            const sourceAssociations = new Set(['OWNER', 'MEMBER', 'COLLABORATOR', 'BOT']);\n            const association = issue.user?.type === 'Bot'\n              ? 'BOT'\n              : (issue.author_association || 'NONE');\n            const isIncident = issue.labels?.some((label) => {\n              const name = typeof label === 'string' ? label : label.name;\n              return name === 'incident';\n            });\n\n            if (!isIncident || !issue.title?.startsWith('🚨 Incident — ') || !sourceAssociations.has(association)) {\n              core.info('Issue non incidente ou non autorisée : aucune action.');\n              return;\n            }\n\n            const marker = '<!-- nrj-ai-diagnosis';\n            const comments = await github.paginate(\n              github.rest.issues.listComments,\n              { owner, repo, issue_number: issueNumber, per_page: 100 }\n            );\n\n            if (comments.some((comment) => comment.body?.includes(marker))) {\n              core.info('Un dossier AI diagnosis existe déjà.');\n              return;\n            }\n\n            const runMatch = issue.body?.match(\n              /Run:\s*https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/actions\/runs\/(\d+)/\n            );\n\n            if (!runMatch) {\n              await github.rest.issues.createComment({\n                owner, repo, issue_number: issueNumber,\n                body: [\n                  '## 🧠 AI-Assisted Diagnosis',\n                  '',\n                  '⚠️ Aucun run source exploitable n’a été trouvé.',\n                  '',\n                  'Aucune proposition automatique de réparation n’a été activée.',\n                ].join('\n'),\n              });\n              return;\n            }\n\n            const runId = Number(runMatch[1]);\n            const run = (await github.rest.actions.getWorkflowRun({\n              owner, repo, run_id: runId\n            })).data;\n\n            const allowedWorkflows = new Set([\n              'CI',\n              'CodeQL',\n              'Dependency Review',\n              'Deployment Safety Net',\n              'Vercel Browser E2E',\n            ]);\n\n            const recentFailure =\n              run.head_branch === 'main' &&\n              ['failure', 'timed_out', 'action_required'].includes(run.conclusion) &&\n              allowedWorkflows.has(run.name) &&\n              Date.now() - new Date(run.updated_at).getTime() <= 24 * 60 * 60 * 1000;\n\n            if (!recentFailure) {\n              await github.rest.issues.createComment({\n                owner, repo, issue_number: issueNumber,\n                body: [\n                  '## 🧠 AI-Assisted Diagnosis',\n                  '',\n                  '🛑 Diagnostic IA bloqué par les garde-fous du run source.',\n                  '',\n                  '- Workflow : ' + run.name,\n                  '- Branche : ' + (run.head_branch || '—'),\n                  '- Conclusion : ' + (run.conclusion || run.status),\n                ].join('\n'),\n              });\n              return;\n            }\n\n            const jobs = (await github.paginate(\n              github.rest.actions.listJobsForWorkflowRun,\n              { owner, repo, run_id: runId, per_page: 100 }\n            )).filter((job) => job.conclusion === 'failure').slice(0, 3);\n\n            const logTexts = [];\n            for (const job of jobs) {\n              try {\n                const response = await github.request(\n                  'GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs',\n                  { owner, repo, job_id: job.id }\n                );\n                logTexts.push(typeof response.data === 'string' ? response.data : String(response.data || ''));\n              } catch (error) {\n                core.warning('Logs indisponibles pour le job ' + job.id + ': ' + error.message);\n              }\n            }\n\n            const recipesFile = (await github.rest.repos.getContent({\n              owner, repo, path: '.github/self-healing-recipes.json', ref: 'main'\n            })).data;\n            if (Array.isArray(recipesFile) || !recipesFile.content) {\n              throw new Error('Catalogue de recettes indisponible.');\n            }\n\n            const recipes = JSON.parse(\n              Buffer.from(recipesFile.content, recipesFile.encoding || 'base64').toString('utf8')\n            );\n\n            const { analyzeIncident } = await import(\n              'file://' + process.env.GITHUB_WORKSPACE + '/scripts/incident-intelligence.mjs'\n            );\n            const { buildDiagnosisPrompt } = await import(\n              'file://' + process.env.GITHUB_WORKSPACE + '/scripts/ai-assisted-diagnosis.mjs'\n            );\n\n            const intelligence = analyzeIncident({\n              run,\n              failedJobs: jobs,\n              logTexts,\n              recipes: recipes.recipes || [],\n            });\n\n            fs.writeFileSync(\n              path.join(process.env.RUNNER_TEMP, 'nrj-ai-prompt.json'),\n              JSON.stringify({\n                issue_number: issueNumber,\n                run,\n                intelligence,\n                recipeIds: (recipes.recipes || []).map((recipe) => recipe.id),\n                prompt: buildDiagnosisPrompt({ run, intelligence, failedJobs: jobs, logTexts, recipes: recipes.recipes || [] }),\n              }),\n              { mode: 0o600 }\n            );\n\n            fs.writeFileSync(\n              path.join(process.env.RUNNER_TEMP, 'nrj-ai-inputs.json'),\n              JSON.stringify({ issue_number: issueNumber, run_id: run.id }),\n              { mode: 0o600 }\n            );\n\n            core.info('Contexte diagnostique préparé hors du dépôt.');\n\n      - name: Verify AI credential\n        id: credential\n        env:\n          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}\n        run: |\n          if [ -n "$COPILOT_GITHUB_TOKEN" ]; then\n            echo "available=true" >> "$GITHUB_OUTPUT"\n          else\n            echo "available=false" >> "$GITHUB_OUTPUT"\n          fi\n\n      - name: Install GitHub Copilot CLI\n        if: steps.credential.outputs.available == 'true'\n        run: npm install --global @github/copilot@1.0.90\n\n      - name: Ask Copilot for diagnosis\n        if: steps.credential.outputs.available == 'true'\n        env:\n          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}\n        working-directory: ${{ runner.temp }}\n        run: |\n          node --input-type=module <<'NODE'\n          import fs from 'node:fs';\n          const payload = JSON.parse(fs.readFileSync('nrj-ai-prompt.json', 'utf8'));\n          fs.writeFileSync('nrj-ai-prompt.txt', payload.prompt, { mode: 0o600 });\n          NODE\n          copilot -sp "$(cat nrj-ai-prompt.txt)" --model gpt-4.1 > nrj-ai-response.txt\n          chmod 600 nrj-ai-response.txt\n\n      - name: Publish diagnosis\n        env:\n          COPILOT_AVAILABLE: ${{ steps.credential.outputs.available }}\n        uses: actions/github-script@v9\n        with:\n          script: |\n            const fs = require('node:fs');\n            const path = require('node:path');\n            const { owner, repo } = context.repo;\n            const temp = process.env.RUNNER_TEMP;\n            const inputs = JSON.parse(fs.readFileSync(path.join(temp, 'nrj-ai-inputs.json'), 'utf8'));\n            const issueNumber = Number(inputs.issue_number);\n\n            if (process.env.COPILOT_AVAILABLE !== 'true') {\n              await github.rest.issues.createComment({\n                owner, repo, issue_number: issueNumber,\n                body: [\n                  '## 🧠 AI-Assisted Diagnosis',\n                  '',\n                  '⚪ Diagnostic IA indisponible : le secret COPILOT_GITHUB_TOKEN n’est pas configuré.',\n                  '',\n                  '🛡️ Aucune proposition automatique de réparation n’a été activée.',\n                ].join('\n'),\n              });\n              return;\n            }\n\n            const contextFile = JSON.parse(fs.readFileSync(path.join(temp, 'nrj-ai-prompt.json'), 'utf8'));\n            const responseText = fs.readFileSync(path.join(temp, 'nrj-ai-response.txt'), 'utf8');\n            const { validateDiagnosis, renderDiagnosis } = await import(\n              'file://' + process.env.GITHUB_WORKSPACE + '/scripts/ai-assisted-diagnosis.mjs'\n            );\n\n            let diagnosis;\n            try {\n              diagnosis = validateDiagnosis({\n                responseText,\n                intelligence: contextFile.intelligence,\n                run: contextFile.run,\n                recipeIds: contextFile.recipeIds,\n              });\n            } catch (error) {\n              diagnosis = {\n                schema_version: 1,\n                status: 'blocked',\n                workflow: contextFile.run.name,\n                run_id: contextFile.run.id,\n                run_number: contextFile.run.run_number,\n                commit: contextFile.run.head_sha,\n                classification: 'unclassified-failure',\n                confidence: 0,\n                likely_root_cause: 'Réponse IA non exploitable.',\n                recommended_recipe_id: null,\n                recommendation: 'operator-review',\n                deterministic_recipe_id: contextFile.intelligence.recipe_id || null,\n                deterministic_agreement: false,\n                evidence: [],\n                uncertainties: [error.message],\n              };\n            }\n\n            const evidence = diagnosis.evidence.length\n              ? diagnosis.evidence.map((item) => '- ' + item).join('\n')\n              : '- Aucune preuve synthétisée par l’IA.';\n            const uncertainties = diagnosis.uncertainties.length\n              ? diagnosis.uncertainties.map((item) => '- ' + item).join('\n')\n              : '- Aucune incertitude signalée.';\n\n            await github.rest.issues.createComment({\n              owner, repo, issue_number: issueNumber,\n              body: [\n                '## 🧠 AI-Assisted Diagnosis',\n                '',\n                '| Champ | Valeur |',\n                '|---|---|',\n                '| Statut | **' + diagnosis.status + '** |',\n                '| Classification | **' + diagnosis.classification + '** |',\n                '| Confiance | **' + Math.round(diagnosis.confidence * 100) + '%** |',\n                '| Cause probable | ' + (diagnosis.likely_root_cause || 'Indéterminée') + ' |',\n                '| Recette recommandée | ' + (diagnosis.recommended_recipe_id || 'Aucune') + ' |',\n                '| Accord déterministe | **' + (diagnosis.deterministic_agreement ? 'OUI' : 'NON') + '** |',\n                '| Action | **' + diagnosis.recommendation + '** |',\n                '',\n                '### Indices synthétisés',\n                evidence,\n                '',\n                '### Incertitudes',\n                uncertainties,\n                '',\n                renderDiagnosis(diagnosis),\n                '',\n                diagnosis.status === 'validated' && diagnosis.recommendation === 'self-healing'\n                  ? '✅ Diagnostic validé : Self-Healing sera relancé et réappliquera tous ses garde-fous déterministes avant toute Draft PR.'\n                  : '🛡️ Aucun pipeline de réparation automatique n’a été activé.',\n              ].join('\n'),\n            });\n\n            if (diagnosis.status === 'validated' && diagnosis.recommendation === 'self-healing' && diagnosis.recommended_recipe_id) {\n              await github.rest.actions.createWorkflowDispatch({\n                owner, repo, workflow_id: 'self-healing.yml', ref: 'main',\n                inputs: { issue_number: String(issueNumber) },\n              });\n              core.info('Self-Healing relancé après validation IA pour #' + issueNumber);\n            }
+name: AI-Assisted Diagnosis
+
+on:
+  issues:
+    types: [opened]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue incident à diagnostiquer'
+        required: true
+        type: number
+
+permissions:
+  contents: read
+  actions: write
+  issues: write
+  pull-requests: read
+
+concurrency:
+  group: ai-assisted-diagnosis
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    name: Diagnose incident with AI
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout automation definitions
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Collect bounded diagnostic context
+        uses: actions/github-script@v9
+        env:
+          ISSUE_NUMBER_INPUT: ${{ inputs.issue_number }}
+        with:
+          script: |
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const { owner, repo } = context.repo;
+            const issueNumber = context.eventName === 'workflow_dispatch'
+              ? Number(process.env.ISSUE_NUMBER_INPUT)
+              : context.payload.issue.number;
+
+            if (!Number.isSafeInteger(issueNumber) || issueNumber <= 0) {
+              core.setFailed('Numéro d’issue invalide.');
+              return;
+            }
+
+            const issue = (await github.rest.issues.get({
+              owner, repo, issue_number: issueNumber
+            })).data;
+
+            const sourceAssociations = new Set(['OWNER', 'MEMBER', 'COLLABORATOR', 'BOT']);
+            const association = issue.user?.type === 'Bot'
+              ? 'BOT'
+              : (issue.author_association || 'NONE');
+            const isIncident = issue.labels?.some((label) => {
+              const name = typeof label === 'string' ? label : label.name;
+              return name === 'incident';
+            });
+
+            if (!isIncident || !issue.title?.startsWith('🚨 Incident — ') || !sourceAssociations.has(association)) {
+              core.info('Issue non incidente ou non autorisée : aucune action.');
+              return;
+            }
+
+            const marker = '<!-- nrj-ai-diagnosis';
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number: issueNumber, per_page: 100 }
+            );
+
+            if (comments.some((comment) => comment.body?.includes(marker))) {
+              core.info('Un dossier AI diagnosis existe déjà.');
+              return;
+            }
+
+            const runMatch = issue.body?.match(
+              /Run:\s*https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/actions\/runs\/(\d+)/
+            );
+
+            if (!runMatch) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issueNumber,
+                body: [
+                  '## 🧠 AI-Assisted Diagnosis',
+                  '',
+                  '⚠️ Aucun run source exploitable n’a été trouvé.',
+                  '',
+                  'Aucune proposition automatique de réparation n’a été activée.',
+                ].join('\n'),
+              });
+              return;
+            }
+
+            const runId = Number(runMatch[1]);
+            const run = (await github.rest.actions.getWorkflowRun({
+              owner, repo, run_id: runId
+            })).data;
+
+            const allowedWorkflows = new Set([
+              'CI',
+              'CodeQL',
+              'Dependency Review',
+              'Deployment Safety Net',
+              'Vercel Browser E2E',
+            ]);
+
+            const recentFailure =
+              run.head_branch === 'main' &&
+              ['failure', 'timed_out', 'action_required'].includes(run.conclusion) &&
+              allowedWorkflows.has(run.name) &&
+              Date.now() - new Date(run.updated_at).getTime() <= 24 * 60 * 60 * 1000;
+
+            if (!recentFailure) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issueNumber,
+                body: [
+                  '## 🧠 AI-Assisted Diagnosis',
+                  '',
+                  '🛑 Diagnostic IA bloqué par les garde-fous du run source.',
+                  '',
+                  '- Workflow : ' + run.name,
+                  '- Branche : ' + (run.head_branch || '—'),
+                  '- Conclusion : ' + (run.conclusion || run.status),
+                ].join('\n'),
+              });
+              return;
+            }
+
+            const jobs = (await github.paginate(
+              github.rest.actions.listJobsForWorkflowRun,
+              { owner, repo, run_id: runId, per_page: 100 }
+            )).filter((job) => job.conclusion === 'failure').slice(0, 3);
+
+            const logTexts = [];
+            for (const job of jobs) {
+              try {
+                const response = await github.request(
+                  'GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs',
+                  { owner, repo, job_id: job.id }
+                );
+                logTexts.push(typeof response.data === 'string' ? response.data : String(response.data || ''));
+              } catch (error) {
+                core.warning('Logs indisponibles pour le job ' + job.id + ': ' + error.message);
+              }
+            }
+
+            const recipesFile = (await github.rest.repos.getContent({
+              owner, repo, path: '.github/self-healing-recipes.json', ref: 'main'
+            })).data;
+            if (Array.isArray(recipesFile) || !recipesFile.content) {
+              throw new Error('Catalogue de recettes indisponible.');
+            }
+
+            const recipes = JSON.parse(
+              Buffer.from(recipesFile.content, recipesFile.encoding || 'base64').toString('utf8')
+            );
+
+            const { analyzeIncident } = await import(
+              'file://' + process.env.GITHUB_WORKSPACE + '/scripts/incident-intelligence.mjs'
+            );
+            const { buildDiagnosisPrompt } = await import(
+              'file://' + process.env.GITHUB_WORKSPACE + '/scripts/ai-assisted-diagnosis.mjs'
+            );
+
+            const intelligence = analyzeIncident({
+              run,
+              failedJobs: jobs,
+              logTexts,
+              recipes: recipes.recipes || [],
+            });
+
+            fs.writeFileSync(
+              path.join(process.env.RUNNER_TEMP, 'nrj-ai-prompt.json'),
+              JSON.stringify({
+                issue_number: issueNumber,
+                run,
+                intelligence,
+                recipeIds: (recipes.recipes || []).map((recipe) => recipe.id),
+                prompt: buildDiagnosisPrompt({ run, intelligence, failedJobs: jobs, logTexts, recipes: recipes.recipes || [] }),
+              }),
+              { mode: 0o600 }
+            );
+
+            fs.writeFileSync(
+              path.join(process.env.RUNNER_TEMP, 'nrj-ai-inputs.json'),
+              JSON.stringify({ issue_number: issueNumber, run_id: run.id }),
+              { mode: 0o600 }
+            );
+
+            core.info('Contexte diagnostique préparé hors du dépôt.');
+
+      - name: Verify AI credential
+        id: credential
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+        run: |
+          if [ -n "$COPILOT_GITHUB_TOKEN" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install GitHub Copilot CLI
+        if: steps.credential.outputs.available == 'true'
+        run: npm install --global @github/copilot@1.0.90
+
+      - name: Ask Copilot for diagnosis
+        if: steps.credential.outputs.available == 'true'
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+        working-directory: ${{ runner.temp }}
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const payload = JSON.parse(fs.readFileSync('nrj-ai-prompt.json', 'utf8'));
+          fs.writeFileSync('nrj-ai-prompt.txt', payload.prompt, { mode: 0o600 });
+          NODE
+          copilot -sp "$(cat nrj-ai-prompt.txt)" --model gpt-4.1 > nrj-ai-response.txt
+          chmod 600 nrj-ai-response.txt
+
+      - name: Publish diagnosis
+        env:
+          COPILOT_AVAILABLE: ${{ steps.credential.outputs.available }}
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const { owner, repo } = context.repo;
+            const temp = process.env.RUNNER_TEMP;
+            const inputs = JSON.parse(fs.readFileSync(path.join(temp, 'nrj-ai-inputs.json'), 'utf8'));
+            const issueNumber = Number(inputs.issue_number);
+
+            if (process.env.COPILOT_AVAILABLE !== 'true') {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issueNumber,
+                body: [
+                  '## 🧠 AI-Assisted Diagnosis',
+                  '',
+                  '⚪ Diagnostic IA indisponible : le secret COPILOT_GITHUB_TOKEN n’est pas configuré.',
+                  '',
+                  '🛡️ Aucune proposition automatique de réparation n’a été activée.',
+                ].join('\n'),
+              });
+              return;
+            }
+
+            const contextFile = JSON.parse(fs.readFileSync(path.join(temp, 'nrj-ai-prompt.json'), 'utf8'));
+            const responseText = fs.readFileSync(path.join(temp, 'nrj-ai-response.txt'), 'utf8');
+            const { validateDiagnosis, renderDiagnosis } = await import(
+              'file://' + process.env.GITHUB_WORKSPACE + '/scripts/ai-assisted-diagnosis.mjs'
+            );
+
+            let diagnosis;
+            try {
+              diagnosis = validateDiagnosis({
+                responseText,
+                intelligence: contextFile.intelligence,
+                run: contextFile.run,
+                recipeIds: contextFile.recipeIds,
+              });
+            } catch (error) {
+              diagnosis = {
+                schema_version: 1,
+                status: 'blocked',
+                workflow: contextFile.run.name,
+                run_id: contextFile.run.id,
+                run_number: contextFile.run.run_number,
+                commit: contextFile.run.head_sha,
+                classification: 'unclassified-failure',
+                confidence: 0,
+                likely_root_cause: 'Réponse IA non exploitable.',
+                recommended_recipe_id: null,
+                recommendation: 'operator-review',
+                deterministic_recipe_id: contextFile.intelligence.recipe_id || null,
+                deterministic_agreement: false,
+                evidence: [],
+                uncertainties: [error.message],
+              };
+            }
+
+            const evidence = diagnosis.evidence.length
+              ? diagnosis.evidence.map((item) => '- ' + item).join('\n')
+              : '- Aucune preuve synthétisée par l’IA.';
+            const uncertainties = diagnosis.uncertainties.length
+              ? diagnosis.uncertainties.map((item) => '- ' + item).join('\n')
+              : '- Aucune incertitude signalée.';
+
+            await github.rest.issues.createComment({
+              owner, repo, issue_number: issueNumber,
+              body: [
+                '## 🧠 AI-Assisted Diagnosis',
+                '',
+                '| Champ | Valeur |',
+                '|---|---|',
+                '| Statut | **' + diagnosis.status + '** |',
+                '| Classification | **' + diagnosis.classification + '** |',
+                '| Confiance | **' + Math.round(diagnosis.confidence * 100) + '%** |',
+                '| Cause probable | ' + (diagnosis.likely_root_cause || 'Indéterminée') + ' |',
+                '| Recette recommandée | ' + (diagnosis.recommended_recipe_id || 'Aucune') + ' |',
+                '| Accord déterministe | **' + (diagnosis.deterministic_agreement ? 'OUI' : 'NON') + '** |',
+                '| Action | **' + diagnosis.recommendation + '** |',
+                '',
+                '### Indices synthétisés',
+                evidence,
+                '',
+                '### Incertitudes',
+                uncertainties,
+                '',
+                renderDiagnosis(diagnosis),
+                '',
+                diagnosis.status === 'validated' && diagnosis.recommendation === 'self-healing'
+                  ? '✅ Diagnostic validé : Self-Healing sera relancé et réappliquera tous ses garde-fous déterministes avant toute Draft PR.'
+                  : '🛡️ Aucun pipeline de réparation automatique n’a été activé.',
+              ].join('\n'),
+            });
+
+            if (diagnosis.status === 'validated' && diagnosis.recommendation === 'self-healing' && diagnosis.recommended_recipe_id) {
+              await github.rest.actions.createWorkflowDispatch({
+                owner, repo, workflow_id: 'self-healing.yml', ref: 'main',
+                inputs: { issue_number: String(issueNumber) },
+              });
+              core.info('Self-Healing relancé après validation IA pour #' + issueNumber);
+            }
