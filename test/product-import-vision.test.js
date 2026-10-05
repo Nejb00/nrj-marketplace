@@ -12,8 +12,8 @@ test('vision import UI is connected to the staging analysis contract', () => {
   assert.match(html, /productImportAnalysis/);
   assert.match(html, /Analyser avec l’IA/);
   assert.match(api, /functions\.invoke\('analyze-product-import'/);
-  assert.match(feature, /analyzeProductImport/);
   assert.match(feature, /buildAnalysisImage/);
+  assert.match(feature, /processProductImport\(row\.id,\s*data/);
   assert.match(main, /initProductImportUI/);
 });
 
