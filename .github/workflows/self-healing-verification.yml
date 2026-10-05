@@ -8,6 +8,7 @@ on:
 permissions:
   contents: read
   actions: read
+  deployments: read
   issues: write
   pull-requests: read
 
