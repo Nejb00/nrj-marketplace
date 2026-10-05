@@ -311,6 +311,6 @@ Deno.serve(async (req) => {
     } catch {
       // keep primary error
     }
-    return json({ ok: false, error: "publish_failed", detail: message }, 500);
+    return json({ ok: false, error: "publish_failed" }, 500);
   }
 });
