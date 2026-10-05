@@ -159,10 +159,14 @@ function renderAnalysis(analysis, classification = null) {
 function clearAnalysis() {
   const panel = byId('productImportAnalysis');
   if (panel) panel.hidden = true;
+  const classificationPanel = byId('productImportClassification');
+  if (classificationPanel) classificationPanel.hidden = true;
   const grid = byId('productImportAnalysisGrid');
   if (grid) grid.innerHTML = '';
   const variants = byId('productImportAnalysisVariants');
   if (variants) variants.innerHTML = '';
+  const classificationHint = byId('productImportClassificationHint');
+  if (classificationHint) classificationHint.innerHTML = '';
 }
 
 async function renderPreview(file) {
