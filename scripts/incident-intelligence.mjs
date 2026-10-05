@@ -1,4 +1,4 @@
-export const INCIDENT_INTELLIGENCE_VERSION = 2;
+export const INCIDENT_INTELLIGENCE_VERSION = 3;
 
 const BUSINESS_RULES = {
   'CART-001': 'Cart line references an invalid product identifier.',
@@ -34,7 +34,12 @@ const BUSINESS_RULES = {
   'PAYMENT-011': 'Payment refunded_at timestamp is invalid.',
 };
 
-const BUSINESS_RULE_PATTERN = /\b(?:CART|ORDER|IMPORT|PAYMENT)-\d{3}\b/g;
+const INTEGRITY_RULES = {
+  'DUP-001': 'A configured duplicate check found multiple rows for the same integrity key.',
+  'ORPHAN-001': 'A child/reference row points to a missing parent row.',
+};
+
+const BUSINESS_RULE_PATTERN = /\b(?:CART|ORDER|IMPORT|PAYMENT)-\d{3}\b/g;\nconst INTEGRITY_RULE_PATTERN = /\b(?:DUP|ORPHAN)-\d{3}\b/g;
 
 export function extractBusinessInvariantMatches(logTexts = []) {
   const found = new Set();
@@ -51,6 +56,24 @@ export function extractBusinessInvariantMatches(logTexts = []) {
     .map((rule_id) => ({
       rule_id,
       description: BUSINESS_RULES[rule_id] || 'Unknown business invariant.',
+    }));
+}
+
+export function extractIntegrityMatches(logTexts = []) {
+  const found = new Set();
+
+  for (const log of logTexts) {
+    if (typeof log !== 'string') continue;
+    for (const match of log.matchAll(INTEGRITY_RULE_PATTERN)) {
+      found.add(match[0]);
+    }
+  }
+
+  return [...found]
+    .sort()
+    .map((rule_id) => ({
+      rule_id,
+      description: INTEGRITY_RULES[rule_id] || 'Unknown integrity rule.',
     }));
 }
 
@@ -78,6 +101,7 @@ export function analyzeIncident({ run, failedJobs = [], logTexts = [], recipes =
   }
 
   const businessInvariantMatches = extractBusinessInvariantMatches(logTexts);
+  const integrityMatches = extractIntegrityMatches(logTexts);
 
   return {
     schema_version: INCIDENT_INTELLIGENCE_VERSION,
@@ -94,6 +118,7 @@ export function analyzeIncident({ run, failedJobs = [], logTexts = [], recipes =
     })),
     signature_matches: signatureMatches,
     business_invariant_matches: businessInvariantMatches,
+    integrity_matches: integrityMatches,
     classification: recipe ? 'known-repair-candidate' : 'unclassified-failure',
     recipe_id: recipe?.id || null,
     recommended_action: recipe ? 'self-healing' : 'operator-review',
