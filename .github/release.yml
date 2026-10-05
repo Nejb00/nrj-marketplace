@@ -1,0 +1,23 @@
+changelog:
+  categories:
+    - title: "🚀 Fonctionnalités"
+      labels:
+        - "frontend"
+        - "backend"
+    - title: "🤖 Automatisation & CI"
+      labels:
+        - "automation"
+        - "ci"
+    - title: "🧪 Tests & qualité"
+      labels:
+        - "tests"
+    - title: "🔐 Sécurité & dépendances"
+      labels:
+        - "security"
+        - "dependencies"
+    - title: "📚 Documentation"
+      labels:
+        - "docs"
+    - title: "Autres changements"
+      labels:
+        - "*"

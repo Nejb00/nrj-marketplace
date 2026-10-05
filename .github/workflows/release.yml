@@ -1,18 +1,28 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - "v*"
+  pull_request:
+    types: [closed]
   workflow_dispatch:
     inputs:
-      tag:
-        description: "Tag GitHub à publier, par ex. v1.2.0"
+      bump:
+        description: "Version bump pour une release manuelle"
         required: true
+        default: "patch"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - none
+      tag:
+        description: "Tag exact optionnel, par ex. v1.2.0 (prioritaire sur bump)"
+        required: false
         type: string
 
 permissions:
   contents: write
+  pull-requests: read
 
 concurrency:
   group: release
@@ -20,41 +30,166 @@ concurrency:
 
 jobs:
   release:
-    name: Create GitHub Release
+    name: Prepare and publish release
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.merged == true &&
+       github.event.pull_request.base.ref == 'main')
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
     steps:
-      - name: Checkout du repo
+      - name: Checkout de main
         uses: actions/checkout@v7
         with:
+          ref: main
           fetch-depth: 0
 
-      - name: Déterminer le tag
-        id: tag
+      - name: Calculer la prochaine version
+        id: version
         env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          INPUT_BUMP: ${{ inputs.bump }}
           INPUT_TAG: ${{ inputs.tag }}
-          REF_NAME: ${{ github.ref_name }}
         run: |
-          TAG="${INPUT_TAG:-$REF_NAME}"
-          case "$TAG" in
-            v*) ;;
-            *)
-              echo "Le tag doit commencer par v (ex: v1.2.0)."
-              exit 1
-              ;;
-          esac
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          set -euo pipefail
 
-      - name: Vérifier le tag
+          node <<'NODE'
+          const fs = require('node:fs');
+          const cp = require('node:child_process');
+
+          const event = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
+          const eventName = process.env.GITHUB_EVENT_NAME;
+          const inputBump = process.env.INPUT_BUMP || 'patch';
+          const explicitTag = (process.env.INPUT_TAG || '').trim();
+
+          const pr = event.pull_request || {};
+          const title = pr.title || process.env.PR_TITLE || '';
+          const body = pr.body || process.env.PR_BODY || '';
+          const labels = (pr.labels || []).map(label => label.name.toLowerCase());
+
+          const run = command => cp.execSync(command, { encoding: 'utf8' }).trim();
+
+          const output = (name, value) => {
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, name + '=' + String(value) + '\n');
+          };
+
+          const validSemver = value => /^\d+\.\d+\.\d+$/.test(value);
+
+          const bumpVersion = (version, bump) => {
+            const parts = version.split('.').map(Number);
+            if (bump === 'major') return (parts[0] + 1) + '.0.0';
+            if (bump === 'minor') return parts[0] + '.' + (parts[1] + 1) + '.0';
+            return parts[0] + '.' + parts[1] + '.' + (parts[2] + 1);
+          };
+
+          const packageVersion = JSON.parse(fs.readFileSync('package.json', 'utf8')).version;
+          const tags = run("git tag --list 'v*' --sort=-version:refname")
+            .split('\n')
+            .filter(Boolean);
+          const latestTag = tags[0] || '';
+          const baseVersion = latestTag ? latestTag.slice(1) : packageVersion;
+
+          if (!validSemver(baseVersion)) {
+            throw new Error('Version de base invalide: ' + baseVersion);
+          }
+
+          let bump = inputBump;
+
+          if (eventName === 'pull_request') {
+            const text = title + '\n' + body;
+            const conventional = title.match(/^(feat|feature|fix|perf|refactor|revert|chore|build|ci|test|security|docs)(\([^)]*\))?(!)?:/i);
+
+            if (
+              labels.includes('release:major') ||
+              /breaking[ -]?change/i.test(text) ||
+              /(^|\s)!:\s/.test(title)
+            ) {
+              bump = 'major';
+            } else if (
+              labels.includes('release:minor') ||
+              (conventional && /^(feat|feature)$/i.test(conventional[1]))
+            ) {
+              bump = 'minor';
+            } else if (/^docs(\([^)]*\))?:/i.test(title) && labels.length <= 1) {
+              bump = 'none';
+            } else {
+              bump = 'patch';
+            }
+          }
+
+          if (explicitTag) {
+            if (!/^v\d+\.\d+\.\d+$/.test(explicitTag)) {
+              throw new Error('Le tag manuel doit respecter le format vX.Y.Z.');
+            }
+            output('has_release', 'true');
+            output('tag', explicitTag);
+            output('bump', 'manual');
+            process.exit(0);
+          }
+
+          if (bump === 'none') {
+            output('has_release', 'false');
+            output('tag', '');
+            output('bump', 'none');
+            process.exit(0);
+          }
+
+          const nextVersion = bumpVersion(baseVersion, bump);
+          output('has_release', 'true');
+          output('tag', 'v' + nextVersion);
+          output('bump', bump);
+          output('base_tag', latestTag || 'none');
+          NODE
+
+      - name: Arrêt propre si aucune release n'est nécessaire
+        if: steps.version.outputs.has_release != 'true'
+        run: |
+          echo "Aucune release générée pour ce changement."
+
+      - name: Vérifier que le tag n'existe pas déjà
+        if: steps.version.outputs.has_release == 'true'
         env:
-          TAG: ${{ steps.tag.outputs.tag }}
+          TAG: ${{ steps.version.outputs.tag }}
         run: |
-          git rev-parse "$TAG^{commit}" >/dev/null
+          set -euo pipefail
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "::notice::Le tag $TAG existe déjà. La release est probablement déjà publiée."
+            exit 0
+          fi
 
-      - name: Publier la release
+      - name: Créer et pousser le tag
+        if: steps.version.outputs.has_release == 'true'
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "Release $TAG" HEAD
+          git push origin "$TAG"
+
+      - name: Publier la GitHub Release
+        if: steps.version.outputs.has_release == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ steps.tag.outputs.tag }}
+          TAG: ${{ steps.version.outputs.tag }}
         run: |
-          gh release create "$TAG"             --repo "${{ github.repository }}"             --title "$TAG"             --generate-notes
+          set -euo pipefail
+          gh release create "$TAG" \
+            --repo "${{ github.repository }}" \
+            --verify-tag \
+            --title "$TAG" \
+            --generate-notes
+
+      - name: Résumé
+        if: always()
+        run: |
+          {
+            echo "## 🚀 Release"
+            echo ""
+            echo "- Tag : \`${{ steps.version.outputs.tag || 'aucun' }}\`"
+            echo "- Bump : \`${{ steps.version.outputs.bump || 'none' }}\`"
+            echo "- Release générée : \`${{ steps.version.outputs.has_release || 'false' }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
