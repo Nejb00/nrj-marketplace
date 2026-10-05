@@ -81,6 +81,28 @@ test('AI diagnosis: inclut les signaux métier déterministes dans le contexte',
   assert.match(prompt, /idempotency key/);
 });
 
+test('AI diagnosis: inclut les signaux d intégrité dans le contexte', () => {
+  const prompt = buildDiagnosisPrompt({
+    run,
+    intelligence: {
+      ...intelligence,
+      integrity_matches: [
+        {
+          rule_id: 'ORPHAN-001',
+          description: 'A child/reference row points to a missing parent row.',
+        },
+      ],
+    },
+    failedJobs: [{ id: 1, name: 'Data Integrity', conclusion: 'failure' }],
+    logTexts: ['ORPHAN-001 product_views.product_id -> products.id'],
+    recipes: [],
+  });
+
+  assert.match(prompt, /integrity_matches/);
+  assert.match(prompt, /ORPHAN-001/);
+  assert.match(prompt, /missing parent row/);
+});
+
 test('AI diagnosis: valide uniquement un accord déterministe', () => {
   const response = JSON.stringify({
     schema_version: 1,
