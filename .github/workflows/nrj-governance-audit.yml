@@ -60,6 +60,9 @@ jobs:
       - name: Matrice attaques paiement
         run: npm run check:payment-attacks
 
+      - name: Santé des tests et flakiness
+        run: npm run check:test-health
+
       - name: Test suite complète
         run: npm test
 
