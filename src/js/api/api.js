@@ -348,6 +348,55 @@ export async function fetchProductDetails(productId) {
     }
 }
 
+export async function fetchProductImports(limit = 10) {
+    try {
+        const { data, error } = await fetchWithTimeout(
+            supabaseClient
+                .from('product_imports')
+                .select('id, source_image, raw_text, product_name, status, created_at, updated_at')
+                .order('created_at', { ascending: false })
+                .limit(limit)
+        );
+        if (error) throw error;
+        return data || [];
+    } catch (err) {
+        console.error('Erreur fetch product imports:', err);
+        return [];
+    }
+}
+
+export async function insertProductImport(productImport) {
+    try {
+        const { data, error } = await fetchWithTimeout(
+            supabaseClient
+                .from('product_imports')
+                .insert([productImport])
+                .select('id, source_image, raw_text, product_name, status, created_at, updated_at')
+                .single()
+        );
+        if (error) throw error;
+        return data;
+    } catch (err) {
+        console.error('Erreur insert product import:', err);
+        throw err;
+    }
+}
+
+export async function deleteProductImport(id) {
+    try {
+        const { error } = await fetchWithTimeout(
+            supabaseClient
+                .from('product_imports')
+                .delete()
+                .eq('id', id)
+        );
+        if (error) throw error;
+    } catch (err) {
+        console.error('Erreur delete product import:', err);
+        throw err;
+    }
+}
+
 export async function insertProduct(product) {
     try {
         const { data, error } = await fetchWithTimeout(
