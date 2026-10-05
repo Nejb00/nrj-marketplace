@@ -156,13 +156,46 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json({ ok: false, error: "provider_revalidation_failed" }, 502);
   }
 
+  const remoteReference = String(remote.data.reference || "").trim();
   const remoteAmount = Number(remote.data.amount);
   const remoteCurrency = String(remote.data.currency || "").toUpperCase();
 
-  if (!Number.isFinite(remoteAmount) ||
+  if (!remoteReference ||
+      remoteReference !== reference ||
+      !Number.isFinite(remoteAmount) ||
       remoteAmount !== Number(row.amount) ||
       remoteCurrency !== String(row.currency).toUpperCase()) {
     return json({ ok: false, error: "payment_mismatch" }, 409);
+  }
+
+  const remoteMetadata =
+    remote.data.metadata && typeof remote.data.metadata === "object"
+      ? remote.data.metadata as { order_id?: unknown }
+      : null;
+  const callbackOrderId =
+    body.metadata && typeof body.metadata === "object"
+      ? String((body.metadata as { order_id?: unknown }).order_id || "").trim()
+      : "";
+  const remoteOrderId = String(remoteMetadata?.order_id || "").trim();
+
+  if (
+    !row.order_id ||
+    (callbackOrderId && callbackOrderId !== row.order_id) ||
+    (remoteOrderId && remoteOrderId !== row.order_id)
+  ) {
+    return json({ ok: false, error: "payment_order_mismatch" }, 409);
+  }
+
+  const expectedProvider =
+    row.payment_method === "openpay_mtn"
+      ? "MTN"
+      : row.payment_method === "openpay_airtel"
+        ? "AIRTEL"
+        : null;
+  const remoteProvider = String(remote.data.provider || "").trim().toUpperCase();
+
+  if (expectedProvider && remoteProvider && remoteProvider !== expectedProvider) {
+    return json({ ok: false, error: "payment_provider_mismatch" }, 409);
   }
 
   const status = mapStatus(remote.data.status);
