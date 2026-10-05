@@ -1,0 +1,70 @@
+name: Deployment Safety Net
+
+on:
+  deployment_status:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "URL du déploiement à contrôler"
+        required: false
+        default: "https://nrj-marketplace.vercel.app"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deployment-safety-net
+  cancel-in-progress: true
+
+jobs:
+  production:
+    name: Production Deployment Safety Net
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event.deployment_status.state == 'success' &&
+        (
+          github.event.deployment.environment == 'Production' ||
+          github.event.deployment.environment == 'production'
+        )
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    env:
+      DEPLOY_URL: >-
+        ${{
+          github.event_name == 'workflow_dispatch'
+          && inputs.base_url
+          || github.event.deployment_status.environment_url
+          || github.event.deployment_status.target_url
+          || 'https://nrj-marketplace.vercel.app'
+        }}
+
+    steps:
+      - name: Contrôler la disponibilité HTTP
+        run: |
+          set -euo pipefail
+          echo "Contrôle de: $DEPLOY_URL"
+          curl --fail --show-error --silent --location             --max-time 20             --output response.html             "$DEPLOY_URL"
+          test -s response.html
+          echo "HTTP OK"
+
+      - name: Vérifier la présence de NRJ Marketplace
+        run: |
+          set -euo pipefail
+          grep -qi "NRJ Marketplace" response.html
+          echo "Contenu applicatif détecté"
+
+      - name: Publier le résumé
+        if: always()
+        run: |
+          {
+            echo "## Deployment Safety Net"
+            echo ""
+            echo "- URL: $DEPLOY_URL"
+            echo "- Déploiement Production: contrôlé"
+            echo "- HTTP: contrôlé"
+            echo "- Marqueur applicatif: contrôlé"
+          } >> "$GITHUB_STEP_SUMMARY"
