@@ -1,26 +1,13 @@
 name: Automation Dashboard
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
-    types: [opened, closed, reopened, synchronize]
+    types: [opened, closed, reopened]
   workflow_run:
     workflows:
       - CI
-      - CodeQL
-      - Dependency Review
-      - PR Labels
-      - PR Quality
-      - Project Report
-      - Release
-      - Repo Health
-      - Deployment Safety Net
-      - Vercel Browser E2E
-      - Incident Guard
     types: [completed]
-  deployment_status:
   release:
     types: [published, edited, deleted]
   schedule:
@@ -172,7 +159,7 @@ jobs:
 
             const rows = workflowRows
               .map((item) => item.row)
-              .join('\n');
+              .join('\\n');
 
             const body = [
               '<!-- nrj-automation-dashboard -->',
@@ -205,7 +192,7 @@ jobs:
                     `- Commit : \`${productionDeployment.sha?.slice(0, 12) || 'unknown'}\``,
                     `- État : **${productionStatus?.state || productionDeployment.state || 'unknown'}**`,
                     productionStatus?.target_url ? `- URL : [ouvrir](${productionStatus.target_url})` : '',
-                  ].filter(Boolean).join('\n')
+                  ].filter(Boolean).join('\\n')
                 : 'Aucun déploiement Production trouvé.',
               '',
               '## 🧪 E2E',
@@ -222,63 +209,26 @@ jobs:
               '',
               incidentText,
               '',
-              '## 🔖 Release',
+              '## ℹ️ Pourquoi ce dashboard existe',
               '',
-              versionText,
-              '',
-              '## 🔗 Liens',
-              '',
-              `- [Dépôt](https://github.com/${owner}/${repo})`,
-              '- [Production](https://nrj-marketplace.vercel.app)',
-              '- [Actions](https://github.com/' + owner + '/' + repo + '/actions)',
-            ].join('\n');
+              'Ce tableau centralise l’état des automatisations, de la sécurité, des déploiements, des PRs et des incidents.',
+            ].join('\\n');
 
-            const allIssues = await github.paginate(
+            const issues = await github.paginate(
               github.rest.issues.listForRepo,
-              { owner, repo, state: 'all', per_page: 100 }
+              { owner, repo, state: 'open', labels: dashboardLabel, per_page: 100 }
             );
 
-            const dashboardIssue = allIssues.find(
-              (issue) =>
-                !issue.pull_request &&
-                issue.title === dashboardTitle
-            );
+            const existing = issues.find((issue) => issue.title === dashboardTitle);
 
-            if (dashboardIssue) {
+            if (existing) {
               await github.rest.issues.update({
-                owner,
-                repo,
-                issue_number: dashboardIssue.number,
-                state: 'open',
-                body,
+                owner, repo, issue_number: existing.number, body, state: 'open',
               });
-
-              await github.rest.issues.addLabels({
-                owner,
-                repo,
-                issue_number: dashboardIssue.number,
-                labels: [dashboardLabel],
-              });
-
-              core.info(`Dashboard mis à jour dans #${dashboardIssue.number}`);
+              core.info(`Dashboard mis à jour dans l'issue #${existing.number}.`);
             } else {
               const created = await github.rest.issues.create({
-                owner,
-                repo,
-                title: dashboardTitle,
-                body,
-                labels: [dashboardLabel],
+                owner, repo, title: dashboardTitle, body, labels: [dashboardLabel],
               });
-              core.info(`Dashboard créé dans #${created.data.number}`);
+              core.info(`Dashboard créé dans l'issue #${created.data.number}.`);
             }
-
-            core.summary
-              .addHeading('Automation Dashboard')
-              .addTable([
-                ['Main', branch.data.commit.sha.slice(0, 12)],
-                ['Production', productionStatus?.state || 'unknown'],
-                ['Latest release', latestRelease?.tag_name || 'none'],
-                ['Open PRs', String(openPrs.length)],
-                ['Open incidents', String(incidents.length)],
-              ])
-              .write();
