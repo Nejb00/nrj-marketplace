@@ -30,6 +30,7 @@ type RequestBody = {
   items?: CartItemInput[];
   phone?: string;
   payment_method?: string;
+  idempotency_key?: string | null;
 };
 
 type ProductRow = {
@@ -104,6 +105,27 @@ async function supabaseRest<T>(
       error: error instanceof Error ? error.message : String(error)
     };
   }
+}
+
+function stableSerialize(value: unknown): string {
+  if (Array.isArray(value)) {
+    return '[' + value.map(stableSerialize).join(',') + ']';
+  }
+
+  if (value && typeof value === 'object') {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .sort(([a], [b]) => a.localeCompare(b));
+
+    return '{' + entries
+      .map(([key, child]) => JSON.stringify(key) + ':' + stableSerialize(child))
+      .join(',') + '}';
+  }
+
+  return JSON.stringify(value);
+}
+
+function validIdempotencyKey(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length >= 16 && value.trim().length <= 200;
 }
 
 function normalizeItems(items: CartItemInput[] | undefined) {
@@ -184,6 +206,18 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json({ ok: false, error: "payment_method_invalid" }, 400);
   }
 
+  const idempotencyKey = body.idempotency_key == null
+    ? null
+    : String(body.idempotency_key).trim();
+
+  if (idempotencyKey && !validIdempotencyKey(idempotencyKey)) {
+    return json({ ok: false, error: "idempotency_key_invalid" }, 400);
+  }
+
+  if (paymentMethod.startsWith("openpay_") && !idempotencyKey) {
+    return json({ ok: false, error: "idempotency_key_required" }, 400);
+  }
+
   let items: ReturnType<typeof normalizeItems>;
   try {
     items = normalizeItems(body.items);
@@ -235,6 +269,76 @@ Deno.serve(async (req: Request): Promise<Response> => {
     });
   }
 
+  const orderFingerprint = stableSerialize({
+    items: orderItems,
+    total,
+    payment_method: paymentMethod,
+    phone
+  });
+
+  async function findExistingIdempotentOrder() {
+    if (!idempotencyKey) return null;
+
+    const existing = await supabaseRest<Array<{
+      id: string;
+      user_id: string;
+      total: number | string;
+      status: string;
+      payment_method: string;
+      phone: string | null;
+      items: unknown;
+      checkout_idempotency_key: string | null;
+    }>>(
+      "orders?select=id,user_id,total,status,payment_method,phone,items,checkout_idempotency_key&user_id=eq." +
+        encodeURIComponent(userId) +
+        "&checkout_idempotency_key=eq." +
+        encodeURIComponent(idempotencyKey) +
+        "&limit=1"
+    );
+
+    const existingOrder = existing.data?.[0] || null;
+    if (!existingOrder) return null;
+
+    const existingFingerprint = stableSerialize({
+      items: existingOrder.items,
+      total: Number(existingOrder.total),
+      payment_method: existingOrder.payment_method,
+      phone: existingOrder.phone
+    });
+
+    if (existingFingerprint !== orderFingerprint) {
+      return {
+        conflict: true,
+        order: existingOrder
+      };
+    }
+
+    return {
+      conflict: false,
+      order: existingOrder
+    };
+  }
+
+  const alreadyCreated = await findExistingIdempotentOrder();
+  if (alreadyCreated?.conflict) {
+    return json({
+      ok: false,
+      error: "order_idempotency_conflict",
+      order_id: alreadyCreated.order.id
+    }, 409);
+  }
+
+  if (alreadyCreated?.order) {
+    return json({
+      ok: true,
+      reused: true,
+      order_id: alreadyCreated.order.id,
+      total: Number(alreadyCreated.order.total),
+      payment_method: alreadyCreated.order.payment_method,
+      status: alreadyCreated.order.status
+    }, 200);
+  }
+
   const insert = await supabaseRest<Array<{
     id: string;
     user_id: string;
@@ -253,12 +357,34 @@ Deno.serve(async (req: Request): Promise<Response> => {
         total,
         status: "pending",
         payment_method: paymentMethod,
-        phone
+        phone,
+        checkout_idempotency_key: idempotencyKey
       })
     }
   );
 
   if (insert.error || !insert.data?.[0]) {
+    const race = await findExistingIdempotentOrder();
+
+    if (race?.conflict) {
+      return json({
+        ok: false,
+        error: "order_idempotency_conflict",
+        order_id: race.order.id
+      }, 409);
+    }
+
+    if (race?.order) {
+      return json({
+        ok: true,
+        reused: true,
+        order_id: race.order.id,
+        total: Number(race.order.total),
+        payment_method: race.order.payment_method,
+        status: race.order.status
+      }, 200);
+    }
+
     return json({ ok: false, error: "order_creation_failed" }, 500);
   }
 
@@ -268,6 +394,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     ok: true,
     order_id: order.id,
     total,
-    payment_method: order.payment_method
+    payment_method: order.payment_method,
+    status: order.status,
+    reused: false
   }, 201);
 });
