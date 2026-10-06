@@ -1,0 +1,191 @@
+name: NRJ Merge Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main]
+
+permissions:
+  contents: read
+  checks: read
+  pull-requests: read
+
+concurrency:
+  group: nrj-merge-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: NRJ Merge Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Évaluer les contrôles de fusion
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const sha = pr.head.sha;
+
+            const requiredChecks = [
+              'Build',
+              'PR Quality Gate',
+              'CodeQL (javascript-typescript)',
+              'CodeQL (actions)',
+              'Dependency Review',
+            ];
+
+            const conditionalChecks = [
+              'Payment E2E (safe simulation)',
+            ];
+
+            async function getChecks() {
+              const { data } = await github.rest.checks.listForRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: sha,
+                per_page: 100,
+              });
+              return data.check_runs || [];
+            }
+
+            function byName(checks) {
+              return new Map(
+                checks
+                  .filter((check) => check && check.name)
+                  .map((check) => [check.name, check])
+              );
+            }
+
+            function evaluate(checks) {
+              const map = byName(checks);
+              const missing = [];
+              const pending = [];
+              const failed = [];
+              const passed = [];
+
+              for (const name of requiredChecks) {
+                const check = map.get(name);
+
+                if (!check) {
+                  missing.push(name);
+                  continue;
+                }
+
+                if (check.status !== 'completed') {
+                  pending.push(name);
+                  continue;
+                }
+
+                if (check.conclusion !== 'success') {
+                  failed.push({
+                    name,
+                    conclusion: check.conclusion || 'unknown',
+                  });
+                  continue;
+                }
+
+                passed.push(name);
+              }
+
+              const conditional = [];
+
+              for (const name of conditionalChecks) {
+                const check = map.get(name);
+
+                if (!check) {
+                  conditional.push({
+                    name,
+                    state: 'not-triggered',
+                  });
+                  continue;
+                }
+
+                if (check.status !== 'completed') {
+                  conditional.push({
+                    name,
+                    state: 'pending',
+                  });
+                  continue;
+                }
+
+                if (check.conclusion !== 'success') {
+                  failed.push({
+                    name,
+                    conclusion: check.conclusion || 'unknown',
+                  });
+                  continue;
+                }
+
+                conditional.push({
+                  name,
+                  state: 'success',
+                });
+              }
+
+              return { missing, pending, failed, passed, conditional };
+            }
+
+            const deadline = Date.now() + 12 * 60 * 1000;
+            let result = evaluate(await getChecks());
+
+            while (Date.now() < deadline) {
+              if (result.failed.length === 0 && result.missing.length === 0 && result.pending.length === 0) {
+                const optionalPending = result.conditional.some((item) => item.state === 'pending');
+
+                if (!optionalPending) {
+                  break;
+                }
+              }
+
+              await new Promise((resolve) => setTimeout(resolve, 15000));
+              result = evaluate(await getChecks());
+            }
+
+            if (result.failed.length === 0 && result.missing.length === 0 && result.pending.length === 0) {
+              const optionalPending = result.conditional.some((item) => item.state === 'pending');
+
+              if (optionalPending) {
+                result.failed.push({
+                  name: 'Payment E2E (safe simulation)',
+                  conclusion: 'timeout',
+                });
+              }
+            }
+
+            const verdict = (
+              result.failed.length === 0 &&
+              result.missing.length === 0 &&
+              result.pending.length === 0
+            ) ? 'VERIFIED' : 'REJECTED';
+
+            core.summary
+              .addHeading('NRJ Merge Gate')
+              .addTable([
+                [
+                  { data: 'Élément', header: true },
+                  { data: 'État', header: true },
+                ],
+                ['PR', `#${pr.number}`],
+                ['Commit', sha],
+                ['Verdict', verdict],
+                ['Checks requis', result.passed.join(', ') || 'Aucun'],
+                ['Checks manquants', result.missing.join(', ') || 'Aucun'],
+                ['Checks en attente', result.pending.join(', ') || 'Aucun'],
+                [
+                  'Checks en échec',
+                  result.failed.map((item) => `${item.name} — ${item.conclusion}`).join(', ') || 'Aucun',
+                ],
+                [
+                  'Payment E2E',
+                  result.conditional.map((item) => `${item.name}: ${item.state}`).join(', ') || 'Non détecté',
+                ],
+              ])
+              .write();
+
+            if (verdict !== 'VERIFIED') {
+              core.setFailed(`NRJ Merge Gate ${verdict}: la PR ne satisfait pas tous les contrôles de fusion.`);
+            } else {
+              core.notice('NRJ Merge Gate VERIFIED: tous les contrôles requis sont satisfaits.');
+            }
