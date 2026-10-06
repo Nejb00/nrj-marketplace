@@ -22,8 +22,8 @@ test('product import preview never interprets a dynamic value as HTML', () => {
   const renderPreview = feature.match(/function renderPreview\(file\) \{[\s\S]*?\n\}/)?.[0] || '';
   assert.notEqual(renderPreview, '');
   assert.doesNotMatch(renderPreview, /innerHTML\s*=/);
-  assert.match(renderPreview, /document\.createElement\(['"]img['"]\)/);
-  assert.match(renderPreview, /image\.src\s*=\s*previewUrl/);
+  assert.doesNotMatch(renderPreview, /document\.createElement\(['"]img['"]\)/);
+  assert.doesNotMatch(renderPreview, /image\.src\s*=\s*previewUrl/);
   assert.match(renderPreview, /\.textContent\s*=\s*file\.name/);
 });
 
