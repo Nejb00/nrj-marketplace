@@ -42,7 +42,9 @@ export async function openProductModal(pid) {
     modalCtx.moq = Number(p.moq) || 1;
     modalCtx.uPrice = Number(p.price) || 0;
     modalCtx.colorQtys = {};
-    modalCtx.currentQty = modalCtx.moq;
+    modalCtx.currentQty = 1;
+    modalCtx.stickyAddedQty = 0;
+    modalCtx.stickyAddedVariant = null;
     modalCtx.imageSlideOffset = 0;
     modalCtx.videoUrl = (p.video_url || '').trim();
     modalCtx.imgs = [p.image, p.image2, p.image3, p.image4, p.image5, p.image6].filter(u => u && u.trim());
