@@ -1122,3 +1122,31 @@ body.options-panel-open { overflow: hidden; }
     .options-benefit-card { min-height: 70px; font-size: 0.59rem; }
     .options-benefit-icon { font-size: 1.05rem; }
 }
+
+
+/* ═══ Phase 4 — variantes populaires ══════════════════════════════════════ */
+.option-color-card,
+.option-size-btn {
+    position: relative;
+}
+.variant-popular-badge {
+    position: absolute;
+    top: 0.2rem;
+    right: 0.2rem;
+    z-index: 2;
+    padding: 0.16rem 0.3rem;
+    border-radius: 999px;
+    background: var(--primary);
+    color: #fff;
+    font-size: 0.54rem;
+    font-weight: 900;
+    line-height: 1;
+    white-space: nowrap;
+    box-shadow: 0 2px 7px rgba(0,0,0,0.14);
+}
+.option-size-btn .variant-popular-badge {
+    top: -0.34rem;
+    right: -0.22rem;
+    padding: 0.13rem 0.25rem;
+    font-size: 0.5rem;
+}
