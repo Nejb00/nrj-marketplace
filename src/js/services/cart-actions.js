@@ -40,8 +40,8 @@ function flyToCart(sourceEl) {
     }, 850);
 }
 
-export async function addToCart(pid, t = '', c = '', sourceEl = null, qty = null) {
-    const p = state.products.find(pr => pr.id === pid);
+export async function addToCart(pid, t = '', c = '', sourceEl = null, qty = null, options = {}) {
+    const { silent = false } = options || {};\n    const p = state.products.find(pr => pr.id === pid);
     if (!p) return;
     if (sourceEl) flyToCart(sourceEl);
     signalCart(p);
@@ -59,7 +59,7 @@ export async function addToCart(pid, t = '', c = '', sourceEl = null, qty = null
     await saveCart();
     refreshCartDisplay();
     syncSoon();
-    showToast(amount > 1 ? `🛒 ${amount} ajoutés au panier` : '🛒 Ajouté au panier');
+    if (!silent) showToast(amount > 1 ? `🛒 ${amount} ajoutés au panier` : '🛒 Ajouté au panier');
 }
 
 export async function changeQty(idx, d) {
