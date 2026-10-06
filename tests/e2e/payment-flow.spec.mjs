@@ -189,6 +189,8 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
 
     await expect(page.locator("#productModal")).toHaveClass(/\bopen\b/);
     await page.locator("#addToCartStickyBtn").click();
+    await expect(page.locator("#optionsPanel")).toHaveAttribute("aria-hidden", "false");
+    await page.locator("#optionsPanelAddBtn").click();
 
     // addToCart() persists asynchronously; wait for the browser's durable state
     // before closing the product modal, otherwise the E2E can race the save.
