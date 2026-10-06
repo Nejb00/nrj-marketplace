@@ -76,6 +76,10 @@
       "githubSha": "7a13aada8e437d76f01f9a56f73aea4a4b139e53",
       "driveMd5": "8c9bd72d39c67c3052c826eea0f363be"
     },
+    ".github/workflows/nrj-merge-gate.yml": {
+      "githubSha": "bf5e2dbbb30e984fb367ee5bc9c41a119bb932de",
+      "driveMd5": "d4a3a6aa576af1958d0d2b32c593bbb8"
+    },
     ".github/workflows/payment-e2e.yml": {
       "githubSha": "3918668a14f708f8be58b5ebef8f2b5f1b423cf8",
       "driveMd5": "16e51e263ca5782ff8bd89f774096f77"
@@ -1037,5 +1041,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-06T07:18:15.634Z"
+  "updatedAt": "2026-10-06T07:20:25.878Z"
 }
