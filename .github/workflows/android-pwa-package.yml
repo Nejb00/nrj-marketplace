@@ -74,7 +74,7 @@ jobs:
             cat /tmp/psi.log
             exit 1
           fi
-          npx --yes lighthouse@12 "$PWA_URL" \
+          npx --yes lighthouse@10 "$PWA_URL" \
             --only-categories=performance,pwa \
             --chrome-flags="--headless=new --no-sandbox" \
             --quiet \
