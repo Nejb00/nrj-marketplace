@@ -41,7 +41,8 @@ function flyToCart(sourceEl) {
 }
 
 export async function addToCart(pid, t = '', c = '', sourceEl = null, qty = null, options = {}) {
-    const { silent = false } = options || {};\n    const p = state.products.find(pr => pr.id === pid);
+    const { silent = false } = options || {};
+    const p = state.products.find(pr => pr.id === pid);
     if (!p) return;
     if (sourceEl) flyToCart(sourceEl);
     signalCart(p);
