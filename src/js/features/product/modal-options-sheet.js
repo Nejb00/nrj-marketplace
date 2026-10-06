@@ -7,7 +7,7 @@ import { addToCart, changeQty } from '../../services/cart-actions.js';
 import { showToast } from '../../utils/dom-helpers.js';
 import { escapeHtml } from '../../utils/escape-html.js';
 import { thumbImg } from '../../utils/images.js';
-import { WHATSAPP_NUMBER } from '../../core/config.js';
+import { WHATSAPP_NUMBER, POPULAR_THRESHOLD } from '../../core/config.js';
 import { modalCtx } from './modal-state.js';
 import { showCartAddedToast } from '../../utils/dom-helpers.js';
 
@@ -48,6 +48,71 @@ const FOCUSABLE_SELECTOR = [
     '[tabindex]:not([tabindex="-1"])'
 ].join(',');
 
+function getVariantPopularity(type, value) {
+    const p = modalCtx.p;
+    if (!p || !value) return 0;
+
+    // Supporte plusieurs formes de données futures sans imposer de colonne DB
+    // supplémentaire tant que le schéma actuel ne contient que le score produit.
+    const source = p.variant_popularity || p.variantPopularity || p.variant_scores;
+    if (!source) return 0;
+
+    const singular = type === 'color' ? 'color' : 'size';
+    const plural = type === 'color' ? 'colors' : 'sizes';
+
+    if (Array.isArray(source)) {
+        const row = source.find((item) => {
+            if (!item || typeof item !== 'object') return false;
+            const itemType = String(item.type || item.kind || '').toLowerCase();
+            const itemValue = String(item.value ?? item.name ?? item.label ?? item.option ?? '').trim();
+            return (!itemType || itemType === type || itemType === singular || itemType === plural)
+                && itemValue === String(value).trim();
+        });
+        return Number(row?.popularity_score ?? row?.score ?? row?.popularity) || 0;
+    }
+
+    const bucket = source[type] || source[singular] || source[plural] || source;
+    if (!bucket || typeof bucket !== 'object') return 0;
+
+    const raw = bucket[value]
+        ?? bucket[String(value).toLowerCase()]
+        ?? bucket[String(value).trim()];
+    if (raw && typeof raw === 'object') {
+        return Number(raw.popularity_score ?? raw.score ?? raw.popularity) || 0;
+    }
+    return Number(raw) || 0;
+}
+
+function popularBadge(type, value) {
+    return getVariantPopularity(type, value) >= POPULAR_THRESHOLD
+        ? '<span class="variant-popular-badge" aria-label="Variante populaire">🔥 Populaire</span>'
+        : '';
+}
+
+function selectPopularVariant(type, values) {
+    if (!Array.isArray(values) || !values.length) return;
+
+    const current = type === 'color' ? modalCtx.sC : modalCtx.sT;
+    if (current) return;
+
+    const ranked = values
+        .map((value) => ({ value, score: getVariantPopularity(type, value) }))
+        .filter((item) => item.score >= POPULAR_THRESHOLD)
+        .sort((a, b) => b.score - a.score);
+
+    const best = ranked[0];
+    if (!best) return;
+
+    if (type === 'color') {
+        const button = [...(els.colors()?.querySelectorAll('[data-option-color]') || [])]
+            .find((el) => el.dataset.optionColor === best.value);
+        if (button) setColor(best.value, button);
+    } else {
+        const button = [...(els.sizes()?.querySelectorAll('[data-option-size]') || [])]
+            .find((el) => el.dataset.optionSize === best.value);
+        if (button) setSize(best.value, button);
+    }
+}
 function colorFallback(name) {
     const value = String(name || '').trim().toLowerCase();
     const aliases = [
@@ -142,6 +207,7 @@ function renderColors() {
                     ${imgHtml}
                 </span>
                 <span class="option-color-name">${escapeHtml(color)}</span>
+                ${popularBadge('color', color)}
             </button>
         `;
     }).join('');
@@ -154,6 +220,8 @@ function renderColors() {
         const selected = [...container.querySelectorAll('[data-option-color]')]
             .find((button) => button.dataset.optionColor === modalCtx.sC);
         if (selected) setColor(modalCtx.sC, selected);
+    } else {
+        selectPopularVariant('color', colors);
     }
 }
 
@@ -181,7 +249,7 @@ function renderSizes() {
                 class="option-size-btn"
                 data-option-size="${escapeHtml(size)}"
                 aria-pressed="false"
-                aria-label="Choisir la taille ${escapeHtml(size)}">${escapeHtml(size)}</button>
+                aria-label="Choisir la taille ${escapeHtml(size)}">${escapeHtml(size)}${popularBadge('size', size)}</button>
     `).join('');
 
     container.querySelectorAll('[data-option-size]').forEach((button) => {
@@ -192,6 +260,8 @@ function renderSizes() {
         const selected = [...container.querySelectorAll('[data-option-size]')]
             .find((button) => button.dataset.optionSize === modalCtx.sT);
         if (selected) setSize(modalCtx.sT, selected);
+    } else {
+        selectPopularVariant('size', sizes);
     }
 }
 
