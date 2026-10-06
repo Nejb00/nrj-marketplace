@@ -80,7 +80,7 @@ async function rest(path, init) {
 async function readImport(importId) {
   const rows = await rest(
     "product_imports?id=eq." + encodeURIComponent(importId) +
-    "&select=id,status,error_code,error_message,product_name,description,supplier_price,supplier_currency,moq,variants,raw_text,overall_confidence,category_confidence,calculated_price,cloudinary_urls,ai_analysis,published_product_id&limit=1"
+    "&select=id,status,error_code,product_name,description,supplier_price,supplier_currency,moq,variants,raw_text,overall_confidence,category_confidence,calculated_price,cloudinary_urls,ai_analysis,published_product_id&limit=1"
   );
   return rows?.[0] || null;
 }
@@ -126,7 +126,7 @@ async function executeStage(importId, stage, token, body, label) {
       current_stage: label,
       last_stage: label,
       last_attempts: Number(error?.attempts || MAX_STAGE_RETRIES),
-      last_error: String(error?.message || error).slice(0, 500),
+      last_error: "stage_failed",
       failed_at: new Date().toISOString()
     });
     throw error;
@@ -158,8 +158,7 @@ async function callStage(stage, token, body) {
         return { data: parsed, attempts: attempt };
       }
 
-      const detail = parsed?.detail || parsed?.error || raw.slice(0, 500) || "stage_failed";
-      const error = new Error(detail);
+      const error = new Error(stage + "_failed");
       error.status = response.status;
       error.attempts = attempt;
 
@@ -479,7 +478,7 @@ Deno.serve(async (req) => {
       steps
     });
   } catch (error) {
-    const message = String(error?.message || error).slice(0, 500);
+    const message = "orchestrator_failed";
     return json({
       ok: false,
       error: "orchestrator_failed",
