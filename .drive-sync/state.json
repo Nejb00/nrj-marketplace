@@ -84,6 +84,10 @@
       "githubSha": "bf5e2dbbb30e984fb367ee5bc9c41a119bb932de",
       "driveMd5": "d4a3a6aa576af1958d0d2b32c593bbb8"
     },
+    ".github/workflows/nrj-secure-merge-gate-controller.yml": {
+      "githubSha": "729b1eccb35e3050a371b54d75ea9e3e8c88cd79",
+      "driveMd5": "3c528c0ec4a25c7b234bd781fe66b686"
+    },
     ".github/workflows/payment-e2e.yml": {
       "githubSha": "3918668a14f708f8be58b5ebef8f2b5f1b423cf8",
       "driveMd5": "16e51e263ca5782ff8bd89f774096f77"
@@ -1045,5 +1049,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-06T15:41:48.690Z"
+  "updatedAt": "2026-10-06T16:50:32.346Z"
 }
