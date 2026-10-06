@@ -76,8 +76,6 @@ jobs:
           fi
           npx --yes lighthouse@12 "$PWA_URL" \
             --only-categories=performance,pwa \
-            --form-factor=mobile \
-            --screenEmulation=mobile \
             --chrome-flags="--headless=new --no-sandbox" \
             --quiet \
             --output=json --output-path=/tmp/lighthouse.json
