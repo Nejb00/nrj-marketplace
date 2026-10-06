@@ -76,6 +76,10 @@
       "githubSha": "7a13aada8e437d76f01f9a56f73aea4a4b139e53",
       "driveMd5": "8c9bd72d39c67c3052c826eea0f363be"
     },
+    ".github/workflows/nrj-merge-gate-v2.yml": {
+      "githubSha": "e7305699826bb785b31b4ec3fe36512fbc54a681",
+      "driveMd5": "9a9893101655325081f2ba30cf7cac08"
+    },
     ".github/workflows/nrj-merge-gate.yml": {
       "githubSha": "bf5e2dbbb30e984fb367ee5bc9c41a119bb932de",
       "driveMd5": "d4a3a6aa576af1958d0d2b32c593bbb8"
@@ -1041,5 +1045,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-06T07:20:25.878Z"
+  "updatedAt": "2026-10-06T15:41:48.690Z"
 }
