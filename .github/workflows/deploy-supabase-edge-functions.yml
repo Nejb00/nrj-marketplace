@@ -31,13 +31,29 @@ jobs:
     env:
       PROJECT_ID: "peojyqliwrtghomyukwn"
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      VALIDATED_SHA: ${{ github.event.workflow_run.head_sha }}
 
     steps:
-      - name: Checkout du commit validé
+      - name: Checkout de main uniquement
         uses: actions/checkout@v7
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && 'main' || github.event.workflow_run.head_sha }}
+          ref: refs/heads/main
           fetch-depth: 1
+
+      - name: Vérifier le commit validé par CI
+        if: github.event_name == 'workflow_run'
+        run: |
+          set -euo pipefail
+          case "${VALIDATED_SHA:-}" in
+            [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]
+              *) echo "::error::CI head_sha invalide"; exit 1 ;;
+          esac
+          CURRENT_SHA="$(git rev-parse HEAD)"
+          if [ "$CURRENT_SHA" != "$VALIDATED_SHA" ]; then
+            echo "::error::Le main courant ne correspond plus au commit validé par CI. Aucun déploiement ne sera effectué."
+            exit 1
+          fi
+          echo "Commit déployé validé par CI : $CURRENT_SHA"
 
       - name: Vérifier le secret de déploiement
         run: |
@@ -49,9 +65,9 @@ jobs:
           echo "Secret de déploiement détecté."
 
       - name: Installer Supabase CLI
-        uses: supabase/setup-cli@v1
+        uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359
         with:
-          version: latest
+          version: 2.119.0
 
       - name: Déployer payment-openpay via l'API Supabase
         run: |
