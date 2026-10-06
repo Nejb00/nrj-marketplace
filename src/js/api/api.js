@@ -322,7 +322,37 @@ export async function fetchProducts(forceRefresh = false) {
         
         const grid = document.getElementById('productsGrid');
         if (grid) {
-            grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;"><div style="font-size:3rem;margin-bottom:1rem;">⚠️</div><h3 style="color:var(--text);margin-bottom:0.5rem;">Impossible de charger les produits</h3><button onclick="location.reload()" style="background:var(--primary);color:white;border:none;padding:0.8rem 2rem;border-radius:50px;font-weight:700;cursor:pointer;">🔄 Réessayer</button></div>';
+            grid.replaceChildren();
+
+            const wrapper = document.createElement('div');
+            wrapper.style.gridColumn = '1 / -1';
+            wrapper.style.textAlign = 'center';
+            wrapper.style.padding = '3rem';
+
+            const icon = document.createElement('div');
+            icon.style.fontSize = '3rem';
+            icon.style.marginBottom = '1rem';
+            icon.textContent = '⚠️';
+
+            const title = document.createElement('h3');
+            title.style.color = 'var(--text)';
+            title.style.marginBottom = '0.5rem';
+            title.textContent = 'Impossible de charger les produits';
+
+            const retry = document.createElement('button');
+            retry.type = 'button';
+            retry.style.background = 'var(--primary)';
+            retry.style.color = 'white';
+            retry.style.border = 'none';
+            retry.style.padding = '0.8rem 2rem';
+            retry.style.borderRadius = '50px';
+            retry.style.fontWeight = '700';
+            retry.style.cursor = 'pointer';
+            retry.textContent = '🔄 Réessayer';
+            retry.addEventListener('click', () => location.reload());
+
+            wrapper.append(icon, title, retry);
+            grid.appendChild(wrapper);
         }
     }
 }
