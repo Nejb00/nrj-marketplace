@@ -183,6 +183,7 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
 
     const calls = await installSafeBackendMocks(page);
 
+    await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
     await expect(page.locator("#tapToSearch")).toBeVisible({ timeout: 20_000 });
     await expect(page.locator("#filterBar .filter-btn").first()).toBeVisible({ timeout: 20_000 });
@@ -227,6 +228,27 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
 
     await page.locator('a[data-nav="cart"]').click();
     await expect(page.locator("#cartPanel")).toHaveClass(/\bopen\b/);
+    await expect(page.locator("#cartPanel")).toHaveAttribute("aria-hidden", "false");
+    await expect(page.locator(".cart-sheet-handle")).toBeVisible();
+
+    const cartFocusInside = await page.evaluate(() => Boolean(document.activeElement?.closest("#cartPanel")));
+    expect(cartFocusInside).toBe(true);
+
+    await page.keyboard.press("Escape");
+    await expect(page.locator("#cartPanel")).toHaveAttribute("aria-hidden", "true");
+    await page.locator('a[data-nav="cart"]').click();
+    await expect(page.locator("#cartPanel")).toHaveClass(/\bopen\b/);
+
+    const handleBox = await page.locator(".cart-sheet-handle").boundingBox();
+    expect(handleBox).not.toBeNull();
+    await page.mouse.move(handleBox.x + handleBox.width / 2, handleBox.y + handleBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(handleBox.x + handleBox.width / 2, handleBox.y + 130);
+    await page.mouse.up();
+    await expect(page.locator("#cartPanel")).toHaveAttribute("aria-hidden", "true");
+    await page.locator('a[data-nav="cart"]').click();
+    await expect(page.locator("#cartPanel")).toHaveClass(/\bopen\b/);
+
     await expect(page.locator(".cart-item").first()).toBeVisible();
     await expect(page.locator("#checkoutBtn")).toBeEnabled();
 
@@ -264,7 +286,8 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
     }
     await page.locator('a[data-nav="cart"]').click();
     await expect(page.locator("#cartPanel")).toHaveClass(/\bopen\b/);
-    await expect(page.locator("#cartEmptyTitle")).toBeVisible();
+    await expect(page.locator("#cartEmptyTitle")).toHaveText("Votre panier est vide");
+    await expect(page.locator(".cart-discover-btn")).toContainText("Voir les populaires");
 
     expect(pageErrors).toEqual([]);
   });

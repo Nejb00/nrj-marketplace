@@ -2,6 +2,7 @@
 // Éclaté de main.js (refacto-archi) — logique strictement identique.
 import { switchFromSearchView } from '../search/search-view.js';
 import { hideAccountView } from './account-view.js';
+import { openCartPanel as openCartPanelService, closeCartPanel as closeCartPanelService } from '../../services/cart-panel.js';
 
 export function isFlexOpen(id) {
   const n = document.getElementById(id);
@@ -13,9 +14,12 @@ export function closeSearchAndAccount() {
   if (isFlexOpen('accountView')) hideAccountView();
 }
 
+export function openCartPanel(trigger) {
+  openCartPanelService(trigger);
+}
+
 export function closeCartPanel() {
-  document.getElementById('cartPanel')?.classList.remove('open');
-  document.getElementById('cartOverlay')?.classList.remove('open');
+  closeCartPanelService();
 }
 
 export function markNavActive(navTarget) {

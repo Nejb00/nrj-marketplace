@@ -13,6 +13,156 @@ import { forYou, hasProfile } from './reco.js';
 import { renderProductCardHTML } from '../features/catalogue/render-product-card.js';
 
 let cartPanelEventsInited = false;
+let cartUiInited = false;
+let lastCartTrigger = null;
+let cartDrag = null;
+
+const CART_FOCUSABLE_SELECTOR = [
+    'button:not([disabled])',
+    'a[href]',
+    'input:not([disabled])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])'
+].join(',');
+
+function isCartOpen() {
+    return document.getElementById('cartPanel')?.classList.contains('open') === true;
+}
+
+function getCartFocusables() {
+    const panel = document.getElementById('cartPanel');
+    return panel ? [...panel.querySelectorAll(CART_FOCUSABLE_SELECTOR)] : [];
+}
+
+function closeCartPanel({ restoreFocus = true } = {}) {
+    const panel = document.getElementById('cartPanel');
+    const overlay = document.getElementById('cartOverlay');
+    if (!panel) return;
+
+    panel.classList.remove('open', 'is-dragging');
+    panel.style.transform = '';
+    panel.setAttribute('aria-hidden', 'true');
+    overlay?.classList.remove('open');
+    overlay?.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('cart-panel-open');
+
+    const trigger = lastCartTrigger;
+    lastCartTrigger = null;
+    if (restoreFocus && trigger && document.contains(trigger) && typeof trigger.focus === 'function') {
+        requestAnimationFrame(() => trigger.focus({ preventScroll: true }));
+    }
+}
+
+function setupCartSheetHandle() {
+    const panel = document.getElementById('cartPanel');
+    const header = panel?.querySelector('.cart-panel-header');
+    if (!panel || !header || header.querySelector('.cart-sheet-handle')) return;
+
+    const handle = document.createElement('div');
+    handle.className = 'cart-sheet-handle';
+    handle.setAttribute('aria-hidden', 'true');
+    header.prepend(handle);
+
+    const finishDrag = (event) => {
+        if (!cartDrag || (event.pointerId != null && event.pointerId !== cartDrag.pointerId)) return;
+        const shouldClose = cartDrag.dy > 96;
+        cartDrag = null;
+        panel.classList.remove('is-dragging');
+        panel.style.transform = '';
+        if (shouldClose) closeCartPanel();
+    };
+
+    handle.addEventListener('pointerdown', (event) => {
+        if (!window.matchMedia('(max-width: 767px)').matches) return;
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
+        cartDrag = { pointerId: event.pointerId, startY: event.clientY, dy: 0 };
+        panel.classList.add('is-dragging');
+        panel.style.transition = 'none';
+        handle.setPointerCapture?.(event.pointerId);
+    });
+
+    handle.addEventListener('pointermove', (event) => {
+        if (!cartDrag || event.pointerId !== cartDrag.pointerId) return;
+        cartDrag.dy = Math.max(0, event.clientY - cartDrag.startY);
+        panel.style.transform = `translateY(${cartDrag.dy}px)`;
+    });
+
+    handle.addEventListener('pointerup', finishDrag);
+    handle.addEventListener('pointercancel', finishDrag);
+}
+
+function setupCartAccessibility() {
+    if (cartUiInited) return;
+    cartUiInited = true;
+
+    document.addEventListener('keydown', (event) => {
+        if (!isCartOpen()) return;
+
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            closeCartPanel();
+            return;
+        }
+
+        if (event.key !== 'Tab') return;
+
+        const focusables = getCartFocusables();
+        if (!focusables.length) return;
+
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+
+        if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+        }
+    });
+}
+
+function initCartPanelUi() {
+    if (cartUiInited) return;
+
+    const panel = document.getElementById('cartPanel');
+    const overlay = document.getElementById('cartOverlay');
+    if (!panel) return;
+
+    panel.setAttribute('aria-modal', 'true');
+    panel.setAttribute('aria-hidden', panel.classList.contains('open') ? 'false' : 'true');
+    panel.setAttribute('tabindex', '-1');
+    overlay?.setAttribute('aria-hidden', 'true');
+
+    setupCartSheetHandle();
+    setupCartAccessibility();
+    cartUiInited = true;
+}
+
+export function openCartPanel(trigger = document.querySelector('.nav-item[data-nav="cart"]')) {
+    const panel = document.getElementById('cartPanel');
+    const overlay = document.getElementById('cartOverlay');
+    if (!panel) return;
+
+    initCartPanelUi();
+    lastCartTrigger = trigger || document.activeElement;
+    panel.classList.add('open');
+    panel.classList.remove('is-dragging');
+    panel.style.transform = '';
+    panel.setAttribute('aria-hidden', 'false');
+    overlay?.classList.add('open');
+    overlay?.setAttribute('aria-hidden', 'true');
+    document.body.classList.add('cart-panel-open');
+
+    refreshCartDisplay();
+
+    requestAnimationFrame(() => {
+        const close = document.getElementById('cartCloseBtn');
+        const first = getCartFocusables()[0];
+        (close || first || panel)?.focus?.({ preventScroll: true });
+    });
+}
 
 function getRecommendations() {
     const inCart = new Set(state.cart.map(item => item.productId));
@@ -48,9 +198,9 @@ function renderRecommendations(products) {
 }
 
 function backToCatalogue() {
-    document.getElementById('cartPanel')?.classList.remove('open');
-    document.getElementById('cartOverlay')?.classList.remove('open');
+    closeCartPanel({ restoreFocus: false });
     document.querySelector('.nav-item[data-nav="home"]')?.click();
+    document.querySelector('.filter-chip[data-filter="bestseller"]')?.click();
 }
 
 function initCartPanelEvents(body, footer) {
@@ -127,6 +277,7 @@ function renderCartItems() {
 }
 
 export function refreshCartDisplay() {
+    initCartPanelUi();
     const body = document.getElementById('cartPanelBody');
     const footer = document.getElementById('cartPanelFooter');
     if (!body) return;
@@ -147,9 +298,9 @@ export function refreshCartDisplay() {
                         '<path d="M18 24h19M17 28h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".45"/>' +
                     '</svg>' +
                 '</div>' +
-                '<h3 id="cartEmptyTitle">Ton panier est vide</h3>' +
+                '<h3 id="cartEmptyTitle">Votre panier est vide</h3>' +
                 '<p>Ajoute quelques trouvailles pour les retrouver ici.</p>' +
-                '<button type="button" class="cart-discover-btn" data-action="cart-discover">Découvrir le catalogue</button>' +
+                '<button type="button" class="cart-discover-btn" data-action="cart-discover">🔥 Voir les populaires</button>' +
             '</section>' +
             recommendations;
 
@@ -184,11 +335,17 @@ export function refreshCartDisplay() {
         footer.classList.add('cart-panel-footer--filled');
         footer.innerHTML =
             '<div class="cart-footer-bar">' +
-                '<div class="cart-total">' +
-                    '<span>Total' + (selectedCount < state.cart.length ? ' (sélection)' : '') + '</span>' +
-                    '<strong id="cartTotal">' + formatPrice(tot) + '</strong>' +
+                '<div class="cart-totals">' +
+                    '<div class="cart-subtotal">' +
+                        '<span>Sous-total</span>' +
+                        '<strong>' + formatPrice(tot) + '</strong>' +
+                    '</div>' +
+                    '<div class="cart-total">' +
+                        '<span>Total' + (selectedCount < state.cart.length ? ' (sélection)' : '') + '</span>' +
+                        '<strong id="cartTotal">' + formatPrice(tot) + '</strong>' +
+                    '</div>' +
                 '</div>' +
-                '<button class="checkout-btn" id="checkoutBtn" data-action="cart-checkout"' + (disabled ? ' disabled' : '') + '>Commander</button>' +
+                '<button class="checkout-btn" id="checkoutBtn" data-action="cart-checkout"' + (disabled ? ' disabled' : '') + '>💬 Commander via WhatsApp</button>' +
             '</div>';
     }
 
