@@ -188,8 +188,10 @@
             <section class="options-section" aria-labelledby="optionsSizeTitle">
                 <div class="options-section-title-row">
                     <h3 id="optionsSizeTitle">Taille</h3>
+                    <button type="button" class="size-guide-btn" id="sizeGuideBtn" aria-label="Ouvrir le guide des tailles">Guide des tailles</button>
                 </div>
                 <div class="options-size-grid" id="optionsSizeOptions"></div>
+                <p class="options-social-proof" id="optionsSizeSocial" hidden></p>
             </section>
 
             <section class="options-section options-quantity-section" aria-labelledby="optionsQtyTitle">
@@ -209,6 +211,14 @@
             <button class="options-panel-add" id="optionsPanelAddBtn" type="button">Ajouter au panier</button>
         </div>
     </section>
+    <div class="cart-added-toast" id="cartAddedToast" role="status" aria-live="polite" aria-atomic="true" hidden>
+        <div class="cart-added-toast-copy">
+            <strong>✅ Ajouté au panier</strong>
+            <span>🚚 Éligible à la livraison gratuite</span>
+        </div>
+        <button type="button" class="cart-added-toast-cart" id="cartAddedToastCart">Aller au panier</button>
+        <button type="button" class="cart-added-toast-close" id="cartAddedToastClose" aria-label="Fermer la confirmation">&times;</button>
+    </div>
     <button class="chat-fab" id="chatFab" aria-label="Ouvrir le chat NRJ">
         <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M12 3C6.98 3 3 6.36 3 10.5c0 1.74.75 3.33 2 4.58V21l3.24-1.62c1.1.36 2.42.62 3.76.62 5.02 0 9-3.36 9-7.5S17.02 3 12 3zm-4 8.5a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5zm4 0a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5zm4 0a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z"/></svg>
         <span class="chat-fab-badge" id="chatFabBadge">0</span>
