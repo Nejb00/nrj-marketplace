@@ -39,19 +39,46 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Setup JDK 17 (Bubblewrap + Gradle)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Pre-seed Bubblewrap config (kills interactive prompts in CI)
+        run: |
+          mkdir -p "${HOME}/.bubblewrap"
+          printf '{"jdkPath":"%s","androidSdkPath":"%s"}\n' \
+            "${JAVA_HOME}" \
+            "/usr/local/lib/android/sdk" \
+            > "${HOME}/.bubblewrap/config.json"
+          echo "Bubblewrap config pre-seeded:"
+          cat "${HOME}/.bubblewrap/config.json"
+
       - name: Validate PWA for TWA
         run: npx --yes @bubblewrap/cli@latest validate --url="$PWA_URL"
+
+      - name: Create ephemeral CI signing key
+        run: |
+          mkdir -p "$ANDROID_DIR"
+          keytool -genkeypair -v \
+            -keystore "$ANDROID_DIR/android-keystore.jks" \
+            -alias nrj \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 3650 \
+            -storepass "$STORE_PASSWORD" \
+            -keypass "$KEY_PASSWORD" \
+            -dname "CN=NRJ Marketplace, OU=CI, O=NRJ, C=CG"
 
       - name: Generate Android project
         run: |
           rm -rf "$ANDROID_DIR"
           mkdir -p "$ANDROID_DIR"
           cd "$ANDROID_DIR"
-          npx --yes @bubblewrap/cli@latest update             --skipVersionUpgrade             --manifest=../twa-manifest.json
-
-      - name: Create ephemeral CI signing key
-        run: |
-          keytool -genkeypair -v             -keystore "$ANDROID_DIR/android-keystore.jks"             -alias nrj             -keyalg RSA             -keysize 2048             -validity 3650             -storepass "$STORE_PASSWORD"             -keypass "$KEY_PASSWORD"             -dname "CN=NRJ Marketplace, OU=CI, O=NRJ, C=CG"
+          npx --yes @bubblewrap/cli@latest update \
+            --skipVersionUpgrade \
+            --manifest=../twa-manifest.json
 
       - name: Build signed test APK and AAB
         env:
