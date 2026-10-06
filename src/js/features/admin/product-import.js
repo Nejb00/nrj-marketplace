@@ -224,10 +224,6 @@ async function renderPreview(file) {
   previewUrl = URL.createObjectURL(file);
   preview.hidden = false;
 
-  const image = document.createElement('img');
-  image.src = previewUrl;
-  image.alt = 'Aperçu de la capture importée';
-
   const meta = document.createElement('div');
   meta.className = 'product-import-preview-meta';
 
