@@ -21,17 +21,33 @@ test('payment-openpay remains JWT-protected and feature-gated', () => {
 
     assert.match(
         paymentFunction,
-        /if \(!OPENPAY_PAYMENT_ENABLED\)[\s\S]*?openpay_payment_disabled/i
+        /getActivationDecision\(userId: string \| null\)/i
+    );
+
+    assert.match(
+        paymentFunction,
+        /reason: "master_switch_disabled"/i
     );
 });
 
-test('payment-openpay checks authentication before the disabled guard', () => {
-    const authPos = paymentFunction.indexOf('if (!token)');
-    const guardPos = paymentFunction.indexOf('if (!OPENPAY_PAYMENT_ENABLED)');
+test('payment-openpay checks authentication before activation decisions', () => {
+    const handler = paymentFunction.slice(paymentFunction.indexOf('Deno.serve'));
+    const authPos = handler.indexOf('if (!token)');
+    const activationPos = handler.indexOf('getActivationDecision(null)');
 
     assert.ok(authPos >= 0, 'authentication guard missing');
-    assert.ok(guardPos >= 0, 'OpenPay feature guard missing');
-    assert.ok(authPos < guardPos, 'feature guard must not bypass authentication');
+    assert.ok(activationPos >= 0, 'activation decision missing');
+    assert.ok(authPos < activationPos, 'activation must not bypass authentication');
+});
+
+test('payment-openpay exposes readiness without provider I/O', () => {
+    const handler = paymentFunction.slice(paymentFunction.indexOf('Deno.serve'));
+    const readinessPos = handler.indexOf('action === "readiness"');
+    const openPayPos = handler.indexOf('openPay<OpenPayPaymentResponse>');
+
+    assert.ok(readinessPos >= 0, 'readiness action missing');
+    assert.ok(openPayPos >= 0, 'provider call missing');
+    assert.ok(readinessPos < openPayPos, 'readiness must be evaluated before provider I/O');
 });
 
 test('payment-openpay does not embed a provider secret', () => {
