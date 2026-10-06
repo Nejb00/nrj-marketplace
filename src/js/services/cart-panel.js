@@ -35,7 +35,7 @@ function getCartFocusables() {
     return panel ? [...panel.querySelectorAll(CART_FOCUSABLE_SELECTOR)] : [];
 }
 
-function closeCartPanel({ restoreFocus = true } = {}) {
+export function closeCartPanel({ restoreFocus = true } = {}) {
     const panel = document.getElementById('cartPanel');
     const overlay = document.getElementById('cartOverlay');
     if (!panel) return;
@@ -93,9 +93,6 @@ function setupCartSheetHandle() {
 }
 
 function setupCartAccessibility() {
-    if (cartUiInited) return;
-    cartUiInited = true;
-
     document.addEventListener('keydown', (event) => {
         if (!isCartOpen()) return;
 
