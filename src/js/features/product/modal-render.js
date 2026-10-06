@@ -37,8 +37,10 @@ export async function openProductModal(pid) {
     modalCtx.p = p;
     modalCtx.tailles = (p.tailles || '').split(',').map(s => s.trim()).filter(Boolean);
     modalCtx.couleurs = (p.couleurs || '').split(',').map(s => s.trim()).filter(Boolean);
-    // Phase 1 : aucune variante n'est imposée à l'ouverture.
-    // Le bottom sheet devient le point unique de sélection.
+    // Chaque fiche repart sans ancienne sélection. La Phase 4 peut ensuite
+    // pré-sélectionner une variante uniquement si son score est explicitement disponible.
+    modalCtx.sT = '';
+    modalCtx.sC = '';
     modalCtx.moq = Number(p.moq) || 1;
     modalCtx.uPrice = Number(p.price) || 0;
     modalCtx.colorQtys = {};
