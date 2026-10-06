@@ -52,6 +52,10 @@
       "githubSha": "d881866c6ab7819eb6b811e6bec74cbad9163561",
       "driveMd5": "9df29765a15dd4d8d990d1ccd5838358"
     },
+    ".github/workflows/deploy-supabase-edge-functions.yml": {
+      "githubSha": "52286bb9b6526779cdeb9589fd16461d8cae7d25",
+      "driveMd5": "cb0f9b96be2c300980df35284a72358c"
+    },
     ".github/workflows/deployment-safety-net.yml": {
       "githubSha": "3b920cb3c8412d245c0cb12a8d5beaf3613e6e40",
       "driveMd5": "430d9cc87e3e005ae8084c5c4f77588c"
@@ -957,5 +961,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-06T00:51:49.712Z"
+  "updatedAt": "2026-10-06T02:24:57.475Z"
 }
