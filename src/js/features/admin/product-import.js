@@ -66,7 +66,7 @@ function resetPreview() {
   }
   if (preview) {
     preview.hidden = true;
-    preview.innerHTML = '';
+    preview.replaceChildren()
   }
 }
 
@@ -121,63 +121,100 @@ function renderAnalysis(analysis, classification = null) {
     ['Indice visuel', analysis?.visual_category_hint || '—']
   ];
 
-  grid.innerHTML = fields.map(([label, value]) =>
-    '<div><dt>' + escapeHtml(label) + '</dt><dd>' + escapeHtml(value) + '</dd></div>'
-  ).join('');
+  grid.replaceChildren();
+  for (const [label, value] of fields) {
+    const wrapper = document.createElement('div');
+    const dt = document.createElement('dt');
+    const dd = document.createElement('dd');
+    dt.textContent = label;
+    dd.textContent = value;
+    wrapper.append(dt, dd);
+    grid.appendChild(wrapper);
+  }
 
   const colors = Array.isArray(analysis?.variants?.colors) ? analysis.variants.colors : [];
   const sizes = Array.isArray(analysis?.variants?.sizes) ? analysis.variants.sizes : [];
   const extras = Array.isArray(analysis?.variants?.other) ? analysis.variants.other : [];
+
   if (classificationPanel && classificationHint) {
     const category = classification?.category;
     const meta = classification?.classification;
-    const path = category
+    const categoryPath = category
       ? (category.parent_name ? category.parent_name + ' > ' + category.name : category.name)
       : 'Aucune catégorie fiable';
 
     classificationPanel.hidden = false;
-    classificationHint.innerHTML =
-      '<strong>' + escapeHtml(path) + '</strong>' +
-      '<span>' +
-        (meta?.auto_publish_eligible
-          ? 'Classification automatique ≥ 90%'
-          : meta?.review_required
-            ? 'Validation humaine recommandée (70–89%)'
-            : 'Blocage : confiance insuffisante') +
-      '</span>' +
-      (meta?.reason ? '<small>' + escapeHtml(meta.reason) + '</small>' : '');
+    classificationHint.replaceChildren();
+
+    const strong = document.createElement('strong');
+    strong.textContent = categoryPath;
+
+    const span = document.createElement('span');
+    span.textContent = meta?.auto_publish_eligible
+      ? 'Classification automatique ≥ 90%'
+      : meta?.review_required
+        ? 'Validation humaine recommandée (70–89%)'
+        : 'Blocage : confiance insuffisante';
+
+    classificationHint.append(strong, span);
+
+    if (meta?.reason) {
+      const small = document.createElement('small');
+      small.textContent = meta.reason;
+      classificationHint.appendChild(small);
+    }
   }
 
-  variants.innerHTML =
-    '<strong>Variantes</strong>' +
-    '<div class="product-import-variant-lines">' +
-      '<span>Couleurs : ' + escapeHtml(colors.length ? colors.join(', ') : '—') + '</span>' +
-      '<span>Tailles : ' + escapeHtml(sizes.length ? sizes.join(', ') : '—') + '</span>' +
-      '<span>Autres : ' + escapeHtml(extras.length ? extras.join(', ') : '—') + '</span>' +
-    '</div>';
+  variants.replaceChildren();
+  const title = document.createElement('strong');
+  title.textContent = 'Variantes';
+
+  const lines = document.createElement('div');
+  lines.className = 'product-import-variant-lines';
+
+  const color = document.createElement('span');
+  color.textContent = 'Couleurs : ' + (colors.length ? colors.join(', ') : '—');
+
+  const size = document.createElement('span');
+  size.textContent = 'Tailles : ' + (sizes.length ? sizes.join(', ') : '—');
+
+  const other = document.createElement('span');
+  other.textContent = 'Autres : ' + (extras.length ? extras.join(', ') : '—');
+
+  lines.append(color, size, other);
+  variants.append(title, lines);
 
   panel.hidden = false;
 }
 
+
 function clearAnalysis() {
   const panel = byId('productImportAnalysis');
   if (panel) panel.hidden = true;
+
   const classificationPanel = byId('productImportClassification');
   if (classificationPanel) classificationPanel.hidden = true;
+
   const grid = byId('productImportAnalysisGrid');
-  if (grid) grid.innerHTML = '';
+  if (grid) grid.replaceChildren();
+
   const variants = byId('productImportAnalysisVariants');
-  if (variants) variants.innerHTML = '';
+  if (variants) variants.replaceChildren();
+
   const classificationHint = byId('productImportClassificationHint');
-  if (classificationHint) classificationHint.innerHTML = '';
+  if (classificationHint) classificationHint.replaceChildren();
+
   const pricingPanel = byId('productImportPricing');
   if (pricingPanel) pricingPanel.hidden = true;
+
   const pricingResult = byId('productImportPriceResult');
   if (pricingResult) pricingResult.textContent = '';
+
   currentImportId = null;
   pricingReady = false;
   mediaReady = false;
 }
+
 
 async function renderPreview(file) {
   const preview = byId('productImportPreview');
@@ -257,18 +294,39 @@ function renderMedia(media) {
   const note = byId('productImportMediaNote');
   const button = byId('productImportMediaBtn');
   if (!media) return;
+
   mediaReady = true;
+
   if (note) {
-    const url = media?.images?.[0]?.delivery_url || media?.images?.[0]?.secure_url || '';
-    note.innerHTML = url
-      ? 'Cloudinary OK · <a href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer">voir l’image optimisée</a>.'
-      : 'Image persistante enregistrée dans Cloudinary.';
+    const rawUrl = media?.images?.[0]?.delivery_url || media?.images?.[0]?.secure_url || '';
+    let safeUrl = '';
+    try {
+      const parsedUrl = new URL(rawUrl);
+      if (parsedUrl.protocol === 'https:') safeUrl = parsedUrl.href;
+    } catch {
+      safeUrl = '';
+    }
+
+    note.replaceChildren();
+    if (safeUrl) {
+      note.append(document.createTextNode('Cloudinary OK · '));
+      const link = document.createElement('a');
+      link.href = safeUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = 'voir l’image optimisée';
+      note.append(link, document.createTextNode('.'));
+    } else {
+      note.textContent = 'Image persistante enregistrée dans Cloudinary.';
+    }
   }
+
   if (button) {
     button.disabled = true;
     button.textContent = 'Média prêt ✓';
   }
 }
+
 
 async function uploadImportMedia() {
   if (!currentImportId || mediaReady) return;
@@ -397,45 +455,102 @@ function renderImports(rows) {
   const list = byId('productImportsList');
   if (!list) return;
 
+  list.replaceChildren();
   if (!rows.length) {
-    list.innerHTML = '<div class="product-import-empty">Aucun import en attente.</div>';
+    const empty = document.createElement('div');
+    empty.className = 'product-import-empty';
+    empty.textContent = 'Aucun import en attente.';
+    list.appendChild(empty);
     return;
   }
 
-  list.innerHTML = rows.map(row => {
+  for (const row of rows) {
     const status = STATUS_LABELS[row.status] || row.status || 'Inconnu';
     const title = row.product_name || (row.raw_text ? row.raw_text.split(/\r?\n/)[0] : '') || 'Import sans titre';
     const source = row.source_image ? 'Source image enregistrée' : 'Capture locale / texte';
-    const price = row.calculated_price != null
-      ? 'Prix : ' + String(row.calculated_price) + ' XAF'
-      : '';
-    return (
-      '<article class="product-import-row">' +
-        '<div class="product-import-row-main">' +
-          '<div class="product-import-row-title">' + escapeHtml(title) + '</div>' +
-          '<div class="product-import-row-meta">' +
-            '<span class="product-import-status-pill status-' + escapeHtml(String(row.status || '').toLowerCase()) + '">' + escapeHtml(status) + '</span>' +
-            '<span>' + escapeHtml(source) + '</span>' +
-            (price ? '<span>' + escapeHtml(price) + '</span>' : '') +
-            '<span>' + escapeHtml(formatDate(row.created_at)) + '</span>' +
-          '</div>' +
-        '<div class="product-import-row-actions">' +
-          ((row.status === 'MEDIA_READY' || row.status === 'READY') ? '<button type="button" class="product-import-publish" data-publish-import-id="' + escapeHtml(row.id) + '">Publier</button>' : '') +
-          ((row.status === 'FAILED') ? '<button type="button" class="product-import-retry" data-retry-import-id="' + escapeHtml(row.id) + '">Reprendre</button>' : '') +
-          '<button type="button" class="product-import-delete" data-import-id="' + escapeHtml(row.id) + '" aria-label="Supprimer cet import">🗑️</button>' +
-          '</div>' +
-      '</article>'
-    );
-  }).join('');
+    const price = row.calculated_price != null ? 'Prix : ' + String(row.calculated_price) + ' XAF' : '';
+
+    const article = document.createElement('article');
+    article.className = 'product-import-row';
+
+    const main = document.createElement('div');
+    main.className = 'product-import-row-main';
+
+    const titleEl = document.createElement('div');
+    titleEl.className = 'product-import-row-title';
+    titleEl.textContent = title;
+
+    const meta = document.createElement('div');
+    meta.className = 'product-import-row-meta';
+
+    const pill = document.createElement('span');
+    pill.className = 'product-import-status-pill status-' + String(row.status || '').toLowerCase();
+    pill.textContent = status;
+
+    const sourceEl = document.createElement('span');
+    sourceEl.textContent = source;
+    meta.append(pill, sourceEl);
+
+    if (price) {
+      const priceEl = document.createElement('span');
+      priceEl.textContent = price;
+      meta.appendChild(priceEl);
+    }
+
+    const dateEl = document.createElement('span');
+    dateEl.textContent = formatDate(row.created_at);
+    meta.appendChild(dateEl);
+    main.append(titleEl, meta);
+
+    const actions = document.createElement('div');
+    actions.className = 'product-import-row-actions';
+
+    if (row.status === 'MEDIA_READY' || row.status === 'READY') {
+      const publish = document.createElement('button');
+      publish.type = 'button';
+      publish.className = 'product-import-publish';
+      publish.dataset.publishImportId = String(row.id);
+      publish.textContent = 'Publier';
+      actions.appendChild(publish);
+    }
+
+    if (row.status === 'FAILED') {
+      const retry = document.createElement('button');
+      retry.type = 'button';
+      retry.className = 'product-import-retry';
+      retry.dataset.retryImportId = String(row.id);
+      retry.textContent = 'Reprendre';
+      actions.appendChild(retry);
+    }
+
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'product-import-delete';
+    del.dataset.importId = String(row.id);
+    del.setAttribute('aria-label', 'Supprimer cet import');
+    del.textContent = '🗑️';
+    actions.appendChild(del);
+
+    article.append(main, actions);
+    list.appendChild(article);
+  }
 }
+
 
 export async function refreshProductImports() {
   const list = byId('productImportsList');
-  if (list) list.innerHTML = '<div class="product-import-empty">Chargement…</div>';
+  if (list) {
+    list.replaceChildren();
+    const loading = document.createElement('div');
+    loading.className = 'product-import-empty';
+    loading.textContent = 'Chargement…';
+    list.appendChild(loading);
+  }
 
   const rows = await fetchProductImports(10);
   renderImports(rows);
 }
+
 
 async function prepareProductImport() {
   const sourceUrl = byId('productImportSourceUrl')?.value.trim() || '';
