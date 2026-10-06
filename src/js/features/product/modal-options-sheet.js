@@ -83,9 +83,10 @@ function getVariantPopularity(type, value) {
 }
 
 function popularBadge(type, value) {
-    return getVariantPopularity(type, value) >= POPULAR_THRESHOLD
-        ? '<span class="variant-popular-badge" aria-label="Variante populaire">🔥 Populaire</span>'
-        : '';
+    if (getVariantPopularity(type, value) < POPULAR_THRESHOLD) return '';
+    return type === 'size'
+        ? '<span class="variant-popular-badge variant-popular-badge--size" aria-label="Variante populaire">🔥</span>'
+        : '<span class="variant-popular-badge" aria-label="Variante populaire">🔥 Populaire</span>';
 }
 
 function selectPopularVariant(type, values) {
