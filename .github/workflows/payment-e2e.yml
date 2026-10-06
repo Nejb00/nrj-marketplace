@@ -1,4 +1,5 @@
 name: Payment E2E
+# Safe simulation only: this workflow never contacts OpenPay.
 
 on:
   pull_request:
