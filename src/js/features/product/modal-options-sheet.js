@@ -25,6 +25,8 @@ const els = {
     added: () => document.getElementById('stickyActionAdded'),
     addedQty: () => document.getElementById('stickyAddedQty'),
     addedVariant: () => document.getElementById('stickyAddedVariant'),
+    addedMain: () => document.getElementById('stickyAddedMain'),
+    qtyHint: () => document.getElementById('optionsQtyHint'),
     stickyMinus: () => document.getElementById('stickyQtyMinus'),
     stickyPlus: () => document.getElementById('stickyQtyPlus'),
 };
@@ -192,9 +194,14 @@ function renderHeader() {
 
 function renderQuantity() {
     setSheetQty(modalCtx.currentQty || 1);
+    const moq = Number(modalCtx.moq) || 1;
+    if (els.qtyHint()) {
+        els.qtyHint().textContent = moq > 1
+            ? `Minimum d'achat : ${moq} pièce(s)`
+            : 'Minimum d’achat : 1 pièce';
+    }
     const add = els.add();
     if (add) {
-        const moq = Number(modalCtx.moq) || 1;
         add.textContent = moq > 1
             ? `Ajouter au panier · min. ${moq}`
             : 'Ajouter au panier';
@@ -223,6 +230,9 @@ function setStickyAddedState(addedQty = getCartQty()) {
         if (added) added.hidden = false;
         if (els.addedQty()) els.addedQty().textContent = String(qty);
         if (els.addedVariant()) els.addedVariant().textContent = variantLabel();
+        if (els.addedMain()) {
+            els.addedMain().setAttribute('aria-label', `Modifier ${variantLabel()}, ${qty} ajouté${qty > 1 ? 's' : ''}`);
+        }
         return;
     }
 
@@ -268,7 +278,7 @@ function closeOptionsPanel() {
     }
 }
 
-function openOptionsPanel(trigger = document.getElementById('addToCartStickyBtn')) {
+function openOptionsPanel(trigger = document.getElementById('addToCartStickyBtn') || document.getElementById('stickyActionAdded')) {
     const panel = els.panel();
     if (!panel) return;
 
@@ -410,7 +420,7 @@ function setupStaticListeners() {
         event.stopPropagation();
         changeStickyQty(1);
     });
-    els.added()?.addEventListener('click', () => openOptionsPanel(els.added()));
+    els.addedMain()?.addEventListener('click', () => openOptionsPanel(els.addedMain()));
 
     setupDrag();
     setupFocusTrap();
