@@ -7,7 +7,7 @@ import { applyFilter, clearSubcategorySelection } from '../catalogue/category-bu
 import { switchView } from '../catalogue/categories-page.js';
 import { refreshCatalogue } from '../catalogue/catalogue-init.js';
 import { addToCart, changeQty, removeCartItem } from '../../services/cart-actions.js';
-import { refreshCartDisplay, openCartPanel, closeCartPanel } from '../../services/cart-panel.js';
+import { refreshCartDisplay, openCartPanel, closeCartPanel, removeCartItemAnimated } from '../../services/cart-panel.js';
 import { toggleFavorite } from '../../services/favorites.js';
 import { openOrderModal, sendWhatsAppOrder } from '../../services/checkout.js';
 import { startMobileMoneyPayment, initMobileMoneyPaymentUi } from '../../services/payment/mobile-money-checkout.js';
@@ -30,7 +30,7 @@ document.addEventListener('click', e => {
   const addBtn = e.target.closest('[data-action="add-to-cart"]'); if (addBtn) { e.stopPropagation(); addToCart(parseInt(addBtn.dataset.id), '', '', addBtn); return; }
   const favBtn = e.target.closest('[data-action="toggle-favorite"]'); if (favBtn) { e.stopPropagation(); toggleFavorite(parseInt(favBtn.dataset.id)); return; }
   const editBtn = e.target.closest('[data-action="edit-product"]'); if (editBtn) { e.stopPropagation(); openEditModal(parseInt(editBtn.dataset.id)); return; }
-  const removeBtn = e.target.closest('[data-action="cart-remove"]'); if (removeBtn) { e.stopPropagation(); removeCartItem(parseInt(removeBtn.dataset.index)); return; }
+  const removeBtn = e.target.closest('[data-action="cart-remove"]'); if (removeBtn) { e.stopPropagation(); removeCartItemAnimated(parseInt(removeBtn.dataset.index), removeBtn.closest('.cart-item')); return; }
   const incBtn = e.target.closest('[data-action="cart-increase"]'); if (incBtn) { changeQty(parseInt(incBtn.dataset.index), 1); return; }
   const decBtn = e.target.closest('[data-action="cart-decrease"]'); if (decBtn) { changeQty(parseInt(decBtn.dataset.index), -1); return; }
   const recCard = e.target.closest('.rec-card'); if (recCard) { openProductModal(parseInt(recCard.dataset.productId)); return; }

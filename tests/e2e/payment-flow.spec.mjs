@@ -250,6 +250,8 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
     await expect(page.locator("#cartPanel")).toHaveClass(/\bopen\b/);
 
     await expect(page.locator(".cart-item").first()).toBeVisible();
+    await expect(page.locator(".cart-item-price").first()).toContainText("Prix unitaire");
+    await expect(page.locator(".cart-item-line-total").first()).toBeVisible();
     await expect(page.locator("#checkoutBtn")).toBeEnabled();
 
     await page.locator("#checkoutBtn").click();

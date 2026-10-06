@@ -4,7 +4,7 @@ import { escapeHtml } from '../utils/escape-html.js';
 import { formatPrice } from '../utils/format.js';
 import { thumbImg } from '../utils/images.js';
 import { getSelectedItems, getSelectedTotal } from './cart-storage.js';
-import { toggleSelectAll, toggleSelectItem } from './cart-actions.js';
+import { toggleSelectAll, toggleSelectItem, removeCartItem } from './cart-actions.js';
 import { openQtyPicker, initQtySheet } from './cart-qty-picker.js';
 import { initCartMenu } from './cart-menu.js';
 import { updateNavCartBadge } from './cart-badge.js';
@@ -240,6 +240,24 @@ function initCartPanelEvents(body, footer) {
     });
 }
 
+export async function removeCartItemAnimated(idx, element) {
+    const target = state.cart[idx];
+    if (!target || element?.dataset.removing === 'true') return;
+
+    element?.setAttribute('aria-busy', 'true');
+    element?.classList.add('is-removing');
+
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (!reducedMotion) {
+        await new Promise((resolve) => setTimeout(resolve, 300));
+    }
+
+    const currentIdx = state.cart.indexOf(target);
+    if (currentIdx >= 0) {
+        await removeCartItem(currentIdx);
+    }
+}
+
 function renderCartItems() {
     return state.cart.map((it, idx) => {
         const p = state.products.find(pr => pr.id === it.productId);
@@ -252,6 +270,7 @@ function renderCartItems() {
         const dis = Number(it.quantity) <= (Number(it.moq) || 1);
         const isSelected = it.selected !== false;
         const qty = Number(it.quantity);
+        const lineTotal = (Number(p.price) || 0) * qty;
 
         return '<div class="cart-item ' + (isSelected ? 'is-selected' : 'is-deselected') + '">' +
             '<label class="cart-item-check">' +
@@ -261,7 +280,8 @@ function renderCartItems() {
             '<div class="cart-item-info">' +
                 '<h4>' + escapeHtml(p.name) + '</h4>' +
                 (vars.length ? '<div class="cart-item-variants">' + escapeHtml(vars.join(', ')) + '</div>' : '') +
-                '<span class="cart-item-price">' + formatPrice(p.price) + '</span>' +
+                '<span class="cart-item-price">Prix unitaire · ' + formatPrice(p.price) + '</span>' +
+                '<strong class="cart-item-line-total">' + formatPrice(lineTotal) + '</strong>' +
                 '<div class="cart-item-qty">' +
                     '<button class="qty-btn" data-action="cart-decrease" data-index="' + idx + '" ' + (dis ? 'disabled' : '') + ' aria-label="Diminuer">−</button>' +
                     '<button type="button" class="qty-value-btn" data-action="cart-qty-pick" data-index="' + idx + '" aria-label="Choisir la quantité">' + qty + ' <span class="qty-chevron">▼</span></button>' +

@@ -14,16 +14,16 @@
  width: 100%;
  max-width: 400px;
  height: 100dvh;
- background: rgba(18, 18, 26, 0.78);
- -webkit-backdrop-filter: blur(30px) saturate(180%);
- backdrop-filter: blur(30px) saturate(180%);
+ background: rgba(16, 16, 20, 0.72);
+ -webkit-backdrop-filter: blur(24px) saturate(160%);
+ backdrop-filter: blur(24px) saturate(160%);
  z-index: 201;
  transform: translateX(100%);
  transition: transform 0.4s cubic-bezier(0.22, 1.18, 0.36, 1);
  display: flex;
  flex-direction: column;
- border-left: 1px solid rgba(255, 255, 255, 0.10);
- box-shadow: -16px 0 50px rgba(0, 0, 0, 0.45);
+ border-left: 1px solid rgba(255, 255, 255, 0.08);
+ box-shadow: -16px 0 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 .cart-panel.open { transform: translateX(0); }
 
@@ -197,6 +197,8 @@
  padding: 0.55rem;
  border: 1px solid var(--border);
  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+ transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+ will-change: transform, opacity;
 }
 
 .cart-item-check {
@@ -208,8 +210,8 @@
 }
 
 .cart-item-img {
- width: 54px;
- height: 54px;
+ width: 80px;
+ height: 80px;
  border-radius: 12px;
  overflow: hidden;
  flex-shrink: 0;
@@ -236,7 +238,9 @@
 }
 
 .cart-item-variants { font-size: 0.69rem; color: var(--text-secondary); }
-.cart-item-price { font-weight: 800; color: var(--primary); font-size: 0.84rem; }
+.cart-item-price { display: block; font-weight: 650; color: var(--text-secondary); font-size: 0.72rem; }
+.cart-item-line-total { display: block; margin-top: 0.1rem; font-size: 0.9rem; line-height: 1.2; font-weight: 900; color: var(--primary); }
+.cart-item.is-removing { transform: translateX(-100%); opacity: 0; pointer-events: none; }
 
 .cart-item-qty {
  display: flex;
@@ -551,7 +555,7 @@
 @media (max-width: 360px) {
  .cart-panel-body { padding-left: 0.75rem; padding-right: 0.75rem; }
  .cart-item { gap: 0.45rem; }
- .cart-item-img { width: 50px; height: 50px; }
+ .cart-item-img { width: 64px; height: 64px; }
  .cart-selected-count { font-size: 0.71rem; }
  .checkout-btn { min-width: 118px; padding-left: 0.8rem; padding-right: 0.8rem; }
  .cart-recommendations-grid { gap: 0.55rem; }
@@ -682,4 +686,15 @@
 
 @media (prefers-reduced-motion: reduce) {
  .cart-panel.is-dragging { transition: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+ .cart-item {
+  transition: none;
+  will-change: auto;
+ }
+ .cart-item.is-removing {
+  transform: none;
+  opacity: 0;
+ }
 }
