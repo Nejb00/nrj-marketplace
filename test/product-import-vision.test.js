@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
 const html = fs.readFileSync('admin.html', 'utf8');
-const api = fs.readFileSync('src/js/api/api.js', 'utf8');
+const api = fs.readFileSync('src/js/api/product-import-api.js', 'utf8');
 const main = fs.readFileSync('src/js/admin-main.js', 'utf8');
 const feature = fs.readFileSync('src/js/features/admin/product-import.js', 'utf8');
 const edge = fs.readFileSync('supabase/functions/analyze-product-import/index.ts', 'utf8');
