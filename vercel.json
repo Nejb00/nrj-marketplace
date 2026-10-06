@@ -4,10 +4,5 @@
       "source": "/p/:id",
       "destination": "/api/og-product?id=:id"
     }
-  ],
-  "git": {
-    "deploymentEnabled": {
-      "feat/product-import-os-integration": false
-    }
-  }
+  ]
 }
