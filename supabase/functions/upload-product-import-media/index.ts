@@ -73,7 +73,7 @@ async function rest(path, init) {
     }
     return { data: parsed, error: null };
   } catch (error) {
-    return { data: null, error: String(error?.message || error) };
+    return { data: null, error: "supabase_request_failed" };
   }
 }
 
@@ -175,8 +175,7 @@ async function uploadToCloudinary(imageDataUrl, importId) {
   try { parsed = JSON.parse(body); } catch { parsed = null; }
 
   if (!response.ok) {
-    const detail = parsed?.error?.message || body.slice(0, 500);
-    throw new Error("cloudinary_" + response.status + ":" + detail);
+    throw new Error("cloudinary_upload_failed");
   }
 
   return parsed;
@@ -260,11 +259,11 @@ Deno.serve(async (req) => {
       media
     });
   } catch (error) {
-    const message = String(error?.message || error).slice(0, 500);
+    const message = "media_failed";
     try {
       await updateImport(importId, {
-        error_code: message.split(":")[0] || "media_failed",
-        error_message: message
+        error_code: message,
+        error_message: "Média impossible à persister. Réessayer ou intervention admin requise."
       });
     } catch {
       // keep primary error
