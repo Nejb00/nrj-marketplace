@@ -1,0 +1,89 @@
+name: Android PWA package
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "public/manifest.webmanifest"
+      - "public/sw.js"
+      - "android/twa-manifest.json"
+      - ".github/workflows/android-pwa-package.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-pwa-package-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    env:
+      PWA_URL: https://nrj-marketplace.vercel.app/
+      ANDROID_DIR: android/generated
+      STORE_PASSWORD: nrj-test-store-2026
+      KEY_PASSWORD: nrj-test-key-2026
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Validate PWA for TWA
+        run: npx --yes @bubblewrap/cli@latest validate --url="$PWA_URL"
+
+      - name: Generate Android project
+        run: |
+          rm -rf "$ANDROID_DIR"
+          mkdir -p "$ANDROID_DIR"
+          cd "$ANDROID_DIR"
+          npx --yes @bubblewrap/cli@latest update             --skipVersionUpgrade             --manifest=../twa-manifest.json
+
+      - name: Create ephemeral CI signing key
+        run: |
+          keytool -genkeypair -v             -keystore "$ANDROID_DIR/android-keystore.jks"             -alias nrj             -keyalg RSA             -keysize 2048             -validity 3650             -storepass "$STORE_PASSWORD"             -keypass "$KEY_PASSWORD"             -dname "CN=NRJ Marketplace, OU=CI, O=NRJ, C=CG"
+
+      - name: Build signed test APK and AAB
+        env:
+          BUBBLEWRAP_KEYSTORE_PASSWORD: ${{ env.STORE_PASSWORD }}
+          BUBBLEWRAP_KEY_PASSWORD: ${{ env.KEY_PASSWORD }}
+        run: |
+          cd "$ANDROID_DIR"
+          npx --yes @bubblewrap/cli@latest build --manifest=../twa-manifest.json
+
+      - name: Generate test Digital Asset Links
+        run: |
+          mkdir -p "$ANDROID_DIR/assetlinks"
+          FINGERPRINT="$(keytool -list -v             -keystore "$ANDROID_DIR/android-keystore.jks"             -storepass "$STORE_PASSWORD"             -alias nrj |
+            awk -F': ' '/SHA256:/{print $2; exit}')"
+          test -n "$FINGERPRINT"
+          cat > "$ANDROID_DIR/assetlinks/assetlinks.json" <<EOF
+          [
+            {
+              "relation": ["delegate_permission/common.handle_all_urls"],
+              "target": {
+                "namespace": "android_app",
+                "package_name": "com.nrj.marketplace",
+                "sha256_cert_fingerprints": ["$FINGERPRINT"]
+              }
+            }
+          ]
+          EOF
+
+      - name: Upload Android test artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nrj-marketplace-android-test-${{ github.run_number }}
+          path: |
+            android/generated/app-release-signed.apk
+            android/generated/app-release-bundle.aab
+            android/generated/assetlinks/assetlinks.json
+          if-no-files-found: error
+          retention-days: 14
