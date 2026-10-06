@@ -241,6 +241,34 @@
 .cart-item-price { display: block; font-weight: 650; color: var(--text-secondary); font-size: 0.72rem; }
 .cart-item-line-total { display: block; margin-top: 0.1rem; font-size: 0.9rem; line-height: 1.2; font-weight: 900; color: var(--primary); }
 .cart-item.is-removing { transform: translateX(-100%); opacity: 0; pointer-events: none; }
+.cart-moq-warning {
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ gap: 0.5rem;
+ margin-top: 0.45rem;
+ padding: 0.45rem 0.55rem;
+ border-radius: 10px;
+ background: color-mix(in srgb, var(--primary) 12%, transparent);
+ border: 1px solid color-mix(in srgb, var(--primary) 35%, transparent);
+ color: var(--text);
+ font-size: 0.68rem;
+ line-height: 1.25;
+}
+.cart-moq-warning span { min-width: 0; }
+.cart-moq-warning button {
+ flex: 0 0 auto;
+ min-height: 28px;
+ padding: 0.3rem 0.5rem;
+ border: 1px solid var(--primary);
+ border-radius: 999px;
+ background: transparent;
+ color: var(--primary);
+ font: inherit;
+ font-weight: 850;
+ cursor: pointer;
+}
+
 
 .cart-item-qty {
  display: flex;
@@ -320,15 +348,45 @@
 }
 
 .cart-recommendations-grid {
- display: grid;
- grid-template-columns: repeat(2, minmax(0, 1fr));
- gap: 0.7rem;
+ display: flex;
+ gap: 0.75rem;
+ width: 100%;
+ overflow-x: auto;
+ padding-bottom: 0.35rem;
+ scroll-snap-type: x mandatory;
+ overscroll-behavior-x: contain;
+ -webkit-overflow-scrolling: touch;
+ scrollbar-width: none;
 }
+.cart-recommendations-grid::-webkit-scrollbar { display: none; }
+
 
 .cart-reco-card {
- min-width: 0;
+ position: relative;
+ flex: 0 0 158px;
+ min-width: 158px;
  overflow: hidden;
+ scroll-snap-align: start;
 }
+.cart-reco-card .product-card-name {
+ white-space: nowrap;
+ overflow: hidden;
+ text-overflow: ellipsis;
+}
+.cart-reco-add {
+ width: calc(100% - 0.8rem);
+ margin: 0 0.4rem 0.4rem;
+ min-height: 36px;
+ border: 0;
+ border-radius: 12px;
+ background: var(--primary);
+ color: #fff;
+ font: inherit;
+ font-size: 0.75rem;
+ font-weight: 850;
+ cursor: pointer;
+}
+.cart-reco-add:active { transform: scale(0.98); }
 
 .cart-reco-card .fav-icon,
 .cart-reco-card .product-edit-btn {

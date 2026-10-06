@@ -4,13 +4,14 @@ import { escapeHtml } from '../utils/escape-html.js';
 import { formatPrice } from '../utils/format.js';
 import { thumbImg } from '../utils/images.js';
 import { getSelectedItems, getSelectedTotal } from './cart-storage.js';
-import { toggleSelectAll, toggleSelectItem, removeCartItem } from './cart-actions.js';
+import { toggleSelectAll, toggleSelectItem, removeCartItem, setCartQty, addToCart } from './cart-actions.js';
 import { openQtyPicker, initQtySheet } from './cart-qty-picker.js';
 import { initCartMenu } from './cart-menu.js';
 import { updateNavCartBadge } from './cart-badge.js';
 import { openOrderModal } from './checkout.js';
 import { forYou, hasProfile } from './reco.js';
 import { renderProductCardHTML } from '../features/catalogue/render-product-card.js';
+import { openProductModal } from '../features/product/modal-render.js';
 
 let cartPanelEventsInited = false;
 let cartUiInited = false;
@@ -162,17 +163,31 @@ export function openCartPanel(trigger = document.querySelector('.nav-item[data-n
 }
 
 function getRecommendations() {
-    const inCart = new Set(state.cart.map(item => item.productId));
-    const eligible = state.products.filter(p => p && p.id != null && !inCart.has(p.id));
+    const inCart = new Set(state.cart.map(item => Number(item.productId)));
+    const eligible = state.products.filter((p) => p && p.id != null && !inCart.has(Number(p.id)));
     if (!eligible.length) return [];
 
-    const ranked = hasProfile()
-        ? forYou(eligible)
-        : [...eligible].sort((a, b) =>
+    const lastItem = state.cart[state.cart.length - 1];
+    const lastProduct = lastItem
+        ? state.products.find((p) => Number(p.id) === Number(lastItem.productId))
+        : null;
+    const categoryId = lastProduct?.category_id || null;
+
+    const sameCategory = categoryId
+        ? eligible.filter((p) => p.category_id && p.category_id === categoryId)
+        : [];
+
+    const rank = (list) => hasProfile()
+        ? forYou(list)
+        : [...list].sort((a, b) =>
             (Number(b.popularity_score) || 0) - (Number(a.popularity_score) || 0)
         );
 
-    return ranked.slice(0, 6);
+    const rankedSameCategory = rank(sameCategory);
+    const remaining = eligible.filter((p) => !rankedSameCategory.includes(p));
+    const rankedFallback = rank(remaining);
+
+    return [...rankedSameCategory, ...rankedFallback].slice(0, 4);
 }
 
 function renderRecommendations(products) {
@@ -181,12 +196,13 @@ function renderRecommendations(products) {
     const cards = products.map((p, i) =>
         '<div class="rec-card cart-reco-card" data-product-id="' + p.id + '" role="listitem">' +
             renderProductCardHTML(p, i) +
+            '<button type="button" class="cart-reco-add" data-action="cart-reco-add" data-id="' + p.id + '" aria-label="Ajouter ' + escapeHtml(p.name) + '">+ Ajouter</button>' +
         '</div>'
     ).join('');
 
     return '<section class="cart-recommendations" aria-labelledby="cartRecommendationsTitle">' +
         '<div class="cart-recommendations-heading">' +
-            '<h3 id="cartRecommendationsTitle">Tu pourrais aimer</h3>' +
+            '<h3 id="cartRecommendationsTitle">💡 Souvent achetés ensemble</h3>' +
         '</div>' +
         '<div class="cart-recommendations-grid" role="list">' +
             cards +
@@ -205,6 +221,22 @@ function initCartPanelEvents(body, footer) {
     cartPanelEventsInited = true;
 
     body.addEventListener('click', (e) => {
+        const moqFill = e.target.closest('[data-action="cart-moq-fill"]');
+        if (moqFill) {
+            e.preventDefault();
+            e.stopPropagation();
+            const idx = parseInt(moqFill.dataset.index, 10);
+            const item = state.cart[idx];
+            const product = item ? state.products.find((p) => Number(p.id) === Number(item.productId)) : null;
+            const moq = Math.max(Number(item?.moq) || 1, Number(product?.moq) || 1);
+            if (item && moq > Number(item.quantity)) {
+                setCartQty(idx, moq).catch((error) => {
+                    console.error('Correction MOQ panier', error);
+                });
+            }
+            return;
+        }
+
         const qtyButton = e.target.closest('[data-action="cart-qty-pick"]');
         if (qtyButton) {
             e.stopPropagation();
@@ -216,6 +248,31 @@ function initCartPanelEvents(body, footer) {
         if (discoverButton) {
             e.preventDefault();
             backToCatalogue();
+            return;
+        }
+
+        const recoAdd = e.target.closest('[data-action="cart-reco-add"]');
+        if (recoAdd) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const pid = Number(recoAdd.dataset.id);
+            const p = state.products.find((product) => Number(product.id) === pid);
+            if (!p) return;
+
+            const hasVariants =
+                String(p.tailles || '').split(',').map((value) => value.trim()).filter(Boolean).length > 0 ||
+                String(p.couleurs || '').split(',').map((value) => value.trim()).filter(Boolean).length > 0;
+
+            if (hasVariants) {
+                openProductModal(pid);
+                return;
+            }
+
+            const moq = Number(p.moq) || 1;
+            addToCart(pid, '', '', recoAdd, moq).catch((error) => {
+                console.error('Ajout rapide recommandation panier', error);
+            });
         }
     });
 
@@ -267,10 +324,17 @@ function renderCartItems() {
         const vars = [];
         if (it.couleur) vars.push('Couleur: ' + it.couleur);
         if (it.taille) vars.push('Taille: ' + it.taille);
-        const dis = Number(it.quantity) <= (Number(it.moq) || 1);
+        const moq = Math.max(Number(it.moq) || 1, Number(p.moq) || 1);
+        const dis = Number(it.quantity) <= moq;
         const isSelected = it.selected !== false;
         const qty = Number(it.quantity);
         const lineTotal = (Number(p.price) || 0) * qty;
+        const moqWarning = qty < moq
+            ? '<div class="cart-moq-warning" role="status">' +
+                '<span>⚠️ Minimum : ' + moq + ' pièces requises</span>' +
+                '<button type="button" data-action="cart-moq-fill" data-index="' + idx + '">+ Ajouter</button>' +
+              '</div>'
+            : '';
 
         return '<div class="cart-item ' + (isSelected ? 'is-selected' : 'is-deselected') + '">' +
             '<label class="cart-item-check">' +
@@ -348,7 +412,7 @@ export function refreshCartDisplay() {
         recommendations;
 
     if (footer) {
-        const disabled = selectedCount === 0;
+        const disabled = selectedCount === 0 || hasInvalidMoq;
         footer.classList.add('cart-panel-footer--filled');
         footer.innerHTML =
             '<div class="cart-footer-bar">' +
@@ -362,7 +426,7 @@ export function refreshCartDisplay() {
                         '<strong id="cartTotal">' + formatPrice(tot) + '</strong>' +
                     '</div>' +
                 '</div>' +
-                '<button class="checkout-btn" id="checkoutBtn" data-action="cart-checkout"' + (disabled ? ' disabled' : '') + '>💬 Commander via WhatsApp</button>' +
+                '<button class="checkout-btn" id="checkoutBtn" data-action="cart-checkout"' + (disabled ? ' disabled' : '') + ' title="' + (hasInvalidMoq ? 'Augmentez les articles sous le minimum avant de commander' : 'Finaliser la commande') + '">💬 Commander via WhatsApp</button>' +
             '</div>';
     }
 
