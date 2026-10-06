@@ -11,7 +11,6 @@ import { updateNavCartBadge } from './cart-badge.js';
 import { openOrderModal } from './checkout.js';
 import { forYou, hasProfile } from './reco.js';
 import { renderProductCardHTML } from '../features/catalogue/render-product-card.js';
-import { openProductModal } from '../features/product/modal-render.js';
 
 let cartPanelEventsInited = false;
 let cartUiInited = false;
@@ -254,7 +253,6 @@ function initCartPanelEvents(body, footer) {
         const recoAdd = e.target.closest('[data-action="cart-reco-add"]');
         if (recoAdd) {
             e.preventDefault();
-            e.stopPropagation();
 
             const pid = Number(recoAdd.dataset.id);
             const p = state.products.find((product) => Number(product.id) === pid);
@@ -265,9 +263,12 @@ function initCartPanelEvents(body, footer) {
                 String(p.couleurs || '').split(',').map((value) => value.trim()).filter(Boolean).length > 0;
 
             if (hasVariants) {
-                openProductModal(pid);
+                // Laisser remonter le clic vers la carte recommandée : le
+                // gestionnaire global ouvre alors la fiche et son sélecteur d'options.
                 return;
             }
+
+            e.stopPropagation();
 
             const moq = Number(p.moq) || 1;
             addToCart(pid, '', '', recoAdd, moq).catch((error) => {
