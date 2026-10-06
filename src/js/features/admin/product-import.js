@@ -1,6 +1,6 @@
 // ═══ Admin — import produit intelligent (PR #2) ═══
 import { showToast } from '../../utils/dom-helpers.js';
-import { fetchProductImports, insertProductImport, processProductImport, uploadProductImportMedia, publishProductImport, deleteProductImport } from '../../api/api.js';
+import { fetchProductImports, insertProductImport, processProductImport, uploadProductImportMedia, publishProductImport, deleteProductImport } from '../../api/product-import-api.js';
 
 const STATUS_LABELS = {
   RECEIVED: 'Reçu',
