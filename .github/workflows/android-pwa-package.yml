@@ -55,8 +55,20 @@ jobs:
           echo "Bubblewrap config pre-seeded:"
           cat "${HOME}/.bubblewrap/config.json"
 
-      - name: Validate PWA for TWA
-        run: npx --yes @bubblewrap/cli@latest validate --url="$PWA_URL"
+      - name: Validate PWA for TWA (PSI with retries)
+        run: |
+          for i in 1 2 3 4 5; do
+            echo "── Validation PWA : tentative $i/5 ──"
+            if npx --yes @bubblewrap/cli@latest validate --url="$PWA_URL"; then
+              echo "PWA validée pour TWA ✓"
+              exit 0
+            fi
+            code=$?
+            echo "Échec (code $code — souvent 429 quota PageSpeed Insights sans clé). Nouvelle tentative dans 45s…"
+            sleep 45
+          done
+          echo "Validation PWA échouée après 5 tentatives."
+          exit 1
 
       - name: Create ephemeral CI signing key
         run: |
