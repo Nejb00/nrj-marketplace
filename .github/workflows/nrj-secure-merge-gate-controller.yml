@@ -1,0 +1,354 @@
+name: NRJ Secure Merge Gate Controller
+
+# Trust model
+# - This workflow is executed from the default branch via workflow_run.
+# - It never checks out or executes PR code.
+# - It verifies exact upstream workflow paths and inspects the PR diff.
+# - It publishes the actual required check explicitly on the PR HEAD SHA.
+on:
+  workflow_run:
+    workflows:
+      - CI
+      - PR Quality
+      - CodeQL
+      - Dependency Review
+      - Payment E2E
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number to validate manually"
+        required: true
+        type: number
+
+permissions:
+  contents: read
+  actions: read
+  checks: write
+  pull-requests: read
+
+concurrency:
+  group: nrj-secure-merge-gate-${{ github.event.workflow_run.head_sha || github.event.inputs.pr_number }}
+  cancel-in-progress: true
+
+jobs:
+  controller:
+    name: NRJ Secure Merge Gate Controller
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Evaluate trusted validation state
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const checkName = 'NRJ Secure Merge Gate';
+
+            const workflowPaths = new Map([
+              ['CI', '.github/workflows/ci.yml'],
+              ['PR Quality', '.github/workflows/pr-quality.yml'],
+              ['CodeQL', '.github/workflows/codeql.yml'],
+              ['Dependency Review', '.github/workflows/dependency-review.yml'],
+              ['Payment E2E', '.github/workflows/payment-e2e.yml'],
+            ]);
+
+            const protectedWorkflowPaths = new Set([
+              ...workflowPaths.values(),
+              '.github/workflows/nrj-secure-merge-gate-controller.yml',
+            ]);
+
+            const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+            async function getPR() {
+              if (context.eventName === 'workflow_dispatch') {
+                const number = Number(context.payload.inputs?.pr_number);
+                if (!Number.isInteger(number) || number <= 0) {
+                  core.setFailed('Numéro de PR invalide.');
+                  return null;
+                }
+
+                return (await github.rest.pulls.get({
+                  owner,
+                  repo,
+                  pull_number: number,
+                })).data;
+              }
+
+              const upstreamSha = context.payload.workflow_run?.head_sha;
+              if (!upstreamSha) {
+                core.setFailed('workflow_run.head_sha absent.');
+                return null;
+              }
+
+              const prs = await github.paginate(
+                github.rest.repos.listPullRequestsAssociatedWithCommit,
+                {
+                  owner,
+                  repo,
+                  commit_sha: upstreamSha,
+                  per_page: 100,
+                }
+              );
+
+              const candidates = prs
+                .filter((pr) =>
+                  pr?.state === 'open' &&
+                  pr?.base?.ref === 'main' &&
+                  pr?.base?.repo?.full_name === owner + '/' + repo &&
+                  pr?.head?.sha === upstreamSha
+                )
+                .sort((a, b) => b.number - a.number);
+
+              return candidates[0] || null;
+            }
+
+            async function createOrUpdateCheck({ sha, conclusion, title, summary }) {
+              const existing = await github.paginate(
+                github.rest.checks.listForRef,
+                {
+                  owner,
+                  repo,
+                  ref: sha,
+                  check_name: checkName,
+                  per_page: 100,
+                }
+              );
+
+              const body = {
+                owner,
+                repo,
+                name: checkName,
+                head_sha: sha,
+                status: 'completed',
+                conclusion,
+                details_url: context.serverUrl + '/' + owner + '/' + repo + '/actions/runs/' + context.runId,
+                output: {
+                  title,
+                  summary,
+                },
+              };
+
+              if (existing.length) {
+                const latest = existing.sort((a, b) =>
+                  String(b.completed_at || b.started_at || '').localeCompare(
+                    String(a.completed_at || a.started_at || '')
+                  )
+                )[0];
+
+                await github.rest.checks.update({
+                  owner,
+                  repo,
+                  check_run_id: latest.id,
+                  status: 'completed',
+                  conclusion,
+                  details_url: body.details_url,
+                  output: body.output,
+                });
+
+                return latest.id;
+              }
+
+              const created = await github.rest.checks.create(body);
+              return created.data.id;
+            }
+
+            const pr = await getPR();
+            if (!pr) {
+              core.notice('Aucune PR ouverte à valider pour cet événement.');
+              return;
+            }
+
+            const sha = pr.head.sha;
+
+            if (pr.base.ref !== 'main') {
+              const summary = 'PR cible ' + pr.base.ref + ' au lieu de main.';
+              await createOrUpdateCheck({
+                sha,
+                conclusion: 'failure',
+                title: '❌ Rejected',
+                summary,
+              });
+              core.setFailed(summary);
+              return;
+            }
+
+            const files = await github.paginate(
+              github.rest.pulls.listFiles,
+              {
+                owner,
+                repo,
+                pull_number: pr.number,
+                per_page: 100,
+              }
+            );
+
+            const changedPaths = files.map((file) => file.filename);
+            const modifiedProtectedWorkflows = changedPaths.filter((path) =>
+              protectedWorkflowPaths.has(path)
+            );
+
+            if (modifiedProtectedWorkflows.length) {
+              const summary = [
+                'La PR modifie un workflow de validation protégé.',
+                '',
+                modifiedProtectedWorkflows.map((path) => '- ' + path).join('\n'),
+              ].join('\n');
+
+              await createOrUpdateCheck({
+                sha,
+                conclusion: 'failure',
+                title: '❌ Protected workflow modified',
+                summary,
+              });
+
+              core.setFailed('Workflow de validation protégé modifié.');
+              return;
+            }
+
+            const paymentE2EExpected = changedPaths.some((path) =>
+              path === 'index.html' ||
+              path.startsWith('src/') ||
+              path.startsWith('supabase/') ||
+              path === 'tests/e2e/payment-flow.spec.mjs' ||
+              path === 'playwright.config.mjs' ||
+              path === '.github/workflows/payment-e2e.yml'
+            );
+
+            const required = [
+              ['CI', workflowPaths.get('CI')],
+              ['PR Quality', workflowPaths.get('PR Quality')],
+              ['CodeQL', workflowPaths.get('CodeQL')],
+              ['Dependency Review', workflowPaths.get('Dependency Review')],
+            ];
+
+            if (paymentE2EExpected) {
+              required.push(['Payment E2E', workflowPaths.get('Payment E2E')]);
+            }
+
+            async function listRuns() {
+              const { data } = await github.rest.actions.listWorkflowRunsForRepo({
+                owner,
+                repo,
+                head_sha: sha,
+                per_page: 100,
+              });
+              return data.workflow_runs || [];
+            }
+
+            function pickNewest(runs, name, path) {
+              return runs
+                .filter((run) =>
+                  run &&
+                  run.name === name &&
+                  run.path === path &&
+                  run.head_sha === sha &&
+                  run.event === 'pull_request'
+                )
+                .sort((a, b) =>
+                  String(b.updated_at || b.created_at || '').localeCompare(
+                    String(a.updated_at || a.created_at || '')
+                  )
+                )[0];
+            }
+
+            const deadline = Date.now() + 12 * 60 * 1000;
+            let states = [];
+
+            while (Date.now() <= deadline) {
+              const runs = await listRuns();
+
+              states = required.map(([name, path]) => {
+                const run = pickNewest(runs, name, path);
+
+                if (!run) {
+                  return { name, path, state: 'missing', conclusion: null };
+                }
+
+                if (run.status !== 'completed') {
+                  return {
+                    name,
+                    path,
+                    state: run.status || 'pending',
+                    conclusion: null,
+                    run_id: run.id,
+                  };
+                }
+
+                return {
+                  name,
+                  path,
+                  state: 'completed',
+                  conclusion: run.conclusion || 'unknown',
+                  run_id: run.id,
+                };
+              });
+
+              const failed = states.filter((item) =>
+                item.state === 'completed' && item.conclusion !== 'success'
+              );
+              const pending = states.filter((item) => item.state !== 'completed');
+
+              if (failed.length || pending.length === 0) {
+                break;
+              }
+
+              await sleep(15000);
+            }
+
+            const failed = states.filter((item) =>
+              item.state === 'completed' && item.conclusion !== 'success'
+            );
+            const pending = states.filter((item) => item.state !== 'completed');
+            const passed = states.filter((item) =>
+              item.state === 'completed' && item.conclusion === 'success'
+            );
+
+            const verified =
+              failed.length === 0 &&
+              pending.length === 0 &&
+              passed.length === required.length;
+
+            const lines = [
+              '### NRJ Secure Merge Gate',
+              '',
+              '- PR: #' + pr.number,
+              '- HEAD: \`' + sha + '\`',
+              '- Vercel: ignoré par conception',
+              '- Protected validation workflows modified: none',
+              '',
+              '### Validation sources',
+              ...states.map((item) => {
+                const prefix =
+                  item.state === 'completed' && item.conclusion === 'success'
+                    ? '✅'
+                    : item.state === 'completed'
+                      ? '❌'
+                      : '⏳';
+
+                return prefix + ' ' + item.name + ' — ' + item.state +
+                  (item.conclusion ? ' / ' + item.conclusion : '');
+              }),
+              '',
+              verified
+                ? '### Verdict: ✅ VERIFIED'
+                : '### Verdict: ❌ REJECTED',
+            ];
+
+            const summary = lines.join('\n');
+
+            await createOrUpdateCheck({
+              sha,
+              conclusion: verified ? 'success' : 'failure',
+              title: verified ? '✅ VERIFIED' : '❌ REJECTED',
+              summary,
+            });
+
+            core.summary.addRaw(summary).write();
+
+            if (!verified) {
+              core.setFailed('NRJ Secure Merge Gate REJECTED.');
+            } else {
+              core.notice('NRJ Secure Merge Gate VERIFIED.');
+            }
