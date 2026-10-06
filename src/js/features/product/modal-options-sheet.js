@@ -123,7 +123,7 @@ function renderColors() {
     }
 
     container.innerHTML = colors.map((color, index) => {
-        const dedicatedImg = modalCtx.imgs?.[index + 1] || '';
+        const dedicatedImg = modalCtx.p?.[`image${index + 2}`] || '';
         const imgHtml = dedicatedImg
             ? thumbImg(dedicatedImg, color, 64, 64)
             : '<span class="option-color-fallback" aria-hidden="true"></span>';
