@@ -198,9 +198,14 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
     await page.locator('[data-option-size="40"]').click();
     await page.locator("#optionsQtyPlus").click();
     await expect(page.locator("#optionsQtyValue")).toHaveText("2");
+    await page.locator("#optionsBenefitsTitle").scrollIntoViewIfNeeded();
+    await expect(page.locator(".options-benefit-card")).toHaveCount(3);
     await page.locator("#optionsPanelAddBtn").click();
     await expect(page.locator("#cartAddedToast")).toBeVisible();
     await expect(page.locator("#cartAddedToast")).toContainText("Éligible à la livraison gratuite");
+    await expect(page.locator("#stickyActionAdded")).toBeVisible();
+    await expect(page.locator("#stickyAddedQty")).toHaveText("2");
+    await expect(page.locator("#stickyAddedVariant")).toHaveText("Noir · 40");
 
     // addToCart() persists asynchronously; wait for the browser's durable state
     // before closing the product modal, otherwise the E2E can race the save.
