@@ -40,11 +40,7 @@ async function rest(path, init) {
     try { parsed = JSON.parse(body); } catch { parsed = body; }
   }
   if (!response.ok) {
-    throw new Error(
-      typeof parsed === "object" && parsed
-        ? (parsed.message || parsed.hint || "Supabase error")
-        : "Supabase error"
-    );
+    throw new Error("supabase_request_failed");
   }
   return parsed;
 }
