@@ -149,8 +149,8 @@
       "driveMd5": "7f0cd1dc5267fbb57cabc9502a6dc073"
     },
     "docs/payment-openpay.md": {
-      "githubSha": "c998da7c2a3b7a219217a0b08bacf05b85ff8fc3",
-      "driveMd5": "d3261d47b9e7d1a773a0cd94e1ecc47d"
+      "githubSha": "87520de4c596586995e59f1a519e6ae691bc42bb",
+      "driveMd5": "074eab400f9c4c04d88a8915ba452b7b"
     },
     "index.html": {
       "githubSha": "e55e14934327e0f06116b5977157cab0566b2e6e",
@@ -349,8 +349,8 @@
       "driveMd5": "404d6fef931a3f5a97587ab6469be48e"
     },
     "src/js/core/config.js": {
-      "githubSha": "a2ad96a0b2fb30f5db197d712cd3ea3064f66dde",
-      "driveMd5": "5f5e1fb436b1c7f6cace7f62f9e4afe3"
+      "githubSha": "fd1d229377bcbe0d5125961a1f2907464a13eaee",
+      "driveMd5": "2d7c66180d37e67c89b4392e7e52f91b"
     },
     "src/js/core/state.js": {
       "githubSha": "c956b3adfff49604c58997ccc4450a2e7514bce7",
@@ -721,8 +721,8 @@
       "driveMd5": "deccc5559be09473133f7372a1a7c566"
     },
     "supabase/functions/payment-openpay/index.ts": {
-      "githubSha": "f816f783cf273b17a5c8628240d82961225f50f4",
-      "driveMd5": "fe56f19951b7453506d5ed308171de9a"
+      "githubSha": "ad1e215c07f98e0cc4c59e0c40c70f677b612503",
+      "driveMd5": "1a43773703735ac4496ae784398194c1"
     },
     "supabase/functions/payment-webhook/README.md": {
       "githubSha": "1d2506f81dfa909185b7b7d7a387a4a09a6f0678",
@@ -872,9 +872,13 @@
       "githubSha": "03a489ea06ac9ff48e3b1ef04025ef137dc63665",
       "driveMd5": "477e9359b25a0de46a753ef35eacca82"
     },
+    "test/payment-openpay-activation.test.js": {
+      "githubSha": "706f3fb00bbc8f188ee34c9e554c9216b3f03284",
+      "driveMd5": "5381c53a9a84078be9c34df14f9f7df8"
+    },
     "test/payment-openpay-guard.test.js": {
-      "githubSha": "f4d0248a9daf5833ac234c7efc16ba361dc73ccc",
-      "driveMd5": "1fa71fbeae4608bb10a4961179ca4520"
+      "githubSha": "0a60e9e1db537b17b9a4526ca0d12e94631d7dd9",
+      "driveMd5": "b5083ea6d0d731e79e701345ff8f1ef7"
     },
     "test/payment-order-consistency.test.js": {
       "githubSha": "39f4b7c02b7bf0a53169778fb67b52cc42883bfe",
@@ -953,5 +957,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-06T00:48:35.408Z"
+  "updatedAt": "2026-10-06T00:51:49.712Z"
 }
