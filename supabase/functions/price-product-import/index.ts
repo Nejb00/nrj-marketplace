@@ -70,7 +70,7 @@ async function rest(path, init) {
     }
     return { data: parsed, error: null };
   } catch (error) {
-    return { data: null, error: String(error?.message || error) };
+    return { data: null, error: "supabase_request_failed" };
   }
 }
 
@@ -229,11 +229,11 @@ Deno.serve(async (req) => {
       pricing: breakdown
     });
   } catch (error) {
-    const message = String(error?.message || error).slice(0, 500);
+    const message = "pricing_failed";
     try {
       await updateImport(importId, {
-        error_code: message.split(":")[0] || "pricing_failed",
-        error_message: message
+        error_code: message,
+        error_message: "Calcul du prix impossible. Réessayer ou intervention admin requise."
       });
     } catch {
       // keep primary error
