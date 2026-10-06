@@ -209,6 +209,15 @@ async function findPaymentByIdempotency(key: string): Promise<PaymentRow | null>
   return result.data?.[0] || null;
 }
 
+async function findLivePaymentForUser(userId: string): Promise<PaymentRow | null> {
+  const result = await supabaseRest<PaymentRow[]>(
+    "payments?select=id,order_id,provider,payment_method,provider_reference,idempotency_key,amount,currency,status&provider=eq.openpay&user_id=eq." +
+      encodeURIComponent(userId) +
+      "&status=in.(pending,processing,refund_pending)&limit=1"
+  );
+  return result.data?.[0] || null;
+}
+
 async function findLivePaymentForOrder(orderId: string): Promise<PaymentRow | null> {
   const result = await supabaseRest<PaymentRow[]>(
     "payments?select=id,order_id,provider,payment_method,provider_reference,idempotency_key,amount,currency,status&provider=eq.openpay&order_id=eq." +
@@ -497,6 +506,15 @@ Deno.serve(async (req: Request): Promise<Response> => {
       return json({ ok: false, error: "payment_operator_conflict" }, 409);
     }
 
+    if (["failed", "cancelled", "refund_pending", "refunded"].includes(existing.status)) {
+      return json({
+        ok: false,
+        error: "payment_attempt_terminal",
+        payment_id: existing.id,
+        status: existing.status
+      }, 409);
+    }
+
     if (!existing.provider_reference) {
       return json({
         ok: false,
@@ -514,6 +532,18 @@ Deno.serve(async (req: Request): Promise<Response> => {
       provider_reference: existing.provider_reference,
       status: existing.status
     });
+  }
+
+  const liveUserPayment = await findLivePaymentForUser(order.user_id || "");
+  if (liveUserPayment && liveUserPayment.order_id !== order.id) {
+    return json({
+      ok: false,
+      error: "payment_active_elsewhere",
+      payment_id: liveUserPayment.id,
+      order_id: liveUserPayment.order_id,
+      provider_reference: liveUserPayment.provider_reference,
+      status: liveUserPayment.status
+    }, 409);
   }
 
   const livePayment = await findLivePaymentForOrder(order.id);
@@ -550,6 +580,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         order_id: order.id,
+        user_id: order.user_id,
         provider: "openpay",
         payment_method: expectedMethod,
         provider_reference: null,
@@ -562,6 +593,18 @@ Deno.serve(async (req: Request): Promise<Response> => {
   );
 
   if (insert.error) {
+    const concurrentUserPayment = await findLivePaymentForUser(order.user_id || "");
+    if (concurrentUserPayment && concurrentUserPayment.order_id !== order.id) {
+      return json({
+        ok: false,
+        error: "payment_active_elsewhere",
+        payment_id: concurrentUserPayment.id,
+        order_id: concurrentUserPayment.order_id,
+        provider_reference: concurrentUserPayment.provider_reference,
+        status: concurrentUserPayment.status
+      }, 409);
+    }
+
     const concurrent = await findLivePaymentForOrder(order.id);
     if (concurrent) {
       if (concurrent.payment_method !== expectedMethod) {

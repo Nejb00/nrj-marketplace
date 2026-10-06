@@ -7,6 +7,15 @@ import {
 export const CREATE_ORDER_FUNCTION_ENDPOINT =
     SUPABASE_URL + '/functions/v1/create-order';
 
+export class OrderFunctionError extends Error {
+    constructor(code, details = null) {
+        super(code);
+        this.name = 'OrderFunctionError';
+        this.code = code;
+        this.details = details;
+    }
+}
+
 async function getAccessToken() {
     let { data: { session } } = await supabaseClient.auth.getSession();
 
@@ -26,7 +35,8 @@ async function getAccessToken() {
 export async function createRemoteOrder({
     items,
     phone,
-    paymentMethod = 'whatsapp'
+    paymentMethod = 'whatsapp',
+    idempotencyKey = null
 } = {}) {
     const accessToken = await getAccessToken();
 
@@ -40,7 +50,8 @@ export async function createRemoteOrder({
         body: JSON.stringify({
             items,
             phone,
-            payment_method: paymentMethod
+            payment_method: paymentMethod,
+            idempotency_key: idempotencyKey
         })
     });
 
@@ -54,7 +65,10 @@ export async function createRemoteOrder({
     }
 
     if (!response.ok) {
-        throw new Error(data?.error || ('Order service error (' + response.status + ')'));
+        throw new OrderFunctionError(
+            data?.error || ('order_http_' + response.status),
+            data
+        );
     }
 
     return data;

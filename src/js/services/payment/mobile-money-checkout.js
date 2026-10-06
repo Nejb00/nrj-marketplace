@@ -1,4 +1,7 @@
-import { MOBILE_MONEY_PAYMENT_ENABLED } from '../../core/config.js';
+import {
+    MOBILE_MONEY_PAYMENT_ENABLED,
+    supabaseClient
+} from '../../core/config.js';
 import { state, saveCart, saveOrders } from '../../core/state.js';
 import { showToast } from '../../utils/dom-helpers.js';
 import { getSelectedItems } from '../cart-storage.js';
@@ -10,12 +13,123 @@ import { PaymentService } from './payment-service.js';
 
 const POLL_INTERVAL_MS = 4000;
 const MAX_POLLS = 10;
+const ORDER_IDEMPOTENCY_STORAGE_KEY = 'nrj_checkout_order_idempotency_key';
+const PAYMENT_IDEMPOTENCY_STORAGE_KEY = 'nrj_payment_idempotency_key';
 
 const provider = new OpenPayProvider();
 const paymentService = new PaymentService(provider);
 let pendingPaymentReference = null;
 let pendingPaymentOrder = null;
 let pendingPaymentCustomer = null;
+let pendingPaymentItems = null;
+let pendingPaymentStatus = null;
+let paymentStartInFlight = false;
+let activeStorageUserId = null;
+
+async function ensureStorageUserScope() {
+    let { data: { session } } = await supabaseClient.auth.getSession();
+
+    if (!session) {
+        const { data, error } = await supabaseClient.auth.signInAnonymously();
+        if (error) throw error;
+        session = data.session;
+    }
+
+    const userId = session?.user?.id;
+    if (!userId) {
+        throw new Error('payment_session_unavailable');
+    }
+
+    activeStorageUserId = userId;
+}
+
+function scopedStorageKey(baseKey) {
+    if (!activeStorageUserId) {
+        throw new Error('payment_session_unavailable');
+    }
+
+    return baseKey + ':' + activeStorageUserId;
+}
+
+function createIdempotencyKey(prefix) {
+    const random = globalThis.crypto?.randomUUID?.();
+    if (random) {
+        return prefix + ':' + random;
+    }
+
+    return prefix + ':' + Date.now() + ':' + Math.random().toString(36).slice(2);
+}
+
+function getDurableStorage() {
+    try {
+        return localStorage;
+    } catch {
+        try {
+            return sessionStorage;
+        } catch {
+            return null;
+        }
+    }
+}
+
+function getDurableKey(storageKey, prefix) {
+    const storage = getDurableStorage();
+
+    if (!storage) {
+        return createIdempotencyKey(prefix);
+    }
+
+    try {
+        const existing = storage.getItem(storageKey);
+        if (existing) return existing;
+
+        const created = createIdempotencyKey(prefix);
+        storage.setItem(storageKey, created);
+        return created;
+    } catch {
+        return createIdempotencyKey(prefix);
+    }
+}
+
+function clearDurableKey(storageKey) {
+    const storage = getDurableStorage();
+    if (!storage) return;
+
+    try {
+        storage.removeItem(storageKey);
+    } catch {
+        // Durable storage may be unavailable; in-memory state still protects
+        // the active attempt.
+    }
+}
+
+function getOrderIdempotencyKey() {
+    return getDurableKey(scopedStorageKey(ORDER_IDEMPOTENCY_STORAGE_KEY), 'order');
+}
+
+function getPaymentIdempotencyKey() {
+    return getDurableKey(scopedStorageKey(PAYMENT_IDEMPOTENCY_STORAGE_KEY), 'payment');
+}
+
+function resetPaymentAttemptKey() {
+    if (!activeStorageUserId) return;
+    clearDurableKey(scopedStorageKey(PAYMENT_IDEMPOTENCY_STORAGE_KEY));
+}
+
+function resetCheckoutKeys() {
+    if (!activeStorageUserId) return;
+    clearDurableKey(scopedStorageKey(PAYMENT_IDEMPOTENCY_STORAGE_KEY));
+    clearDurableKey(scopedStorageKey(ORDER_IDEMPOTENCY_STORAGE_KEY));
+}
+
+function resetTerminalCheckoutState() {
+    pendingPaymentReference = null;
+    pendingPaymentOrder = null;
+    pendingPaymentCustomer = null;
+    pendingPaymentItems = null;
+    pendingPaymentStatus = null;
+    resetCheckoutKeys();
+}
 
 function setPaymentUi({ busy = false, message = '' } = {}) {
     const button = document.getElementById('startMobileMoneyBtn');
@@ -63,6 +177,12 @@ function buildRemoteItems(selected) {
 }
 
 function recordPaidOrder({ remoteOrder, selected, customer }) {
+    const alreadyRecorded = (state.orders || []).some(
+        order => order.remoteOrderId === remoteOrder.order_id
+    );
+
+    if (alreadyRecorded) return;
+
     const productMap = new Map(
         state.products.map(product => [Number(product.id), product])
     );
@@ -149,13 +269,44 @@ export async function startMobileMoneyPayment() {
     }
 
     const button = document.getElementById('startMobileMoneyBtn');
-    if (button?.disabled) return;
+    if (button?.disabled || paymentStartInFlight) return;
+
+    paymentStartInFlight = true;
 
     try {
         const customer = getPaymentInput();
 
-        localStorage.setItem('fluo_customer_name', customer.name);
-        localStorage.setItem('fluo_customer_phone', customer.phone);
+        await ensureStorageUserScope();
+
+        const currentItems = buildRemoteItems(selected);
+
+        if (pendingPaymentOrder) {
+            const pendingItems = pendingPaymentItems || [];
+            const contextChanged =
+                JSON.stringify(currentItems) !== JSON.stringify(pendingItems) ||
+                !pendingPaymentCustomer ||
+                pendingPaymentCustomer.name !== customer.name ||
+                pendingPaymentCustomer.phone !== customer.phone ||
+                pendingPaymentCustomer.operator !== customer.operator;
+
+            if (contextChanged) {
+                if (pendingPaymentStatus !== 'terminal') {
+                    setPaymentUi({
+                        busy: false,
+                        message: 'Un paiement est déjà en cours pour ce panier. Terminez-le avant de modifier la commande.'
+                    });
+                    showToast('⏳ Un paiement est déjà en cours');
+                    return;
+                }
+
+                pendingPaymentOrder = null;
+                pendingPaymentCustomer = null;
+                pendingPaymentItems = null;
+                pendingPaymentStatus = null;
+                pendingPaymentReference = null;
+                resetCheckoutKeys();
+            }
+        }
 
         let remoteOrder = pendingPaymentOrder;
 
@@ -165,17 +316,43 @@ export async function startMobileMoneyPayment() {
                 message: 'Création de la commande sécurisée…'
             });
 
-            remoteOrder = await createRemoteOrder({
-                items: buildRemoteItems(selected),
-                phone: customer.phone,
-                paymentMethod: 'openpay_' + customer.operator.toLowerCase()
-            });
+            const orderIdempotencyKey = getOrderIdempotencyKey();
+
+            try {
+                remoteOrder = await createRemoteOrder({
+                    items: buildRemoteItems(selected),
+                    phone: customer.phone,
+                    paymentMethod: 'openpay_' + customer.operator.toLowerCase(),
+                    idempotencyKey: orderIdempotencyKey
+                });
+            } catch (error) {
+                const code = error?.code || (error instanceof Error ? error.message : String(error));
+
+                // A reused browser key with changed cart/price/operator is a
+                // safe conflict, not a reason to duplicate the old order.
+                // Rotate only the ORDER key, then create a fresh checkout intent.
+                if (code !== 'order_idempotency_conflict') {
+                    throw error;
+                }
+
+                clearSessionKey(ORDER_IDEMPOTENCY_STORAGE_KEY);
+
+                remoteOrder = await createRemoteOrder({
+                    items: buildRemoteItems(selected),
+                    phone: customer.phone,
+                    paymentMethod: 'openpay_' + customer.operator.toLowerCase(),
+                    idempotencyKey: getOrderIdempotencyKey()
+                });
+            }
         }
 
         if (!remoteOrder?.order_id || !Number.isFinite(Number(remoteOrder.total)) ||
             Number(remoteOrder.total) <= 0) {
             throw new Error('order_creation_invalid');
         }
+
+        pendingPaymentItems = currentItems;
+        pendingPaymentCustomer = customer;
 
         setPaymentUi({
             busy: true,
@@ -202,7 +379,8 @@ export async function startMobileMoneyPayment() {
                     metadata: {
                         operator: customer.operator,
                         customerName: customer.name
-                    }
+                    },
+                    idempotencyKey: getPaymentIdempotencyKey()
                 });
             } catch (error) {
                 const code = error?.code || (error instanceof Error ? error.message : String(error));
@@ -220,6 +398,8 @@ export async function startMobileMoneyPayment() {
                     pendingPaymentReference = null;
                     pendingPaymentOrder = remoteOrder;
                     pendingPaymentCustomer = customer;
+                    pendingPaymentItems = currentItems;
+                    pendingPaymentStatus = 'active';
 
                     setPaymentUi({
                         busy: false,
@@ -271,14 +451,39 @@ export async function startMobileMoneyPayment() {
             pendingPaymentReference = null;
             pendingPaymentOrder = null;
             pendingPaymentCustomer = null;
+            pendingPaymentItems = null;
+            pendingPaymentStatus = null;
+            resetCheckoutKeys();
             document.getElementById('orderModalOverlay')?.classList.remove('open');
             showToast('✅ Paiement confirmé');
+            return;
+        }
+
+        if (payment.status === 'failed' || payment.status === 'cancelled') {
+            pendingPaymentReference = null;
+            pendingPaymentOrder = remoteOrder;
+            pendingPaymentCustomer = customer;
+            pendingPaymentItems = currentItems;
+            pendingPaymentStatus = 'terminal';
+            resetPaymentAttemptKey();
+
+            setPaymentUi({
+                busy: false,
+                message: payment.status === 'failed'
+                    ? 'Paiement refusé. Vous pouvez réessayer.'
+                    : 'Paiement annulé.'
+            });
+            showToast(payment.status === 'failed'
+                ? '❌ Paiement refusé'
+                : '⚠️ Paiement annulé');
             return;
         }
 
         pendingPaymentReference = payment.providerReference;
         pendingPaymentOrder = remoteOrder;
         pendingPaymentCustomer = customer;
+        pendingPaymentItems = currentItems;
+        pendingPaymentStatus = 'active';
 
         const finalStatus = await waitForPayment(payment.providerReference);
 
@@ -299,12 +504,17 @@ export async function startMobileMoneyPayment() {
             pendingPaymentReference = null;
             pendingPaymentOrder = null;
             pendingPaymentCustomer = null;
+            resetCheckoutKeys();
             document.getElementById('orderModalOverlay')?.classList.remove('open');
             showToast('✅ Paiement confirmé');
             return;
         }
 
         if (finalStatus === 'failed' || finalStatus === 'cancelled') {
+            pendingPaymentReference = null;
+            pendingPaymentStatus = 'terminal';
+            resetPaymentAttemptKey();
+
             setPaymentUi({
                 busy: false,
                 message: finalStatus === 'failed'
@@ -331,17 +541,25 @@ export async function startMobileMoneyPayment() {
 
         const code = error instanceof Error ? error.message : String(error);
 
-        if (!pendingPaymentReference) {
-            pendingPaymentOrder = null;
+        if (!pendingPaymentReference && !pendingPaymentOrder) {
             pendingPaymentCustomer = null;
+            pendingPaymentItems = null;
+            pendingPaymentStatus = null;
         }
 
         if (code === 'phone_invalid') {
             showToast('⚠️ Numéro congolais invalide');
         } else if (code === 'operator_invalid') {
             showToast('⚠️ Choisissez MTN ou Airtel');
+        } else if (code === 'payment_active_elsewhere') {
+            showToast('⏳ Un autre paiement est déjà en cours pour ce compte');
+        } else if (code === 'payment_attempt_terminal') {
+            resetPaymentAttemptKey();
+            showToast('⚠️ Cette tentative est terminée. Vous pouvez réessayer.');
         } else {
             showToast('❌ Paiement indisponible pour le moment');
         }
+    } finally {
+        paymentStartInFlight = false;
     }
 }
