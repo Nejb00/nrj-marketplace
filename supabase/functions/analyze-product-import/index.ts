@@ -121,7 +121,7 @@ async function rest(path, init) {
     }
     return { data: parsed, error: null };
   } catch (error) {
-    return { data: null, error: String(error?.message || error) };
+    return { data: null, error: "supabase_request_failed" };
   }
 }
 
