@@ -5,6 +5,7 @@ import { handleAdminLogin, handleLogout, checkAdminSession } from './features/ad
 import { addProduct } from './features/admin/product-form.js';
 import { deleteProduct } from './features/admin/product-delete.js';
 import { initAdminChat } from './features/chat/admin-chat.js';
+import { initProductImportUI } from './features/admin/product-import.js';
 
 document.getElementById('adminLoginBtn').addEventListener('click', handleAdminLogin);
 document.getElementById('logoutBtn').addEventListener('click', handleLogout);
@@ -17,7 +18,8 @@ document.addEventListener('click', e => {
 
 async function init() {
     await fetchProducts();
-    await checkAdminSession();
+    const isAdmin = await checkAdminSession();
+    if (isAdmin) initProductImportUI();
     await initAdminChat();
 }
 

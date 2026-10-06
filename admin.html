@@ -61,6 +61,96 @@
                 </div>
             </section>
 
+            <section class="product-import-card" id="productImportSection" aria-labelledby="productImportTitle">
+                <div class="product-import-head">
+                    <div>
+                        <span class="product-import-eyebrow">NRJ PRODUCT IMPORT OS</span>
+                        <h2 id="productImportTitle">✨ Import intelligent</h2>
+                        <p>Prépare une capture Alibaba dans le sas sécurisé avant son analyse IA.</p>
+                    </div>
+                    <span class="product-import-badge">STAGING</span>
+                </div>
+
+                <div class="product-import-source-grid">
+                    <div class="product-import-dropzone" id="productImportDropzone">
+                        <input type="file" id="productImportFile" accept="image/*" hidden>
+                        <button type="button" class="product-import-file-btn" id="productImportChooseBtn">📷 Ajouter une capture</button>
+                        <div class="product-import-preview" id="productImportPreview" hidden></div>
+                        <p class="product-import-help">Aperçu local. La suite de la pipeline persiste le média dans Cloudinary puis publie selon les règles de confiance.</p>
+                    </div>
+
+                    <div class="product-import-fields">
+                        <div class="form-group">
+                            <label for="productImportSourceUrl">URL source de l’image</label>
+                            <input type="url" id="productImportSourceUrl" placeholder="https://.../capture.jpg" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label for="productImportRawText">Texte Alibaba / notes (facultatif)</label>
+                            <textarea id="productImportRawText" rows="5" maxlength="12000" placeholder="Colle ici le titre, le prix, le MOQ ou tout texte visible sur la capture…"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="product-import-actions">
+                    <div class="product-import-status" id="productImportStatus" aria-live="polite"></div>
+                    <button type="button" class="product-import-submit" id="productImportPrepareBtn">Analyser avec l’IA →</button>
+                </div>
+
+                <section class="product-import-analysis" id="productImportAnalysis" hidden aria-live="polite">
+                    <div class="product-import-analysis-head">
+                        <h3>🧠 Analyse extraite</h3>
+                        <span id="productImportConfidence" class="product-import-confidence">—</span>
+                    </div>
+                    <dl class="product-import-analysis-grid" id="productImportAnalysisGrid"></dl>
+                    <div class="product-import-analysis-variants" id="productImportAnalysisVariants"></div>
+                    <div class="product-import-classification" id="productImportClassification" hidden>
+                        <div class="product-import-classification-label">🏷️ Catégorie catalogue</div>
+                        <div class="product-import-classification-hint" id="productImportClassificationHint"></div>
+                    </div>
+
+                    <section class="product-import-pricing" id="productImportPricing" hidden>
+                        <div class="product-import-pricing-head">
+                            <div>
+                                <div class="product-import-classification-label">💰 Prix universel</div>
+                                <p id="productImportPricingNote">Paramètres modifiables avant calcul.</p>
+                            </div>
+                            <span class="product-import-pricing-currency">XAF</span>
+                        </div>
+                        <div class="product-import-pricing-grid">
+                            <label>Taux vers XAF<input id="productImportFxRate" type="number" min="0" step="0.000001" placeholder="Ex. 1 pour XAF"></label>
+                            <label>Logistique (XAF)<input id="productImportLogistics" type="number" min="0" step="1" value="0"></label>
+                            <label>Droits (%)<input id="productImportDuty" type="number" min="0" max="100" step="0.1" value="0"></label>
+                            <label>Frais marketplace (%)<input id="productImportFee" type="number" min="0" max="100" step="0.1" value="0"></label>
+                            <label>Marge cible (%)<input id="productImportMargin" type="number" min="0" max="94.9" step="0.1" value="30"></label>
+                            <label>Arrondi (XAF)<input id="productImportRounding" type="number" min="1" step="1" value="500"></label>
+                        </div>
+                        <button type="button" class="product-import-price-btn" id="productImportPriceBtn">Calculer le prix →</button>
+                        <div class="product-import-price-result" id="productImportPriceResult" aria-live="polite"></div>
+                    </section>
+                    <section class="product-import-media" id="productImportMedia" hidden>
+                        <div class="product-import-media-head">
+                            <div>
+                                <div class="product-import-classification-label">☁️ Média persistant</div>
+                                <p id="productImportMediaNote">L’image sera envoyée à Cloudinary après le calcul du prix.</p>
+                            </div>
+                            <span class="product-import-pricing-currency">CLOUDINARY</span>
+                        </div>
+                        <button type="button" class="product-import-price-btn" id="productImportMediaBtn">Finaliser le média →</button>
+                    </section>
+                </section>
+
+                <div class="product-import-publish-note" id="productImportPublish">
+                    Les imports MEDIA_READY peuvent être publiés ici. Sous 90%, une approbation admin explicite est requise.
+                </div>
+                <div class="product-import-list-wrap">
+                    <div class="product-import-list-head">
+                        <h3>Imports récents</h3>
+                        <button type="button" class="product-import-refresh" id="productImportRefreshBtn">Actualiser</button>
+                    </div>
+                    <div class="product-import-list" id="productImportsList"></div>
+                </div>
+            </section>
+
             <h2 style="margin-bottom:1rem;color:var(--primary);">Ajouter un nouveau produit</h2>
             <div class="form-group"><label>Nom</label><input type="text" id="adminName" placeholder="Ex: Écouteurs Pro"></div>
 
