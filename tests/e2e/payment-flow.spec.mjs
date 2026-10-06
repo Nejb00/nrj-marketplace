@@ -13,8 +13,8 @@ const FAKE_PRODUCT = {
   popularity_score: 100,
   created_at: "2026-10-05T00:00:00.000Z",
   moq: 1,
-  tailles: "",
-  couleurs: "",
+  tailles: "37,38,39,40,41,42",
+  couleurs: "Blanc,Noir",
 };
 
 function jsonResponse(body, status = 200) {
@@ -190,8 +190,14 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
     await expect(page.locator("#productModal")).toHaveClass(/\bopen\b/);
     await page.locator("#addToCartStickyBtn").click();
     await expect(page.locator("#optionsPanel")).toHaveAttribute("aria-hidden", "false");
-    await expect(page.locator("#optionsColorOptions")).toContainText("Couleur non spécifiée");
-    await expect(page.locator("#optionsSizeOptions")).toContainText("Taille non spécifiée");
+    await expect(page.locator("#optionsColorOptions .option-color-card")).toHaveCount(2);
+    await expect(page.locator("#optionsSizeOptions .option-size-btn")).toHaveCount(6);
+    await expect(page.locator("#optionsSizeSocial")).toBeVisible();
+    await expect(page.locator("#sizeGuideBtn")).toBeVisible();
+    await page.locator('[data-option-color="Noir"]').click();
+    await page.locator('[data-option-size="40"]').click();
+    await page.locator("#optionsQtyPlus").click();
+    await expect(page.locator("#optionsQtyValue")).toHaveText("2");
     await page.locator("#optionsPanelAddBtn").click();
     await expect(page.locator("#cartAddedToast")).toBeVisible();
     await expect(page.locator("#cartAddedToast")).toContainText("Éligible à la livraison gratuite");
