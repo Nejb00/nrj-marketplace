@@ -88,6 +88,10 @@
       "githubSha": "ad37e2ffefbcb073f82a1131d08cc733e8571cfb",
       "driveMd5": "5f99c8a6fed04d55cc5d17fd6795baa0"
     },
+    ".github/workflows/product-import-auto-recovery.yml": {
+      "githubSha": "d3f8259420796f135559a7c89b7d1ee65c39d66a",
+      "driveMd5": "2162a6d12e2208570605299e85cffcdd"
+    },
     ".github/workflows/project-report.yml": {
       "githubSha": "ecb83787b5a573a8bdb2e98c88fc9e7afb72b0a9",
       "driveMd5": "3d59a7918f2df3994ea453de8878ec6f"
@@ -133,8 +137,8 @@
       "driveMd5": "1b421ecf2ae9904bee86dd2b89a98821"
     },
     "admin.html": {
-      "githubSha": "b6081df7f10dbd04e3274795abd0efff53662589",
-      "driveMd5": "9d4a9c1876f02791c7101cf9db36dea4"
+      "githubSha": "76764a7d7e9005bb0618ee3b9c256cb3a56af5e6",
+      "driveMd5": "7b36133d92fcc7be3fbe6fa62c1ec4c5"
     },
     "api/og-product.js": {
       "githubSha": "30ead57d3aa214884c0f14d491e01bd7cd1f8216",
@@ -281,8 +285,8 @@
       "driveMd5": "6aeb10458dec1bce5704e0f133d602e7"
     },
     "src/css/components/admin.css": {
-      "githubSha": "76ed77d8b7d8fc991e2770ce9868891798eab257",
-      "driveMd5": "c66e21c684df9c2cf4484517204713d6"
+      "githubSha": "1675f9c66de68f864981a5a5c3c07427bd25fa6f",
+      "driveMd5": "c185a458466aef2a29a06e74a6fcad9a"
     },
     "src/css/components/cart-admin.css": {
       "githubSha": "0718af5c355d9cd685d7f788b6a00f52856b4c59",
@@ -345,12 +349,16 @@
       "driveMd5": "73a5845bdd8ebd634c2c9db81668f662"
     },
     "src/js/admin-main.js": {
-      "githubSha": "237f3e50dfd6793aa3458c2f2e936d885f78acd4",
-      "driveMd5": "99b84610867cb74b594fa65b94219d1d"
+      "githubSha": "c110533443f35e497d14e2c69bb6f97bc359d196",
+      "driveMd5": "48ae1174fea02e8e0017e21a997f76f4"
     },
     "src/js/api/api.js": {
       "githubSha": "05cfa90d1e8b2d085a0d66215dbe2a8ef99f0d0e",
       "driveMd5": "404d6fef931a3f5a97587ab6469be48e"
+    },
+    "src/js/api/product-import-api.js": {
+      "githubSha": "831ecea8205cf65f44c89e9233533310b9451ac5",
+      "driveMd5": "2274d6e8d706207821910ef99f468a4a"
     },
     "src/js/core/config.js": {
       "githubSha": "fd1d229377bcbe0d5125961a1f2907464a13eaee",
@@ -383,6 +391,10 @@
     "src/js/features/admin/product-form.js": {
       "githubSha": "c56398451be340e509771ead602cc7a4fa59d7f1",
       "driveMd5": "b19b8bb0f4f1619846a16aa90f5de6e5"
+    },
+    "src/js/features/admin/product-import.js": {
+      "githubSha": "a1386de3d228dcef95ad9d31f9ed9e344d3240ec",
+      "driveMd5": "2366dbae2fbf8806c0099a3b6aa844f2"
     },
     "src/js/features/app/account-view.js": {
       "githubSha": "c2a912bf1b097fff79e15e36cb3e108692c66111",
@@ -700,9 +712,17 @@
       "githubSha": "c36cff0245d00b0da1bceada07609f291aea7476",
       "driveMd5": "ce5d33f4a308ef6e237bfa86e364dcb9"
     },
+    "supabase/functions/analyze-product-import/index.ts": {
+      "githubSha": "e3b62b661089520e7718e5a9958872f908b87b8c",
+      "driveMd5": "1f0269eb7ce7901703e4339f4cf2c3d3"
+    },
     "supabase/functions/chat-ai/index.ts": {
       "githubSha": "1e63b5716ae844062c4e5bdd70bccd34871091e0",
       "driveMd5": "ea1dbc984c6949001daa675a482eb1fc"
+    },
+    "supabase/functions/classify-product-import/index.ts": {
+      "githubSha": "209997b44b52d4c9bad5c1daabd6ffd883db6dd7",
+      "driveMd5": "40754a5334d0ed3be1b8ef5d4d4520f3"
     },
     "supabase/functions/create-order/README.md": {
       "githubSha": "f7655a64e25af93fc709700a2ea2319ce75848d9",
@@ -735,6 +755,26 @@
     "supabase/functions/payment-webhook/index.ts": {
       "githubSha": "d874c093161aa327bd204126178fc2c98fc42bce",
       "driveMd5": "c40c117be299c40a8dc32efbc3a99fd1"
+    },
+    "supabase/functions/price-product-import/index.ts": {
+      "githubSha": "fc119c7c2f11b970441c14d7cc470f4364905974",
+      "driveMd5": "fe9e8f86d5e75ff4a7a1e60ad7df2dc2"
+    },
+    "supabase/functions/process-product-import/index.ts": {
+      "githubSha": "c8745ef7cb88d67045b1c07364fc3d1322b59d5c",
+      "driveMd5": "45c9c383a25d58a408f2d53528db18e7"
+    },
+    "supabase/functions/publish-product-import/index.ts": {
+      "githubSha": "a9d0d4ea83aee3c530cebca9f3e9f300de05ed34",
+      "driveMd5": "693967c33f9b035eb21cf7688d4a2594"
+    },
+    "supabase/functions/recover-product-imports/index.ts": {
+      "githubSha": "5de4c0c2ca8a3095dcb541bc925be524aebe4273",
+      "driveMd5": "aa3d9eb72fba14215f620314078e17bd"
+    },
+    "supabase/functions/upload-product-import-media/index.ts": {
+      "githubSha": "51f738bb5d88983e428065184fa6c989af684d12",
+      "driveMd5": "97d377aa585ebff2b0c5c19500083834"
     },
     "supabase/migrations/20261002192115_harden_rls_and_fk_indexes.sql": {
       "githubSha": "5f3706cba2e0c63b5897bc894e336b8cb5c5ac61",
@@ -896,6 +936,42 @@
       "githubSha": "29cd591716d927ab6076a3619c05cc67fc63c34a",
       "driveMd5": "f49d199e9e87eb419a44fdabbafed496"
     },
+    "test/product-import-auto-recovery.test.js": {
+      "githubSha": "9b094beedaf3c0e9f7dc142bcb790a974ccf3a06",
+      "driveMd5": "0759b1ac1a92fdd6a4ed08dc4b4ffeac"
+    },
+    "test/product-import-classification.test.js": {
+      "githubSha": "f3836fb58efe045dad1a35c4f169be9671b63328",
+      "driveMd5": "91ce69a30c44b22bbd0793f9c3bc0bc2"
+    },
+    "test/product-import-media.test.js": {
+      "githubSha": "2078e24b9f6e26a11234a7ad78eef2b17549d5f9",
+      "driveMd5": "335447a42ac44bf2374bdc3d242d2abd"
+    },
+    "test/product-import-orchestrator.test.js": {
+      "githubSha": "648c31f08e86b986f1943f9d125134c968c0376c",
+      "driveMd5": "f38d72267f7c829ffd83e283b4c4d01c"
+    },
+    "test/product-import-pricing.test.js": {
+      "githubSha": "8bddc95ca7890bfb0d9237cb7c93538cc9bfdb3f",
+      "driveMd5": "f7a42cb9ed22cc794a086cf1a0b2eff2"
+    },
+    "test/product-import-publisher.test.js": {
+      "githubSha": "be7a5d5ffcaaedc0541e6e8f7a474afb44bfe135",
+      "driveMd5": "859c7c3694e5fb176c7640745954a096"
+    },
+    "test/product-import-security.test.js": {
+      "githubSha": "58a22a485d3d74003f53832f9738bdb9a9230cdb",
+      "driveMd5": "8e794211f66daefaed5024d40045bcad"
+    },
+    "test/product-import-ui.test.js": {
+      "githubSha": "c5ce27547b17e92875ae63e4187be95617767dec",
+      "driveMd5": "8e81543d89715095e7887bf94a83f022"
+    },
+    "test/product-import-vision.test.js": {
+      "githubSha": "23c0c8ecf4dc4e2d417a7988ed87c4890233357d",
+      "driveMd5": "fa7f8945109c0390c0b6a218a47f0ed2"
+    },
     "test/project-report-routing.test.js": {
       "githubSha": "2daf4ccffdb6739aa05d3f0c956d5cb47a8c2fb9",
       "driveMd5": "d3ea51f4b3bc309d4709dd6d22041767"
@@ -945,8 +1021,8 @@
       "driveMd5": "1acf90963ce71e8dcfdbffacfd67f068"
     },
     "vercel.json": {
-      "githubSha": "b16eb60657eb498912d183f20230eb5401ace826",
-      "driveMd5": "b8658470ca689642450ef625326f37f2"
+      "githubSha": "2613076c0c5cd1ab02256edbc36b22c6933f6916",
+      "driveMd5": "02fad2225431d3bcafb3522d78049a51"
     },
     "vite.config.js": {
       "githubSha": "610c4be52446afa97857f6a11b16f6ebb15c2d3d",
@@ -961,5 +1037,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-06T02:24:57.475Z"
+  "updatedAt": "2026-10-06T07:17:06.544Z"
 }
