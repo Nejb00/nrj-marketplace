@@ -1,15 +1,13 @@
 name: Deploy Supabase Edge Functions
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "supabase/functions/payment-openpay/**"
-      - "supabase/config.toml"
-      - ".github/workflows/deploy-supabase-edge-functions.yml"
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
   workflow_dispatch:
 
-# Le workflow lit le dépôt et déploie uniquement la fonction explicitement ciblée.
+# Le workflow ne déploie automatiquement qu'après une CI push sur main réussie.
+# Le lancement manuel reste disponible comme voie de maintenance contrôlée.
 permissions:
   contents: read
 
@@ -20,6 +18,13 @@ concurrency:
 jobs:
   deploy-payment-openpay:
     name: Deploy payment-openpay
+    if: >-
+      ${{ github.event_name == 'workflow_dispatch' ||
+          (
+            github.event.workflow_run.conclusion == 'success' &&
+            github.event.workflow_run.event == 'push' &&
+            github.event.workflow_run.head_branch == 'main'
+          ) }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -28,10 +33,10 @@ jobs:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
     steps:
-      - name: Checkout de main
+      - name: Checkout du commit validé
         uses: actions/checkout@v7
         with:
-          ref: main
+          ref: ${{ github.event_name == 'workflow_dispatch' && 'main' || github.event.workflow_run.head_sha }}
           fetch-depth: 1
 
       - name: Vérifier le secret de déploiement
@@ -65,4 +70,5 @@ jobs:
             echo "- Projet : `$PROJECT_ID`"
             echo "- Mode : API Supabase"
             echo "- JWT : conservé via `supabase/config.toml`"
+            echo "- Déclencheur : CI `main` réussie ou lancement manuel"
           } >> "$GITHUB_STEP_SUMMARY"
