@@ -55,20 +55,52 @@ jobs:
           echo "Bubblewrap config pre-seeded:"
           cat "${HOME}/.bubblewrap/config.json"
 
-      - name: Validate PWA for TWA (PSI with retries)
+      - name: Validate PWA for TWA (PSI, fallback Lighthouse local)
         run: |
-          for i in 1 2 3 4 5; do
-            echo "── Validation PWA : tentative $i/5 ──"
-            if npx --yes @bubblewrap/cli@latest validate --url="$PWA_URL"; then
-              echo "PWA validée pour TWA ✓"
-              exit 0
-            fi
-            code=$?
-            echo "Échec (code $code — souvent 429 quota PageSpeed Insights sans clé). Nouvelle tentative dans 45s…"
-            sleep 45
-          done
-          echo "Validation PWA échouée après 5 tentatives."
-          exit 1
+          set +e
+          npx --yes @bubblewrap/cli@latest validate --url="$PWA_URL" 2>&1 | tee /tmp/psi.log
+          psi_ok=${PIPESTATUS[0]}
+          set -e
+          if [ "$psi_ok" = "0" ]; then
+            echo "PWA validée par bubblewrap via PageSpeed Insights ✓"
+            exit 0
+          fi
+          if grep -q "status 429" /tmp/psi.log; then
+            echo "⚠️ PSI sans clé = quota 429 Google (limitation d'infra connue en CI)."
+            echo "Bascule : audit Lighthouse LOCAL — le même moteur que PSI exécute côté serveur."
+            echo "Critères bubblewrap répliqués : performance ≥ 80 ET PWA = 1 (mobile)."
+          else
+            echo "Échec bubblewrap validate pour une raison autre que 429 :"
+            cat /tmp/psi.log
+            exit 1
+          fi
+          npx --yes lighthouse@12 "$PWA_URL" \
+            --only-categories=performance,pwa \
+            --form-factor=mobile \
+            --screenEmulation=mobile \
+            --chrome-flags="--headless=new --no-sandbox" \
+            --quiet \
+            --output=json --output-path=/tmp/lighthouse.json
+          python3 - <<'PY'
+          import json, sys
+          r = json.load(open('/tmp/lighthouse.json'))
+          cats = r.get('categories', {})
+          if 'pwa' not in cats:
+              print('Catégorie PWA absente du rapport Lighthouse — audit impossible'); sys.exit(1)
+          perf = cats['performance']['score']
+          pwa = cats['pwa']['score']
+          print(f"performance = {perf*100:.0f}/100 (requis >= 80)")
+          print(f"pwa         = {pwa} (requis = 1)")
+          if pwa is not None and pwa < 1:
+              print("Audits PWA en échec :")
+              for ref in cats['pwa'].get('auditRefs', []):
+                  a = r['audits'].get(ref['id'], {})
+                  if a.get('score') is not None and a.get('score', 1) < 1:
+                      print(f"  - {ref['id']}: {a.get('title','')}")
+          assert perf is not None and perf >= 0.8, "score performance < 80"
+          assert pwa == 1, "score PWA < 1"
+          print("Critères TWA (bubblewrap) satisfaits — validation par Lighthouse local ✓")
+          PY
 
       - name: Create ephemeral CI signing key
         run: |
