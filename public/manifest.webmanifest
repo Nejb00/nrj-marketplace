@@ -5,6 +5,7 @@
   "lang": "fr",
   "start_url": "/",
   "scope": "/",
+  "id": "/",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone"],
   "orientation": "any",
