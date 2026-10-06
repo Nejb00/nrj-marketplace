@@ -72,6 +72,10 @@
       "githubSha": "7a13aada8e437d76f01f9a56f73aea4a4b139e53",
       "driveMd5": "8c9bd72d39c67c3052c826eea0f363be"
     },
+    ".github/workflows/payment-e2e.yml": {
+      "githubSha": "3918668a14f708f8be58b5ebef8f2b5f1b423cf8",
+      "driveMd5": "16e51e263ca5782ff8bd89f774096f77"
+    },
     ".github/workflows/pr-labeler.yml": {
       "githubSha": "dd9c268814bfa6b41054f6ec4d738fca19bd80d3",
       "driveMd5": "8df378c7b1643a3fa991881b794d6ca8"
@@ -159,6 +163,10 @@
     "package.json": {
       "githubSha": "b302b6ed9b8b390a3035fc5c16a9259c3787dc16",
       "driveMd5": "fa5d0727208fdeea87e7c849816ac3b5"
+    },
+    "playwright.config.mjs": {
+      "githubSha": "65383b2e1a0062c186f49e5319dc3d19a59dd071",
+      "driveMd5": "61106a9f1da09eaebda0997028effa40"
     },
     "public/Hr": {
       "githubSha": "755d0629ab9b927d669f2476729886bf48958b47",
@@ -341,8 +349,8 @@
       "driveMd5": "404d6fef931a3f5a97587ab6469be48e"
     },
     "src/js/core/config.js": {
-      "githubSha": "5331f8f1184f668bb9094af6a5b001fe731c4927",
-      "driveMd5": "9ee2a4a10f4b5ae3eec7e4e66f6f18e6"
+      "githubSha": "a2ad96a0b2fb30f5db197d712cd3ea3064f66dde",
+      "driveMd5": "5f5e1fb436b1c7f6cace7f62f9e4afe3"
     },
     "src/js/core/state.js": {
       "githubSha": "c956b3adfff49604c58997ccc4450a2e7514bce7",
@@ -848,6 +856,14 @@
       "githubSha": "fd38d2e151c9908d6efb56436fc715168d822228",
       "driveMd5": "6f2d974d460c2bf7f45f6130027bdf86"
     },
+    "test/payment-e2e-base-schema.sql": {
+      "githubSha": "09f2896424bdd3f6e37d52fdc564c3d96cb0e76a",
+      "driveMd5": "8d1eb08dfe0db75e03405fcf45efc752"
+    },
+    "test/payment-e2e.sql": {
+      "githubSha": "416cb85bc479356f2814d713de0702f875a36d2b",
+      "driveMd5": "a7d7cf13c0266b695fe75c29bc434337"
+    },
     "test/payment-flow-dry-run.test.js": {
       "githubSha": "163cb7f1d40a9d566323726d128aea33563a5d19",
       "driveMd5": "d95ffc60c4339e998167357129fcbc4d"
@@ -912,6 +928,10 @@
       "githubSha": "c01e4524748114cc42a298fc27b06a86d2605d7b",
       "driveMd5": "d8af5109a8fb2ebc65c4a4cf2964474e"
     },
+    "tests/e2e/payment-flow.spec.mjs": {
+      "githubSha": "e9b8243bf94df7b1b3efe0a0987839c05c5003b3",
+      "driveMd5": "8eeef4f9b05510e5e8db1b2d94732ac5"
+    },
     "tests/e2e/production.spec.mjs": {
       "githubSha": "95893bd4efcee16eab126e51b69b0a1070a2334d",
       "driveMd5": "1acf90963ce71e8dcfdbffacfd67f068"
@@ -933,5 +953,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-06T00:45:13.355Z"
+  "updatedAt": "2026-10-06T00:48:35.408Z"
 }
