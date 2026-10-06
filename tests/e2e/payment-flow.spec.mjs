@@ -15,6 +15,10 @@ const FAKE_PRODUCT = {
   moq: 1,
   tailles: "37,38,39,40,41,42",
   couleurs: "Blanc,Noir",
+  variant_popularity: {
+    colors: { Noir: 100 },
+    sizes: { "40": 100 },
+  },
 };
 
 function jsonResponse(body, status = 200) {
@@ -194,8 +198,10 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
     await expect(page.locator("#optionsSizeOptions .option-size-btn")).toHaveCount(6);
     await expect(page.locator("#optionsSizeSocial")).toBeVisible();
     await expect(page.locator("#sizeGuideBtn")).toBeVisible();
-    await page.locator('[data-option-color="Noir"]').click();
-    await page.locator('[data-option-size="40"]').click();
+    await expect(page.locator('[data-option-color="Noir"]')).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator('[data-option-color="Noir"]')).toContainText("🔥 Populaire");
+    await expect(page.locator('[data-option-size="40"]')).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator('[data-option-size="40"]')).toContainText("🔥 Populaire");
     await page.locator("#optionsQtyPlus").click();
     await expect(page.locator("#optionsQtyValue")).toHaveText("2");
     await page.locator("#optionsBenefitsTitle").scrollIntoViewIfNeeded();
