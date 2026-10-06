@@ -4,12 +4,11 @@
 
 import { state } from '../../core/state.js';
 import { addToCart, changeQty } from '../../services/cart-actions.js';
-import { showToast } from '../../utils/dom-helpers.js';
+import { showToast, showCartAddedToast } from '../../utils/dom-helpers.js';
 import { escapeHtml } from '../../utils/escape-html.js';
 import { thumbImg } from '../../utils/images.js';
 import { WHATSAPP_NUMBER, POPULAR_THRESHOLD } from '../../core/config.js';
 import { modalCtx } from './modal-state.js';
-import { showCartAddedToast } from '../../utils/dom-helpers.js';
 
 const els = {
     panel: () => document.getElementById('optionsPanel'),
@@ -391,7 +390,16 @@ async function validateAndAdd() {
     if (!p) return;
 
     try {
-        const requestedQty = Math.max(1, Number(modalCtx.currentQty) || 1);
+        if (modalCtx.couleurs.length && !modalCtx.sC) {
+            showToast('⚠️ Choisis une couleur');
+            return;
+        }
+        if (modalCtx.tailles.length && !modalCtx.sT) {
+            showToast('⚠️ Choisis une taille');
+            return;
+        }
+
+        const requestedQty = Math.max(Number(modalCtx.moq) || 1, Number(modalCtx.currentQty) || 1);
         await addToCart(p.id, modalCtx.sT || '', modalCtx.sC || '', els.add(), requestedQty, { silent: true });
         showCartAddedToast();
 
