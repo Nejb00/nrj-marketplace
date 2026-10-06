@@ -1,0 +1,94 @@
+name: Payment E2E
+
+on:
+  pull_request:
+    paths:
+      - "index.html"
+      - "src/**"
+      - "supabase/**"
+      - "tests/e2e/payment-flow.spec.mjs"
+      - "playwright.config.mjs"
+      - ".github/workflows/payment-e2e.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: payment-e2e-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  payment-e2e:
+    name: Payment E2E (safe simulation)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: nrj_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d nrj_e2e"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      VITE_PAYMENT_E2E_MODE: "true"
+    steps:
+      - name: Checkout du dépôt
+        uses: actions/checkout@v7
+
+      - name: Installation de Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Installation des dépendances
+        run: npm install --no-save --package-lock=false --ignore-scripts
+
+      - name: Installation du client PostgreSQL
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Validation SQL PostgreSQL transactionnelle
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          PGDATABASE: nrj_e2e
+        run: |
+          set -euo pipefail
+          psql -v ON_ERROR_STOP=1 -f test/payment-e2e-base-schema.sql
+          for migration in             supabase/migrations/20261005100000_create_payment_persistence.sql             supabase/migrations/20261005134207_harden_payment_order_consistency.sql             supabase/migrations/20261005140232_harden_payment_reconciliation.sql             supabase/migrations/20261005153000_apply_payment_provider_event.sql             supabase/migrations/20261005161000_enforce_payment_order_state_machine.sql             supabase/migrations/20261005165000_payment_audit_observability.sql             supabase/migrations/20261005171000_harden_checkout_idempotency.sql
+          do
+            echo "Applying $migration"
+            psql -v ON_ERROR_STOP=1 -f "$migration"
+          done
+          psql -v ON_ERROR_STOP=1 -f test/payment-e2e.sql
+      - name: Installation de Playwright
+        run: npm install --no-save --package-lock=false --ignore-scripts @playwright/test@1.63.0
+
+      - name: Installation de Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Build E2E
+        run: npm run build
+
+      - name: Test E2E paiement complet
+        run: npx playwright test tests/e2e/payment-flow.spec.mjs --config=playwright.config.mjs --reporter=list
+
+      - name: Publier les rapports Playwright
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: payment-e2e-report
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
