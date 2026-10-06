@@ -7,7 +7,9 @@ import { addToCart, changeQty } from '../../services/cart-actions.js';
 import { showToast } from '../../utils/dom-helpers.js';
 import { escapeHtml } from '../../utils/escape-html.js';
 import { thumbImg } from '../../utils/images.js';
+import { WHATSAPP_NUMBER } from '../../core/config.js';
 import { modalCtx } from './modal-state.js';
+import { showCartAddedToast } from '../../utils/dom-helpers.js';
 
 const els = {
     panel: () => document.getElementById('optionsPanel'),
@@ -27,6 +29,8 @@ const els = {
     addedVariant: () => document.getElementById('stickyAddedVariant'),
     addedMain: () => document.getElementById('stickyAddedMain'),
     qtyHint: () => document.getElementById('optionsQtyHint'),
+    sizeSocial: () => document.getElementById('optionsSizeSocial'),
+    sizeGuide: () => document.getElementById('sizeGuideBtn'),
     stickyMinus: () => document.getElementById('stickyQtyMinus'),
     stickyPlus: () => document.getElementById('stickyQtyPlus'),
 };
@@ -88,7 +92,7 @@ function variantLabel() {
 }
 
 function setSheetQty(next) {
-    const qty = Math.max(1, Math.floor(Number(next) || 1));
+    const qty = Math.max(Number(modalCtx.moq) || 1, Math.floor(Number(next) || 1));
     modalCtx.currentQty = qty;
     const qtyEl = els.qty();
     if (qtyEl) qtyEl.textContent = String(qty);
@@ -158,9 +162,18 @@ function renderSizes() {
     if (!container) return;
 
     const sizes = Array.isArray(modalCtx.tailles) ? modalCtx.tailles : [];
+    const social = els.sizeSocial();
+
     if (!sizes.length) {
         container.innerHTML = '<p class="options-empty" role="status">Taille non spécifiée — ajout possible sans taille.</p>';
+        if (social) social.hidden = true;
         return;
+    }
+
+    if (social) {
+        const popularSize = sizes.includes('40') ? '40' : sizes[Math.floor(sizes.length / 2)] || sizes[0];
+        social.textContent = `ℹ️ 85% des clients commandent du ${popularSize}`;
+        social.hidden = false;
     }
 
     container.innerHTML = sizes.map((size) => `
@@ -218,6 +231,9 @@ function renderPanel() {
     renderColors();
     renderSizes();
     renderQuantity();
+
+    const guide = els.sizeGuide();
+    if (guide) guide.hidden = !modalCtx.tailles.length;
 }
 
 function setStickyAddedState(addedQty = getCartQty()) {
@@ -306,7 +322,8 @@ async function validateAndAdd() {
 
     try {
         const requestedQty = Math.max(1, Number(modalCtx.currentQty) || 1);
-        await addToCart(p.id, modalCtx.sT || '', modalCtx.sC || '', els.add(), requestedQty);
+        await addToCart(p.id, modalCtx.sT || '', modalCtx.sC || '', els.add(), requestedQty, { silent: true });
+        showCartAddedToast();
 
         const actualQty = getCartQty();
         modalCtx.stickyAddedQty = actualQty;
@@ -410,6 +427,13 @@ function setupStaticListeners() {
     els.add()?.addEventListener('click', validateAndAdd);
     els.qtyMinus()?.addEventListener('click', () => setSheetQty((modalCtx.currentQty || 1) - 1));
     els.qtyPlus()?.addEventListener('click', () => setSheetQty((modalCtx.currentQty || 1) + 1));
+
+    els.sizeGuide()?.addEventListener('click', () => {
+        const p = modalCtx.p;
+        if (!p) return;
+        const message = `Bonjour NRJ Marketplace, pouvez-vous m'aider avec le guide des tailles pour "${p.name}" ?`;
+        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
+    });
 
     els.idle()?.addEventListener('click', () => openOptionsPanel(els.idle()));
     els.stickyMinus()?.addEventListener('click', (event) => {
