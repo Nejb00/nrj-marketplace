@@ -268,6 +268,14 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
     await expect(page.locator("#cartRecommendationsTitle")).toContainText("Souvent achetés ensemble");
     await expect(page.locator(".cart-reco-card")).toHaveCount(1);
     await expect(page.locator(".cart-reco-add")).toBeVisible();
+
+    await page.locator(".cart-reco-add").click();
+    await expect(page.locator(".cart-item")).toHaveCount(2);
+    const secondRemove = page.locator(".cart-item").nth(1).locator(".remove-item-btn");
+    await secondRemove.click();
+    await expect(page.locator(".cart-item").nth(1)).toHaveClass(/is-removing/);
+    await expect(page.locator(".cart-item")).toHaveCount(1);
+
     await expect(page.locator("#checkoutBtn")).toBeEnabled();
 
     await page.locator("#checkoutBtn").click();

@@ -19,7 +19,7 @@ export function openCartPanel(trigger) {
 }
 
 export function closeCartPanel() {
-  closeCartPanelService();
+  closeCartPanelService({ restoreFocus: false });
 }
 
 export function markNavActive(navTarget) {
