@@ -243,6 +243,21 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
     await expect(page.locator("#cartPanel")).toHaveClass(/\bopen\b/);
     await expect(page.locator("#cartPanel")).toHaveAttribute("aria-hidden", "false");
     await expect(page.locator(".cart-sheet-handle")).toBeVisible();
+    await expect(page.locator("#cartPanelTitle")).toHaveText("Panier (2)");
+    await expect(page.locator("#cartMenuBtn")).toBeVisible();
+    await expect(page.locator("#cartMenuBtn")).toHaveAttribute("aria-expanded", "false");
+
+    await page.locator("#cartMenuBtn").click();
+    await expect(page.locator("#cartMenu")).toBeVisible();
+    await expect(page.locator("#cartMenu")).toContainText("Partager le panier");
+    await expect(page.locator("#cartMenu")).toContainText("Supprimer la sélection");
+    await page.keyboard.press("Escape");
+    await expect(page.locator("#cartMenu")).toBeHidden();
+
+    await expect(page.locator(".cart-tabs")).toBeVisible();
+    await expect(page.locator(".cart-tab").first()).toContainText("Tout (2)");
+    await expect(page.locator(".cart-tab").nth(1)).toContainText("Sélectionné (2)");
+    await expect(page.locator("#checkoutBtn")).toContainText("Commander (2)");
 
     const cartFocusInside = await page.evaluate(() => Boolean(document.activeElement?.closest("#cartPanel")));
     expect(cartFocusInside).toBe(true);
@@ -268,6 +283,7 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
     await expect(page.locator("#cartRecommendationsTitle")).toContainText("Souvent achetés ensemble");
     await expect(page.locator(".cart-reco-card")).toHaveCount(1);
     await expect(page.locator(".cart-reco-add")).toBeVisible();
+    await expect(page.locator(".cart-footer-reassurance")).toContainText("MOQ vérifié");
 
     await page.locator(".cart-reco-add").click();
     await expect(page.locator(".cart-item")).toHaveCount(2);
