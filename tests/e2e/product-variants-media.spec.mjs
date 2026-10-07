@@ -180,7 +180,7 @@ test("fiche produit V2 → couleur → galerie groupée → panier conserve vari
   ).toBe(17);
 
   await expect(page.locator("#modalCarouselScroll img").first()).toHaveAttribute(
-    "src",
+    "data-full",
     "https://example.com/white-1.jpg"
   );
 
