@@ -8,7 +8,7 @@ CREATE OR REPLACE FUNCTION public.save_product_variant_graph(
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, pg_temp
+SET search_path = ''
 AS $function$
 DECLARE
   v_variant_id uuid;
@@ -145,7 +145,7 @@ CREATE OR REPLACE FUNCTION public.delete_product_variant(
 RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, pg_temp
+SET search_path = ''
 AS $function$
 BEGIN
   IF NOT public.is_chat_admin() THEN
