@@ -557,6 +557,21 @@
     gap: 0.32rem;
     transition: border-color 0.15s ease, transform 0.15s ease, background 0.15s ease;
 }
+.option-color-card.is-unavailable,
+.option-color-card:disabled,
+.option-size-btn.is-unavailable,
+.option-size-btn:disabled {
+    opacity: 0.34;
+    cursor: not-allowed;
+    filter: grayscale(0.35);
+}
+.option-color-card.is-unavailable:active,
+.option-color-card:disabled:active,
+.option-size-btn.is-unavailable:active,
+.option-size-btn:disabled:active {
+    transform: none;
+}
+
 .option-color-card.selected {
     border-color: var(--primary);
     background: rgba(255,140,66,0.12);
