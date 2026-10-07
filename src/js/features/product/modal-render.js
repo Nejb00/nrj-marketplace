@@ -48,7 +48,8 @@ export async function openProductModal(pid) {
     // pré-sélectionner une variante uniquement si son score est explicitement disponible.
     modalCtx.sT = '';
     modalCtx.sC = '';
-    modalCtx.sVariantId = null;
+    const initialVariant = getActiveProductVariants(p)[0] || null;
+    modalCtx.sVariantId = initialVariant?.id || null;
     modalCtx.moq = Number(p.moq) || 1;
     modalCtx.uPrice = Number(p.price) || 0;
     modalCtx.colorQtys = {};
