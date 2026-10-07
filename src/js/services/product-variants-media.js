@@ -84,6 +84,129 @@ export function getProductGalleryMedia(product, variantId = null) {
     return collectLegacyProductMedia(product);
 }
 
+export function getActiveProductVariants(product) {
+    const variants = Array.isArray(product?.variants)
+        ? product.variants.map(normalizeProductVariant).filter((variant) => variant && variant.active)
+        : [];
+    const realVariants = variants.filter((variant) => variant.variant_key !== 'legacy');
+    return realVariants.length ? realVariants : [];
+}
+
+function unique(values) {
+    return [...new Set(values.map(cleanText).filter(Boolean))];
+}
+
+export function getVariantOptionValues(product) {
+    const variants = getActiveProductVariants(product);
+    if (!variants.length) {
+        return {
+            colors: cleanText(product?.couleurs).split(',').map(cleanText).filter(Boolean),
+            sizes: cleanText(product?.tailles).split(',').map(cleanText).filter(Boolean)
+        };
+    }
+
+    return {
+        colors: unique(variants.map((variant) => variant.color)),
+        sizes: unique(variants.map((variant) => variant.size))
+    };
+}
+
+function variantMatches(variant, color, size) {
+    const wantedColor = cleanText(color);
+    const wantedSize = cleanText(size);
+    if (wantedColor && variant.color !== wantedColor) return false;
+    if (wantedSize && variant.size !== wantedSize) return false;
+    return true;
+}
+
+export function resolveProductVariant(product, color = '', size = '') {
+    const variants = getActiveProductVariants(product);
+    if (!variants.length) return null;
+
+    const wantedColor = cleanText(color);
+    const wantedSize = cleanText(size);
+
+    if (wantedColor && wantedSize) {
+        const exact = variants.find((variant) => variantMatches(variant, wantedColor, wantedSize));
+        if (exact) return exact;
+    }
+
+    if (wantedColor) {
+        const colorOnly = variants.find((variant) =>
+            variant.color === wantedColor && !variant.size
+        );
+        if (colorOnly) return colorOnly;
+
+        const firstColor = variants.find((variant) => variant.color === wantedColor);
+        if (firstColor) return firstColor;
+    }
+
+    if (wantedSize) {
+        const sizeOnly = variants.find((variant) =>
+            variant.size === wantedSize && !variant.color
+        );
+        if (sizeOnly) return sizeOnly;
+
+        const firstSize = variants.find((variant) => variant.size === wantedSize);
+        if (firstSize) return firstSize;
+    }
+
+    return variants[0] || null;
+}
+
+export function getVariantMedia(product, variant) {
+    if (!variant) return [];
+
+    const media = Array.isArray(product?.media)
+        ? product.media.map(normalizeProductMedia).filter(Boolean)
+        : [];
+
+    return media
+        .filter((item) => String(item.variant_id) === String(variant.id))
+        .sort((a, b) => a.sort_order - b.sort_order);
+}
+
+export function getProductGalleryForSelection(product, color = '', size = '') {
+    const variants = getActiveProductVariants(product);
+    if (!variants.length) return getProductGalleryMedia(product);
+
+    const selected = resolveProductVariant(product, color, size);
+    if (!selected) return getProductGalleryMedia(product);
+
+    // Pour un produit à variantes couleur+taille, une sélection de couleur
+    // doit pouvoir afficher toute la galerie de cette couleur même si chaque
+    // taille possède sa propre ligne de variante.
+    const wantedColor = cleanText(color);
+    if (wantedColor && !cleanText(size)) {
+        const sameColor = variants
+            .filter((variant) => variant.color === wantedColor)
+            .sort((a, b) => a.sort_order - b.sort_order);
+
+        const byColor = sameColor
+            .flatMap((variant) => getVariantMedia(product, variant))
+            .sort((a, b) => a.sort_order - b.sort_order);
+
+        if (byColor.length) {
+            const seen = new Set();
+            return byColor.filter((item) => {
+                if (seen.has(item.url)) return false;
+                seen.add(item.url);
+                return true;
+            });
+        }
+    }
+
+    const selectedMedia = getVariantMedia(product, selected);
+    if (selectedMedia.length) return selectedMedia;
+
+    return getProductGalleryMedia(product, selected.id);
+}
+
+export function getVariantThumbnail(product, color = '', size = '') {
+    const gallery = getProductGalleryForSelection(product, color, size);
+    return gallery.find((item) => item.media_type === 'image') || gallery[0] || null;
+}
+
 export async function hydrateProductVariantsMedia(product) {
     if (!product?.id) return product;
 
