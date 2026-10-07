@@ -1,0 +1,301 @@
+name: NRJ Merge Gate
+
+# Security model:
+# - workflow_run executes this workflow from the default branch, so a PR cannot
+#   replace the gate logic on its own head.
+# - This workflow never checks out or executes PR code.
+# - Upstream validation is trusted only when the workflow path is exact and the
+#   PR did not modify any protected validation workflow.
+on:
+  workflow_run:
+    workflows:
+      - CI
+      - PR Quality
+      - CodeQL
+      - Dependency Review
+      - Payment E2E
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number to audit manually"
+        required: true
+        type: number
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+
+concurrency:
+  group: nrj-merge-gate-${{ github.event.workflow_run.head_sha || github.event.inputs.pr_number }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: NRJ Merge Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Évaluer les contrôles de fusion depuis main
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        with:
+          script: |
+            const workflowPaths = new Map([
+              ['CI', '.github/workflows/ci.yml'],
+              ['PR Quality', '.github/workflows/pr-quality.yml'],
+              ['CodeQL', '.github/workflows/codeql.yml'],
+              ['Dependency Review', '.github/workflows/dependency-review.yml'],
+              ['Payment E2E', '.github/workflows/payment-e2e.yml'],
+            ]);
+
+            const protectedWorkflowPaths = new Set(workflowPaths.values());
+
+            function sleep(ms) {
+              return new Promise((resolve) => setTimeout(resolve, ms));
+            }
+
+            function newestRun(runs, name, path, sha) {
+              return runs
+                .filter((run) =>
+                  run &&
+                  run.name === name &&
+                  run.path === path &&
+                  run.head_sha === sha &&
+                  run.event === 'pull_request'
+                )
+                .sort((a, b) =>
+                  String(b.updated_at || b.created_at || '').localeCompare(
+                    String(a.updated_at || a.created_at || '')
+                  )
+                )[0];
+            }
+
+            async function resolvePr() {
+              if (context.eventName === 'workflow_dispatch') {
+                const number = Number(context.payload.inputs?.pr_number);
+                if (!Number.isInteger(number) || number <= 0) {
+                  core.setFailed('Numéro de PR invalide.');
+                  return null;
+                }
+
+                const { data } = await github.rest.pulls.get({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: number,
+                });
+                return data;
+              }
+
+              const workflowRun = context.payload.workflow_run;
+              const sha = workflowRun?.head_sha;
+
+              if (!sha) {
+                core.setFailed('workflow_run.head_sha absent.');
+                return null;
+              }
+
+              const prs = await github.paginate(
+                github.rest.repos.listPullRequestsAssociatedWithCommit,
+                {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  commit_sha: sha,
+                  per_page: 100,
+                }
+              );
+
+              const candidates = prs
+                .filter((pr) =>
+                  pr?.base?.ref === 'main' &&
+                  pr?.base?.repo?.full_name === context.repo.owner + '/' + context.repo.repo &&
+                  pr?.head?.sha === sha &&
+                  pr?.state === 'open'
+                )
+                .sort((a, b) => b.number - a.number);
+
+              if (!candidates.length) {
+                core.notice(`Aucune PR ouverte vers main associée au commit ${sha}. Le Gate n'a rien à valider.`);
+                return null;
+              }
+
+              return candidates[0];
+            }
+
+            const pr = await resolvePr();
+            if (!pr) {
+              return;
+            }
+
+            if (pr.base.ref !== 'main') {
+              core.setFailed(`PR #${pr.number}: branche cible inattendue (${pr.base.ref}).`);
+              return;
+            }
+
+            const sha = pr.head.sha;
+
+            const files = await github.paginate(
+              github.rest.pulls.listFiles,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                per_page: 100,
+              }
+            );
+
+            const changedPaths = files.map((file) => file.filename);
+            const modifiedProtectedWorkflows = changedPaths.filter((path) =>
+              protectedWorkflowPaths.has(path)
+            );
+
+            if (modifiedProtectedWorkflows.length) {
+              core.summary
+                .addHeading('NRJ Merge Gate')
+                .addRaw(
+                  [
+                    `❌ REJECTED — PR #${pr.number}`,
+                    '',
+                    'La PR modifie un workflow de validation protégé.',
+                    '',
+                    modifiedProtectedWorkflows.map((path) => `- ${path}`).join('\\n'),
+                    '',
+                    'Ces workflows restent des sources de confiance pour le Merge Gate et ne peuvent pas être redéfinis par la PR elle-même.',
+                  ].join('\\n')
+                )
+                .write();
+
+              core.setFailed('Workflow de validation protégé modifié.');
+              return;
+            }
+
+            const paymentE2EExpected = changedPaths.some((path) =>
+              path === 'index.html' ||
+              path.startsWith('src/') ||
+              path.startsWith('supabase/') ||
+              path === 'tests/e2e/payment-flow.spec.mjs' ||
+              path === 'playwright.config.mjs' ||
+              path === '.github/workflows/payment-e2e.yml'
+            );
+
+            async function listRuns() {
+              const { data } = await github.rest.actions.listWorkflowRunsForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                head_sha: sha,
+                per_page: 100,
+              });
+              return data.workflow_runs || [];
+            }
+
+            const required = [
+              ['CI', workflowPaths.get('CI')],
+              ['PR Quality', workflowPaths.get('PR Quality')],
+              ['CodeQL', workflowPaths.get('CodeQL')],
+              ['Dependency Review', workflowPaths.get('Dependency Review')],
+            ];
+
+            if (paymentE2EExpected) {
+              required.push(['Payment E2E', workflowPaths.get('Payment E2E')]);
+            }
+
+            const deadline = Date.now() + 12 * 60 * 1000;
+            let result = null;
+
+            while (Date.now() <= deadline) {
+              const runs = await listRuns();
+
+              const states = required.map(([name, path]) => {
+                const run = newestRun(runs, name, path, sha);
+
+                if (!run) {
+                  return {
+                    name,
+                    path,
+                    state: 'missing',
+                    conclusion: null,
+                  };
+                }
+
+                if (run.status !== 'completed') {
+                  return {
+                    name,
+                    path,
+                    state: run.status || 'pending',
+                    conclusion: null,
+                  };
+                }
+
+                return {
+                  name,
+                  path,
+                  state: 'completed',
+                  conclusion: run.conclusion || 'unknown',
+                  run_id: run.id,
+                };
+              });
+
+              result = {
+                passed: states.filter((item) =>
+                  item.state === 'completed' && item.conclusion === 'success'
+                ),
+                failed: states.filter((item) =>
+                  item.state === 'completed' && item.conclusion !== 'success'
+                ),
+                pending: states.filter((item) =>
+                  item.state !== 'completed'
+                ),
+              };
+
+              if (result.failed.length || result.pending.length === 0) {
+                break;
+              }
+
+              await sleep(15000);
+            }
+
+            const verified =
+              result &&
+              result.failed.length === 0 &&
+              result.pending.length === 0 &&
+              result.passed.length === required.length;
+
+            const lines = [
+              `## NRJ Merge Gate`,
+              '',
+              `- PR : #${pr.number}`,
+              `- Commit contrôlé : \`${sha}\``,
+              `- Vercel : ignoré par conception`,
+              `- Workflows de validation modifiés : aucun`,
+              '',
+              '### Contrôles',
+              ...required.map(([name, path]) => {
+                const found = [
+                  ...(result?.passed || []),
+                  ...(result?.failed || []),
+                  ...(result?.pending || []),
+                ].find((item) => item.name === name && item.path === path);
+
+                if (!found) return `- ❌ ${name} — absent`;
+                if (found.state === 'completed' && found.conclusion === 'success') {
+                  return `- ✅ ${name}`;
+                }
+                if (found.state === 'completed') {
+                  return `- ❌ ${name} — ${found.conclusion}`;
+                }
+                return `- ⏳ ${name} — ${found.state}`;
+              }),
+              '',
+              verified
+                ? '### Verdict : ✅ VERIFIED'
+                : '### Verdict : ❌ REJECTED',
+            ];
+
+            core.summary.addRaw(lines.join('\\n')).write();
+
+            if (!verified) {
+              core.setFailed('NRJ Merge Gate REJECTED : tous les contrôles de confiance ne sont pas validés.');
+            } else {
+              core.notice('NRJ Merge Gate VERIFIED : contrôles validés depuis les workflows de main.');
+            }

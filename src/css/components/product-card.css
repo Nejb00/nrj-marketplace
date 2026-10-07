@@ -225,6 +225,7 @@
     top: 10px; 
     left: 10px; 
     z-index: 4; 
+    pointer-events: none;
     display: flex; 
     flex-direction: column; 
     gap: 0.3rem; 

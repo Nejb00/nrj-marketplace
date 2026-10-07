@@ -179,11 +179,25 @@ test('payment invariants detect missing idempotency, invalid lifecycle and incon
       'PAYMENT-003',
       'PAYMENT-004',
       'PAYMENT-005',
-      'PAYMENT-008',
       'PAYMENT-010',
       'PAYMENT-011',
     ]
   );
+});
+
+test('payment invariants require refunded_at for refunded payments', () => {
+  const violations = validatePayments([{
+    order_id: 'order-8',
+    provider: 'openpay',
+    idempotency_key: 'attempt-8',
+    amount: 1000,
+    currency: 'XAF',
+    status: 'refunded',
+    paid_at: '2026-10-05T10:00:00.000Z',
+    refunded_at: null,
+  }]);
+
+  assert.deepEqual(violations.map(({ rule_id }) => rule_id), ['PAYMENT-008']);
 });
 
 test('payment invariants block paid_at on a non-settled payment', () => {

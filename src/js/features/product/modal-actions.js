@@ -1,7 +1,7 @@
 // ═══ Fiche produit — actions (panier, commande directe, chat, partage, favori) ═══
 // Éclaté de product-modal.js (refacto-archi) — logique strictement identique.
 import { state } from '../../core/state.js';
-import { WHATSAPP_NUMBER, BASE_URL } from '../../core/config.js';
+import { BASE_URL } from '../../core/config.js';
 import { formatPrice } from '../../utils/format.js';
 import { showToast } from '../../utils/dom-helpers.js';
 import { trackPopularity } from '../../api/api.js';
@@ -9,6 +9,7 @@ import { toggleFavorite } from '../../services/favorites.js';
 import { addToCart } from '../../services/cart-actions.js';
 import { openChat } from '../chat/chat-ui.js';
 import { modalCtx } from './modal-state.js';
+import { closeOptionsPanel, initOptionsPanel, openOptionsPanel } from './modal-options-sheet.js';
 import { pauseModalVideos } from './modal-carousel.js';
 
 export function bindHeaderActions(p, uPrice, moq) {
@@ -23,7 +24,9 @@ export function bindHeaderActions(p, uPrice, moq) {
     // Partage 🔗
     document.getElementById('modalShareBtn').onclick = () => {
         const url = BASE_URL + '?id=' + p.id;
-        const txt = `${formatPrice(uPrice)}\nMinimum d'achat : ${moq} pièce(s)\nDécouvre "${p.name}" sur NRJ Marketplace ${url}`;
+        const currentPrice = Number(modalCtx.uPrice) || Number(uPrice) || 0;
+        const currentMoq = Number(modalCtx.moq) || Number(moq) || 1;
+        const txt = `${formatPrice(currentPrice)}\nMinimum d'achat : ${currentMoq} pièce(s)\nDécouvre "${p.name}" sur NRJ Marketplace ${url}`;
         if (typeof navigator.share === 'function') {
             navigator.share({ title: p.name, text: txt, url }).catch(() => {});
         } else {
@@ -34,71 +37,33 @@ export function bindHeaderActions(p, uPrice, moq) {
 
 export function bindStickyActions() {
     const p = modalCtx.p;
-    const { tailles, couleurs, moq, uPrice } = modalCtx;
 
-    document.getElementById('addToCartStickyBtn').onclick = (e) => {
-        if (tailles.length && !modalCtx.sT) return showToast('⚠️ Sélectionnez une taille');
+    // Le CTA panier ouvre le sélecteur V2 ; "Commander directement" ouvre
+    // le même sélecteur en mode Buy Now.
+    initOptionsPanel();
+    const directBtn = document.getElementById('directOrderStickyBtn');
+    if (directBtn) {
+        directBtn.onclick = () => openOptionsPanel(directBtn, 'buy');
+    }
 
-        if (couleurs.length) {
-            const selected = Object.entries(modalCtx.colorQtys).filter(([, q]) => q > 0);
-            const totalQ = selected.reduce((s, [, q]) => s + q, 0);
-            if (selected.length === 0) {
-                showToast('⚠️ Choisis au moins une quantité');
-                return;
-            }
-            if (totalQ < moq) {
-                showToast(`⚠️ Minimum d'achat : ${moq} pièce(s)`);
-                return;
-            }
-            selected.forEach(([color, qty], i) => {
-                addToCart(p.id, modalCtx.sT, color, i === 0 ? e.currentTarget : null, qty);
+    const chatBtn = document.getElementById('chatStickyBtn');
+    if (chatBtn) {
+        chatBtn.onclick = () => {
+            if (!p) return;
+            trackPopularity(p.id, 3);
+            openChat({
+                product: { id: p.id, name: p.name, price: modalCtx.uPrice, image: p.image },
+                taille: modalCtx.sT,
+                couleur: modalCtx.sC
             });
-        } else {
-            addToCart(p.id, modalCtx.sT, '', e.currentTarget, modalCtx.currentQty);
-        }
-    };
-
-    document.getElementById('directOrderStickyBtn').onclick = () => {
-        if (tailles.length && !modalCtx.sT) return showToast('⚠️ Sélectionnez une taille');
-
-        let msg = `Bonjour NRJ Marketplace, je souhaite commander :\n${p.name} (ID: ${p.id})`;
-        if (modalCtx.sT) msg += `\nTaille: ${modalCtx.sT}`;
-
-        if (couleurs.length) {
-            const selected = Object.entries(modalCtx.colorQtys).filter(([, q]) => q > 0);
-            if (selected.length === 0) {
-                showToast('⚠️ Choisis au moins une quantité');
-                return;
-            }
-            const totalQ = selected.reduce((s, [, q]) => s + q, 0);
-            if (totalQ < moq) {
-                showToast(`⚠️ Minimum d'achat : ${moq} pièce(s)`);
-                return;
-            }
-            msg += '\nCouleurs:';
-            selected.forEach(([c, q]) => { msg += `\n  • ${c} × ${q}`; });
-            msg += `\nQuantité totale: ${totalQ}`;
-        } else {
-            msg += `\nQuantité: ${moq}`;
-        }
-
-        trackPopularity(p.id, 10);
-        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
-    };
-
-    document.getElementById('chatStickyBtn').onclick = () => {
-        trackPopularity(p.id, 3);
-        openChat({
-            product: { id: p.id, name: p.name, price: p.price, image: p.image },
-            taille: modalCtx.sT,
-            couleur: modalCtx.sC
-        });
-    };
+        };
+    }
 }
-
 export function closeProductModal() {
+    closeOptionsPanel();
     pauseModalVideos();
     document.getElementById('productModal').classList.remove('open');
+    document.getElementById('productModal').setAttribute('aria-hidden', 'true');
     document.getElementById('stickyBottomBar').classList.remove('visible');
     state.modalOpen = false;
     history.replaceState({}, '', window.location.pathname);

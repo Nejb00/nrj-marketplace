@@ -26,9 +26,13 @@ import { initLogoLongPress } from './logo-press.js';
 import { initSwipeCategories } from './swipe-nav.js';
 import { buildFilterBar } from './filter-bar.js';
 import { initSubcategoryCollapse } from './subcategory-collapse.js';
+import { showSkeletonLoaders } from '../../services/lazy-loading.js';
 
 async function init() {
   try {
+    // Le premier rendu ne doit pas attendre Supabase : afficher immédiatement
+    // une grille stable, puis remplacer les squelettes quand le catalogue arrive.
+    showSkeletonLoaders('productsGrid', 12);
     await loadPersistedState();
     await fetchCategories();
     await fetchProducts();
