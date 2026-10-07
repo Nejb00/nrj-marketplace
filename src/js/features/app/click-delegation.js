@@ -38,6 +38,15 @@ document.addEventListener('nrj:close-product-modal', () => {
   if (state.modalOpen) closeProductModal();
 });
 
+function syncCatalogueContentMode(nav) {
+  const isCatalogue = nav === 'home';
+  document.body.classList.toggle('catalogue-content-only', isCatalogue);
+}
+
+// Au chargement, la vue par défaut est le catalogue :
+// la zone principale démarre directement sur son contenu.
+syncCatalogueContentMode('home');
+
 document.addEventListener('click', e => {
   const fb = e.target.closest('.filter-btn'); if (fb) { applyFilter(fb.dataset.category); return; }
   const subBubble = e.target.closest('.subcat-bubble');
@@ -106,6 +115,7 @@ document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('clic
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   this.classList.add('active');
   const nav = this.dataset.nav;
+  syncCatalogueContentMode(nav);
 
   if (nav === 'home') {
     if (state.modalOpen) closeProductModal();

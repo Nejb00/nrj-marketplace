@@ -200,8 +200,8 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
 
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
-    await expect(page.locator("#tapToSearch")).toBeVisible({ timeout: 20_000 });
-    await expect(page.locator("#filterBar .filter-btn").first()).toBeVisible({ timeout: 20_000 });
+    await expect(page.locator("#headerFixed")).toBeHidden({ timeout: 20_000 });
+    await expect(page.locator("#headerSpacer")).toBeHidden({ timeout: 20_000 });
 
     const productCard = page.locator("#productsGrid .product-card").first();
     await expect(productCard).toBeVisible({ timeout: 20_000 });
