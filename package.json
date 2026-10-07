@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@octokit/rest": "^20.1.1",
-    "@supabase/supabase-js": "^2.32.0",
+    "@supabase/supabase-js": "^2.117.2",
     "googleapis": "^134.0.0"
   },
   "devDependencies": {
