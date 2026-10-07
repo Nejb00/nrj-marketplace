@@ -87,6 +87,10 @@ function normalizeCart(raw) {
         if (item.variantId != null && String(item.variantId).trim()) {
             normalized.variantId = String(item.variantId).trim();
         }
+        const unitPrice = Number(item.unitPrice);
+        if (Number.isFinite(unitPrice) && unitPrice > 0) {
+            normalized.unitPrice = unitPrice;
+        }
         return normalized;
     }).filter(Boolean);
 }
