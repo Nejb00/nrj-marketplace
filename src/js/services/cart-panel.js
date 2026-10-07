@@ -105,36 +105,43 @@ function setupCartSheetHandle() {
     header.prepend(handle);
 
     const updateDrag = (event) => {
-        if (!cartDrag || event.pointerId !== cartDrag.pointerId) return;
+        if (!cartDrag) return;
         event.preventDefault();
-        cartDrag.dy = Math.max(0, event.clientY - cartDrag.startY);
+        const currentY = Number(event.clientY);
+        if (!Number.isFinite(currentY)) return;
+        cartDrag.lastY = currentY;
+        cartDrag.dy = Math.max(0, currentY - cartDrag.startY);
         panel.style.transform = `translateY(${cartDrag.dy}px)`;
     };
 
     const finishDrag = (event) => {
-        if (!cartDrag || (event.pointerId != null && event.pointerId !== cartDrag.pointerId)) return;
-        const finalDy = Math.max(0, Number(event.clientY) - cartDrag.startY);
+        if (!cartDrag) return;
+        const currentY = Number(event.clientY);
+        if (Number.isFinite(currentY)) {
+            cartDrag.lastY = currentY;
+        }
+        const finalDy = Math.max(0, Number(cartDrag.lastY) - cartDrag.startY);
         const shouldClose = Math.max(cartDrag.dy, finalDy) > 96;
         cartDrag = null;
         panel.classList.remove('is-dragging');
         panel.style.transform = '';
+        panel.style.transition = '';
         if (shouldClose) closeCartPanel();
     };
 
     handle.addEventListener('pointerdown', (event) => {
         if (!window.matchMedia('(max-width: 767px)').matches) return;
         if (event.pointerType === 'mouse' && event.button !== 0) return;
-        cartDrag = { pointerId: event.pointerId, startY: event.clientY, dy: 0 };
+        const startY = Number(event.clientY);
+        if (!Number.isFinite(startY)) return;
+        cartDrag = { startY, lastY: startY, dy: 0 };
         panel.classList.add('is-dragging');
         panel.style.transition = 'none';
     });
 
-    handle.addEventListener('pointermove', updateDrag);
-    handle.addEventListener('pointerup', finishDrag);
-    handle.addEventListener('pointercancel', finishDrag);
-    document.addEventListener('pointermove', updateDrag, { passive: false });
-    document.addEventListener('pointerup', finishDrag);
-    document.addEventListener('pointercancel', finishDrag);
+    window.addEventListener('pointermove', updateDrag, { capture: true, passive: false });
+    window.addEventListener('pointerup', finishDrag, { capture: true });
+    window.addEventListener('pointercancel', finishDrag, { capture: true });
 }
 
 function setupCartAccessibility() {
