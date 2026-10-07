@@ -38,7 +38,10 @@ export function normalizeProductVariant(row) {
         color: cleanText(row.color),
         size: cleanText(row.size),
         sku: cleanText(row.sku),
-        price: row.price == null ? null : Number(row.price),
+        price: (() => {
+            const value = row.price == null ? null : Number(row.price);
+            return Number.isFinite(value) && value > 0 ? value : null;
+        })(),
         moq: row.moq == null ? null : cleanText(row.moq),
         active: row.active !== false,
         sort_order: Number.isFinite(Number(row.sort_order)) ? Number(row.sort_order) : 0,
@@ -117,6 +120,40 @@ function variantMatches(variant, color, size) {
     if (wantedColor && variant.color !== wantedColor) return false;
     if (wantedSize && variant.size !== wantedSize) return false;
     return true;
+}
+
+export function isValidVariantSelection(product, color = '', size = '') {
+    const variants = getActiveProductVariants(product);
+    if (!variants.length) return true;
+
+    return variants.some((variant) =>
+        (!cleanText(color) || variant.color === cleanText(color)) &&
+        (!cleanText(size) || variant.size === cleanText(size))
+    );
+}
+
+export function getCompatibleVariantValues(product, type, selection = {}) {
+    const variants = getActiveProductVariants(product);
+    if (!variants.length) return null;
+
+    const color = cleanText(selection.color);
+    const size = cleanText(selection.size);
+
+    const compatible = variants.filter((variant) => {
+        if (type === 'color') {
+            return !size || variant.size === size;
+        }
+        if (type === 'size') {
+            return !color || variant.color === color;
+        }
+        return true;
+    });
+
+    const values = type === 'color'
+        ? compatible.map((variant) => variant.color)
+        : compatible.map((variant) => variant.size);
+
+    return new Set(unique(values));
 }
 
 export function resolveProductVariant(product, color = '', size = '') {
