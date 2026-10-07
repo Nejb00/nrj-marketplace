@@ -10,6 +10,7 @@ import { addToCart, changeQty } from '../../services/cart-actions.js';
 import { openCartPanel, closeCartPanel, removeCartItemAnimated } from '../../services/cart-panel.js';
 import { toggleFavorite } from '../../services/favorites.js';
 import { openOrderModal, sendWhatsAppOrder } from '../../services/checkout.js';
+import { cancelDirectPurchase } from '../../services/direct-purchase.js';
 import { startMobileMoneyPayment, initMobileMoneyPaymentUi } from '../../services/payment/mobile-money-checkout.js';
 import { openProductModal, closeProductModal } from '../product/modal-render.js';
 import { openEditModal } from '../product/product-edit-form.js';
@@ -31,6 +32,10 @@ document.addEventListener('nrj:cart-open-product', (event) => {
 
   closeCartPanel({ restoreFocus: false });
   openProductModal(pid, selection);
+});
+
+document.addEventListener('nrj:close-product-modal', () => {
+  if (state.modalOpen) closeProductModal();
 });
 
 document.addEventListener('click', e => {
@@ -78,7 +83,19 @@ document.getElementById('checkoutBtn')?.addEventListener('click', openOrderModal
 document.getElementById('sendWhatsAppBtn')?.addEventListener('click', sendWhatsAppOrder);
 document.getElementById('startMobileMoneyBtn')?.addEventListener('click', startMobileMoneyPayment);
 initMobileMoneyPaymentUi();
-document.getElementById('cancelOrderBtn')?.addEventListener('click', () => document.getElementById('orderModalOverlay').classList.remove('open'));
+document.getElementById('cancelOrderBtn')?.addEventListener('click', async () => {
+  const restored = cancelDirectPurchase();
+  if (restored) {
+    try {
+      const { saveCart } = await import('../../core/state.js');
+      await saveCart();
+      refreshCartDisplay();
+    } catch (error) {
+      console.warn('Restauration panier après Buy Now', error);
+    }
+  }
+  document.getElementById('orderModalOverlay').classList.remove('open');
+});
 
 document.getElementById('saveEditBtn')?.addEventListener('click', updateProduct);
 document.getElementById('cancelEditBtn')?.addEventListener('click', () => document.getElementById('editProductModalOverlay').classList.remove('open'));
