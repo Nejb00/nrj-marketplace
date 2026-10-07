@@ -9,6 +9,8 @@ export const modalCtx = {
     p: null,
     tailles: [],
     couleurs: [],
+    variants: [],
+    sVariantId: null,
     sT: '',
     sC: '',
     moq: 1,
