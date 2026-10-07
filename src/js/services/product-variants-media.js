@@ -122,6 +122,40 @@ function variantMatches(variant, color, size) {
     return true;
 }
 
+export function getVariantCommercials(product, color = '', size = '') {
+    const variants = getActiveProductVariants(product);
+    const productPrice = Number(product?.price) || 0;
+    const productMoq = Number(product?.moq) || 1;
+
+    if (!variants.length) {
+        return {
+            variant: null,
+            ready: false,
+            price: productPrice,
+            moq: productMoq,
+        };
+    }
+
+    const requiresColor = variants.some((variant) => variant.color);
+    const requiresSize = variants.some((variant) => variant.size);
+    const normalizedColor = cleanText(color);
+    const normalizedSize = cleanText(size);
+    const ready =
+        (!requiresColor || Boolean(normalizedColor)) &&
+        (!requiresSize || Boolean(normalizedSize));
+
+    const variant = ready ? resolveProductVariant(product, normalizedColor, normalizedSize) : null;
+    const variantPrice = Number(variant?.price);
+    const variantMoq = Number(variant?.moq);
+
+    return {
+        variant,
+        ready: Boolean(variant),
+        price: Number.isFinite(variantPrice) && variantPrice > 0 ? variantPrice : productPrice,
+        moq: Number.isFinite(variantMoq) && variantMoq > 0 ? variantMoq : productMoq,
+    };
+}
+
 export function isValidVariantSelection(product, color = '', size = '') {
     const variants = getActiveProductVariants(product);
     if (!variants.length) return true;
