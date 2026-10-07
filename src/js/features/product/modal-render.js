@@ -13,7 +13,11 @@ import { updateTotal } from './modal-total.js';
 import { initOptionsPanel } from './modal-options-sheet.js';
 import { bindHeaderActions, bindStickyActions } from './modal-actions.js';
 import { renderRecommendations } from './modal-recommendations.js';
-import { getProductGalleryMedia } from '../../services/product-variants-media.js';
+import {
+    getProductGalleryForSelection,
+    getVariantOptionValues,
+    getActiveProductVariants,
+} from '../../services/product-variants-media.js';
 
 export { closeProductModal } from './modal-actions.js';
 
@@ -36,12 +40,15 @@ export async function openProductModal(pid) {
 
     // ── Remplissage du contexte partagé (anciennes closures) ──
     modalCtx.p = p;
-    modalCtx.tailles = (p.tailles || '').split(',').map(s => s.trim()).filter(Boolean);
-    modalCtx.couleurs = (p.couleurs || '').split(',').map(s => s.trim()).filter(Boolean);
+    const optionValues = getVariantOptionValues(p);
+    modalCtx.variants = getActiveProductVariants(p);
+    modalCtx.tailles = optionValues.sizes;
+    modalCtx.couleurs = optionValues.colors;
     // Chaque fiche repart sans ancienne sélection. La Phase 4 peut ensuite
     // pré-sélectionner une variante uniquement si son score est explicitement disponible.
     modalCtx.sT = '';
     modalCtx.sC = '';
+    modalCtx.sVariantId = null;
     modalCtx.moq = Number(p.moq) || 1;
     modalCtx.uPrice = Number(p.price) || 0;
     modalCtx.colorQtys = {};
@@ -50,7 +57,7 @@ export async function openProductModal(pid) {
     modalCtx.stickyAddedVariant = null;
     modalCtx.imageSlideOffset = 0;
     modalCtx.videoUrl = (p.video_url || '').trim();
-    modalCtx.imgs = getProductGalleryMedia(p).map(media => media.url);
+    modalCtx.imgs = getProductGalleryForSelection(p).map(media => media.url);
     modalCtx.sc = document.getElementById('modalCarouselScroll');
     modalCtx.dc = document.getElementById('modalCarouselDots');
 
