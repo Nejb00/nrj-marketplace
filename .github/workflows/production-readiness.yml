@@ -1,0 +1,93 @@
+name: Production Readiness
+
+on:
+  deployment_status:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  deployments: read
+  issues: read
+
+concurrency:
+  group: production-readiness
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: Production readiness gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Collecter les signaux de production
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const deployments = await github.rest.repos.listDeployments({
+              owner,
+              repo,
+              environment: 'Production',
+              per_page: 10,
+            });
+
+            const latest = deployments.data[0];
+            let deploymentState = 'unknown';
+            if (latest) {
+              const statuses = await github.rest.repos.listDeploymentStatuses({
+                owner,
+                repo,
+                deployment_id: latest.id,
+                per_page: 1,
+              });
+              deploymentState = statuses.data[0]?.state || latest.state || 'unknown';
+            }
+
+            const safetyRuns = await github.rest.actions.listWorkflowRuns({
+              owner,
+              repo,
+              workflow_id: 'deployment-safety-net.yml',
+              branch: 'main',
+              per_page: 3,
+            });
+
+            const browserRuns = await github.rest.actions.listWorkflowRuns({
+              owner,
+              repo,
+              workflow_id: 'vercel-browser-e2e.yml',
+              branch: 'main',
+              per_page: 3,
+            });
+
+            const incidents = await github.paginate(
+              github.rest.issues.listForRepo,
+              { owner, repo, state: 'open', labels: 'incident', per_page: 100 }
+            );
+
+            const smokePassed = safetyRuns.data.workflow_runs.some(
+              run => run.conclusion === 'success'
+            );
+            const browserE2EPassed = browserRuns.data.workflow_runs.some(
+              run => run.conclusion === 'success'
+            );
+
+            require('node:fs').writeFileSync('/tmp/production-readiness.json', JSON.stringify({
+              deploymentState,
+              smokePassed,
+              browserE2EPassed,
+              openIncidents: incidents.length,
+              targetEnvironment: 'Production',
+            }));
+
+      - name: Installation de Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Évaluer la readiness
+        run: node scripts/production-readiness-report.mjs /tmp/production-readiness.json

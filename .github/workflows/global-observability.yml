@@ -1,0 +1,76 @@
+name: Global Automation Observability
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+      - CodeQL
+      - Security Audit
+      - Data Integrity
+      - Supabase Migration Drift
+      - NRJ Governance Audit
+      - Vercel Browser E2E
+      - Deployment Safety Net
+    types: [completed]
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  issues: read
+
+concurrency:
+  group: global-observability
+  cancel-in-progress: true
+
+jobs:
+  observe:
+    name: Main-branch health aggregation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout du repo
+        uses: actions/checkout@v7
+
+      - name: Installation de Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Collecter les runs main
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const workflows = await github.paginate(
+              github.rest.actions.listRepoWorkflows,
+              { owner, repo, per_page: 100 }
+            );
+
+            const runs = [];
+            for (const workflow of workflows.filter(item => item.state === 'active')) {
+              const response = await github.rest.actions.listWorkflowRuns({
+                owner,
+                repo,
+                workflow_id: workflow.id,
+                branch: 'main',
+                per_page: 1,
+              });
+              if (response.data.workflow_runs[0]) runs.push(response.data.workflow_runs[0]);
+            }
+
+            const incidents = await github.paginate(
+              github.rest.issues.listForRepo,
+              { owner, repo, state: 'open', labels: 'incident', per_page: 100 }
+            );
+
+            require('node:fs').writeFileSync(
+              '/tmp/observability.json',
+              JSON.stringify({ workflowRuns: runs, mainBranch: 'main', incidentsOpen: incidents.length })
+            );
+
+      - name: Calculer la santé globale
+        run: node scripts/observability-report.mjs /tmp/observability.json

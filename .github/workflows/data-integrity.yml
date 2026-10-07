@@ -1,0 +1,70 @@
+# Data Integrity OS — détection lecture seule des doublons et références orphelines
+
+name: Data Integrity
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    - cron: "23 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: data-integrity-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: Duplicate + orphan audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout du repo
+        uses: actions/checkout@v7
+
+      - name: Vérifier la configuration
+        id: config
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "${SUPABASE_DB_URL}" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "ℹ️ Audit distant non activé : SUPABASE_DB_URL absent."
+            exit 0
+          fi
+
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+
+      - name: Interroger Supabase en lecture seule
+        if: steps.config.outputs.enabled == 'true'
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          export PGCONNECT_TIMEOUT=10
+          psql "${SUPABASE_DB_URL}"             --no-password             --tuples-only             --no-align             --command="$(cat scripts/data-integrity-snapshot.sql)"             > /tmp/data-integrity.json
+
+      - name: Vérifier l'intégrité
+        if: steps.config.outputs.enabled == 'true'
+        id: audit
+        continue-on-error: ${{ github.event_name == 'pull_request' }}
+        run: node scripts/data-integrity.mjs --snapshot /tmp/data-integrity.json
+
+      - name: Résumé de configuration
+        if: steps.config.outputs.enabled != 'true'
+        run: |
+          echo "Data Integrity OS is installed but waiting for SUPABASE_DB_URL."
+
+      - name: Résumé des résultats PR
+        if: always() && steps.config.outputs.enabled == 'true' && github.event_name == 'pull_request'
+        env:
+          AUDIT_OUTCOME: ${{ steps.audit.outcome }}
+        run: |
+          echo "Data Integrity audit outcome: ${AUDIT_OUTCOME}"
+          echo "PR runs report integrity findings without blocking the PR merge."

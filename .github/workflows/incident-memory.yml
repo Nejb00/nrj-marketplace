@@ -1,0 +1,71 @@
+name: Incident Memory
+
+on:
+  workflow_run:
+    workflows:
+      - Incident Guard
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: read
+  actions: read
+
+concurrency:
+  group: incident-memory
+  cancel-in-progress: true
+
+jobs:
+  memory:
+    name: Incident recurrence analysis
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout du repo
+        uses: actions/checkout@v7
+
+      - name: Installation de Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Analyser les incidents ouverts
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issues = await github.paginate(
+              github.rest.issues.listForRepo,
+              { owner, repo, state: 'all', labels: 'incident', per_page: 100 }
+            );
+
+            const entries = [];
+            for (const issue of issues.slice(0, 100)) {
+              const body = issue.body || '';
+              const match = body.match(/<!-- nrj-incident-intelligence\n([\s\S]*?)\n-->/);
+              if (!match) continue;
+
+              try {
+                const intel = JSON.parse(match[1]);
+                entries.push({
+                  workflow: intel.workflow,
+                  classification: intel.classification,
+                  recipeId: intel.recipe_id || null,
+                  signatures: (intel.signature_matches || []).map(x => x.signature),
+                  businessRules: (intel.business_invariant_matches || []).map(x => x.rule_id),
+                  integrityRules: (intel.integrity_matches || []).map(x => x.rule_id),
+                  seenAt: issue.created_at,
+                });
+              } catch (error) {
+                core.warning('Incident intelligence illisible dans #' + issue.number + ': ' + error.message);
+              }
+            }
+
+            require('node:fs').writeFileSync('/tmp/incident-history.json', JSON.stringify(entries));
+
+      - name: Produire un résumé machine-readable
+        run: |
+          node --input-type=module -e "import fs from 'node:fs'; import { recordIncident } from './scripts/incident-history.mjs'; const entries=JSON.parse(fs.readFileSync('/tmp/incident-history.json','utf8')); let memory=[]; for (const entry of entries) memory=recordIncident(memory,entry); console.log(JSON.stringify({schema_version:1,entries:memory.length,memory},null,2));"

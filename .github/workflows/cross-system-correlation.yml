@@ -1,0 +1,90 @@
+name: Cross-System Correlation
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+      - Deployment Safety Net
+      - Supabase Migration Drift
+      - Data Integrity
+      - Vercel Browser E2E
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  deployments: read
+  issues: read
+
+concurrency:
+  group: cross-system-correlation
+  cancel-in-progress: true
+
+jobs:
+  correlate:
+    name: Git Supabase Vercel correlation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout du repo
+        uses: actions/checkout@v7
+
+      - name: Installation de Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Collecter les signaux
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+
+            const branch = await github.rest.repos.getBranch({ owner, repo, branch: 'main' });
+
+            const deployments = await github.rest.repos.listDeployments({
+              owner,
+              repo,
+              environment: 'Production',
+              per_page: 1,
+            });
+
+            let deploymentCommit = null;
+            let deploymentStatus = 'unknown';
+            if (deployments.data[0]) {
+              deploymentCommit = deployments.data[0].sha || null;
+              const statuses = await github.rest.repos.listDeploymentStatuses({
+                owner,
+                repo,
+                deployment_id: deployments.data[0].id,
+                per_page: 1,
+              });
+              deploymentStatus = statuses.data[0]?.state || deployments.data[0].state || 'unknown';
+            }
+
+            const incidents = await github.paginate(
+              github.rest.issues.listForRepo,
+              { owner, repo, state: 'open', labels: 'incident', per_page: 100 }
+            );
+
+            const files = await github.rest.actions.listWorkflowRuns({
+              owner,
+              repo,
+              workflow_id: 'supabase-migration-drift.yml',
+              branch: 'main',
+              per_page: 1,
+            });
+
+            const migrationDrift = files.data.workflow_runs[0]?.conclusion === 'failure';
+
+            require('node:fs').writeFileSync('/tmp/correlation.json', JSON.stringify({
+              github: { commit: branch.data.commit.sha },
+              supabase: { migrationDrift, integrityIssueCount: incidents.filter(i => i.title.includes('Data Integrity')).length },
+              vercel: { deploymentCommit, status: deploymentStatus },
+            }));
+
+      - name: Calculer les corrélations
+        run: |
+          node --input-type=module -e "import fs from 'node:fs'; import { correlateSignals } from './scripts/cross-system-correlation.mjs'; const input=JSON.parse(fs.readFileSync('/tmp/correlation.json','utf8')); console.log(JSON.stringify(correlateSignals(input),null,2));"

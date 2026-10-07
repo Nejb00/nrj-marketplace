@@ -6,6 +6,7 @@ const read = (path) => fs.readFileSync(path, 'utf8');
 
 const incidentGuard = read('.github/workflows/incident-guard.yml');
 const aiDiagnosis = read('.github/workflows/ai-assisted-diagnosis.yml');
+const aiDiagnosisModule = read('scripts/ai-assisted-diagnosis.mjs');
 const selfHealing = read('.github/workflows/self-healing.yml');
 const verification = read('.github/workflows/self-healing-verification.yml');
 
@@ -43,4 +44,11 @@ test('repair verification is restricted to operator self-healing branches and re
   for (const check of ['Build', 'Dependency Review', 'CodeQL', 'CodeQL (javascript-typescript)', 'CodeQL (actions)']) {
     assert.ok(verification.includes("'" + check + "'"), 'Missing verification check: ' + check);
   }
+});
+
+
+test('business and integrity signals stay diagnostic-only', () => {
+  assert.ok(aiDiagnosisModule.includes('business_invariant_matches'));
+  assert.ok(aiDiagnosisModule.includes('integrity_matches'));
+  assert.ok(selfHealing.includes("aiDiagnosis?.recommendation === 'self-healing'"));
 });

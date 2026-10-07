@@ -43,3 +43,66 @@
 ## Safety rule
 
 No optimization should remove a detection, security, verification, or rollback boundary unless an equivalent control demonstrably replaces it.
+
+
+## Business contract gate
+
+The CI suite now includes deterministic business invariants for the three state
+surfaces already present in the application:
+
+- cart quantity/MOQ, identifiers and duplicate variant lines;
+- stored order arithmetic and duplicate variant lines;
+- product-import lifecycle consistency and confidence bounds.
+
+The invariant engine is pure and machine-readable. It is a detection boundary,
+not an authorization to mutate production state. Future incident intelligence
+can consume its `rule_id` values without allowing the AI layer to invent fixes.
+
+
+## Business incident intelligence
+
+Business invariant violations are treated as **evidence**, not as automatic repair authorization.
+
+The flow is:
+
+`business invariant test/audit → CART-*/ORDER-*/IMPORT-* signal → Incident Intelligence → AI Diagnosis context`
+
+A business rule signal alone never selects a self-healing recipe. Automatic repair still requires an existing deterministic recipe, a validated AI diagnosis, exact run/commit correlation, and all repair verification gates.
+
+### Supabase migration drift path
+`PR/push → Supabase Migration Drift → compare local filenames vs remote migration history by timestamp → machine-readable drift report`
+
+The detector is intentionally read-only: it never applies, repairs, reorders, or deletes migrations. Supabase itself compares local migration files with remote history by migration timestamp. The remote probe uses the Supabase Management API only when the repository has both `SUPABASE_ACCESS_TOKEN` and `SUPABASE_PROJECT_REF` configured. Without those credentials, the workflow remains installed but explicitly reports that the remote audit is not enabled.
+
+A migration drift is an evidence signal, not a self-healing authorization. In particular, a remote-only migration means the database has applied schema history that is not represented in the repository and must be reconciled deliberately before any automated repair is considered.
+
+
+### Data Integrity OS
+`PR/push/schedule → Data Integrity → duplicate + orphan snapshot → machine-readable integrity report → Incident Guard (main failures)`
+
+The duplicate audit checks integrity keys that the current schema declares unique or where the payment lifecycle requires a single live payment per order. The orphan audit checks both enforced relational links and important logical references that are not protected by a foreign key, notably `product_views.product_id → products.id`.
+
+Integrity evidence is diagnostic only. It does not authorize self-healing or data deletion. Pull-request audits may report existing production findings without blocking the PR; failures on `main`/scheduled audits are eligible for Incident Guard.
+
+
+## NRJ Self-Healing OS — nouvelle matrice de gouvernance
+
+| Axe | Contrôle | Nature |
+|---|---|---|
+| C3 | Cohérence paiement/commande, import/produit/catégorie, événements | Déterministe / lecture seule |
+| C4 | Valeurs impossibles et chronologies incohérentes | Déterministe / lecture seule |
+| D | Audit sécurité statique + CodeQL + règles Supabase existantes | Déterministe / revue requise selon le signal |
+| E | Classification des fichiers modifiés → périmètre de tests | Déterministe |
+| F | Garde-fou de réparation : fraîcheur, répétition, cible sensible, taille | Bloquant |
+| G | Budget de rollback + corrélation + âge de l’incident | Bloquant |
+| H | Santé globale limitée à `main`, incidents et runs en attente | Observabilité |
+| I | État PR : divergence, checks, taille, mergeabilité | Intelligence Git/PR |
+| J | Gate de promotion : déploiement, smoke, navigateur, incidents | Bloquant |
+| K | Historique de récurrence par signature métier | Mémoire |
+| L | Corrélation Git ↔ Supabase ↔ Vercel | Analyse transverse |
+
+### Règle de sûreté commune
+
+Les nouveaux signaux de données, sécurité, paiement et corrélation sont des **preuves diagnostiques**. Aucun de ces signaux ne donne à lui seul le droit de modifier des données métier, de supprimer une ligne, d’appliquer une migration ou de fusionner une PR.
+
+Le workflow `NRJ Governance Audit` exécute les contrats déterministes indépendamment du temps de réponse de la CI principale. Les sondes nécessitant une connexion privée restent explicitement conditionnelles si leurs secrets ne sont pas configurés.

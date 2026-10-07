@@ -1,0 +1,78 @@
+name: PR Intelligence
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: pr-intelligence-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: PR and branch intelligence
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Collecter l'état de la PR
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const pr = context.payload.pull_request;
+            if (!pr) {
+              core.info('Aucune PR dans cet événement.');
+              return;
+            }
+
+            const compare = await github.rest.repos.compareCommits({
+              owner,
+              repo,
+              base: 'main',
+              head: pr.head.sha,
+            });
+
+            const checks = await github.rest.checks.listForRef({
+              owner,
+              repo,
+              ref: pr.head.sha,
+              per_page: 100,
+            });
+
+            const failures = checks.data.check_runs.filter(
+              run => run.status === 'completed' && run.conclusion !== 'success'
+            ).length;
+
+            const pending = checks.data.check_runs.filter(
+              run => run.status !== 'completed'
+            ).length;
+
+            require('node:fs').writeFileSync('/tmp/pr-intelligence.json', JSON.stringify({
+              base: 'main',
+              head: pr.head.ref,
+              aheadBy: compare.data.ahead_by || 0,
+              behindBy: compare.data.behind_by || 0,
+              changedFiles: pr.changed_files || 0,
+              draft: pr.draft,
+              mergeable: pr.mergeable !== false,
+              requiredFailures: failures,
+              requiredPending: pending,
+            }));
+
+      - name: Installation de Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Évaluer la PR
+        run: node scripts/pr-intelligence-report.mjs /tmp/pr-intelligence.json

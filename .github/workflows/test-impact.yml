@@ -1,0 +1,56 @@
+name: Test Impact Intelligence
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: test-impact-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  impact:
+    name: Changed-file test intelligence
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout du repo
+        uses: actions/checkout@v7
+
+      - name: Installation de Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Calculer l'impact
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const prNumber = context.payload.pull_request?.number;
+            if (!prNumber) {
+              core.info('Impact PR disponible uniquement sur pull_request.');
+              return;
+            }
+
+            const files = await github.paginate(
+              github.rest.pulls.listFiles,
+              { owner, repo, pull_number: prNumber, per_page: 100 }
+            );
+
+            const names = files.map(file => file.filename);
+            require('node:fs').writeFileSync('/tmp/changed-files.json', JSON.stringify(names));
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Produire le rapport d'impact
+        if: github.event_name == 'pull_request'
+        run: node scripts/test-impact-report.mjs /tmp/changed-files.json

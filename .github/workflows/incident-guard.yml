@@ -8,6 +8,7 @@ on:
       - Dependency Review
       - Deployment Safety Net
       - Vercel Browser E2E
+      - Data Integrity
     types: [completed]
 
 permissions:
@@ -134,6 +135,7 @@ jobs:
                 '| Commit | `' + intelligence.commit + '` |',
                 '| Failed jobs | ' + intelligence.failed_jobs.length + ' |',
                 '| Signature(s) | ' + (intelligence.signature_matches.length || 0) + ' |',
+                '| Integrity signals | ' + (intelligence.integrity_matches.length || 0) + ' |',
                 '| Recette candidate | ' + (intelligence.recipe_id ? '`' + intelligence.recipe_id + '`' : 'Aucune') + ' |',
                 '| Action recommandée | **' + intelligence.recommended_action + '** |',
                 '',

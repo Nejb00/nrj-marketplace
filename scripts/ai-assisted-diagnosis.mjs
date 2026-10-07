@@ -97,6 +97,8 @@ export function buildDiagnosisPrompt({
       recommended_action: intelligence?.recommended_action ?? null,
       failed_jobs: intelligence?.failed_jobs ?? [],
       signature_matches: intelligence?.signature_matches ?? [],
+      business_invariant_matches: intelligence?.business_invariant_matches ?? [],
+      integrity_matches: intelligence?.integrity_matches ?? [],
     }, null, 2),
     '',
     'Run metadata:',
