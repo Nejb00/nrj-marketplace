@@ -15,6 +15,7 @@ import { bindHeaderActions, bindStickyActions } from './modal-actions.js';
 import { renderRecommendations } from './modal-recommendations.js';
 import {
     getProductGalleryForSelection,
+    getVariantCommercials,
     getVariantOptionValues,
     getActiveProductVariants,
     resolveProductVariant,
@@ -62,8 +63,9 @@ export async function openProductModal(pid, initialSelection = null) {
     modalCtx.sC = initialColor;
     const initialVariant = requestedVariant || resolveProductVariant(p, initialColor, initialSize);
     modalCtx.sVariantId = initialVariant?.id || null;
-    modalCtx.moq = Number(p.moq) || 1;
-    modalCtx.uPrice = Number(p.price) || 0;
+    const commercial = getVariantCommercials(p, initialColor, initialSize);
+    modalCtx.moq = commercial.moq;
+    modalCtx.uPrice = commercial.price;
     modalCtx.colorQtys = {};
     modalCtx.currentQty = 1;
     modalCtx.stickyAddedQty = 0;
