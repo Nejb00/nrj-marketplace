@@ -19,6 +19,10 @@ const ALLOWED_PAYMENT_METHODS = new Set([
   "openpay_airtel"
 ]);
 
+// Keep server-side quantity bounds aligned with the current catalog,
+// which contains products with MOQ up to 2000.
+const MAX_ORDER_QTY = 2000;
+
 type CartItemInput = {
   productId?: number | string;
   quantity?: number | string;
@@ -154,7 +158,7 @@ function normalizeItems(items: CartItemInput[] | undefined) {
       throw new TypeError("product_id_invalid");
     }
 
-    if (!Number.isSafeInteger(quantity) || quantity <= 0 || quantity > 1000) {
+    if (!Number.isSafeInteger(quantity) || quantity <= 0 || quantity > MAX_ORDER_QTY) {
       throw new TypeError("quantity_invalid");
     }
 
