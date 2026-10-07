@@ -316,9 +316,9 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
     await expect(page.locator(".cart-tab").first()).toHaveAttribute("aria-selected", "false");
     await page.locator(".cart-tab").first().click();
 
-    await page.evaluate(async () => {
-      const stateModule = await import("/src/js/core/state.js");
-      stateModule.state.cart.push({
+    await page.evaluate(() => {
+      const cart = JSON.parse(localStorage.getItem("nrj_cart_v32") || "[]");
+      cart.push({
         productId: 29999,
         quantity: 3,
         taille: "",
@@ -326,10 +326,11 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
         moq: 2,
         selected: true,
       });
-      await stateModule.saveCart();
-      const panelModule = await import("/src/js/services/cart-panel.js");
-      panelModule.refreshCartDisplay();
+      localStorage.setItem("nrj_cart_v32", JSON.stringify(cart));
     });
+    await page.reload();
+    await page.locator('a[data-nav="cart"]').click();
+    await expect(page.locator("#cartPanel")).toHaveAttribute("aria-hidden", "false");
 
     await expect(page.locator(".cart-unavailable")).toBeVisible();
     await expect(page.locator(".cart-unavailable")).toContainText("Articles indisponibles");
