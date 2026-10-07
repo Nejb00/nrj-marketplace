@@ -274,10 +274,31 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
 
     const handleBox = await page.locator(".cart-sheet-handle").boundingBox();
     expect(handleBox).not.toBeNull();
-    await page.mouse.move(handleBox.x + handleBox.width / 2, handleBox.y + handleBox.height / 2);
-    await page.mouse.down();
-    await page.mouse.move(handleBox.x + handleBox.width / 2, handleBox.y + 130);
-    await page.mouse.up();
+    const startY = handleBox.y + handleBox.height / 2;
+    const endY = startY + 130;
+    await page.locator(".cart-sheet-handle").dispatchEvent("pointerdown", {
+      pointerId: 1,
+      pointerType: "touch",
+      clientY: startY,
+      bubbles: true,
+      cancelable: true,
+    });
+    await page.evaluate(({ endY }) => {
+      window.dispatchEvent(new PointerEvent("pointermove", {
+        pointerId: 1,
+        pointerType: "touch",
+        clientY: endY,
+        bubbles: true,
+        cancelable: true,
+      }));
+      window.dispatchEvent(new PointerEvent("pointerup", {
+        pointerId: 1,
+        pointerType: "touch",
+        clientY: endY,
+        bubbles: true,
+        cancelable: true,
+      }));
+    }, { endY });
     await expect(page.locator("#cartPanel")).toHaveAttribute("aria-hidden", "true");
     await page.locator('a[data-nav="cart"]').click();
     await expect(page.locator("#cartPanel")).toHaveClass(/\bopen\b/);
