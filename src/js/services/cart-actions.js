@@ -89,6 +89,50 @@ export async function setCartQty(idx, qty) {
     syncSoon();
 }
 
+/**
+ * Modifie la variante + quantité d'une ligne existante.
+ * Si la nouvelle variante existe déjà sur une autre ligne du même produit,
+ * les quantités sont fusionnées afin d'éviter les doublons dans le panier.
+ */
+export async function updateCartItem(idx, { taille = '', couleur = '', quantity } = {}) {
+    const it = state.cart[idx];
+    if (!it) return;
+
+    const product = state.products.find((p) => Number(p.id) === Number(it.productId));
+    const moq = Math.max(
+        Number(it.moq) || 1,
+        Number(product?.moq) || 1
+    );
+    const n = Number(quantity);
+    const nextQty = Math.max(moq, Number.isFinite(n) ? Math.floor(n) : moq);
+    const nextTaille = String(taille || '').trim();
+    const nextCouleur = String(couleur || '').trim();
+
+    const duplicateIdx = state.cart.findIndex((other, otherIdx) =>
+        otherIdx !== idx &&
+        Number(other.productId) === Number(it.productId) &&
+        String(other.taille || '') === nextTaille &&
+        String(other.couleur || '') === nextCouleur
+    );
+
+    if (duplicateIdx >= 0) {
+        const duplicate = state.cart[duplicateIdx];
+        duplicate.quantity = Math.max(0, Number(duplicate.quantity) || 0) + nextQty;
+        duplicate.moq = Math.max(Number(duplicate.moq) || 1, moq);
+        duplicate.selected = duplicate.selected !== false || it.selected !== false;
+        state.cart.splice(idx, 1);
+    } else {
+        it.taille = nextTaille;
+        it.couleur = nextCouleur;
+        it.quantity = nextQty;
+        it.moq = moq;
+    }
+
+    await saveCart();
+    refreshCartDisplay();
+    syncSoon();
+}
+
 export async function removeCartItem(idx) {
     state.cart.splice(idx, 1);
     await saveCart();
