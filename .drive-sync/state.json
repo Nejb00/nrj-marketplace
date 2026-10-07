@@ -20,6 +20,10 @@
       "githubSha": "f2969c45acfec580cc71153dfb92bfdd1c61b11e",
       "driveMd5": "a266343992b97e5978acb2b0ba89ff55"
     },
+    ".github/workflows/android-pwa-package.yml": {
+      "githubSha": "09978b457800cfb6e4c4c4ae2c554dc232d1fc76",
+      "driveMd5": "6a8849299e982661507ac373e021d527"
+    },
     ".github/workflows/automation-cost-benchmark.yml": {
       "githubSha": "3888d682fba358ab58ec7d4ceab9980b5bf29820",
       "driveMd5": "ab2815b1f1c49bc356dcf94cb4f155cf"
@@ -156,9 +160,21 @@
       "githubSha": "3e3c78e0d1b0cfb5a40252cc31892974c48e389e",
       "driveMd5": "87791236eac679905b4e002f62e76d2a"
     },
+    "android/README.md": {
+      "githubSha": "ad08c4d64c7e14762169e79ce6021ea59aef3886",
+      "driveMd5": "3e42b46cde97bf75e34a27c3a316a7a7"
+    },
+    "android/twa-manifest.json": {
+      "githubSha": "c8778a8760f94970f9ee3a91deaba02bc9e9b41d",
+      "driveMd5": "2b6906dc2cf02e4259f931e12a2f0861"
+    },
     "api/og-product.js": {
       "githubSha": "30ead57d3aa214884c0f14d491e01bd7cd1f8216",
       "driveMd5": "bfc6fe004c6c18f027fc6178c21772b6"
+    },
+    "docs/android-pwa.md": {
+      "githubSha": "8176675828817a9b8e6b27ce486fbd9a96316b39",
+      "driveMd5": "f1da7c85c757c35d7e3e55bdd6f6860b"
     },
     "docs/automation-workflow-topology.md": {
       "githubSha": "0402cbf4cb3972401c5a2234aa6439791be54893",
@@ -181,8 +197,8 @@
       "driveMd5": "e110104578fac3b4a7596201ea2df148"
     },
     "index.html": {
-      "githubSha": "f249fd9c23c06ff3eee9e7211ab944d84fd2e42e",
-      "driveMd5": "63acda33ebb8487202381e3d7f4f6a31"
+      "githubSha": "c928b57238cbbc11688370ff6e37a5581b7b5ab0",
+      "driveMd5": "1d11f3235143922414fc312066d835eb"
     },
     "package-lock.json": {
       "githubSha": "9c37ec69e76c0d3cd47c93756d6e64fa8d975d41",
@@ -225,8 +241,8 @@
       "driveMd5": "6fb4079db8e45d734005bf5507445c2e"
     },
     "public/manifest.webmanifest": {
-      "githubSha": "7adfe776a628ea3fc7bbd1973f03d0d5e9dee347",
-      "driveMd5": "2a1f73cf80b8029f6a6821eddd8b9781"
+      "githubSha": "a6035e687f0424325b642f149b72eb1e4acc209f",
+      "driveMd5": "787c66d0b3e116f8e46840ebe9dc1c94"
     },
     "public/placeholder.svg": {
       "githubSha": "47fe9f8fa403638fd3ea0ebd55a9447ac8645f6b",
@@ -385,8 +401,8 @@
       "driveMd5": "2274d6e8d706207821910ef99f468a4a"
     },
     "src/js/core/config.js": {
-      "githubSha": "fd1d229377bcbe0d5125961a1f2907464a13eaee",
-      "driveMd5": "2d7c66180d37e67c89b4392e7e52f91b"
+      "githubSha": "46412e8df51630ad9c838287f1e6836e6f45785d",
+      "driveMd5": "18596a1248908b58553d8380f71da77a"
     },
     "src/js/core/state.js": {
       "githubSha": "008f5bba7fc0cf14a0ddb339f51c8a2d0e0619ea",
@@ -433,8 +449,8 @@
       "driveMd5": "92b63d7c977b3320ebce6fe32e3ecc50"
     },
     "src/js/features/app/app-init.js": {
-      "githubSha": "2302183ba38a71a42d526f33dd2ed765f873dc7a",
-      "driveMd5": "2def19fc9cc31e344cdf2c1f547e0909"
+      "githubSha": "eb93702f91c165c84cd510124d89c43a88d6182c",
+      "driveMd5": "e9cdb320d2adf5c6c3cfc52216a90d1b"
     },
     "src/js/features/app/click-delegation.js": {
       "githubSha": "a95abf5fa4b36c1684b64b2e48bf188390948f2b",
@@ -1109,5 +1125,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-07T15:40:41.592Z"
+  "updatedAt": "2026-10-07T16:01:14.632Z"
 }
