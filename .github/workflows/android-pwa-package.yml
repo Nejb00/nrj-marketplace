@@ -147,7 +147,7 @@ jobs:
       - name: Generate test Digital Asset Links
         run: |
           mkdir -p "$ANDROID_DIR/assetlinks"
-          FINGERPRINT="$(keytool -list -v             -keystore "$ANDROID_DIR/android-keystore.jks"             -storepass "$STORE_PASSWORD"             -alias nrj |
+          FINGERPRINT="$(keytool -list -v             -keystore "$ANDROID_DIR/android-keystore.jks"             -storepass "$NRJ_ANDROID_STORE_PASSWORD"             -alias nrj |
             awk -F': ' '/SHA256:/{print $2; exit}')"
           test -n "$FINGERPRINT"
           cat > "$ANDROID_DIR/assetlinks/assetlinks.json" <<EOF
