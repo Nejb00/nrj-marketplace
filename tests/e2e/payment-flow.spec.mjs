@@ -304,10 +304,21 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
     await expect(page.locator(".cart-tab").first()).toHaveAttribute("aria-selected", "false");
     await page.locator(".cart-tab").first().click();
 
-    await page.evaluate(() => {
-      const storageKey = "nrj_cart_v32";
-      const cart = JSON.parse(localStorage.getItem(storageKey) || "[]");
-      cart.push({
+    await page.evaluate(async () => {
+      const db = await new Promise((resolve, reject) => {
+        const request = indexedDB.open("NRJMarketplaceDB", 6);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+
+      const current = await new Promise((resolve, reject) => {
+        const request = db.transaction("cart", "readonly").objectStore("cart").get("default");
+        request.onsuccess = () => resolve(request.result || { userId: "default", items: [] });
+        request.onerror = () => reject(request.error);
+      });
+
+      const items = Array.isArray(current.items) ? current.items : [];
+      items.push({
         productId: 29999,
         quantity: 3,
         taille: "",
@@ -315,7 +326,19 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
         moq: 2,
         selected: true,
       });
-      localStorage.setItem(storageKey, JSON.stringify(cart));
+
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction("cart", "readwrite");
+        tx.objectStore("cart").put({
+          userId: "default",
+          items,
+          updatedAt: new Date().toISOString(),
+        });
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error);
+      });
+      db.close();
     });
     await page.reload();
     await expect(page.locator('a[data-nav="cart"]')).toBeVisible();
