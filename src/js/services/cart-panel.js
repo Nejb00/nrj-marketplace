@@ -1,5 +1,5 @@
 // ═══ Panier — panneau : rendu du body/footer + bindings ═══
-import { state } from '../core/state.js';
+import { state, saveCart } from '../core/state.js';
 import { escapeHtml } from '../utils/escape-html.js';
 import { formatPrice } from '../utils/format.js';
 import { thumbImg } from '../utils/images.js';
@@ -16,6 +16,46 @@ let cartPanelEventsInited = false;
 let cartUiInited = false;
 let lastCartTrigger = null;
 let cartDrag = null;
+let cartViewMode = 'all';
+
+function findCartProduct(item) {
+    return state.products.find((product) => Number(product.id) === Number(item?.productId)) || null;
+}
+
+function getCartEntries() {
+    return state.cart.map((item, index) => ({
+        item,
+        index,
+        product: findCartProduct(item)
+    }));
+}
+
+function getUnavailableEntries() {
+    return getCartEntries().filter((entry) => !entry.product);
+}
+
+function getSelectedQuantity(items = state.cart.filter((item) => item.selected !== false)) {
+    return items.reduce((sum, item) => sum + Math.max(0, Number(item.quantity) || 0), 0);
+}
+
+function getCartQuantity() {
+    return getSelectedQuantity(state.cart);
+}
+
+async function removeUnavailableCartItems() {
+    const unavailable = getUnavailableEntries();
+    if (!unavailable.length) return;
+    if (!state.products.length) {
+        console.warn('Suppression des indisponibles ignorée : catalogue non chargé');
+        return;
+    }
+    if (!confirm(`Supprimer ${unavailable.length} article${unavailable.length > 1 ? 's' : ''} indisponible${unavailable.length > 1 ? 's' : ''} ?`)) return;
+
+    const unavailableIds = new Set(unavailable.map(({ index }) => index));
+    state.cart = state.cart.filter((item, index) => !unavailableIds.has(index));
+    await saveCart();
+    refreshCartDisplay();
+}
 
 const CART_FOCUSABLE_SELECTOR = [
     'button:not([disabled])',
@@ -220,6 +260,29 @@ function initCartPanelEvents(body, footer) {
     cartPanelEventsInited = true;
 
     body.addEventListener('click', (e) => {
+        const tabButton = e.target.closest('[data-action="cart-view-mode"]');
+        if (tabButton) {
+            const nextMode = tabButton.dataset.mode === 'selected' ? 'selected' : 'all';
+            cartViewMode = nextMode;
+            refreshCartDisplay();
+            return;
+        }
+
+        const unavailableRemoveAll = e.target.closest('[data-action="cart-remove-unavailable"]');
+        if (unavailableRemoveAll) {
+            e.preventDefault();
+            e.stopPropagation();
+            removeUnavailableCartItems().catch((error) => console.error('Suppression indisponibles', error));
+            return;
+        }
+
+        const manageButton = e.target.closest('[data-action="cart-manage"]');
+        if (manageButton) {
+            cartViewMode = 'all';
+            document.getElementById('cartSelectAll')?.focus({ preventScroll: true });
+            return;
+        }
+
         const moqFill = e.target.closest('[data-action="cart-moq-fill"]');
         if (moqFill) {
             e.preventDefault();
@@ -296,6 +359,12 @@ function initCartPanelEvents(body, footer) {
         if (!checkoutButton || checkoutButton.disabled) return;
         openOrderModal();
     });
+
+    document.addEventListener('nrj:cart-manage', () => {
+        cartViewMode = 'all';
+        refreshCartDisplay();
+        requestAnimationFrame(() => document.getElementById('cartSelectAll')?.focus({ preventScroll: true }));
+    });
 }
 
 export async function removeCartItemAnimated(idx, element) {
@@ -316,10 +385,8 @@ export async function removeCartItemAnimated(idx, element) {
     }
 }
 
-function renderCartItems() {
-    return state.cart.map((it, idx) => {
-        const p = state.products.find(pr => pr.id === it.productId);
-        if (!p) return '';
+function renderCartItems(entries) {
+    return entries.map(({ item: it, index: idx, product: p }) => {
 
         const img = p.image ? thumbImg(p.image, p.name, 80, 80) : '📦';
         const vars = [];
@@ -358,6 +425,46 @@ function renderCartItems() {
     }).join('');
 }
 
+function renderUnavailableItems(entries) {
+    if (!entries.length) return '';
+
+    const cards = entries.map(({ item: it, index: idx }) => {
+        const label = it.productName || it.name || (`Produit #${it.productId}`);
+        const vars = [];
+        if (it.couleur) vars.push('Couleur: ' + it.couleur);
+        if (it.taille) vars.push('Taille: ' + it.taille);
+
+        return '<div class="cart-item cart-item--unavailable">' +
+            '<label class="cart-item-check">' +
+                '<input type="checkbox" disabled aria-label="Article indisponible">' +
+            '</label>' +
+            '<div class="cart-item-img cart-item-img--unavailable" aria-hidden="true">⚠️</div>' +
+            '<div class="cart-item-info">' +
+                '<h4>' + escapeHtml(label) + '</h4>' +
+                '<span class="cart-item-unavailable-label">Article indisponible</span>' +
+                (vars.length ? '<div class="cart-item-variants">' + escapeHtml(vars.join(', ')) + '</div>' : '') +
+                '<span class="cart-item-unavailable-note">Ce produit n’est plus disponible dans le catalogue. Disponibilité et prix non garantis.</span>' +
+            '</div>' +
+            '<button class="remove-item-btn" data-action="cart-remove" data-index="' + idx + '" aria-label="Supprimer l’article indisponible">🗑️</button>' +
+        '</div>';
+    }).join('');
+
+    return '<section class="cart-unavailable" aria-labelledby="cartUnavailableTitle">' +
+        '<div class="cart-unavailable-heading">' +
+            '<div><h3 id="cartUnavailableTitle">Articles indisponibles</h3><p>Ils ne pourront pas être commandés.</p></div>' +
+            '<button type="button" class="cart-unavailable-clear" data-action="cart-remove-unavailable">Tout supprimer</button>' +
+        '</div>' +
+        '<div class="cart-items">' + cards + '</div>' +
+    '</section>';
+}
+
+function renderCartTabs(allQuantity, selectedQuantity) {
+    return '<div class="cart-tabs" role="tablist" aria-label="Filtre du panier">' +
+        '<button type="button" class="cart-tab ' + (cartViewMode === 'all' ? 'is-active' : '') + '" data-action="cart-view-mode" data-mode="all" role="tab" aria-selected="' + (cartViewMode === 'all' ? 'true' : 'false') + '">Tout (' + allQuantity + ')</button>' +
+        '<button type="button" class="cart-tab ' + (cartViewMode === 'selected' ? 'is-active' : '') + '" data-action="cart-view-mode" data-mode="selected" role="tab" aria-selected="' + (cartViewMode === 'selected' ? 'true' : 'false') + '">Sélectionné (' + selectedQuantity + ')</button>' +
+    '</div>';
+}
+
 export function refreshCartDisplay() {
     initCartPanelUi();
     const body = document.getElementById('cartPanelBody');
@@ -369,6 +476,19 @@ export function refreshCartDisplay() {
     initQtySheet();
 
     const recommendations = renderRecommendations(getRecommendations());
+
+    const allQuantity = getCartQuantity();
+    const selectedQuantity = getSelectedQuantity();
+    const unavailableEntries = getUnavailableEntries();
+    const availableEntries = getCartEntries().filter((entry) => !!entry.product);
+    const visibleAvailableEntries = cartViewMode === 'selected'
+        ? availableEntries.filter(({ item }) => item.selected !== false)
+        : availableEntries;
+    const visibleUnavailableEntries = cartViewMode === 'selected'
+        ? unavailableEntries.filter(({ item }) => item.selected !== false)
+        : unavailableEntries;
+
+    const tabs = renderCartTabs(allQuantity, selectedQuantity);
 
     if (state.cart.length === 0) {
         body.innerHTML =
@@ -396,7 +516,14 @@ export function refreshCartDisplay() {
 
     const selectedItems = getSelectedItems();
     const selectedCount = selectedItems.length;
-    const allSelected = selectedCount === state.cart.length;
+    const allSelected = availableEntries.length > 0 && availableEntries.every(({ item }) => item.selected !== false);
+    const hasInvalidMoq = selectedItems.some((item) => {
+        const product = findCartProduct(item);
+        if (!product) return false;
+        const moq = Math.max(Number(item.moq) || 1, Number(product.moq) || 1);
+        return Number(item.quantity) < moq;
+    });
+    const hasUnavailableSelected = selectedItems.some((item) => !findCartProduct(item));
     const tot = getSelectedTotal();
 
     const selectBar =
@@ -408,12 +535,22 @@ export function refreshCartDisplay() {
             '<span class="cart-selected-count">Articles sélectionnés (' + selectedCount + ')</span>' +
         '</div>';
 
-    body.innerHTML = selectBar +
-        '<div class="cart-items">' + renderCartItems() + '</div>' +
+    const selectedEmpty =
+        cartViewMode === 'selected' && visibleAvailableEntries.length === 0 && visibleUnavailableEntries.length === 0
+            ? '<section class="cart-filter-empty" aria-live="polite"><strong>Aucun article sélectionné</strong><span>Retourne dans “Tout” pour voir ton panier.</span><button type="button" data-action="cart-view-mode" data-mode="all">Voir tout</button></section>'
+            : '';
+
+    body.innerHTML = tabs +
+        (cartViewMode === 'all'
+            ? selectBar
+            : '') +
+        selectedEmpty +
+        (visibleAvailableEntries.length ? '<div class="cart-items">' + renderCartItems(visibleAvailableEntries) + '</div>' : '') +
+        renderUnavailableItems(visibleUnavailableEntries) +
         recommendations;
 
     if (footer) {
-        const disabled = selectedCount === 0 || hasInvalidMoq;
+        const disabled = selectedCount === 0 || hasInvalidMoq || hasUnavailableSelected;
         footer.classList.add('cart-panel-footer--filled');
         footer.innerHTML =
             '<div class="cart-footer-bar">' +
@@ -427,7 +564,7 @@ export function refreshCartDisplay() {
                         '<strong id="cartTotal">' + formatPrice(tot) + '</strong>' +
                     '</div>' +
                 '</div>' +
-                '<button class="checkout-btn" id="checkoutBtn" data-action="cart-checkout"' + (disabled ? ' disabled' : '') + ' title="' + (hasInvalidMoq ? 'Augmentez les articles sous le minimum avant de commander' : 'Finaliser la commande') + '">💬 Commander via WhatsApp</button>' +
+                '<button class="checkout-btn" id="checkoutBtn" data-action="cart-checkout"' + (disabled ? ' disabled' : '') + ' title="' + (hasUnavailableSelected ? 'Supprimez les articles indisponibles avant de commander' : hasInvalidMoq ? 'Augmentez les articles sous le minimum avant de commander' : 'Finaliser la commande') + '">💬 Commander via WhatsApp</button>' +
             '</div>';
     }
 
