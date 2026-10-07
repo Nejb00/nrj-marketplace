@@ -257,12 +257,12 @@
       "driveMd5": "1d11f3235143922414fc312066d835eb"
     },
     "package-lock.json": {
-      "githubSha": "9c37ec69e76c0d3cd47c93756d6e64fa8d975d41",
-      "driveMd5": "8929d1eb26aad732f8a4cb65a9dcf29f"
+      "githubSha": "dabeffd73bd549c4bd88bf0481b601da116a223a",
+      "driveMd5": "dce5e75aec58f4fc29a1360c002b831f"
     },
     "package.json": {
-      "githubSha": "da17e09d39496c1f7742467bd66b927a07312667",
-      "driveMd5": "b00a917a728aec27967d208cbef516be"
+      "githubSha": "6120cdb7c2494629240a0328ea1b424094a4d6e9",
+      "driveMd5": "5c7fa45459378437f82dd0ea90623eb8"
     },
     "playwright.config.mjs": {
       "githubSha": "65383b2e1a0062c186f49e5319dc3d19a59dd071",
@@ -1345,8 +1345,8 @@
       "driveMd5": "09029b8193a15af4f5f8fd6a339402ae"
     },
     "vite.config.js": {
-      "githubSha": "610c4be52446afa97857f6a11b16f6ebb15c2d3d",
-      "driveMd5": "ba96d156f4f2282a5e0fe5b742620aaf"
+      "githubSha": "42b0ede613f06d5e0bc4283f079c4fb4794b4b60",
+      "driveMd5": "a0018480fe3228e3c20d7a620cc6ba1f"
     },
     "scripts/sync_to_gdrive.py": {
       "githubSha": "9d43e41e7a90148c44dad49486cab825e475bfe6",
@@ -1357,5 +1357,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-07T16:20:35.968Z"
+  "updatedAt": "2026-10-07T17:09:08.666Z"
 }
