@@ -56,6 +56,14 @@
       "githubSha": "7e2a0836136b9b010bd9bc7bdcf5ea81f5783fa5",
       "driveMd5": "443799507b541299fe1f86d8972578f3"
     },
+    ".github/workflows/cross-system-correlation.yml": {
+      "githubSha": "2f97919a68226484899cb274bcea713591711daa",
+      "driveMd5": "5d564eef714412a41f4e87826a562c3c"
+    },
+    ".github/workflows/data-integrity.yml": {
+      "githubSha": "3e4d2bd560acb764bef0e11e278cbf6cd38f0e23",
+      "driveMd5": "f8abdd336a5ff427cb84c307c9c5cd88"
+    },
     ".github/workflows/dependency-review.yml": {
       "githubSha": "d881866c6ab7819eb6b811e6bec74cbad9163561",
       "driveMd5": "9df29765a15dd4d8d990d1ccd5838358"
@@ -76,13 +84,29 @@
       "githubSha": "8657e05c4334a1b8d8fc9881a0633bad3d87039d",
       "driveMd5": "1ea4bbe130861324591c519b24df05ee"
     },
+    ".github/workflows/global-observability.yml": {
+      "githubSha": "6172068a0003629a13e012552b17790a53045a52",
+      "driveMd5": "8092740b36bd5144dcf0f19276f8811e"
+    },
     ".github/workflows/incident-guard.yml": {
-      "githubSha": "9e87ddd61c120f556a78989356f291cf17e940ea",
-      "driveMd5": "6ea768c783211ad2a2e09d690983f3af"
+      "githubSha": "eb23d8d51ed92642eca4b195a188722f7bb73f64",
+      "driveMd5": "e532a9b9a835e7a17f54332c2d1258af"
+    },
+    ".github/workflows/incident-memory.yml": {
+      "githubSha": "84bdd68cd03bee30b6c446cb6b4d8bdf7c8ae667",
+      "driveMd5": "695fdb5f83a7734b0f9a00abe5a3ddc3"
     },
     ".github/workflows/notion-sync.yml": {
       "githubSha": "7a13aada8e437d76f01f9a56f73aea4a4b139e53",
       "driveMd5": "8c9bd72d39c67c3052c826eea0f363be"
+    },
+    ".github/workflows/nrj-final-audit.yml": {
+      "githubSha": "061b096b35afc44c138c45975f5541ac9b4adf4c",
+      "driveMd5": "d3522d1bc9f558f3477c444ae429f6e6"
+    },
+    ".github/workflows/nrj-governance-audit.yml": {
+      "githubSha": "fd65cc2477c901d0154067104f716fd933c96ddf",
+      "driveMd5": "3854fcccc592b49b6aaa902151ff1d68"
     },
     ".github/workflows/nrj-merge-gate-v2.yml": {
       "githubSha": "e7305699826bb785b31b4ec3fe36512fbc54a681",
@@ -92,6 +116,10 @@
       "githubSha": "bf5e2dbbb30e984fb367ee5bc9c41a119bb932de",
       "driveMd5": "d4a3a6aa576af1958d0d2b32c593bbb8"
     },
+    ".github/workflows/nrj-resilience-audit.yml": {
+      "githubSha": "b4c2694a242df3775ba95b27cfc835b457f597b2",
+      "driveMd5": "e913e4f4390cf77c1111c447c89d8ad6"
+    },
     ".github/workflows/nrj-secure-merge-gate-controller.yml": {
       "githubSha": "729b1eccb35e3050a371b54d75ea9e3e8c88cd79",
       "driveMd5": "3c528c0ec4a25c7b234bd781fe66b686"
@@ -99,6 +127,10 @@
     ".github/workflows/payment-e2e.yml": {
       "githubSha": "3918668a14f708f8be58b5ebef8f2b5f1b423cf8",
       "driveMd5": "16e51e263ca5782ff8bd89f774096f77"
+    },
+    ".github/workflows/pr-intelligence.yml": {
+      "githubSha": "1cbb1dddcb13fffac2bbf56f48b46c959d911c8b",
+      "driveMd5": "5d86b50a20346bf6145c7c9419709abd"
     },
     ".github/workflows/pr-labeler.yml": {
       "githubSha": "dd9c268814bfa6b41054f6ec4d738fca19bd80d3",
@@ -112,6 +144,10 @@
       "githubSha": "d3f8259420796f135559a7c89b7d1ee65c39d66a",
       "driveMd5": "2162a6d12e2208570605299e85cffcdd"
     },
+    ".github/workflows/production-readiness.yml": {
+      "githubSha": "1ded89e5822fcecf9b0ec952a129edefef0ae471",
+      "driveMd5": "3269f4bb3685ebac18300e69a8adeb4b"
+    },
     ".github/workflows/project-report.yml": {
       "githubSha": "ecb83787b5a573a8bdb2e98c88fc9e7afb72b0a9",
       "driveMd5": "3d59a7918f2df3994ea453de8878ec6f"
@@ -123,6 +159,10 @@
     ".github/workflows/repo-health.yml": {
       "githubSha": "2453aac63041c797e8c73f14fe3cb5dfc9901c25",
       "driveMd5": "afb38dccece86f2aa7f1c1d3a73c77b6"
+    },
+    ".github/workflows/security-audit.yml": {
+      "githubSha": "89ab7d6c0fdd6eec53bdfcc1f1b88af26c57a3f4",
+      "driveMd5": "138a76382cf12c90e5f54697cf3e437b"
     },
     ".github/workflows/self-healing-dry-run.yml": {
       "githubSha": "f1ddcc1fb60a4e1937f2aa5893df74e32e013999",
@@ -139,6 +179,18 @@
     ".github/workflows/self-healing.yml": {
       "githubSha": "ae80e1868a3c0c9ae913d36c1db657b790fe85c4",
       "driveMd5": "c93e5fa6985e3513cf3f4cab370fb6de"
+    },
+    ".github/workflows/supabase-migration-drift.yml": {
+      "githubSha": "081e0c55ab01f01cbef8f55f0245d57c0b02d645",
+      "driveMd5": "4e6b0da556f520836569d7e45a4d557a"
+    },
+    ".github/workflows/supabase-rls-audit.yml": {
+      "githubSha": "46a37a20a5ee11dfdd5bd2ca0d3a672653980b2d",
+      "driveMd5": "26a814b6a6014d6b69838cd8c3fde57d"
+    },
+    ".github/workflows/test-impact.yml": {
+      "githubSha": "da8641b6b3f8b61cc9e4d0894b2b5533f5e66e4b",
+      "driveMd5": "7459497579c5c253912be7944de57bfb"
     },
     ".github/workflows/vercel-browser-e2e.yml": {
       "githubSha": "94ef15919ce7e1109d847e05ac22d05538490443",
@@ -177,8 +229,12 @@
       "driveMd5": "f1da7c85c757c35d7e3e55bdd6f6860b"
     },
     "docs/automation-workflow-topology.md": {
-      "githubSha": "0402cbf4cb3972401c5a2234aa6439791be54893",
-      "driveMd5": "05e682d6c81ef02f6c8f9c9e4eeff948"
+      "githubSha": "e42f353103e888cedb4da3ac9233ea408711d1a1",
+      "driveMd5": "bfc2924d56c6135d6a3aeaaf86d85cef"
+    },
+    "docs/nrj-self-healing-attack-matrix.md": {
+      "githubSha": "77f625603426ef6ca563e6ae157f428a88187fea",
+      "driveMd5": "4fd0c7539ffb1d49b96c1d4887c0ecae"
     },
     "docs/payment-architecture.md": {
       "githubSha": "55cfba982e5c6cfb2fe1ac63b00215fa556e660d",
@@ -205,8 +261,8 @@
       "driveMd5": "8929d1eb26aad732f8a4cb65a9dcf29f"
     },
     "package.json": {
-      "githubSha": "cd4ee63e35f546afbfc66d53ec17ab244331e9f7",
-      "driveMd5": "b6843f2bda1c918b1a078a6eb6f1f6b6"
+      "githubSha": "da17e09d39496c1f7742467bd66b927a07312667",
+      "driveMd5": "b00a917a728aec27967d208cbef516be"
     },
     "playwright.config.mjs": {
       "githubSha": "65383b2e1a0062c186f49e5319dc3d19a59dd071",
@@ -261,8 +317,8 @@
       "driveMd5": "bf16f4c11c05e3f7da584a4be7a9a8c6"
     },
     "scripts/ai-assisted-diagnosis.mjs": {
-      "githubSha": "b6ea6d11b6c906c21f0d8e7ae0ea9eca3fe3db4a",
-      "driveMd5": "38d451c5ebf1c0486829c568841de4b8"
+      "githubSha": "e2eb61182f2df7c9ff83240e997399ea68a8084e",
+      "driveMd5": "05c520eb37309e920b727636204f6dd7"
     },
     "scripts/automation-benchmark.mjs": {
       "githubSha": "344653df949ede56e7fff3f5cb0fdb141a946ee0",
@@ -271,6 +327,14 @@
     "scripts/automation-cost-benchmark.mjs": {
       "githubSha": "cb44f179e044119504c3197a050003581c41b5b1",
       "driveMd5": "f98d7726ca10e747f96fb76a25d49cc8"
+    },
+    "scripts/automation-final-audit.mjs": {
+      "githubSha": "00a4878007c4055949789098ac07b1d4f4563645",
+      "driveMd5": "0293ed81975b312dc87b9b7a5abaa789"
+    },
+    "scripts/automation-governance.mjs": {
+      "githubSha": "21b79796519b51e019df3d022fd194376f71f6e7",
+      "driveMd5": "ed8fcde984d8c53493a79588cf7004c8"
     },
     "scripts/automation-real-incident-observer.mjs": {
       "githubSha": "9cc2bab85f8c0b959a7ceb2b8bf4fc39d39a9e1d",
@@ -288,17 +352,101 @@
       "githubSha": "7ce58ba3218f42f8d4897991fac8321cdbfdf974",
       "driveMd5": "edfa55323f526b7a818d8aac847bdc83"
     },
+    "scripts/cross-system-correlation.mjs": {
+      "githubSha": "8b8e9a24b220dc5e44d07efd96cb5489c3c0c8a1",
+      "driveMd5": "b5ba9f2618f531266f88cdd71fd0e13c"
+    },
+    "scripts/cross-system-integrity.mjs": {
+      "githubSha": "315b0ed95bdbff1234ecfe44664c44e6c9f12205",
+      "driveMd5": "a84faa671174284c13a79952fb776253"
+    },
+    "scripts/data-integrity-snapshot.sql": {
+      "githubSha": "407ed4d1a0b03e1dc9b46e23426feb67d54a3553",
+      "driveMd5": "e3edd649551d518fa50806ae6c72d438"
+    },
+    "scripts/data-integrity.mjs": {
+      "githubSha": "c120213d4b3974eea2bb402361debd73aedc69a2",
+      "driveMd5": "190119730ae1b9f77d2089a1c98b7c9b"
+    },
     "scripts/drive-sync.mjs": {
       "githubSha": "bf668574dc2ec2f93f7ddc50c9314a3b326df28e",
       "driveMd5": "6703e5ca7409710394b9feb6248ea949"
     },
+    "scripts/git-pr-intelligence.mjs": {
+      "githubSha": "476c008e1d3aaea724bf84d2fe25a0b20e8e61b8",
+      "driveMd5": "a8eed711cf5a6cfacb31ffeb5773d422"
+    },
+    "scripts/incident-history.mjs": {
+      "githubSha": "4fd11f7a71a1524096b28a51979b99f1023dc496",
+      "driveMd5": "6b56a77b4a590b95d83845f53632cef1"
+    },
     "scripts/incident-intelligence.mjs": {
-      "githubSha": "52710f2d19c5cbaba9ed65edec3014e72b3b66c3",
-      "driveMd5": "d08bc5172d20fc81fd37b1726ebc3427"
+      "githubSha": "e4ebf29ec9915d0bf6062760e03d0d7c5506c236",
+      "driveMd5": "64eb97639d104d65c978cf2c310818d1"
+    },
+    "scripts/migration-drift.mjs": {
+      "githubSha": "0cdb9ae0052e09a7e7ad15192d3b2801464c58ac",
+      "driveMd5": "45d832a83e03751af61c38f150060669"
+    },
+    "scripts/observability-model.mjs": {
+      "githubSha": "88e20c63d20c8933e4bf18743837d0903ef28041",
+      "driveMd5": "18f866aac11f38319a03a46cb1bcedc6"
+    },
+    "scripts/observability-report.mjs": {
+      "githubSha": "26389a03d53593006fe6bd5aa041bce9e0276077",
+      "driveMd5": "8133351e1dee7dcfd032cf2b938cd5db"
+    },
+    "scripts/payment-attack-matrix.mjs": {
+      "githubSha": "6f138edab6005abd4bf9f656b6a81d1eb9a9a61b",
+      "driveMd5": "f7ae2caa91a3b241846d0616d2f86a24"
+    },
+    "scripts/payment-audit.mjs": {
+      "githubSha": "de91fb0ef9c507c8d4ef97e56a62e602e2a8d7f4",
+      "driveMd5": "8d2afe7730935cffa29d592f3c1300b2"
+    },
+    "scripts/pr-intelligence-report.mjs": {
+      "githubSha": "fc064a935ee7f0b3a2f3969be0d9d075419a9d63",
+      "driveMd5": "fd6ca8b991c78f9398f05be3e5fda6aa"
+    },
+    "scripts/production-guard.mjs": {
+      "githubSha": "4d3eb6440540cd36d89ae9c1179107fcbe9fe89b",
+      "driveMd5": "a73fead2400d231d7b84fcbff7480dba"
+    },
+    "scripts/production-readiness-report.mjs": {
+      "githubSha": "9f22187a5b9fcef5cc49035735f19ab8cee939e5",
+      "driveMd5": "2d6ec800af152e6b5531672f39373676"
+    },
+    "scripts/recovery-guard.mjs": {
+      "githubSha": "48cdd02a406b584497ef6db43987f45863a4dfce",
+      "driveMd5": "307d4045d9de3ddd6aa1a936a2cc894c"
+    },
+    "scripts/rls-security-audit.mjs": {
+      "githubSha": "420af43c4cb0d2d812666691fb5bd17d10ccaa86",
+      "driveMd5": "353f9e77b20d70a1842ba889d2455c5b"
+    },
+    "scripts/rls-security-snapshot.sql": {
+      "githubSha": "7069dd8207015d74b2c1b70ce62ab0e1bf2fc5c4",
+      "driveMd5": "f2d0ab87b6232d7f9f0fe47f36107343"
+    },
+    "scripts/run-rls-audit.mjs": {
+      "githubSha": "68d75d60b6cde9a7d4f93e7f8e5dfe14a702ebf1",
+      "driveMd5": "39763515ea50ef6b097f94e6d7011b10"
+    },
+    "scripts/security-audit-repo.mjs": {
+      "githubSha": "2f0665102690927cbcd1db06a1926c6ac703809e",
+      "driveMd5": "b1f0e4a2de79050f0025498a73fecee4"
+    },
+    "scripts/security-audit.mjs": {
+      "githubSha": "b8825a60b0872f6f5e8ae44155038e586065dda0",
+      "driveMd5": "df60a4471c341b9fecdf691201a1ce43"
     },
     "scripts/self-healing-e2e.mjs": {
       "githubSha": "938bc4ad414e8d4b4616b00d74dc9294f0740961",
       "driveMd5": "20a0ff48d176b52682d963c57317acb1"
+    },
+    "scripts/self-healing-guard.mjs": {
+      "githubSha": "805da645fb7583032d1aeca68b987909a3522f27",
+      "driveMd5": "4ff328b87622842b089eba1a733cd26a"
     },
     "scripts/self-healing-rollback.mjs": {
       "githubSha": "3b673df4f0ace27bc7b6f72732c44933327788c5",
@@ -319,6 +467,18 @@
     "scripts/sync_to_notion.py": {
       "githubSha": "345f6e3456991770d82afa931b46d6afcd617d79",
       "driveMd5": "c8ef2e55a2b3d608f7cfff8479c4e898"
+    },
+    "scripts/test-health.mjs": {
+      "githubSha": "a0d9106742d67bb74d2addac92beaa226224632e",
+      "driveMd5": "b52cc1b8ae58499fdf83b55a0e176d4a"
+    },
+    "scripts/test-impact-report.mjs": {
+      "githubSha": "0d1888bccf127ee6002ce4c7f924d59d468e2470",
+      "driveMd5": "85153beaad4644d83e0450e0688a82ea"
+    },
+    "scripts/test-intelligence.mjs": {
+      "githubSha": "6d8227f99418a8e1fe96c45545585648744445af",
+      "driveMd5": "d34eef657b650780a2e25b6ad7136db9"
     },
     "src/css/base/base.css": {
       "githubSha": "23de71ad38f820ad84939cd2298ed9eb72f79f35",
@@ -905,8 +1065,8 @@
       "driveMd5": "584f1adbc2128557402efcd1df822a90"
     },
     "test/ai-assisted-diagnosis.test.js": {
-      "githubSha": "52d53aef4531add8c5c14e50e2135e20e1ee87b6",
-      "driveMd5": "671b54d4ee6b0f6c75b658f180f8486d"
+      "githubSha": "e1de3565e9f33bb36e756970ce006c10b82d2e2c",
+      "driveMd5": "f98ebaf04b4556656706b13d23f3ea00"
     },
     "test/automation-benchmark.test.js": {
       "githubSha": "bbea12001bc50780253eb562835cc9b4f2d28f5e",
@@ -920,21 +1080,41 @@
       "githubSha": "c6806cb9b2500fbada441220f0ea0df9088fdd4b",
       "driveMd5": "e0d605c0aec01198e9ebcb102950c4cc"
     },
+    "test/automation-final-audit.test.js": {
+      "githubSha": "8a86753be22cd5161b62e18739dbb3657e1a0ed3",
+      "driveMd5": "f9ddeaad0144e1d7edb98a438395ae15"
+    },
+    "test/automation-governance.test.js": {
+      "githubSha": "85fa10bc4843cee7e8f1606fb13cfdc3ebbcfaf8",
+      "driveMd5": "e5ef680a23f4564427f9b6c2fa65f340"
+    },
     "test/automation-real-incident-observer.test.js": {
       "githubSha": "3e9551e444243271825c263487f3ba4a1d4fccd1",
       "driveMd5": "f200bfab0bfd7c7d0116f879232b239f"
     },
     "test/automation-topology.test.js": {
-      "githubSha": "1e4ad027fedb80779e7682d8ccaf8486173fc03b",
-      "driveMd5": "5ff881c3e3ab16027592b1dfdbac7ab5"
+      "githubSha": "992c6e01785027d0012a20fea8741dd7ab7892ea",
+      "driveMd5": "fe05c683727d9d54c0d66ae5a1522e27"
     },
     "test/business-invariants.test.js": {
       "githubSha": "a950f2bbbc9af5135cb6b88968c5f237855f0439",
       "driveMd5": "2c9367817325c5b4f05f49b01e8df006"
     },
+    "test/correlation-contract.test.js": {
+      "githubSha": "41ba11483593139f5bdb5f58121f15dcde8c3ce5",
+      "driveMd5": "8aca4387417fd0ac7961845ec60de72c"
+    },
     "test/create-order-contract.test.js": {
       "githubSha": "8bf2d1f8a16a5d362046396d6da5ec622cf6389d",
       "driveMd5": "fe048e578a2f4649c2fe8aa0def4c196"
+    },
+    "test/cross-system-integrity.test.js": {
+      "githubSha": "30ed7b116cd01c815ffa50b71909da451a45e774",
+      "driveMd5": "e9cd2389884787e0769d188603f60e40"
+    },
+    "test/data-integrity.test.js": {
+      "githubSha": "cd83dce2367f502606b1491e7a027ef09a4b356c",
+      "driveMd5": "c09fdb00eb81058d184452411fe8c2b6"
     },
     "test/direct-purchase.test.js": {
       "githubSha": "072b3e815db58016d8e3beb29d0057cf54747141",
@@ -948,9 +1128,21 @@
       "githubSha": "0812dfef8529af76b35e15461e0d735856d0d2bd",
       "driveMd5": "b3a85d688b4e63fa66d3feb6d298963a"
     },
+    "test/git-pr-intelligence.test.js": {
+      "githubSha": "22b1ab744050d56ce88127576e86f79b88bf500e",
+      "driveMd5": "13cbd7c8fe93b186cf26c03fb7470d2f"
+    },
+    "test/incident-history.test.js": {
+      "githubSha": "c39f8034229522d56141ca5990e92c1a33bcc47c",
+      "driveMd5": "26cc75f2ef779f560f08d28a8fc7edb5"
+    },
     "test/incident-intelligence.test.js": {
-      "githubSha": "e44a6c81e2943cecdcaf35ece6b9b55e6673fbfa",
-      "driveMd5": "5d9938dc78daeb20ceee22725688f022"
+      "githubSha": "3695fe4a2bbaf846d485d5c9bf02c79af52df4ff",
+      "driveMd5": "50117a9ad62fe7ead2179c83a301a199"
+    },
+    "test/migration-drift.test.js": {
+      "githubSha": "40d89d8171b25446ff107248469f5de753966ae2",
+      "driveMd5": "3c5baf49a2e9cee634f46a50ff0751ab"
     },
     "test/mobile-money-checkout.test.js": {
       "githubSha": "2bfcf53d924db00044116f6acd8ce2abe24a9eec",
@@ -960,6 +1152,10 @@
       "githubSha": "02812637bdc153b22d48128fd68ae3bc80de7274",
       "driveMd5": "2fead946d70c715b2805930dc06334b6"
     },
+    "test/observability-model.test.js": {
+      "githubSha": "ae0e0e890e5f1e94cc229ac756c874ec976e09f5",
+      "driveMd5": "3e13a66f11d8a7f161028bb4a45bc7c0"
+    },
     "test/openpay-provider.test.js": {
       "githubSha": "9301bcc769dcae3fab4a73bd257de7068ced6ccf",
       "driveMd5": "889f4d3809bc0299b052ca51d5272588"
@@ -967,6 +1163,14 @@
     "test/payment-anti-abuse.test.js": {
       "githubSha": "9c37611cab8f6f33f894c338b4f76faa16c84297",
       "driveMd5": "a3c562d84e6e610a1f94ea450f80f187"
+    },
+    "test/payment-attack-matrix.test.js": {
+      "githubSha": "f0ff43350d441c5157b66951dbd9936df96a006c",
+      "driveMd5": "5178cb924b0a0c6c4047640469bc7202"
+    },
+    "test/payment-audit.test.js": {
+      "githubSha": "991527434e417e6a0f5475563775eae39bc364d5",
+      "driveMd5": "a984c19ed99d22e5341fe2377180587c"
     },
     "test/payment-checkout-regression.test.js": {
       "githubSha": "17b542a9c7c3c4d6e22263b86afaa2ea62ac02b0",
@@ -1056,9 +1260,25 @@
       "githubSha": "cfdef74efa4a27c9967814ebf2c125ca3e466371",
       "driveMd5": "caad1444a800afb561a18f8200d68ba5"
     },
+    "test/production-guard.test.js": {
+      "githubSha": "3287b70eeac0b60205882b48e454b5432532f76f",
+      "driveMd5": "288c02478221f95592969c6a7385b06d"
+    },
     "test/project-report-routing.test.js": {
       "githubSha": "2daf4ccffdb6739aa05d3f0c956d5cb47a8c2fb9",
       "driveMd5": "d3ea51f4b3bc309d4709dd6d22041767"
+    },
+    "test/recovery-guard.test.js": {
+      "githubSha": "528b2fdc9b160443d28c2922d8037517351859f3",
+      "driveMd5": "6afa673a250abf9b7ef061ccf2da26f8"
+    },
+    "test/rls-security-audit.test.js": {
+      "githubSha": "e889639ff1e976ffa3165e2dc0fdf29db7d29725",
+      "driveMd5": "15fe3b7dcdc76537ef6823095dd9b720"
+    },
+    "test/security-audit.test.js": {
+      "githubSha": "7ad988e9ef5ecc2ef8962776cb75d5dbc5d35c44",
+      "driveMd5": "13218058cdf2fbdb50162279a0c040df"
     },
     "test/self-healing-ai-comment-parser.test.js": {
       "githubSha": "c9b6dbc46ccc814ac48e5f7d06f20a9e59097dca",
@@ -1069,8 +1289,12 @@
       "driveMd5": "e399aaf878e05a1d5c3f9ce3147afe4c"
     },
     "test/self-healing-global-resilience.test.js": {
-      "githubSha": "8e2b4be92ab59b4f2525f009aa8c61681112ec80",
-      "driveMd5": "6d5758dbe571456c8e691467eecc1e62"
+      "githubSha": "d89d7ac1f14f258927c99ac88c072aa3044976fe",
+      "driveMd5": "a659d8c6459b83e5e00f3f5b10f9db37"
+    },
+    "test/self-healing-guard.test.js": {
+      "githubSha": "5f9e24c90565b7cad21895901e92722587d7857f",
+      "driveMd5": "ea922651bcc81d53fb45e17c58ff9f84"
     },
     "test/self-healing-recipes.test.js": {
       "githubSha": "4ca3552fe1315eec5cdb147e5c3d3b7e51869e8e",
@@ -1081,8 +1305,8 @@
       "driveMd5": "53aae155aeda6a5805429a9c93b58ec6"
     },
     "test/self-healing-safety-contract.test.js": {
-      "githubSha": "b1c8403581ca22db3f06bcc157239fc5119afc68",
-      "driveMd5": "d1aa70a487e190e0e6b4078b0e94119f"
+      "githubSha": "7d749d45ea6b7c850b2bdee7fe30633a93fb9361",
+      "driveMd5": "fc3453f8a105e20f85f0f9b49d13edd2"
     },
     "test/self-healing-simulation.test.js": {
       "githubSha": "f67638a6e1c7ccea215876a6c7d415c7462bca0d",
@@ -1091,6 +1315,14 @@
     "test/self-healing-verification.test.js": {
       "githubSha": "33aa0a9c7692a93781dec0c2e2930715680cacce",
       "driveMd5": "08de7a1bd6243c1cdf5e82afe5b45a80"
+    },
+    "test/test-health.test.js": {
+      "githubSha": "9da52b47003502f459d01d0caa6ddfd4693229fb",
+      "driveMd5": "21081736a65066b66446fc41647b9706"
+    },
+    "test/test-intelligence.test.js": {
+      "githubSha": "23b9ff64b83ee1b8a7aed06632e0976f97b4f230",
+      "driveMd5": "7c15e1386706010136534e52eb80bb78"
     },
     "test/vercel-browser-e2e-routing.test.js": {
       "githubSha": "c01e4524748114cc42a298fc27b06a86d2605d7b",
@@ -1125,5 +1357,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-07T16:01:14.632Z"
+  "updatedAt": "2026-10-07T16:20:35.968Z"
 }
