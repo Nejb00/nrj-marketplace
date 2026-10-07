@@ -316,17 +316,46 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
     await expect(page.locator(".cart-tab").first()).toHaveAttribute("aria-selected", "false");
     await page.locator(".cart-tab").first().click();
 
-    await page.evaluate(() => {
-      const cart = JSON.parse(localStorage.getItem("nrj_cart_v32") || "[]");
-      cart.push({
-        productId: 29999,
-        quantity: 3,
-        taille: "",
-        couleur: "",
-        moq: 2,
-        selected: true,
+    await page.evaluate(async () => {
+      const items = await new Promise((resolve, reject) => {
+        const request = indexedDB.open("NRJMarketplaceDB", 6);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          const db = request.result;
+          const read = db.transaction("cart", "readonly").objectStore("cart").get("default");
+          read.onerror = () => reject(read.error);
+          read.onsuccess = () => resolve(Array.isArray(read.result?.items) ? read.result.items : []);
+        };
       });
-      localStorage.setItem("nrj_cart_v32", JSON.stringify(cart));
+
+      const updatedItems = [
+        ...items,
+        {
+          productId: 29999,
+          quantity: 3,
+          taille: "",
+          couleur: "",
+          moq: 2,
+          selected: true,
+        },
+      ];
+
+      await new Promise((resolve, reject) => {
+        const request = indexedDB.open("NRJMarketplaceDB", 6);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          const db = request.result;
+          const tx = db.transaction("cart", "readwrite");
+          tx.objectStore("cart").put({
+            userId: "default",
+            items: updatedItems,
+            updatedAt: new Date().toISOString(),
+          });
+          tx.oncomplete = resolve;
+          tx.onerror = () => reject(tx.error);
+          tx.onabort = () => reject(tx.error);
+        };
+      });
     });
     await page.reload();
     await page.locator('a[data-nav="cart"]').click();
