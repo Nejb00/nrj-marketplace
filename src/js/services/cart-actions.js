@@ -41,14 +41,19 @@ function flyToCart(sourceEl) {
 }
 
 export async function addToCart(pid, t = '', c = '', sourceEl = null, qty = null, options = {}) {
-    const { silent = false, variantId = null } = options || {};
+    const { silent = false, variantId = null, unitPrice = null, moq: requestedMoq = null } = options || {};
     const normalizedVariantId = variantId == null ? null : String(variantId).trim();
+    const normalizedUnitPrice = Number(unitPrice);
+    const variantMoq = Number(requestedMoq);
     const p = state.products.find(pr => pr.id === pid);
     if (!p) return;
     if (sourceEl) flyToCart(sourceEl);
     signalCart(p);
 
-    const moq = Number(p.moq) || 1;
+    const productMoq = Number(p.moq) || 1;
+    const moq = Number.isFinite(variantMoq) && variantMoq > 0
+        ? Math.max(productMoq, variantMoq)
+        : productMoq;
     const amount = Math.max(moq, Number(qty) || moq);
     const exist = state.cart.find(i =>
         Number(i.productId) === Number(pid) &&
@@ -59,6 +64,10 @@ export async function addToCart(pid, t = '', c = '', sourceEl = null, qty = null
     if (exist) {
         exist.quantity = Number(exist.quantity) + amount;
         exist.selected = true;
+        exist.moq = Math.max(Number(exist.moq) || 1, moq);
+        if (normalizedVariantId && Number.isFinite(normalizedUnitPrice) && normalizedUnitPrice > 0) {
+            exist.unitPrice = normalizedUnitPrice;
+        }
     } else {
         const item = {
             productId: pid,
@@ -69,6 +78,9 @@ export async function addToCart(pid, t = '', c = '', sourceEl = null, qty = null
             selected: true
         };
         if (normalizedVariantId) item.variantId = normalizedVariantId;
+        if (normalizedVariantId && Number.isFinite(normalizedUnitPrice) && normalizedUnitPrice > 0) {
+            item.unitPrice = normalizedUnitPrice;
+        }
         state.cart.push(item);
     }
     trackPopularity(pid, 5);
@@ -109,7 +121,7 @@ export async function setCartQty(idx, qty) {
  * Si la nouvelle variante existe déjà sur une autre ligne du même produit,
  * les quantités sont fusionnées afin d'éviter les doublons dans le panier.
  */
-export async function updateCartItem(idx, { taille = '', couleur = '', quantity, variantId = undefined } = {}) {
+export async function updateCartItem(idx, { taille = '', couleur = '', quantity, variantId = undefined, unitPrice = undefined, moq = undefined } = {}) {
     const it = state.cart[idx];
     if (!it) return;
 
@@ -125,6 +137,14 @@ export async function updateCartItem(idx, { taille = '', couleur = '', quantity,
     const nextVariantId = variantId === undefined
         ? (it.variantId != null ? String(it.variantId).trim() : null)
         : (variantId == null ? null : String(variantId).trim());
+    const requestedUnitPrice = unitPrice === undefined ? Number(it.unitPrice) : Number(unitPrice);
+    const nextUnitPrice = Number.isFinite(requestedUnitPrice) && requestedUnitPrice > 0
+        ? requestedUnitPrice
+        : null;
+    const requestedMoq = moq === undefined ? moq : Number(moq);
+    const nextMoq = Number.isFinite(requestedMoq) && requestedMoq > 0
+        ? Math.max(Number(product?.moq) || 1, requestedMoq)
+        : Math.max(Number(product?.moq) || 1, Number(it.moq) || 1);
 
     const duplicateIdx = state.cart.findIndex((other, otherIdx) =>
         otherIdx !== idx &&
@@ -137,16 +157,19 @@ export async function updateCartItem(idx, { taille = '', couleur = '', quantity,
     if (duplicateIdx >= 0) {
         const duplicate = state.cart[duplicateIdx];
         duplicate.quantity = Math.max(0, Number(duplicate.quantity) || 0) + nextQty;
-        duplicate.moq = Math.max(Number(duplicate.moq) || 1, moq);
+        duplicate.moq = Math.max(Number(duplicate.moq) || 1, nextMoq);
         duplicate.selected = duplicate.selected !== false || it.selected !== false;
+        if (nextVariantId && nextUnitPrice) duplicate.unitPrice = nextUnitPrice;
         state.cart.splice(idx, 1);
     } else {
         it.taille = nextTaille;
         it.couleur = nextCouleur;
         it.quantity = nextQty;
-        it.moq = moq;
+        it.moq = nextMoq;
         if (nextVariantId) it.variantId = nextVariantId;
         else delete it.variantId;
+        if (nextVariantId && nextUnitPrice) it.unitPrice = nextUnitPrice;
+        else if (!nextVariantId) delete it.unitPrice;
     }
 
     await saveCart();
