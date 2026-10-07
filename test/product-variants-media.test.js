@@ -3,9 +3,12 @@ import assert from 'node:assert/strict';
 
 import {
     collectLegacyProductMedia,
+    getCompatibleVariantValues,
     getProductGalleryForSelection,
     getProductGalleryMedia,
+    getVariantCommercials,
     getVariantOptionValues,
+    isValidVariantSelection,
     normalizeProductMedia,
     normalizeProductVariant,
 } from '../src/js/services/product-variants-media.js';
@@ -142,4 +145,46 @@ test('getVariantOptionValues derives unique options from real V2 variants', () =
 
     assert.deepEqual(values.colors, ['Blanc', 'Rouge']);
     assert.deepEqual(values.sizes, ['M', 'L']);
+});
+
+
+test('getVariantCommercials uses variant price and MOQ only when the selection is complete', () => {
+    const product = {
+        id: 99,
+        price: 4_500,
+        moq: 5,
+        variants: [
+            { id: 'wm', product_id: 99, variant_key: 'white-m', color: 'Blanc', size: 'M', price: 5_000, moq: '8', active: true },
+            { id: 'wl', product_id: 99, variant_key: 'white-l', color: 'Blanc', size: 'L', price: 5_500, moq: '10', active: true },
+        ],
+    };
+
+    const incomplete = getVariantCommercials(product, 'Blanc', '');
+    assert.equal(incomplete.ready, false);
+    assert.equal(incomplete.price, 4_500);
+    assert.equal(incomplete.moq, 5);
+
+    const complete = getVariantCommercials(product, 'Blanc', 'L');
+    assert.equal(complete.ready, true);
+    assert.equal(complete.variant.id, 'wl');
+    assert.equal(complete.price, 5_500);
+    assert.equal(complete.moq, 10);
+});
+
+test('getCompatibleVariantValues and isValidVariantSelection enforce the V2 matrix', () => {
+    const product = {
+        id: 100,
+        variants: [
+            { id: 'wm', product_id: 100, variant_key: 'white-m', color: 'Blanc', size: 'M', active: true },
+            { id: 'wl', product_id: 100, variant_key: 'white-l', color: 'Blanc', size: 'L', active: true },
+            { id: 'rs', product_id: 100, variant_key: 'red-s', color: 'Rouge', size: 'S', active: true },
+        ],
+    };
+
+    assert.deepEqual(
+        [...getCompatibleVariantValues(product, 'size', { color: 'Blanc' })],
+        ['M', 'L']
+    );
+    assert.equal(isValidVariantSelection(product, 'Blanc', 'M'), true);
+    assert.equal(isValidVariantSelection(product, 'Blanc', 'S'), false);
 });
