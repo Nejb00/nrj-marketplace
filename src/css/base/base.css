@@ -598,24 +598,12 @@ footer { text-align: center; padding: 1.5rem 1rem 5rem; color: var(--text-second
 
 /* ═══ Vue Catalogue — contenu uniquement ═══
    La vue Accueil/Catalogue laisse toute la hauteur disponible à son contenu :
-   bannière + produits. La recherche reste accessible, tandis que les couches
-   de navigation du header sont retirées pour ne pas consommer d'espace.
+   bannière + produits. Le header fixe et son spacer sont retirés dans cette
+   vue pour réserver l'espace à l'expérience catalogue.
 */
+body.catalogue-content-only #headerFixed,
 body.catalogue-content-only #headerSpacer {
     display: none;
-}
-
-body.catalogue-content-only #headerFixed {
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    backdrop-filter: none;
-}
-
-body.catalogue-content-only #headerFixed #filterBar,
-body.catalogue-content-only #headerFixed #quickFilters,
-body.catalogue-content-only #headerFixed #subcategoryBubbles {
-    display: none !important;
 }
 
 body.catalogue-content-only #mainContent {
