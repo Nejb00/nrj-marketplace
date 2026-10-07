@@ -299,6 +299,18 @@ function initCartPanelEvents(body, footer) {
             return;
         }
 
+        const editButton = e.target.closest('[data-action="cart-edit"]');
+        if (editButton) {
+            e.preventDefault();
+            e.stopPropagation();
+            const idx = parseInt(editButton.dataset.index, 10);
+            if (!Number.isInteger(idx) || idx < 0) return;
+            document.dispatchEvent(new CustomEvent('nrj:cart-edit', {
+                detail: { index: idx, trigger: editButton }
+            }));
+            return;
+        }
+
         const qtyButton = e.target.closest('[data-action="cart-qty-pick"]');
         if (qtyButton) {
             e.stopPropagation();
@@ -408,19 +420,22 @@ function renderCartItems(entries) {
             '<label class="cart-item-check">' +
                 '<input type="checkbox" data-action="cart-select" data-index="' + idx + '" ' + (isSelected ? 'checked' : '') + '>' +
             '</label>' +
-            '<div class="cart-item-img">' + img + '</div>' +
-            '<div class="cart-item-info">' +
-                '<h4>' + escapeHtml(p.name) + '</h4>' +
-                (vars.length ? '<div class="cart-item-variants">' + escapeHtml(vars.join(', ')) + '</div>' : '') +
-                '<span class="cart-item-price">Prix unitaire · ' + formatPrice(p.price) + '</span>' +
-                '<strong class="cart-item-line-total">' + formatPrice(lineTotal) + '</strong>' +
-                '<div class="cart-item-qty">' +
-                    '<button class="qty-btn" data-action="cart-decrease" data-index="' + idx + '" ' + (dis ? 'disabled' : '') + ' aria-label="Diminuer">−</button>' +
-                    '<button type="button" class="qty-value-btn" data-action="cart-qty-pick" data-index="' + idx + '" aria-label="Choisir la quantité">' + qty + ' <span class="qty-chevron">▼</span></button>' +
-                    '<button class="qty-btn" data-action="cart-increase" data-index="' + idx + '" aria-label="Augmenter">+</button>' +
-                '</div>' +
+            '<button type="button" class="cart-item-edit-trigger" data-action="cart-edit" data-index="' + idx + '" aria-label="Modifier ' + escapeHtml(p.name) + '">' +
+                '<span class="cart-item-img">' + img + '</span>' +
+                '<span class="cart-item-info">' +
+                    '<span class="cart-item-info-name">' + escapeHtml(p.name) + '</span>' +
+                    (vars.length ? '<span class="cart-item-variants">' + escapeHtml(vars.join(', ')) + '</span>' : '') +
+                    '<span class="cart-item-price">Prix unitaire · ' + formatPrice(p.price) + '</span>' +
+                    '<strong class="cart-item-line-total">' + formatPrice(lineTotal) + '</strong>' +
+                '</span>' +
+            '</button>' +
+            '<div class="cart-item-qty">' +
+                '<button class="qty-btn" data-action="cart-decrease" data-index="' + idx + '" ' + (dis ? 'disabled' : '') + ' aria-label="Diminuer">−</button>' +
+                '<button type="button" class="qty-value-btn" data-action="cart-qty-pick" data-index="' + idx + '" aria-label="Choisir la quantité">' + qty + ' <span class="qty-chevron">▼</span></button>' +
+                '<button class="qty-btn" data-action="cart-increase" data-index="' + idx + '" aria-label="Augmenter">+</button>' +
             '</div>' +
             '<button class="remove-item-btn" data-action="cart-remove" data-index="' + idx + '" aria-label="Retirer">🗑️</button>' +
+            moqWarning +
         '</div>';
     }).join('');
 }
