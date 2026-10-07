@@ -151,6 +151,10 @@ jobs:
           BUBBLEWRAP_KEYSTORE_PASSWORD: ${{ env.NRJ_ANDROID_STORE_PASSWORD }}
           BUBBLEWRAP_KEY_PASSWORD: ${{ env.NRJ_ANDROID_KEY_PASSWORD }}
         run: |
+          # Gradle refuse des chemins SDK contradictoires : aligner ANDROID_SDK_ROOT
+          # sur le SDK compatible bubblewrap préparé plus haut.
+          export ANDROID_SDK_ROOT="${HOME}/android-sdk-bw"
+          export ANDROID_HOME="${HOME}/android-sdk-bw"
           cd "$ANDROID_DIR"
           npx --yes @bubblewrap/cli@latest build --manifest=../twa-manifest.json
 
