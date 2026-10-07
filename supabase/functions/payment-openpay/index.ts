@@ -89,6 +89,10 @@ function getActivationDecision(userId: string | null): ActivationDecision {
     return { enabled: false, mode, reason: "activation_mode_disabled" };
   }
 
+  if (!OPENPAY_API_KEY) {
+    return { enabled: false, mode, reason: "provider_key_missing" };
+  }
+
   if (!Number.isFinite(OPENPAY_MAX_TRANSACTION_XAF) || OPENPAY_MAX_TRANSACTION_XAF <= 0) {
     return { enabled: false, mode, reason: "max_transaction_not_configured" };
   }
