@@ -314,10 +314,11 @@ test("Buy Now ouvre le checkout direct puis restaure le panier à l’annulation
 
   await page.locator("#cancelOrderBtn").click();
 
-  const restoredCart = await page.evaluate(async () => {
-    const stateModule = await import("/src/js/core/state.js");
-    return stateModule.state.cart;
-  });
-
-  expect(restoredCart).toEqual([]);
+  // Vérification via le parcours utilisateur réel : après annulation,
+  // le panier doit rester vide et réouvrable sans article temporaire Buy Now.
+  await page.locator('a[data-nav="cart"]').click();
+  await expect(page.locator("#cartPanel")).toHaveClass(/\bopen\b/);
+  await expect(page.locator("#cartPanel")).toHaveAttribute("aria-hidden", "false");
+  await expect(page.locator("#cartPanelTitle")).toHaveText("Panier (0)");
+  await expect(page.locator("#cartEmptyState")).toBeVisible();
 });
