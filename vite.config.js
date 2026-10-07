@@ -29,12 +29,12 @@ export default defineConfig({
     // Code splitting : sépare les gros vendors dans des chunks dédiés.
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index.html'),
-        admin: resolve(__dirname, 'admin.html')
+        main: resolve(import.meta.dirname, 'index.html'),
+        admin: resolve(import.meta.dirname, 'admin.html')
       },
       output: {
-        manualChunks: {
-          supabase: ['@supabase/supabase-js']
+        manualChunks(id) {
+          if (id.includes('node_modules/@supabase/supabase-js')) return 'supabase';
         }
       }
     }
