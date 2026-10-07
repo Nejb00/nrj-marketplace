@@ -19,6 +19,20 @@ import { showAccountView, hideAccountView, handleAccountAction } from './account
 import { isFlexOpen } from './view-helpers.js';
 import { switchToSearchView, switchFromSearchView } from '../search/search-view.js';
 
+document.addEventListener('nrj:cart-open-product', (event) => {
+  const pid = Number(event.detail?.productId);
+  if (!Number.isInteger(pid) || pid <= 0) return;
+
+  const selection = {
+    variantId: event.detail?.variantId || null,
+    couleur: event.detail?.couleur || '',
+    taille: event.detail?.taille || ''
+  };
+
+  closeCartPanel({ restoreFocus: false });
+  openProductModal(pid, selection);
+});
+
 document.addEventListener('click', e => {
   const fb = e.target.closest('.filter-btn'); if (fb) { applyFilter(fb.dataset.category); return; }
   const subBubble = e.target.closest('.subcat-bubble');
