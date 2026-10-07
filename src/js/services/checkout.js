@@ -135,8 +135,9 @@ export async function sendWhatsAppOrder() {
         let d = p.name;
         if (i.couleur || i.taille) d += ' (' + [i.couleur, i.taille].filter(Boolean).join(', ') + ')';
 
-        msg += '- ' + d + ' x' + Number(i.quantity) + ' = ' + formatPrice(p.price * Number(i.quantity)) + '\n  🔗 ' + BASE_URL + '?id=' + p.id + '\n';
-        tot += p.price * Number(i.quantity);
+        const unitPrice = Number(i.unitPrice) || Number(p.price) || 0;
+        msg += '- ' + d + ' x' + Number(i.quantity) + ' = ' + formatPrice(unitPrice * Number(i.quantity)) + '\n  🔗 ' + BASE_URL + '?id=' + p.id + '\n';
+        tot += unitPrice * Number(i.quantity);
 
         const variant = [i.couleur, i.taille].filter(Boolean).join(', ');
         const orderItem = {
