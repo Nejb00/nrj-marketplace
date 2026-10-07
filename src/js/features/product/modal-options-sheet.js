@@ -368,7 +368,6 @@ function closeOptionsPanel() {
     document.getElementById('stickyBottomBar')?.removeAttribute('inert');
     document.getElementById('cartPanel')?.removeAttribute('inert');
 
-    const wasEditing = modalCtx.sheetMode === 'edit';
     modalCtx.sheetMode = 'add';
     modalCtx.editCartIndex = null;
 
@@ -587,12 +586,6 @@ function setupStaticListeners() {
 
     els.idle()?.addEventListener('click', () => openOptionsPanel(els.idle()));
 
-    document.addEventListener('nrj:cart-edit', (event) => {
-        const idx = Number(event.detail?.index);
-        const trigger = event.detail?.trigger || null;
-        if (!Number.isInteger(idx) || idx < 0) return;
-        openCartItemEditor(idx, trigger);
-    });
     els.stickyMinus()?.addEventListener('click', (event) => {
         event.stopPropagation();
         changeStickyQty(-1);
