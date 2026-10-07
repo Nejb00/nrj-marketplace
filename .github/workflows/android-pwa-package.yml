@@ -114,6 +114,15 @@ jobs:
           print("Critères TWA (bubblewrap) satisfaits — validation par Lighthouse local ✓")
           PY
 
+      - name: Generate Android project
+        run: |
+          rm -rf "$ANDROID_DIR"
+          mkdir -p "$ANDROID_DIR"
+          cd "$ANDROID_DIR"
+          npx --yes @bubblewrap/cli@latest update \
+            --skipVersionUpgrade \
+            --manifest=../twa-manifest.json
+
       - name: Create ephemeral CI signing key
         run: |
           set -euo pipefail
@@ -136,15 +145,6 @@ jobs:
             -storepass "$CI_KEYSTORE_PASSWORD" \
             -keypass "$CI_KEYSTORE_PASSWORD" \
             -dname "CN=NRJ Marketplace, OU=CI, O=NRJ, C=CG"
-
-      - name: Generate Android project
-        run: |
-          rm -rf "$ANDROID_DIR"
-          mkdir -p "$ANDROID_DIR"
-          cd "$ANDROID_DIR"
-          npx --yes @bubblewrap/cli@latest update \
-            --skipVersionUpgrade \
-            --manifest=../twa-manifest.json
 
       - name: Build signed test APK and AAB
         env:
