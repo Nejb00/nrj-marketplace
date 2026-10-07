@@ -40,6 +40,10 @@
       "githubSha": "7cc1742ee2e2dba173516b80c2dd72415a705163",
       "driveMd5": "4cee50df82cc1805b5ed20b638962aae"
     },
+    ".github/workflows/business-invariants.yml": {
+      "githubSha": "daca2c7a8ef97522a163e854268a8ebd22dde8ad",
+      "driveMd5": "cde4a23e2e4300783a79b1a9a4667c2d"
+    },
     ".github/workflows/ci.yml": {
       "githubSha": "66800b21c1fb4fdd61001330fce0da63f85ef88c",
       "driveMd5": "b6baaeff74f6c0cfabbd005c3c3f0b46"
@@ -255,6 +259,10 @@
     "scripts/automation-topology.mjs": {
       "githubSha": "b046c914b33446df3d63690ee601ee14f288151c",
       "driveMd5": "deb1fa0f249be07cd4ad7e956171135a"
+    },
+    "scripts/business-invariants.mjs": {
+      "githubSha": "b06992a8bc24ff6bae1a6e336032a80dd0b4e41c",
+      "driveMd5": "6551086c2ebfff10efcfe5e539f9a5df"
     },
     "scripts/ci-check.mjs": {
       "githubSha": "7ce58ba3218f42f8d4897991fac8321cdbfdf974",
@@ -876,6 +884,10 @@
       "githubSha": "1e4ad027fedb80779e7682d8ccaf8486173fc03b",
       "driveMd5": "5ff881c3e3ab16027592b1dfdbac7ab5"
     },
+    "test/business-invariants.test.js": {
+      "githubSha": "a950f2bbbc9af5135cb6b88968c5f237855f0439",
+      "driveMd5": "2c9367817325c5b4f05f49b01e8df006"
+    },
     "test/create-order-contract.test.js": {
       "githubSha": "8bf2d1f8a16a5d362046396d6da5ec622cf6389d",
       "driveMd5": "fe048e578a2f4649c2fe8aa0def4c196"
@@ -1053,5 +1065,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-07T07:15:35.264Z"
+  "updatedAt": "2026-10-07T07:17:58.122Z"
 }
