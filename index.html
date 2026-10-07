@@ -51,6 +51,12 @@
             </div>
             <!-- Couche 2 : rangée des catégories parentes, collée sous la recherche -->
             <div class="filters-bar header-category-row" id="filterBar"></div>
+            <div class="quick-filters" id="quickFilters" role="group" aria-label="Filtres rapides">
+                <button type="button" class="filter-chip active" data-filter="all">Tout</button>
+                <button type="button" class="filter-chip" data-filter="new">✨ Nouveau</button>
+                <button type="button" class="filter-chip" data-filter="bestseller">🔥 Best-sellers</button>
+                <button type="button" class="filter-chip" data-filter="foryou">✨ Pour toi</button>
+            </div>
             <!-- PROMPT 3B : bulles enfants attachées au header — position:absolute;
                  top:100% (hors de la hauteur du header), même feuille liquid-glass.
                  Repli = translateY(-100%) + opacity uniquement (aucun changement de
@@ -105,7 +111,7 @@
         </nav>
         <footer><p>© 2026 NRJ Marketplace — Chine • France • Turquie → Congo Brazzaville 🔥</p></footer>
     </div>
-    <div class="product-modal" id="productModal">
+    <div class="product-modal" id="productModal" role="dialog" aria-modal="true" aria-label="Fiche produit" aria-hidden="true">
         <div class="modal-sheet">
             <div class="sheet-handle" id="sheetHandle" aria-hidden="true"></div>
             <div class="modal-image-section">
@@ -124,8 +130,6 @@
             <div class="product-detail-moq" id="modalMoq"></div>
             <div class="product-detail-total" id="modalTotal"></div>
             <div class="product-detail-desc" id="modalDesc"></div>
-            <div class="option-group" id="modalTailleGroup" style="display:none;"><label>Taille</label><div class="option-buttons" id="modalTailleOptions"></div></div>
-            <div class="option-group" id="modalCouleurGroup" style="display:none;"><label>Couleur</label><div class="option-buttons" id="modalCouleurOptions"></div></div>
         </div>
         <div class="recommendations"><h3>Vous aimerez aussi</h3><div class="rec-carousel" id="modalRecCarousel"></div></div>
         <div class="sourcing-section">
@@ -138,10 +142,136 @@
         </div>
         </div><!-- /.modal-sheet -->
     </div>
-    <div class="sticky-bottom-bar" id="stickyBottomBar">
-        <button class="btn-direct-sticky" id="directOrderStickyBtn">⚡ Commander directement</button>
-        <button class="btn-chat-sticky" id="chatStickyBtn" aria-label="Discuter avec NRJ" title="Discuter avec NRJ">💬</button>
-        <button class="btn-cart-sticky" id="addToCartStickyBtn" aria-label="Ajouter au panier"><svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"></path></svg></button>
+    <div class="sticky-bottom-bar" id="stickyBottomBar" aria-label="Actions du produit">
+        <button class="btn-direct-sticky" id="directOrderStickyBtn" type="button">⚡ Commander directement</button>
+
+        <button class="btn-chat-sticky" id="chatStickyBtn" type="button" aria-label="Discuter avec NRJ" title="Discuter avec NRJ">💬</button>
+
+        <button class="sticky-primary-action" id="addToCartStickyBtn" type="button" aria-label="Sélectionner une option pour ajouter au panier">
+            <span class="sticky-action-icon" aria-hidden="true">🛒</span>
+            <span>Sélectionner une option</span>
+        </button>
+
+        <div class="sticky-primary-action sticky-primary-action--added"
+             id="stickyActionAdded"
+             role="group"
+             aria-label="Produit ajouté au panier"
+             hidden>
+            <button class="sticky-qty-btn" id="stickyQtyMinus" type="button" aria-label="Diminuer la quantité">−</button>
+            <button class="sticky-added-main" id="stickyAddedMain" type="button">
+                <span class="sticky-added-count"><span id="stickyAddedQty">0</span> ajouté<span class="sticky-added-count-suffix">s</span></span>
+                <span class="sticky-added-variant" id="stickyAddedVariant">Options par défaut</span>
+            </button>
+            <button class="sticky-qty-btn" id="stickyQtyPlus" type="button" aria-label="Augmenter la quantité">+</button>
+        </div>
+    </div>
+
+    <div class="options-panel-backdrop" id="optionsPanelBackdrop"></div>
+    <section class="options-panel"
+             id="optionsPanel"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="optionsPanelTitle"
+             aria-hidden="true"
+             tabindex="-1">
+        <div class="options-panel-handle" id="optionsPanelHandle" aria-hidden="true"></div>
+        <div class="options-panel-header">
+            <div class="options-panel-heading">
+                <span class="options-panel-kicker" id="optionsPanelKicker">CHOISIR UNE OPTION</span>
+                <h2 id="optionsPanelTitle">Personnalise ton produit</h2>
+                <p class="options-panel-product-name" id="optionsPanelProductName"></p>
+                <p class="options-panel-price" id="optionsPanelPrice"></p>
+            </div>
+            <button class="options-panel-close" id="optionsPanelCloseBtn" type="button" aria-label="Fermer les options">&times;</button>
+        </div>
+
+        <div class="options-panel-scroll">
+            <section class="options-section" aria-labelledby="optionsColorTitle">
+                <div class="options-section-title-row">
+                    <h3 id="optionsColorTitle">Couleur</h3>
+                </div>
+                <div class="options-color-grid" id="optionsColorOptions"></div>
+            </section>
+
+            <section class="options-section" aria-labelledby="optionsSizeTitle">
+                <div class="options-section-title-row">
+                    <h3 id="optionsSizeTitle">Taille</h3>
+                    <button type="button" class="size-guide-btn" id="sizeGuideBtn" aria-label="Ouvrir le guide des tailles">Guide des tailles</button>
+                </div>
+                <div class="options-size-grid" id="optionsSizeOptions"></div>
+                <p class="options-social-proof" id="optionsSizeSocial" hidden></p>
+            </section>
+
+            <section class="options-section options-quantity-section" aria-labelledby="optionsQtyTitle">
+                <div class="options-section-title-row">
+                    <h3 id="optionsQtyTitle">Quantité</h3>
+                    <span id="optionsQtyHint" class="options-qty-hint"></span>
+                </div>
+                <div class="options-qty-stepper" role="group" aria-label="Sélection de la quantité">
+                    <button id="optionsQtyMinus" type="button" aria-label="Diminuer la quantité">−</button>
+                    <output id="optionsQtyValue" aria-live="polite">1</output>
+                    <button id="optionsQtyPlus" type="button" aria-label="Augmenter la quantité">+</button>
+                </div>
+            </section>
+
+            <section class="options-section options-benefits-section" aria-labelledby="optionsBenefitsTitle">
+                <div class="options-section-title-row">
+                    <h3 id="optionsBenefitsTitle">✓ Avantages</h3>
+                </div>
+                <div class="options-benefits-grid" role="list">
+                    <div class="options-benefit-card" role="listitem">
+                        <span class="options-benefit-icon" aria-hidden="true">🚚</span>
+                        <span>Livraison 5-7 jours</span>
+                    </div>
+                    <div class="options-benefit-card" role="listitem">
+                        <span class="options-benefit-icon" aria-hidden="true">💰</span>
+                        <span>Meilleur prix garanti</span>
+                    </div>
+                    <div class="options-benefit-card" role="listitem">
+                        <span class="options-benefit-icon" aria-hidden="true">🔄</span>
+                        <span>Retour gratuit</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="options-panel-footer">
+            <button class="options-panel-add" id="optionsPanelAddBtn" type="button">Ajouter au panier</button>
+            <button class="options-panel-buy" id="optionsPanelBuyBtn" type="button" hidden>Acheter maintenant</button>
+        </div>
+    </section>
+    <div class="qty-sheet-overlay" id="qtySheetOverlay" hidden aria-hidden="true">
+        <section class="qty-sheet" id="qtySheet" role="dialog" aria-modal="true" aria-labelledby="qtySheetTitle">
+            <div class="qty-sheet-handle" aria-hidden="true"></div>
+            <div class="qty-sheet-header">
+                <div>
+                    <span class="qty-sheet-kicker">QUANTITÉ</span>
+                    <h2 id="qtySheetTitle">Choisis une quantité</h2>
+                </div>
+                <button type="button" class="qty-sheet-close" id="qtySheetClose" aria-label="Fermer">&times;</button>
+            </div>
+            <div class="qty-sheet-body">
+                <div class="qty-sheet-list" id="qtySheetList" role="listbox" aria-label="Quantités disponibles"></div>
+                <div class="qty-sheet-custom">
+                    <label for="qtySheetInput">Quantité personnalisée</label>
+                    <div class="qty-sheet-input-row">
+                        <input type="number" id="qtySheetInput" min="1" step="1" inputmode="numeric" aria-describedby="qtySheetHint">
+                        <span id="qtySheetHint">Le minimum d’achat est respecté automatiquement.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="qty-sheet-footer">
+                <button type="button" class="qty-sheet-apply" id="qtySheetApply">Mettre à jour</button>
+            </div>
+        </section>
+    </div>
+    <div class="cart-added-toast" id="cartAddedToast" role="status" aria-live="polite" aria-atomic="true" hidden>
+        <div class="cart-added-toast-copy">
+            <strong>✅ Ajouté au panier</strong>
+            <span>🚚 Éligible à la livraison gratuite</span>
+        </div>
+        <button type="button" class="cart-added-toast-cart" id="cartAddedToastCart">Aller au panier</button>
+        <button type="button" class="cart-added-toast-close" id="cartAddedToastClose" aria-label="Fermer la confirmation">&times;</button>
     </div>
     <button class="chat-fab" id="chatFab" aria-label="Ouvrir le chat NRJ">
         <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M12 3C6.98 3 3 6.36 3 10.5c0 1.74.75 3.33 2 4.58V21l3.24-1.62c1.1.36 2.42.62 3.76.62 5.02 0 9-3.36 9-7.5S17.02 3 12 3zm-4 8.5a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5zm4 0a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5zm4 0a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z"/></svg>
@@ -173,8 +303,23 @@
     </div>
     <div class="cart-panel" id="cartPanel" role="dialog" aria-label="Panier">
         <div class="cart-panel-header">
-            <h2>Mon panier</h2>
             <button class="cart-close-btn" id="cartCloseBtn" aria-label="Fermer">&times;</button>
+            <h2 id="cartPanelTitle">Mon panier</h2>
+            <div class="cart-menu-wrap">
+                <button
+                    type="button"
+                    class="cart-menu-btn"
+                    id="cartMenuBtn"
+                    aria-label="Options du panier"
+                    aria-haspopup="menu"
+                    aria-expanded="false">⋯</button>
+                <div class="cart-menu" id="cartMenu" role="menu" hidden>
+                    <button type="button" class="cart-menu-item" data-cart-action="manage" role="menuitem">⚙️ Gérer le panier</button>
+                    <button type="button" class="cart-menu-item" data-cart-action="share" role="menuitem">↗️ Partager le panier</button>
+                    <button type="button" class="cart-menu-item" id="cartMenuRemoveSelected" data-cart-action="remove-selected" role="menuitem">🗑️ Supprimer la sélection</button>
+                    <button type="button" class="cart-menu-item cart-menu-item--danger" data-cart-action="clear" role="menuitem">🧹 Vider le panier</button>
+                </div>
+            </div>
         </div>
         <div class="cart-panel-body" id="cartPanelBody"></div>
         <div class="cart-panel-footer" id="cartPanelFooter"></div>

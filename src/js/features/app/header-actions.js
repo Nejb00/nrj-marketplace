@@ -3,7 +3,7 @@
 import { state } from '../../core/state.js';
 import { switchView } from '../catalogue/categories-page.js';
 import { closeProductModal } from '../product/modal-render.js';
-import { refreshCartDisplay } from '../../services/cart-panel.js';
+import { openCartPanel as openCartPanelService } from '../../services/cart-panel.js';
 import { showAccountView } from './account-view.js';
 import { isFlexOpen, closeSearchAndAccount, closeCartPanel, markNavActive } from './view-helpers.js';
 import { switchFromSearchView } from '../search/search-view.js';
@@ -25,9 +25,7 @@ export function openHeaderProfile() {
 }
 
 export function openHeaderCart() {
-  document.getElementById('cartPanel')?.classList.add('open');
-  document.getElementById('cartOverlay')?.classList.add('open');
-  refreshCartDisplay();
+  openCartPanelService(document.getElementById('cartBtnHeader'));
 }
 
 export function initHeaderActionsBubble() {

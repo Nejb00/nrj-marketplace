@@ -8,7 +8,7 @@ export function renderAdminList() {
   const list = document.getElementById('adminProductsList');
   if (!list) return;
   list.innerHTML = state.products.map(p =>
-    `<li><span>${escapeHtml(p.name)} [ID: ${p.id}]</span><button class="btn-sm" data-action="admin-remove" data-id="${p.id}">🗑️</button></li>`
+    `<li><span>${escapeHtml(p.name)} [ID: ${p.id}]</span><div class="admin-product-row-actions"><button class="btn-sm" data-action="admin-edit-variants" data-id="${p.id}">🎛️ Variantes</button><button class="btn-sm" data-action="admin-remove" data-id="${p.id}">🗑️</button></div></li>`
   ).join('');
 }
 

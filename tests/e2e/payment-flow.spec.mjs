@@ -1,5 +1,7 @@
 import { test, expect } from "@playwright/test";
 
+test.use({ viewport: { width: 390, height: 844 } });
+
 const FAKE_USER_ID = "00000000-0000-4000-8000-000000000023";
 const FAKE_ORDER_ID = "00000000-0000-4000-8000-000000000123";
 const FAKE_PAYMENT_ID = "00000000-0000-4000-8000-000000000223";
@@ -12,6 +14,23 @@ const FAKE_PRODUCT = {
   image: null,
   popularity_score: 100,
   created_at: "2026-10-05T00:00:00.000Z",
+  moq: 1,
+  tailles: "37,38,39,40,41,42",
+  couleurs: "Blanc,Noir",
+  variant_popularity: {
+    colors: { Noir: 100 },
+    sizes: { "40": 100 },
+  },
+};
+
+const FAKE_RECO_PRODUCT = {
+  id: 23024,
+  name: "Organisateur de rangement E2E",
+  price: 7_500,
+  category_id: null,
+  image: null,
+  popularity_score: 80,
+  created_at: "2026-10-04T00:00:00.000Z",
   moq: 1,
   tailles: "",
   couleurs: "",
@@ -87,7 +106,7 @@ async function installSafeBackendMocks(page) {
     if (url.pathname.endsWith("/rest/v1/products")) {
       // Catalogue: tableau. Fiche produit via .single(): objet JSON.
       const isSingleProduct = url.searchParams.get("id") === `eq.${FAKE_PRODUCT.id}`;
-      await route.fulfill(jsonResponse(isSingleProduct ? FAKE_PRODUCT : [FAKE_PRODUCT]));
+      await route.fulfill(jsonResponse(isSingleProduct ? FAKE_PRODUCT : [FAKE_PRODUCT, FAKE_RECO_PRODUCT]));
       return;
     }
 
@@ -113,9 +132,9 @@ async function installSafeBackendMocks(page) {
     expect(payload.items).toEqual([
       {
         productId: FAKE_PRODUCT.id,
-        quantity: 1,
-        taille: null,
-        couleur: null,
+        quantity: 2,
+        taille: "40",
+        couleur: "Noir",
       },
     ]);
     expect(typeof payload.idempotency_key).toBe("string");
@@ -179,6 +198,7 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
 
     const calls = await installSafeBackendMocks(page);
 
+    await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
     await expect(page.locator("#tapToSearch")).toBeVisible({ timeout: 20_000 });
     await expect(page.locator("#filterBar .filter-btn").first()).toBeVisible({ timeout: 20_000 });
@@ -189,6 +209,26 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
 
     await expect(page.locator("#productModal")).toHaveClass(/\bopen\b/);
     await page.locator("#addToCartStickyBtn").click();
+    await expect(page.locator("#optionsPanel")).toHaveAttribute("aria-hidden", "false");
+    await expect(page.locator("#optionsColorOptions .option-color-card")).toHaveCount(2);
+    await expect(page.locator("#optionsSizeOptions .option-size-btn")).toHaveCount(6);
+    await expect(page.locator("#optionsSizeSocial")).toBeVisible();
+    await expect(page.locator("#sizeGuideBtn")).toBeVisible();
+    await expect(page.locator('[data-option-color="Noir"]')).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator('[data-option-color="Noir"]')).toContainText("🔥 Populaire");
+    await expect(page.locator('[data-option-size="40"]')).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator('[data-option-size="40"] .variant-popular-badge')).toHaveAttribute("aria-label", "Variante populaire");
+    await expect(page.locator('[data-option-size="40"] .variant-popular-badge')).toContainText("🔥");
+    await page.locator("#optionsQtyPlus").click();
+    await expect(page.locator("#optionsQtyValue")).toHaveText("2");
+    await page.locator("#optionsBenefitsTitle").scrollIntoViewIfNeeded();
+    await expect(page.locator(".options-benefit-card")).toHaveCount(3);
+    await page.locator("#optionsPanelAddBtn").click();
+    await expect(page.locator("#cartAddedToast")).toBeVisible();
+    await expect(page.locator("#cartAddedToast")).toContainText("Éligible à la livraison gratuite");
+    await expect(page.locator("#stickyActionAdded")).toBeVisible();
+    await expect(page.locator("#stickyAddedQty")).toHaveText("2");
+    await expect(page.locator("#stickyAddedVariant")).toHaveText("Noir · 40");
 
     // addToCart() persists asynchronously; wait for the browser's durable state
     // before closing the product modal, otherwise the E2E can race the save.
@@ -204,7 +244,127 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
 
     await page.locator('a[data-nav="cart"]').click();
     await expect(page.locator("#cartPanel")).toHaveClass(/\bopen\b/);
+    await expect(page.locator("#cartPanel")).toHaveAttribute("aria-hidden", "false");
+    await expect(page.locator(".cart-sheet-handle")).toBeVisible();
+    await expect(page.locator("#cartPanelTitle")).toHaveText("Panier (2)");
+    await expect(page.locator("#cartMenuBtn")).toBeVisible();
+    await expect(page.locator("#cartMenuBtn")).toHaveAttribute("aria-expanded", "false");
+
+    await page.locator("#cartMenuBtn").click();
+    await expect(page.locator("#cartMenu")).toBeVisible();
+    await expect(page.locator("#cartMenu")).toContainText("Partager le panier");
+    await expect(page.locator("#cartMenu")).toContainText("Supprimer la sélection");
+    await page.keyboard.press("Escape");
+    await expect(page.locator("#cartMenu")).toBeHidden();
+
+    await expect(page.locator(".cart-tabs")).toBeVisible();
+    await expect(page.locator(".cart-tab").first()).toContainText("Tout (2)");
+    await expect(page.locator(".cart-tab").nth(1)).toContainText("Sélectionné (2)");
+    await expect(page.locator("#checkoutBtn")).toContainText("Commander (2)");
+
+    await expect.poll(
+      async () => page.evaluate(() => Boolean(document.activeElement?.closest("#cartPanel"))),
+      { timeout: 2_000 }
+    ).toBe(true);
+
+    await page.keyboard.press("Escape");
+    await expect(page.locator("#cartPanel")).toHaveAttribute("aria-hidden", "true");
+    await page.locator('a[data-nav="cart"]').click();
+    await expect(page.locator("#cartPanel")).toHaveClass(/\bopen\b/);
+
+    const handle = page.locator(".cart-sheet-handle");
+    await handle.dispatchEvent("pointerdown", {
+      pointerId: 7,
+      pointerType: "touch",
+      clientY: 100,
+      button: 0,
+    });
+    await handle.dispatchEvent("pointermove", {
+      pointerId: 7,
+      pointerType: "touch",
+      clientY: 230,
+      button: 0,
+    });
+    await handle.dispatchEvent("pointerup", {
+      pointerId: 7,
+      pointerType: "touch",
+      clientY: 230,
+      button: 0,
+    });
+    await expect(page.locator("#cartPanel")).toHaveAttribute("aria-hidden", "true");
+    await page.locator('a[data-nav="cart"]').click();
+    await expect(page.locator("#cartPanel")).toHaveClass(/\bopen\b/);
+
     await expect(page.locator(".cart-item").first()).toBeVisible();
+    await expect(page.locator(".cart-item-price").first()).toContainText("Prix unitaire");
+    await expect(page.locator(".cart-item-line-total").first()).toBeVisible();
+    await expect(page.locator("#cartRecommendationsTitle")).toContainText("Souvent achetés ensemble");
+    await expect(page.locator(".cart-reco-card")).toHaveCount(1);
+    await expect(page.locator(".cart-reco-add")).toBeVisible();
+    await expect(page.locator(".cart-footer-reassurance")).toContainText("MOQ vérifié");
+
+    await page.locator(".cart-tab").nth(1).click();
+    await expect(page.locator(".cart-tab").nth(1)).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator(".cart-tab").first()).toHaveAttribute("aria-selected", "false");
+    await page.locator(".cart-tab").first().click();
+
+    await page.evaluate(async () => {
+      const db = await new Promise((resolve, reject) => {
+        const request = indexedDB.open("NRJMarketplaceDB", 6);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+
+      const current = await new Promise((resolve, reject) => {
+        const request = db.transaction("cart", "readonly").objectStore("cart").get("default");
+        request.onsuccess = () => resolve(request.result || { userId: "default", items: [] });
+        request.onerror = () => reject(request.error);
+      });
+
+      const items = Array.isArray(current.items) ? current.items : [];
+      items.push({
+        productId: 29999,
+        quantity: 3,
+        taille: "",
+        couleur: "",
+        moq: 2,
+        selected: true,
+      });
+
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction("cart", "readwrite");
+        tx.objectStore("cart").put({
+          userId: "default",
+          items,
+          updatedAt: new Date().toISOString(),
+        });
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error);
+      });
+      db.close();
+    });
+    await page.reload();
+    await expect(page.locator('a[data-nav="cart"]')).toBeVisible();
+    await page.locator('a[data-nav="cart"]').click();
+    await expect(page.locator("#cartPanel")).toHaveClass(/\bopen\b/);
+
+    await expect(page.locator(".cart-unavailable")).toBeVisible();
+    await expect(page.locator(".cart-unavailable")).toContainText("Articles indisponibles");
+    await expect(page.locator("#checkoutBtn")).toBeDisabled();
+
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.locator(".cart-unavailable-clear").click();
+    await expect(page.locator(".cart-unavailable")).toHaveCount(0);
+    await expect(page.locator("#checkoutBtn")).toBeEnabled();
+
+    await page.locator(".cart-reco-add").click();
+    await expect(page.locator(".cart-item")).toHaveCount(2);
+    const secondRemove = page.locator(".cart-item").nth(1).locator(".remove-item-btn");
+    await secondRemove.click();
+    await expect(page.locator(".cart-item").nth(1)).toHaveClass(/is-removing/);
+    await expect(page.locator(".cart-item")).toHaveCount(1);
+
     await expect(page.locator("#checkoutBtn")).toBeEnabled();
 
     await page.locator("#checkoutBtn").click();
@@ -241,7 +401,11 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
     }
     await page.locator('a[data-nav="cart"]').click();
     await expect(page.locator("#cartPanel")).toHaveClass(/\bopen\b/);
-    await expect(page.locator("#cartEmptyTitle")).toBeVisible();
+    await expect(page.locator("#cartEmptyTitle")).toHaveText("Votre panier est vide");
+    await expect(page.locator(".cart-discover-btn")).toContainText("Voir les populaires");
+
+    await page.locator(".cart-discover-btn").click();
+    await expect(page.locator('.filter-chip[data-filter="bestseller"]')).toHaveClass(/\bactive\b/);
 
     expect(pageErrors).toEqual([]);
   });

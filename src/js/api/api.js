@@ -2,6 +2,7 @@ import { supabaseClient } from '../core/config.js';
 import { state } from '../core/state.js';
 import { showToast } from '../utils/dom-helpers.js';
 import db from '../services/db.js';
+import { hydrateProductVariantsMedia } from '../services/product-variants-media.js';
 
 const PRODUCTS_CACHE_KEY = 'nrj_products_cache';
 const CACHE_DURATION = 5 * 60 * 1000;
@@ -340,6 +341,7 @@ export async function fetchProductDetails(productId) {
         if (data) {
             const cat = data.category_id ? state.categoriesById.get(data.category_id) : null;
             data.category_name = cat ? cat.name : null;
+            return await hydrateProductVariantsMedia(data);
         }
         return data;
     } catch (err) {

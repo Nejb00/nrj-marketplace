@@ -19,11 +19,16 @@ const ALLOWED_PAYMENT_METHODS = new Set([
   "openpay_airtel"
 ]);
 
+// Keep server-side quantity bounds aligned with the current catalog,
+// which contains products with MOQ up to 2000.
+const MAX_ORDER_QTY = 2000;
+
 type CartItemInput = {
   productId?: number | string;
   quantity?: number | string;
   taille?: string | null;
   couleur?: string | null;
+  variantId?: string | null;
 };
 
 type RequestBody = {
@@ -37,6 +42,7 @@ type ProductRow = {
   id: number;
   name: string | null;
   price: number | string | null;
+  moq: number | string | null;
 };
 
 function json(data: unknown, status = 200): Response {
@@ -140,6 +146,7 @@ function normalizeItems(items: CartItemInput[] | undefined) {
       quantity: number;
       taille: string | null;
       couleur: string | null;
+      variantId: string | null;
     }
   >();
 
@@ -151,13 +158,21 @@ function normalizeItems(items: CartItemInput[] | undefined) {
       throw new TypeError("product_id_invalid");
     }
 
-    if (!Number.isSafeInteger(quantity) || quantity <= 0 || quantity > 1000) {
+    if (!Number.isSafeInteger(quantity) || quantity <= 0 || quantity > MAX_ORDER_QTY) {
       throw new TypeError("quantity_invalid");
     }
 
     const taille = raw.taille ? String(raw.taille).slice(0, 100) : null;
     const couleur = raw.couleur ? String(raw.couleur).slice(0, 100) : null;
-    const key = [productId, couleur || "", taille || ""].join("\u001f");
+    const variantId = raw.variantId == null || raw.variantId === ""
+      ? null
+      : String(raw.variantId).trim();
+
+    if (variantId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(variantId)) {
+      throw new TypeError("variant_id_invalid");
+    }
+
+    const key = [productId, variantId || "", couleur || "", taille || ""].join("\u001f");
     const existing = map.get(key);
 
     if (existing) {
@@ -167,7 +182,8 @@ function normalizeItems(items: CartItemInput[] | undefined) {
         productId,
         quantity,
         taille,
-        couleur
+        couleur,
+        variantId
       });
     }
   }
@@ -230,7 +246,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const ids = [...new Set(items.map(item => item.productId))];
   const productResult = await supabaseRest<ProductRow[]>(
-    "products?select=id,name,price&id=in.(" +
+    "products?select=id,name,price,moq&id=in.("
       ids.map(encodeURIComponent).join(",") +
       ")"
   );
@@ -247,26 +263,126 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json({ ok: false, error: "product_not_found" }, 409);
   }
 
+  const variantIds = [...new Set(
+    items
+      .map((item) => item.variantId)
+      .filter((id): id is string => Boolean(id))
+  )];
+
+  let variants = new Map<string, {
+    id: string;
+    product_id: number;
+    active: boolean;
+    color: string | null;
+    size: string | null;
+    price: number | string | null;
+    moq: number | string | null;
+  }>();
+
+  if (variantIds.length) {
+    const variantResult = await supabaseRest<Array<{
+      id: string;
+      product_id: number;
+      active: boolean;
+      color: string | null;
+      size: string | null;
+      price: number | string | null;
+    }>>(
+      "product_variants?select=id,product_id,active,color,size,price,moq&id=in.("
+        variantIds.map(encodeURIComponent).join(",") +
+        ")"
+    );
+
+    if (variantResult.error) {
+      return json({ ok: false, error: "variant_lookup_failed" }, 502);
+    }
+
+    variants = new Map(
+      (variantResult.data || []).map((variant) => [String(variant.id), variant])
+    );
+
+    if (variants.size !== variantIds.length) {
+      return json({ ok: false, error: "variant_not_found" }, 409);
+    }
+  }
+
   let total = 0;
   const orderItems = [];
 
   for (const item of items) {
     const product = products.get(item.productId);
-    const unitPrice = Number(product?.price);
+    const variant = item.variantId ? variants.get(String(item.variantId)) : null;
 
-    if (!product || !Number.isFinite(unitPrice) || unitPrice <= 0) {
+    if (!product) {
+      return json({ ok: false, error: "product_not_found" }, 409);
+    }
+
+    if (item.variantId) {
+      if (!variant || Number(variant.product_id) !== Number(item.productId) || variant.active !== true) {
+        return json({ ok: false, error: "variant_not_available" }, 409);
+      }
+
+      if (item.couleur && variant.color && item.couleur !== variant.color) {
+        return json({ ok: false, error: "variant_color_mismatch" }, 409);
+      }
+
+      if (item.taille && variant.size && item.taille !== variant.size) {
+        return json({ ok: false, error: "variant_size_mismatch" }, 409);
+      }
+    }
+
+    const variantPrice = Number(variant?.price);
+    const productPrice = Number(product.price);
+    const unitPrice = Number.isFinite(variantPrice) && variantPrice > 0
+      ? variantPrice
+      : productPrice;
+
+    if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
       return json({ ok: false, error: "product_price_invalid" }, 409);
     }
 
+    const productMoq = Number(product.moq);
+    const variantMoq = Number(variant?.moq);
+    const resolvedMoq = Math.max(
+      Number.isFinite(productMoq) && productMoq > 0 ? productMoq : 1,
+      Number.isFinite(variantMoq) && variantMoq > 0 ? variantMoq : 1
+    );
+
+    if (item.quantity < resolvedMoq) {
+      return json({
+        ok: false,
+        error: "quantity_below_moq",
+        product_id: item.productId,
+        variant_id: item.variantId,
+        moq: resolvedMoq
+      }, 409);
+    }
+
+    const resolvedColor = item.couleur || variant?.color || null;
+    const resolvedSize = item.taille || variant?.size || null;
+
     total += unitPrice * item.quantity;
 
-    orderItems.push({
+    const orderItem: {
+      productId: number;
+      name: string;
+      price: number;
+      qty: number;
+      variant: string | null;
+      variantId?: string;
+    } = {
       productId: item.productId,
       name: product.name || "Produit",
       price: unitPrice,
       qty: item.quantity,
-      variant: [item.couleur, item.taille].filter(Boolean).join(", ") || null
-    });
+      variant: [resolvedColor, resolvedSize].filter(Boolean).join(", ") || null
+    };
+
+    if (item.variantId) {
+      orderItem.variantId = item.variantId;
+    }
+
+    orderItems.push(orderItem);
   }
 
   const orderFingerprint = stableSerialize({

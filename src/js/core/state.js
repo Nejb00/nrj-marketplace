@@ -77,13 +77,21 @@ function normalizeCart(raw) {
     if (!Array.isArray(raw)) return [];
     return raw.map((item) => {
         if (!item || item.productId == null) return null;
-        return {
+        const normalized = {
             productId: item.productId,
             quantity: Number(item.quantity) || 1,
             taille: item.taille || '',
             couleur: item.couleur || item.color || '',
             moq: Number(item.moq) || 1
         };
+        if (item.variantId != null && String(item.variantId).trim()) {
+            normalized.variantId = String(item.variantId).trim();
+        }
+        const unitPrice = Number(item.unitPrice);
+        if (Number.isFinite(unitPrice) && unitPrice > 0) {
+            normalized.unitPrice = unitPrice;
+        }
+        return normalized;
     }).filter(Boolean);
 }
 

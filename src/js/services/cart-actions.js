@@ -40,26 +40,54 @@ function flyToCart(sourceEl) {
     }, 850);
 }
 
-export async function addToCart(pid, t = '', c = '', sourceEl = null, qty = null) {
+export async function addToCart(pid, t = '', c = '', sourceEl = null, qty = null, options = {}) {
+    const { silent = false, variantId = null, unitPrice = null, moq: requestedMoq = null } = options || {};
+    const normalizedVariantId = variantId == null ? null : String(variantId).trim();
+    const normalizedUnitPrice = Number(unitPrice);
+    const variantMoq = Number(requestedMoq);
     const p = state.products.find(pr => pr.id === pid);
     if (!p) return;
     if (sourceEl) flyToCart(sourceEl);
     signalCart(p);
 
-    const moq = Number(p.moq) || 1;
+    const productMoq = Number(p.moq) || 1;
+    const moq = Number.isFinite(variantMoq) && variantMoq > 0
+        ? Math.max(productMoq, variantMoq)
+        : productMoq;
     const amount = Math.max(moq, Number(qty) || moq);
-    const exist = state.cart.find(i => i.productId === pid && i.taille === t && i.couleur === c);
+    const exist = state.cart.find(i =>
+        Number(i.productId) === Number(pid) &&
+        i.taille === t &&
+        i.couleur === c &&
+        String(i.variantId || '') === String(normalizedVariantId || '')
+    );
     if (exist) {
         exist.quantity = Number(exist.quantity) + amount;
         exist.selected = true;
+        exist.moq = Math.max(Number(exist.moq) || 1, moq);
+        if (normalizedVariantId && Number.isFinite(normalizedUnitPrice) && normalizedUnitPrice > 0) {
+            exist.unitPrice = normalizedUnitPrice;
+        }
     } else {
-        state.cart.push({ productId: pid, quantity: amount, taille: t, couleur: c, moq, selected: true });
+        const item = {
+            productId: pid,
+            quantity: amount,
+            taille: t,
+            couleur: c,
+            moq,
+            selected: true
+        };
+        if (normalizedVariantId) item.variantId = normalizedVariantId;
+        if (normalizedVariantId && Number.isFinite(normalizedUnitPrice) && normalizedUnitPrice > 0) {
+            item.unitPrice = normalizedUnitPrice;
+        }
+        state.cart.push(item);
     }
     trackPopularity(pid, 5);
     await saveCart();
     refreshCartDisplay();
     syncSoon();
-    showToast(amount > 1 ? `🛒 ${amount} ajoutés au panier` : '🛒 Ajouté au panier');
+    if (!silent) showToast(amount > 1 ? `🛒 ${amount} ajoutés au panier` : '🛒 Ajouté au panier');
 }
 
 export async function changeQty(idx, d) {
@@ -83,6 +111,67 @@ export async function setCartQty(idx, qty) {
     }
     const moq = Number(it.moq) || 1;
     it.quantity = Math.max(moq, Math.floor(n));
+    await saveCart();
+    refreshCartDisplay();
+    syncSoon();
+}
+
+/**
+ * Modifie la variante + quantité d'une ligne existante.
+ * Si la nouvelle variante existe déjà sur une autre ligne du même produit,
+ * les quantités sont fusionnées afin d'éviter les doublons dans le panier.
+ */
+export async function updateCartItem(idx, { taille = '', couleur = '', quantity, variantId = undefined, unitPrice = undefined, moq = undefined } = {}) {
+    const it = state.cart[idx];
+    if (!it) return;
+
+    const product = state.products.find((p) => Number(p.id) === Number(it.productId));
+    const baseMoq = Math.max(
+        Number(it.moq) || 1,
+        Number(product?.moq) || 1
+    );
+    const n = Number(quantity);
+    const nextQty = Math.max(baseMoq, Number.isFinite(n) ? Math.floor(n) : baseMoq);
+    const nextTaille = String(taille || '').trim();
+    const nextCouleur = String(couleur || '').trim();
+    const nextVariantId = variantId === undefined
+        ? (it.variantId != null ? String(it.variantId).trim() : null)
+        : (variantId == null ? null : String(variantId).trim());
+    const requestedUnitPrice = unitPrice === undefined ? Number(it.unitPrice) : Number(unitPrice);
+    const nextUnitPrice = Number.isFinite(requestedUnitPrice) && requestedUnitPrice > 0
+        ? requestedUnitPrice
+        : null;
+    const requestedMoq = moq === undefined ? Number(it.moq) : Number(moq);
+    const nextMoq = Number.isFinite(requestedMoq) && requestedMoq > 0
+        ? Math.max(Number(product?.moq) || 1, requestedMoq)
+        : baseMoq;
+
+    const duplicateIdx = state.cart.findIndex((other, otherIdx) =>
+        otherIdx !== idx &&
+        Number(other.productId) === Number(it.productId) &&
+        String(other.taille || '') === nextTaille &&
+        String(other.couleur || '') === nextCouleur &&
+        String(other.variantId || '') === String(nextVariantId || '')
+    );
+
+    if (duplicateIdx >= 0) {
+        const duplicate = state.cart[duplicateIdx];
+        duplicate.quantity = Math.max(0, Number(duplicate.quantity) || 0) + nextQty;
+        duplicate.moq = Math.max(Number(duplicate.moq) || 1, nextMoq);
+        duplicate.selected = duplicate.selected !== false || it.selected !== false;
+        if (nextVariantId && nextUnitPrice) duplicate.unitPrice = nextUnitPrice;
+        state.cart.splice(idx, 1);
+    } else {
+        it.taille = nextTaille;
+        it.couleur = nextCouleur;
+        it.quantity = nextQty;
+        it.moq = nextMoq;
+        if (nextVariantId) it.variantId = nextVariantId;
+        else delete it.variantId;
+        if (nextVariantId && nextUnitPrice) it.unitPrice = nextUnitPrice;
+        else if (!nextVariantId) delete it.unitPrice;
+    }
+
     await saveCart();
     refreshCartDisplay();
     syncSoon();

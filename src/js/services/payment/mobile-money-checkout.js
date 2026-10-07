@@ -10,6 +10,7 @@ import { signalOrder } from '../reco.js';
 import { createRemoteOrder } from './order-service.js';
 import { OpenPayProvider } from './openpay-provider.js';
 import { PaymentService } from './payment-service.js';
+import { finishDirectPurchase } from '../direct-purchase.js';
 
 const POLL_INTERVAL_MS = 4000;
 const MAX_POLLS = 10;
@@ -168,12 +169,18 @@ function getPaymentInput() {
 }
 
 function buildRemoteItems(selected) {
-    return selected.map(item => ({
-        productId: item.productId,
-        quantity: Number(item.quantity),
-        taille: item.taille || null,
-        couleur: item.couleur || null
-    }));
+    return selected.map(item => {
+        const payload = {
+            productId: item.productId,
+            quantity: Number(item.quantity),
+            taille: item.taille || null,
+            couleur: item.couleur || null
+        };
+        if (item.variantId != null && String(item.variantId).trim()) {
+            payload.variantId = String(item.variantId).trim();
+        }
+        return payload;
+    });
 }
 
 function recordPaidOrder({ remoteOrder, selected, customer }) {
@@ -194,13 +201,18 @@ function recordPaidOrder({ remoteOrder, selected, customer }) {
 
             const variant = [item.couleur, item.taille].filter(Boolean).join(', ');
 
-            return {
+            const unitPrice = Number(item.unitPrice) || Number(product.price) || 0;
+            const result = {
                 productId: product.id,
                 name: product.name,
-                price: product.price,
+                price: unitPrice,
                 qty: Number(item.quantity),
                 variant: variant || null
             };
+            if (item.variantId != null && String(item.variantId).trim()) {
+                result.variantId = String(item.variantId).trim();
+            }
+            return result;
         })
         .filter(Boolean);
 
@@ -335,7 +347,7 @@ export async function startMobileMoneyPayment() {
                     throw error;
                 }
 
-                clearSessionKey(ORDER_IDEMPOTENCY_STORAGE_KEY);
+                clearDurableKey(scopedStorageKey(ORDER_IDEMPOTENCY_STORAGE_KEY));
 
                 remoteOrder = await createRemoteOrder({
                     items: buildRemoteItems(selected),
@@ -445,6 +457,7 @@ export async function startMobileMoneyPayment() {
             signalOrder && signalOrder();
 
             state.cart = state.cart.filter(item => item.selected === false);
+            finishDirectPurchase();
             await saveCart();
             refreshCartDisplay();
 
@@ -498,6 +511,7 @@ export async function startMobileMoneyPayment() {
             signalOrder && signalOrder();
 
             state.cart = state.cart.filter(item => item.selected === false);
+            finishDirectPurchase();
             await saveCart();
             refreshCartDisplay();
 

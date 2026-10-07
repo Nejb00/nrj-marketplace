@@ -12,6 +12,8 @@ export function getSelectedItems() {
 export function getSelectedTotal() {
     return getSelectedItems().reduce((sum, it) => {
         const p = state.products.find(pr => pr.id === it.productId);
-        return p ? sum + p.price * Number(it.quantity) : sum;
+        if (!p) return sum;
+        const unitPrice = Number(it.unitPrice) || Number(p.price) || 0;
+        return sum + unitPrice * Number(it.quantity);
     }, 0);
 }
