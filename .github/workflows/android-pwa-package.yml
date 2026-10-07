@@ -1,0 +1,189 @@
+name: Android PWA package
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+    paths:
+      - "public/manifest.webmanifest"
+      - "public/sw.js"
+      - "android/twa-manifest.json"
+      - ".github/workflows/android-pwa-package.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-pwa-package-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    env:
+      PWA_URL: https://nrj-marketplace.vercel.app/
+      ANDROID_DIR: android/generated
+      # Les mots de passe de signature sont générés aléatoirement à chaque run.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup JDK 17 (Bubblewrap + Gradle)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Prepare Bubblewrap-compatible Android SDK (non-interactive)
+        run: |
+          SDK_ROOT="/usr/local/lib/android/sdk"
+          BW_SDK="${HOME}/android-sdk-bw"
+          mkdir -p "${BW_SDK}/bin"
+          # Bubblewrap exige <sdk>/tools ou <sdk>/bin ET <sdk>/bin/sdkmanager :
+          ln -sfn "${SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager" "${BW_SDK}/bin/sdkmanager"
+          ln -sfn "${SDK_ROOT}/cmdline-tools/latest/bin/avdmanager" "${BW_SDK}/bin/avdmanager" 2>/dev/null || true
+          for d in build-tools platforms platform-tools licenses cmdline-tools; do
+            ln -sfn "${SDK_ROOT}/${d}" "${BW_SDK}/${d}" 2>/dev/null || true
+          done
+          # Bubblewrap 1.25 exige précisément build-tools;36.1.0 (zipalign, apksigner) :
+          if [ ! -d "${SDK_ROOT}/build-tools/36.1.0" ]; then
+            echo "build-tools;36.1.0 absent — installation via sdkmanager…"
+            yes | "${SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager" --sdk_root="${SDK_ROOT}" "build-tools;36.1.0" >/dev/null 2>&1 || true
+          fi
+          echo "build-tools disponibles : $(ls "${SDK_ROOT}/build-tools" | tr '\n' ' ')"
+          mkdir -p "${HOME}/.bubblewrap"
+          printf '{"jdkPath":"%s","androidSdkPath":"%s"}\n' \
+            "${JAVA_HOME}" \
+            "${BW_SDK}" \
+            > "${HOME}/.bubblewrap/config.json"
+          echo "Bubblewrap config pre-seeded:"
+          cat "${HOME}/.bubblewrap/config.json"
+
+      - name: Validate PWA for TWA (PSI, fallback Lighthouse local)
+        run: |
+          set +e
+          npx --yes @bubblewrap/cli@latest validate --url="$PWA_URL" 2>&1 | tee /tmp/psi.log
+          psi_ok=${PIPESTATUS[0]}
+          set -e
+          if [ "$psi_ok" = "0" ]; then
+            echo "PWA validée par bubblewrap via PageSpeed Insights ✓"
+            exit 0
+          fi
+          if grep -q "status 429" /tmp/psi.log; then
+            echo "⚠️ PSI sans clé = quota 429 Google (limitation d'infra connue en CI)."
+            echo "Bascule : audit Lighthouse LOCAL — le même moteur que PSI exécute côté serveur."
+            echo "Critères bubblewrap répliqués : performance ≥ 80 ET PWA = 1 (mobile)."
+          else
+            echo "Échec bubblewrap validate pour une raison autre que 429 :"
+            cat /tmp/psi.log
+            exit 1
+          fi
+          npx --yes lighthouse@10 "$PWA_URL" \
+            --only-categories=performance,pwa \
+            --chrome-flags="--headless=new --no-sandbox" \
+            --quiet \
+            --output=json --output-path=/tmp/lighthouse.json
+          python3 - <<'PY'
+          import json, sys
+          r = json.load(open('/tmp/lighthouse.json'))
+          cats = r.get('categories', {})
+          if 'pwa' not in cats:
+              print('Catégorie PWA absente du rapport Lighthouse — audit impossible'); sys.exit(1)
+          perf = cats['performance']['score']
+          pwa = cats['pwa']['score']
+          print(f"performance = {perf*100:.0f}/100 (requis >= 80)")
+          print(f"pwa         = {pwa} (requis = 1)")
+          if pwa is not None and pwa < 1:
+              print("Audits PWA en échec :")
+              for ref in cats['pwa'].get('auditRefs', []):
+                  a = r['audits'].get(ref['id'], {})
+                  if a.get('score') is not None and a.get('score', 1) < 1:
+                      print(f"  - {ref['id']}: {a.get('title','')}")
+          assert perf is not None and perf >= 0.8, "score performance < 80"
+          assert pwa == 1, "score PWA < 1"
+          print("Critères TWA (bubblewrap) satisfaits — validation par Lighthouse local ✓")
+          PY
+
+      - name: Generate Android project
+        run: |
+          rm -rf "$ANDROID_DIR"
+          mkdir -p "$ANDROID_DIR"
+          cd "$ANDROID_DIR"
+          npx --yes @bubblewrap/cli@latest update \
+            --skipVersionUpgrade \
+            --manifest=../twa-manifest.json
+
+      - name: Create ephemeral CI signing key
+        run: |
+          set -euo pipefail
+          mkdir -p "$ANDROID_DIR"
+          # PKCS12 : un seul mot de passe réel (store = key) — un secret aléatoire par run.
+          CI_KEYSTORE_PASSWORD="$(python3 - <<'PY'
+          import secrets
+          print(secrets.token_urlsafe(24))
+          PY
+          )"
+          echo "::add-mask::${CI_KEYSTORE_PASSWORD}"
+          echo "NRJ_ANDROID_STORE_PASSWORD=${CI_KEYSTORE_PASSWORD}" >> "$GITHUB_ENV"
+          echo "NRJ_ANDROID_KEY_PASSWORD=${CI_KEYSTORE_PASSWORD}" >> "$GITHUB_ENV"
+          keytool -genkeypair -v \
+            -keystore "$ANDROID_DIR/android-keystore.jks" \
+            -alias nrj \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 3650 \
+            -storepass "$CI_KEYSTORE_PASSWORD" \
+            -keypass "$CI_KEYSTORE_PASSWORD" \
+            -dname "CN=NRJ Marketplace, OU=CI, O=NRJ, C=CG"
+
+      - name: Build signed test APK and AAB
+        env:
+          BUBBLEWRAP_KEYSTORE_PASSWORD: ${{ env.NRJ_ANDROID_STORE_PASSWORD }}
+          BUBBLEWRAP_KEY_PASSWORD: ${{ env.NRJ_ANDROID_KEY_PASSWORD }}
+        run: |
+          # Gradle refuse des chemins SDK contradictoires : aligner ANDROID_SDK_ROOT
+          # sur le SDK compatible bubblewrap préparé plus haut.
+          export ANDROID_SDK_ROOT="${HOME}/android-sdk-bw"
+          export ANDROID_HOME="${HOME}/android-sdk-bw"
+          cd "$ANDROID_DIR"
+          npx --yes @bubblewrap/cli@latest build --manifest=../twa-manifest.json
+
+      - name: Generate test Digital Asset Links
+        run: |
+          mkdir -p "$ANDROID_DIR/assetlinks"
+          FINGERPRINT="$(keytool -list -v             -keystore "$ANDROID_DIR/android-keystore.jks"             -storepass "$NRJ_ANDROID_STORE_PASSWORD"             -alias nrj |
+            awk -F': ' '/SHA256:/{print $2; exit}')"
+          test -n "$FINGERPRINT"
+          cat > "$ANDROID_DIR/assetlinks/assetlinks.json" <<EOF
+          [
+            {
+              "relation": ["delegate_permission/common.handle_all_urls"],
+              "target": {
+                "namespace": "android_app",
+                "package_name": "com.nrj.marketplace",
+                "sha256_cert_fingerprints": ["$FINGERPRINT"]
+              }
+            }
+          ]
+          EOF
+
+      - name: Upload Android test artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nrj-marketplace-android-test-${{ github.run_number }}
+          path: |
+            android/generated/app-release-signed.apk
+            android/generated/app-release-bundle.aab
+            android/generated/assetlinks/assetlinks.json
+          if-no-files-found: error
+          retention-days: 14

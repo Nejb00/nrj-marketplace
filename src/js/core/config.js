@@ -11,13 +11,13 @@ export const PRODUCTS_PER_PAGE = 20;
 /** Première vague de cartes dans la grille (DOM). */
 export const INITIAL_PRODUCTS = 40;
 /** Photos above-the-fold : eager + fetchpriority=high. */
-export const EAGER_IMAGE_COUNT = 8;
+export const EAGER_IMAGE_COUNT = 4;
 /** Total d'images à précharger tout de suite (visibles d'abord). */
-export const PRELOAD_IMAGE_COUNT = 40;
+export const PRELOAD_IMAGE_COUNT = 12;
 /** Téléchargements parallèles dans la file de préchargement. */
-export const PRELOAD_CONCURRENCY = 6;
+export const PRELOAD_CONCURRENCY = 3;
 /** <link rel="preload"> pour le LCP (premières cartes). */
-export const LCP_PRELOAD_COUNT = 4;
+export const LCP_PRELOAD_COUNT = 2;
 export const NEW_PRODUCT_DAYS = 7;
 export const POPULAR_THRESHOLD = 20;
 export const MAX_SEARCH_RESULTS = 7;
