@@ -215,7 +215,8 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
     await expect(page.locator('[data-option-color="Noir"]')).toHaveAttribute("aria-pressed", "true");
     await expect(page.locator('[data-option-color="Noir"]')).toContainText("🔥 Populaire");
     await expect(page.locator('[data-option-size="40"]')).toHaveAttribute("aria-pressed", "true");
-    await expect(page.locator('[data-option-size="40"]')).toContainText("🔥 Populaire");
+    await expect(page.locator('[data-option-size="40"] .variant-popular-badge')).toHaveAttribute("aria-label", "Variante populaire");
+    await expect(page.locator('[data-option-size="40"] .variant-popular-badge')).toContainText("🔥");
     await page.locator("#optionsQtyPlus").click();
     await expect(page.locator("#optionsQtyValue")).toHaveText("2");
     await page.locator("#optionsBenefitsTitle").scrollIntoViewIfNeeded();
