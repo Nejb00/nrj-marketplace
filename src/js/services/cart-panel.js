@@ -137,6 +137,12 @@ function setupCartAccessibility() {
         if (!isCartOpen()) return;
 
         if (event.key === 'Escape') {
+            // Un menu contextuel du panier possède son propre cycle de focus.
+            // Laisser son handler fermer le menu d'abord, puis conserver le
+            // panneau ouvert tant que l'utilisateur n'a pas demandé sa fermeture.
+            const cartMenu = document.getElementById('cartMenu');
+            if (cartMenu && !cartMenu.hidden) return;
+
             event.preventDefault();
             closeCartPanel();
             return;
