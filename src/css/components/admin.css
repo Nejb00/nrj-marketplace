@@ -691,3 +691,258 @@
   font-weight: 900;
   cursor: pointer;
 }
+
+
+/* ═══ Product Variants V2 — admin editor ═══════════════════════════════════ */
+.admin-variants-card {
+  margin: 0 0 2rem;
+  padding: 1.15rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(145deg, rgba(255, 140, 66, 0.10), transparent 44%),
+    var(--surface);
+  box-shadow: 0 16px 36px rgba(0,0,0,.14);
+}
+.admin-variants-card[hidden] { display: none !important; }
+.admin-variants-head,
+.admin-variants-product-picker,
+.admin-variant-editor-actions,
+.admin-variants-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .8rem;
+}
+.admin-variants-head { align-items: flex-start; margin-bottom: 1rem; }
+.admin-variants-eyebrow {
+  color: var(--primary);
+  font-size: .64rem;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+.admin-variants-head h2 {
+  margin: .15rem 0 .2rem;
+  color: var(--text);
+  font-size: 1.1rem;
+}
+.admin-variants-head p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: .72rem;
+}
+.admin-variants-new,
+.admin-variant-save {
+  min-height: 42px;
+  padding: .62rem .85rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #fff;
+  font: inherit;
+  font-size: .72rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+.admin-variants-new:disabled,
+.admin-variant-save:disabled { opacity: .55; cursor: wait; }
+.admin-variants-product-picker {
+  align-items: flex-end;
+  margin-bottom: .9rem;
+}
+.admin-variants-product-picker label {
+  display: grid;
+  gap: .3rem;
+  flex: 1;
+  color: var(--text-secondary);
+  font-size: .66rem;
+  font-weight: 800;
+}
+.admin-variants-product-picker select,
+.admin-variant-editor input,
+.admin-variant-editor textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: .58rem .68rem;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--surface-light);
+  color: var(--text);
+  font: inherit;
+  font-size: .74rem;
+  outline: none;
+}
+.admin-variants-product-picker select:focus,
+.admin-variant-editor input:focus,
+.admin-variant-editor textarea:focus {
+  border-color: var(--primary);
+}
+.admin-variants-status {
+  min-width: 0;
+  flex: 1;
+  color: var(--text-secondary);
+  font-size: .68rem;
+  line-height: 1.4;
+}
+.admin-variants-status.is-success { color: #16a34a; }
+.admin-variants-status.is-error { color: #ef4444; }
+.admin-variant-editor {
+  padding: .9rem;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: var(--surface-light);
+}
+.admin-variant-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .65rem;
+}
+.admin-variant-editor label {
+  display: grid;
+  gap: .28rem;
+  color: var(--text-secondary);
+  font-size: .64rem;
+  font-weight: 800;
+}
+.admin-variant-editor label small,
+.admin-variant-media-field small {
+  color: var(--text-secondary);
+  font-size: .6rem;
+  line-height: 1.35;
+  font-weight: 600;
+}
+.admin-variant-active {
+  align-content: end;
+}
+.admin-variant-toggle {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: 0 .7rem;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--surface-light);
+  color: var(--text);
+}
+.admin-variant-toggle input {
+  width: 18px;
+  min-height: 18px;
+  accent-color: var(--primary);
+}
+.admin-variant-media-field {
+  margin-top: .7rem;
+}
+.admin-variant-editor textarea {
+  min-height: 150px;
+  resize: vertical;
+}
+.admin-variant-editor-actions {
+  justify-content: flex-end;
+  margin-top: .7rem;
+}
+.admin-variants-list-wrap {
+  margin-top: 1rem;
+  padding-top: .95rem;
+  border-top: 1px solid var(--border);
+}
+.admin-variants-list-head { margin-bottom: .6rem; }
+.admin-variants-list-head h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: .82rem;
+}
+.admin-variants-list {
+  display: grid;
+  gap: .55rem;
+}
+.admin-variants-empty {
+  padding: .8rem;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+  font-size: .68rem;
+  line-height: 1.4;
+}
+.admin-variant-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: .65rem;
+  padding: .68rem;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: var(--surface);
+}
+.admin-variant-row.is-inactive { opacity: .58; }
+.admin-variant-title {
+  min-width: 0;
+  color: var(--text);
+  font-size: .73rem;
+  font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.admin-variant-meta {
+  color: var(--text-secondary);
+  font-size: .61rem;
+  line-height: 1.35;
+}
+.admin-variant-media-count {
+  color: var(--primary);
+  font-size: .62rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+.admin-variant-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+}
+.admin-variant-edit,
+.admin-variant-delete {
+  min-height: 34px;
+  padding: .38rem .52rem;
+  border-radius: 9px;
+  font: inherit;
+  font-size: .62rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+.admin-variant-edit {
+  border: 1px solid var(--border);
+  background: var(--surface-light);
+  color: var(--text);
+}
+.admin-variant-delete {
+  border: 1px solid rgba(239,68,68,.28);
+  background: rgba(239,68,68,.07);
+  color: #ef4444;
+}
+.admin-product-row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+}
+@media (max-width: 680px) {
+  .admin-variants-product-picker,
+  .admin-variants-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .admin-variant-editor-grid { grid-template-columns: 1fr; }
+  .admin-variant-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .admin-variant-media-count { grid-column: 1; }
+  .admin-variant-actions { grid-column: 2; grid-row: 1 / span 2; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-variants-card *, .admin-variants-card *::before, .admin-variants-card *::after {
+    scroll-behavior: auto;
+    transition: none !important;
+  }
+}

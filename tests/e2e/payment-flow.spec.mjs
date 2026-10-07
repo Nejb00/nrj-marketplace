@@ -272,33 +272,25 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
     await page.locator('a[data-nav="cart"]').click();
     await expect(page.locator("#cartPanel")).toHaveClass(/\bopen\b/);
 
-    const handleBox = await page.locator(".cart-sheet-handle").boundingBox();
-    expect(handleBox).not.toBeNull();
-    const startY = handleBox.y + handleBox.height / 2;
-    const endY = startY + 130;
-    await page.locator(".cart-sheet-handle").dispatchEvent("pointerdown", {
-      pointerId: 1,
+    const handle = page.locator(".cart-sheet-handle");
+    await handle.dispatchEvent("pointerdown", {
+      pointerId: 7,
       pointerType: "touch",
-      clientY: startY,
-      bubbles: true,
-      cancelable: true,
+      clientY: 100,
+      button: 0,
     });
-    await page.evaluate(({ endY }) => {
-      window.dispatchEvent(new PointerEvent("pointermove", {
-        pointerId: 1,
-        pointerType: "touch",
-        clientY: endY,
-        bubbles: true,
-        cancelable: true,
-      }));
-      window.dispatchEvent(new PointerEvent("pointerup", {
-        pointerId: 1,
-        pointerType: "touch",
-        clientY: endY,
-        bubbles: true,
-        cancelable: true,
-      }));
-    }, { endY });
+    await handle.dispatchEvent("pointermove", {
+      pointerId: 7,
+      pointerType: "touch",
+      clientY: 230,
+      button: 0,
+    });
+    await handle.dispatchEvent("pointerup", {
+      pointerId: 7,
+      pointerType: "touch",
+      clientY: 230,
+      button: 0,
+    });
     await expect(page.locator("#cartPanel")).toHaveAttribute("aria-hidden", "true");
     await page.locator('a[data-nav="cart"]').click();
     await expect(page.locator("#cartPanel")).toHaveClass(/\bopen\b/);
@@ -317,49 +309,45 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
     await page.locator(".cart-tab").first().click();
 
     await page.evaluate(async () => {
-      const items = await new Promise((resolve, reject) => {
+      const db = await new Promise((resolve, reject) => {
         const request = indexedDB.open("NRJMarketplaceDB", 6);
+        request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error);
-        request.onsuccess = () => {
-          const db = request.result;
-          const read = db.transaction("cart", "readonly").objectStore("cart").get("default");
-          read.onerror = () => reject(read.error);
-          read.onsuccess = () => resolve(Array.isArray(read.result?.items) ? read.result.items : []);
-        };
       });
 
-      const updatedItems = [
-        ...items,
-        {
-          productId: 29999,
-          quantity: 3,
-          taille: "",
-          couleur: "",
-          moq: 2,
-          selected: true,
-        },
-      ];
+      const current = await new Promise((resolve, reject) => {
+        const request = db.transaction("cart", "readonly").objectStore("cart").get("default");
+        request.onsuccess = () => resolve(request.result || { userId: "default", items: [] });
+        request.onerror = () => reject(request.error);
+      });
+
+      const items = Array.isArray(current.items) ? current.items : [];
+      items.push({
+        productId: 29999,
+        quantity: 3,
+        taille: "",
+        couleur: "",
+        moq: 2,
+        selected: true,
+      });
 
       await new Promise((resolve, reject) => {
-        const request = indexedDB.open("NRJMarketplaceDB", 6);
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => {
-          const db = request.result;
-          const tx = db.transaction("cart", "readwrite");
-          tx.objectStore("cart").put({
-            userId: "default",
-            items: updatedItems,
-            updatedAt: new Date().toISOString(),
-          });
-          tx.oncomplete = resolve;
-          tx.onerror = () => reject(tx.error);
-          tx.onabort = () => reject(tx.error);
-        };
+        const tx = db.transaction("cart", "readwrite");
+        tx.objectStore("cart").put({
+          userId: "default",
+          items,
+          updatedAt: new Date().toISOString(),
+        });
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error);
       });
+      db.close();
     });
     await page.reload();
+    await expect(page.locator('a[data-nav="cart"]')).toBeVisible();
     await page.locator('a[data-nav="cart"]').click();
-    await expect(page.locator("#cartPanel")).toHaveAttribute("aria-hidden", "false");
+    await expect(page.locator("#cartPanel")).toHaveClass(/\bopen\b/);
 
     await expect(page.locator(".cart-unavailable")).toBeVisible();
     await expect(page.locator(".cart-unavailable")).toContainText("Articles indisponibles");

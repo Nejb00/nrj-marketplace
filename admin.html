@@ -151,6 +151,81 @@
                 </div>
             </section>
 
+            <section class="admin-variants-card" id="adminVariantsSection" hidden aria-labelledby="adminVariantsTitle">
+                <div class="admin-variants-head">
+                    <div>
+                        <span class="admin-variants-eyebrow">NRJ PRODUCT VARIANTS V2</span>
+                        <h2 id="adminVariantsTitle">🎛️ Variantes & galeries</h2>
+                        <p id="adminVariantsProductName">Sélectionne un produit pour gérer ses variantes.</p>
+                    </div>
+                    <button type="button" class="admin-variants-new" id="adminVariantsNewBtn">+ Nouvelle variante</button>
+                </div>
+
+                <div class="admin-variants-product-picker">
+                    <label for="adminVariantsProduct">Produit
+                        <select id="adminVariantsProduct"></select>
+                    </label>
+                    <div class="admin-variants-status" id="adminVariantsStatus" aria-live="polite"></div>
+                </div>
+
+                <div class="admin-variant-editor">
+                    <input type="hidden" id="adminVariantId">
+
+                    <div class="admin-variant-editor-grid">
+                        <label>Clé technique
+                            <input id="adminVariantKey" type="text" maxlength="160" placeholder="Ex. color:white|size:m">
+                            <small>Optionnelle. Sans valeur, elle est générée depuis couleur / taille / SKU.</small>
+                        </label>
+                        <label>Libellé
+                            <input id="adminVariantLabel" type="text" maxlength="300" placeholder="Blanc / M">
+                        </label>
+                        <label>Couleur
+                            <input id="adminVariantColor" type="text" maxlength="100" placeholder="Blanc">
+                        </label>
+                        <label>Taille
+                            <input id="adminVariantSize" type="text" maxlength="100" placeholder="M">
+                        </label>
+                        <label>SKU
+                            <input id="adminVariantSku" type="text" maxlength="120" placeholder="SKU-001">
+                        </label>
+                        <label>Prix variante (XAF)
+                            <input id="adminVariantPrice" type="number" min="0" step="1" placeholder="Prix du produit">
+                        </label>
+                        <label>MOQ variante
+                            <input id="adminVariantMoq" type="number" min="1" step="1" placeholder="MOQ du produit">
+                        </label>
+                        <label>Ordre
+                            <input id="adminVariantSort" type="number" min="0" step="1" value="0">
+                        </label>
+                        <label class="admin-variant-active">
+                            <span>État</span>
+                            <span class="admin-variant-toggle">
+                                <input id="adminVariantActive" type="checkbox" checked>
+                                <span>Variante active</span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <label class="admin-variant-media-field">Galerie de la variante
+                        <textarea id="adminVariantMedia" rows="7" maxlength="200000" placeholder="https://.../blanc-face.jpg
+https://.../blanc-profil.jpg
+https://.../blanc-contexte.jpg"></textarea>
+                        <small>Une URL HTTPS par ligne · doublons supprimés · jusqu’à 100 médias.</small>
+                    </label>
+
+                    <div class="admin-variant-editor-actions">
+                        <button type="button" class="admin-variant-save" id="adminVariantSaveBtn">Enregistrer la variante</button>
+                    </div>
+                </div>
+
+                <div class="admin-variants-list-wrap">
+                    <div class="admin-variants-list-head">
+                        <h3>Variantes V2 du produit</h3>
+                    </div>
+                    <div id="adminVariantsList" class="admin-variants-list"></div>
+                </div>
+            </section>
+
             <h2 style="margin-bottom:1rem;color:var(--primary);">Ajouter un nouveau produit</h2>
             <div class="form-group"><label>Nom</label><input type="text" id="adminName" placeholder="Ex: Écouteurs Pro"></div>
 

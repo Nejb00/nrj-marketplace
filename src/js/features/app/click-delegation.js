@@ -2,7 +2,7 @@
 // Éclaté de main.js (refacto-archi) — logique strictement identique.
 // Side-effects au chargement, ordre historique préservé (lignes 639→746
 // de l'ancien main.js).
-import { state, getCategoryName, trackViewedItem } from '../../core/state.js';
+import { state, saveCart, getCategoryName, trackViewedItem } from '../../core/state.js';
 import { applyFilter, clearSubcategorySelection } from '../catalogue/category-bubbles.js';
 import { switchView } from '../catalogue/categories-page.js';
 import { refreshCatalogue } from '../catalogue/catalogue-init.js';
@@ -10,6 +10,7 @@ import { addToCart, changeQty } from '../../services/cart-actions.js';
 import { openCartPanel, closeCartPanel, removeCartItemAnimated } from '../../services/cart-panel.js';
 import { toggleFavorite } from '../../services/favorites.js';
 import { openOrderModal, sendWhatsAppOrder } from '../../services/checkout.js';
+import { cancelDirectPurchase } from '../../services/direct-purchase.js';
 import { startMobileMoneyPayment, initMobileMoneyPaymentUi } from '../../services/payment/mobile-money-checkout.js';
 import { openProductModal, closeProductModal } from '../product/modal-render.js';
 import { openEditModal } from '../product/product-edit-form.js';
@@ -18,6 +19,24 @@ import { hideSearchDropdown } from '../../services/search-dropdown.js';
 import { showAccountView, hideAccountView, handleAccountAction } from './account-view.js';
 import { isFlexOpen } from './view-helpers.js';
 import { switchToSearchView, switchFromSearchView } from '../search/search-view.js';
+
+document.addEventListener('nrj:cart-open-product', (event) => {
+  const pid = Number(event.detail?.productId);
+  if (!Number.isInteger(pid) || pid <= 0) return;
+
+  const selection = {
+    variantId: event.detail?.variantId || null,
+    couleur: event.detail?.couleur || '',
+    taille: event.detail?.taille || ''
+  };
+
+  closeCartPanel({ restoreFocus: false });
+  openProductModal(pid, selection);
+});
+
+document.addEventListener('nrj:close-product-modal', () => {
+  if (state.modalOpen) closeProductModal();
+});
 
 document.addEventListener('click', e => {
   const fb = e.target.closest('.filter-btn'); if (fb) { applyFilter(fb.dataset.category); return; }
@@ -64,7 +83,18 @@ document.getElementById('checkoutBtn')?.addEventListener('click', openOrderModal
 document.getElementById('sendWhatsAppBtn')?.addEventListener('click', sendWhatsAppOrder);
 document.getElementById('startMobileMoneyBtn')?.addEventListener('click', startMobileMoneyPayment);
 initMobileMoneyPaymentUi();
-document.getElementById('cancelOrderBtn')?.addEventListener('click', () => document.getElementById('orderModalOverlay').classList.remove('open'));
+document.getElementById('cancelOrderBtn')?.addEventListener('click', async () => {
+  const restored = cancelDirectPurchase();
+  if (restored) {
+    try {
+      await saveCart();
+      refreshCartDisplay();
+    } catch (error) {
+      console.warn('Restauration panier après Buy Now', error);
+    }
+  }
+  document.getElementById('orderModalOverlay').classList.remove('open');
+});
 
 document.getElementById('saveEditBtn')?.addEventListener('click', updateProduct);
 document.getElementById('cancelEditBtn')?.addEventListener('click', () => document.getElementById('editProductModalOverlay').classList.remove('open'));

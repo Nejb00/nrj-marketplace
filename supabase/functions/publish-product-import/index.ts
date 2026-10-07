@@ -98,6 +98,145 @@ function toVariantText(value) {
     .slice(0, 1000);
 }
 
+function normalizeMediaUrl(value) {
+  const url = String(value || "").trim();
+  if (!url || url.length > 2000 || !/^https?:\\/\\//i.test(url)) return "";
+  return url;
+}
+
+function normalizeVariantItems(rawVariants) {
+  const source = rawVariants && typeof rawVariants === "object"
+    ? rawVariants
+    : {};
+  const items = Array.isArray(source.items) ? source.items : [];
+
+  const byKey = new Map();
+
+  for (const raw of items.slice(0, 100)) {
+    if (!raw || typeof raw !== "object") continue;
+
+    const variantKey = cleanText(
+      raw.variant_key || raw.variantKey || raw.key || raw.sku || raw.label,
+      160
+    );
+    if (!variantKey || byKey.has(variantKey)) continue;
+
+    const mediaSource = Array.isArray(raw.media)
+      ? raw.media
+      : Array.isArray(raw.images)
+        ? raw.images
+        : [];
+
+    const media = mediaSource
+      .map((item) => {
+        if (typeof item === "string") return normalizeMediaUrl(item);
+        if (!item || typeof item !== "object") return "";
+        return normalizeMediaUrl(
+          item.url || item.delivery_url || item.secure_url
+        );
+      })
+      .filter(Boolean)
+      .slice(0, 100);
+
+    const price = raw.price == null ? null : Number(raw.price);
+    const safePrice = Number.isFinite(price) && price > 0 ? price : null;
+
+    const attributes = raw.attributes && typeof raw.attributes === "object"
+      ? raw.attributes
+      : {};
+
+    byKey.set(variantKey, {
+      variant_key: variantKey,
+      label: cleanText(raw.label, 300) || variantKey,
+      color: cleanText(raw.color || raw.colour, 100) || null,
+      size: cleanText(raw.size || raw.taille, 100) || null,
+      sku: cleanText(raw.sku, 120) || null,
+      price: safePrice,
+      moq: raw.moq == null ? null : cleanText(raw.moq, 50) || null,
+      active: raw.active !== false,
+      sort_order: Number.isSafeInteger(Number(raw.sort_order))
+        ? Number(raw.sort_order)
+        : byKey.size,
+      attributes,
+      media
+    });
+  }
+
+  return [...byKey.values()];
+}
+
+function collectVariantMedia(variantItems) {
+  return variantItems.flatMap((variant) =>
+    variant.media.map((url, index) => ({
+      variant_key: variant.variant_key,
+      url,
+      sort_order: index
+    }))
+  );
+}
+
+async function publishVariantGraph(productId, variantItems) {
+  if (!variantItems.length) return { variants: 0, media: 0 };
+
+  const insertedVariants = await rest("product_variants?select=id,variant_key", {
+    method: "POST",
+    headers: { Prefer: "return=representation" },
+    body: JSON.stringify(
+      variantItems.map((variant) => ({
+        product_id: productId,
+        variant_key: variant.variant_key,
+        label: variant.label,
+        color: variant.color,
+        size: variant.size,
+        sku: variant.sku,
+        price: variant.price,
+        moq: variant.moq,
+        active: variant.active,
+        sort_order: variant.sort_order,
+        attributes: variant.attributes
+      }))
+    )
+  });
+
+  if (insertedVariants.error || !Array.isArray(insertedVariants.data)) {
+    throw new Error("variant_insert_failed");
+  }
+
+  const variantMap = new Map(
+    insertedVariants.data.map((variant) => [
+      String(variant.variant_key),
+      String(variant.id)
+    ])
+  );
+
+  const variantMedia = collectVariantMedia(variantItems)
+    .map((media) => ({
+      product_id: productId,
+      variant_id: variantMap.get(media.variant_key) || null,
+      url: media.url,
+      media_type: "image",
+      alt_text: "",
+      sort_order: media.sort_order,
+      metadata: {}
+    }))
+    .filter((media) => media.variant_id);
+
+  if (variantMedia.length) {
+    const insertedMedia = await rest("product_media", {
+      method: "POST",
+      body: JSON.stringify(variantMedia)
+    });
+    if (insertedMedia.error) {
+      throw new Error("variant_media_insert_failed");
+    }
+  }
+
+  return {
+    variants: insertedVariants.data.length,
+    media: variantMedia.length
+  };
+}
+
 function getPublishEligibility(row) {
   const ai = row.ai_analysis && typeof row.ai_analysis === "object" ? row.ai_analysis : {};
   const classification = ai.classification && typeof ai.classification === "object"
@@ -125,7 +264,9 @@ function extractMedia(row) {
     : {};
   const images = Array.isArray(media.images) ? media.images : [];
   return images
-    .map((item) => String(item?.delivery_url || item?.secure_url || "").trim())
+    .map((item) => normalizeMediaUrl(
+      item?.delivery_url || item?.secure_url || item?.url
+    ))
     .filter(Boolean)
     .slice(0, 6);
 }
@@ -255,18 +396,29 @@ Deno.serve(async (req) => {
     const variants = payload.variants && typeof payload.variants === "object"
       ? payload.variants
       : {};
+    const variantItems = normalizeVariantItems(variants);
+
+    let publishImages = mediaImages;
+    if (!publishImages.length) {
+      publishImages = variantItems
+        .flatMap((variant) => variant.media)
+        .filter(Boolean)
+        .slice(0, 6);
+    }
+
+    if (!publishImages.length) throw new Error("media_required");
 
     const product = {
       name: cleanText(payload.product_name, MAX_NAME_LENGTH) || "Produit importé NRJ",
       category_id: category.id,
       category: cleanText(category.name, 200),
       price: Number(payload.calculated_price),
-      image: mediaImages[0] || null,
-      image2: mediaImages[1] || null,
-      image3: mediaImages[2] || null,
-      image4: mediaImages[3] || null,
-      image5: mediaImages[4] || null,
-      image6: mediaImages[5] || null,
+      image: publishImages[0] || null,
+      image2: publishImages[1] || null,
+      image3: publishImages[2] || null,
+      image4: publishImages[3] || null,
+      image5: publishImages[4] || null,
+      image6: publishImages[5] || null,
       tailles: toVariantText(variants.sizes),
       couleurs: toVariantText(variants.colors),
       moq: cleanText(payload.moq, 50) || "1",
@@ -285,6 +437,18 @@ Deno.serve(async (req) => {
 
     const published = inserted.data?.[0];
     if (!published?.id) throw new Error("product_insert_missing_id");
+
+    if (variantItems.length) {
+      try {
+        await publishVariantGraph(published.id, variantItems);
+      } catch (variantError) {
+        await rest(
+          "products?id=eq." + encodeURIComponent(published.id),
+          { method: "DELETE" }
+        );
+        throw variantError;
+      }
+    }
 
     await updateImport(importId, {
       published_product_id: published.id,

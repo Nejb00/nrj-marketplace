@@ -8,6 +8,7 @@ import { getSelectedItems } from './cart-storage.js';
 import { closeCartMenu } from './cart-menu.js';
 import { refreshCartDisplay } from './cart-panel.js';
 import { createRemoteOrder } from './payment/order-service.js';
+import { finishDirectPurchase } from './direct-purchase.js';
 
 function readCustomerPhone() {
     return document.getElementById('customerPhone')?.value.trim()
@@ -16,12 +17,18 @@ function readCustomerPhone() {
 }
 
 function buildRemoteItems(selected) {
-    return selected.map(item => ({
-        productId: item.productId,
-        quantity: Number(item.quantity),
-        taille: item.taille || null,
-        couleur: item.couleur || null
-    }));
+    return selected.map(item => {
+        const payload = {
+            productId: item.productId,
+            quantity: Number(item.quantity),
+            taille: item.taille || null,
+            couleur: item.couleur || null
+        };
+        if (item.variantId != null && String(item.variantId).trim()) {
+            payload.variantId = String(item.variantId).trim();
+        }
+        return payload;
+    });
 }
 
 export function shareCart() {
@@ -35,8 +42,9 @@ export function shareCart() {
         if (!p) continue;
         let d = p.name;
         if (i.couleur || i.taille) d += ' (' + [i.couleur, i.taille].filter(Boolean).join(', ') + ')';
-        msg += '• ' + d + ' x' + Number(i.quantity) + ' — ' + formatPrice(p.price * Number(i.quantity)) + '\n  🔗 ' + BASE_URL + '?id=' + p.id + '\n';
-        tot += p.price * Number(i.quantity);
+        const unitPrice = Number(i.unitPrice) || Number(p.price) || 0;
+        msg += '• ' + d + ' x' + Number(i.quantity) + ' — ' + formatPrice(unitPrice * Number(i.quantity)) + '\n  🔗 ' + BASE_URL + '?id=' + p.id + '\n';
+        tot += unitPrice * Number(i.quantity);
     }
     msg += '\n💰 *Total : ' + formatPrice(tot) + '*\n\n👉 ' + BASE_URL;
 
@@ -78,7 +86,8 @@ export function openOrderModal() {
     const lines = selected.map(i => {
         const p = state.products.find(pr => pr.id === i.productId);
         if (!p) return '';
-        tot += p.price * Number(i.quantity);
+        const unitPrice = Number(i.unitPrice) || Number(p.price) || 0;
+        tot += unitPrice * Number(i.quantity);
         let line = '• ' + escapeHtml(p.name) + ' [ID: ' + p.id + '] x' + Number(i.quantity);
         if (i.couleur || i.taille) {
             line += ' (' + [i.couleur, i.taille].filter(Boolean).join(', ') + ')';
@@ -127,17 +136,22 @@ export async function sendWhatsAppOrder() {
         let d = p.name;
         if (i.couleur || i.taille) d += ' (' + [i.couleur, i.taille].filter(Boolean).join(', ') + ')';
 
-        msg += '- ' + d + ' x' + Number(i.quantity) + ' = ' + formatPrice(p.price * Number(i.quantity)) + '\n  🔗 ' + BASE_URL + '?id=' + p.id + '\n';
-        tot += p.price * Number(i.quantity);
+        const unitPrice = Number(i.unitPrice) || Number(p.price) || 0;
+        msg += '- ' + d + ' x' + Number(i.quantity) + ' = ' + formatPrice(unitPrice * Number(i.quantity)) + '\n  🔗 ' + BASE_URL + '?id=' + p.id + '\n';
+        tot += unitPrice * Number(i.quantity);
 
         const variant = [i.couleur, i.taille].filter(Boolean).join(', ');
-        orderItems.push({
+        const orderItem = {
             productId: p.id,
             name: p.name,
-            price: p.price,
+            price: unitPrice,
             qty: Number(i.quantity),
             variant: variant || null
-        });
+        };
+        if (i.variantId != null && String(i.variantId).trim()) {
+            orderItem.variantId = String(i.variantId).trim();
+        }
+        orderItems.push(orderItem);
     }
 
     msg += '\n💰 *Total : ' + formatPrice(tot) + '*';
@@ -178,6 +192,7 @@ export async function sendWhatsAppOrder() {
     document.getElementById('orderModalOverlay')?.classList.remove('open');
 
     state.cart = state.cart.filter(i => i.selected === false);
+    finishDirectPurchase();
     await saveCart();
     refreshCartDisplay();
 

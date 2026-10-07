@@ -13,10 +13,17 @@ import { updateTotal } from './modal-total.js';
 import { initOptionsPanel } from './modal-options-sheet.js';
 import { bindHeaderActions, bindStickyActions } from './modal-actions.js';
 import { renderRecommendations } from './modal-recommendations.js';
+import {
+    getProductGalleryForSelection,
+    getVariantCommercials,
+    getVariantOptionValues,
+    getActiveProductVariants,
+    resolveProductVariant,
+} from '../../services/product-variants-media.js';
 
 export { closeProductModal } from './modal-actions.js';
 
-export async function openProductModal(pid) {
+export async function openProductModal(pid, initialSelection = null) {
     let p = state.products.find(pr => pr.id === pid);
     if (!p) return;
 
@@ -35,21 +42,37 @@ export async function openProductModal(pid) {
 
     // ── Remplissage du contexte partagé (anciennes closures) ──
     modalCtx.p = p;
-    modalCtx.tailles = (p.tailles || '').split(',').map(s => s.trim()).filter(Boolean);
-    modalCtx.couleurs = (p.couleurs || '').split(',').map(s => s.trim()).filter(Boolean);
+    const optionValues = getVariantOptionValues(p);
+    modalCtx.variants = getActiveProductVariants(p);
+    modalCtx.tailles = optionValues.sizes;
+    modalCtx.couleurs = optionValues.colors;
     // Chaque fiche repart sans ancienne sélection. La Phase 4 peut ensuite
     // pré-sélectionner une variante uniquement si son score est explicitement disponible.
-    modalCtx.sT = '';
-    modalCtx.sC = '';
-    modalCtx.moq = Number(p.moq) || 1;
-    modalCtx.uPrice = Number(p.price) || 0;
+    const activeVariants = getActiveProductVariants(p);
+    const requestedVariant = initialSelection?.variantId
+        ? activeVariants.find((variant) => String(variant.id) === String(initialSelection.variantId))
+        : null;
+    const initialColor = String(
+        initialSelection?.couleur || initialSelection?.color || requestedVariant?.color || ''
+    ).trim();
+    const initialSize = String(
+        initialSelection?.taille || initialSelection?.size || requestedVariant?.size || ''
+    ).trim();
+
+    modalCtx.sT = initialSize;
+    modalCtx.sC = initialColor;
+    const initialVariant = requestedVariant || resolveProductVariant(p, initialColor, initialSize);
+    modalCtx.sVariantId = initialVariant?.id || null;
+    const commercial = getVariantCommercials(p, initialColor, initialSize);
+    modalCtx.moq = commercial.moq;
+    modalCtx.uPrice = commercial.price;
     modalCtx.colorQtys = {};
     modalCtx.currentQty = 1;
     modalCtx.stickyAddedQty = 0;
     modalCtx.stickyAddedVariant = null;
     modalCtx.imageSlideOffset = 0;
     modalCtx.videoUrl = (p.video_url || '').trim();
-    modalCtx.imgs = [p.image, p.image2, p.image3, p.image4, p.image5, p.image6].filter(u => u && u.trim());
+    modalCtx.imgs = getProductGalleryForSelection(p, modalCtx.sC, modalCtx.sT).map(media => media.url);
     modalCtx.sc = document.getElementById('modalCarouselScroll');
     modalCtx.dc = document.getElementById('modalCarouselDots');
 
