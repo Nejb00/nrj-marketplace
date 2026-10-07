@@ -16,6 +16,7 @@ import {
     getProductGalleryForSelection,
     getVariantThumbnail,
     getCompatibleVariantValues,
+    getVariantCommercials,
     isValidVariantSelection,
     resolveProductVariant,
 } from '../../services/product-variants-media.js';
@@ -187,12 +188,29 @@ function refreshGalleryFromSelection() {
     const variant = resolveProductVariant(product, modalCtx.sC, modalCtx.sT);
     modalCtx.sVariantId = variant?.id || null;
 
+    const commercial = getVariantCommercials(product, modalCtx.sC, modalCtx.sT);
+    modalCtx.uPrice = commercial.price;
+    modalCtx.moq = commercial.moq;
+
     const gallery = getProductGalleryForSelection(product, modalCtx.sC, modalCtx.sT);
     modalCtx.imgs = gallery.map((media) => media.url).filter(Boolean);
 
     if (modalCtx.sc && modalCtx.dc) {
         buildCarousel();
     }
+
+    renderHeader();
+    renderQuantity();
+    // Le total de la ligne dépend désormais du prix/MOQ de la variante résolue.
+    // Le sélecteur reste ouvert : on ne change que les valeurs commerciales.
+    document.getElementById('modalPrice')?.replaceChildren(
+        document.createTextNode(new Intl.NumberFormat('fr-FR').format(modalCtx.uPrice) + ' XAF')
+    );
+    const modalMoq = document.getElementById('modalMoq');
+    if (modalMoq) modalMoq.textContent = 'Minimum d\'achat : ' + modalCtx.moq + ' pièce(s)';
+    const modalTotal = document.getElementById('modalTotal');
+    if (modalTotal) modalTotal.textContent = 'Total minimum : ' +
+        new Intl.NumberFormat('fr-FR').format(modalCtx.uPrice * modalCtx.moq) + ' XAF';
 }
 
 function setColor(color, button) {
@@ -551,7 +569,9 @@ async function openCartItemEditor(idx, trigger = null) {
     modalCtx.variants = Array.isArray(p.variants) ? p.variants.filter((variant) => variant?.active !== false) : [];
     modalCtx.sVariantId = it.variantId || null;
     modalCtx.moq = Math.max(Number(it.moq) || 1, Number(p.moq) || 1);
-    modalCtx.uPrice = Number(p.price) || 0;
+    const commercial = getVariantCommercials(p, modalCtx.sC, modalCtx.sT);
+    modalCtx.uPrice = commercial.price;
+    modalCtx.moq = Math.max(modalCtx.moq, commercial.moq);
     modalCtx.currentQty = Math.max(modalCtx.moq, Number(it.quantity) || modalCtx.moq);
     modalCtx.sheetMode = 'edit';
     modalCtx.editCartIndex = idx;
