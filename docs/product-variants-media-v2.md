@@ -103,6 +103,18 @@ Les tables V2 sont exposées en lecture publique uniquement pour le catalogue. L
 
 Aucune clé `service_role` n'est introduite dans le frontend.
 
+## Admin V2
+
+Le panneau Admin expose une surface dédiée pour gérer le graphe V2 :
+
+- sélection d'un produit ;
+- création / modification d'une variante ;
+- couleur, taille, SKU, prix, MOQ, ordre et état actif ;
+- galerie avec plusieurs URLs HTTPS, jusqu'à 100 médias ;
+- suppression d'une variante avec cascade de ses médias.
+
+Les écritures passent par `save_product_variant_graph` et `delete_product_variant`. Ces RPC sont `SECURITY DEFINER`, vérifient `public.is_chat_admin()`, et l'exécution est retirée de `PUBLIC`. La variante et sa galerie sont donc mises à jour dans une même transaction PostgreSQL.
+
 ## Ordre d'intégration
 
 1. Schéma + backfill legacy.
