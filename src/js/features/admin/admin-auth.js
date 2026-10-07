@@ -5,6 +5,7 @@ import { supabaseClient } from '../../core/config.js';
 import { showToast } from '../../utils/dom-helpers.js';
 import { loadCategoryDropdowns } from './category-dropdowns.js';
 import { renderAdminList, renderAdminStats } from './admin-list.js';
+import { initProductVariantsAdminUI } from './product-variants-admin-ui.js';
 
 export async function handleAdminLogin() {
   try {
@@ -20,6 +21,7 @@ export async function handleAdminLogin() {
     await loadCategoryDropdowns();
     renderAdminList();
     renderAdminStats();
+    initProductVariantsAdminUI();
     showToast('🔓 Connecté');
   } catch (err) {
     document.getElementById('adminError').textContent = err.message;
@@ -48,6 +50,7 @@ export async function checkAdminSession() {
     await loadCategoryDropdowns();
     renderAdminList();
     renderAdminStats();
+    initProductVariantsAdminUI();
   }
   return state.isAdminLoggedIn;
 }
