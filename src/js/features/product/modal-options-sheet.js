@@ -8,7 +8,9 @@ import { showToast, showCartAddedToast } from '../../utils/dom-helpers.js';
 import { escapeHtml } from '../../utils/escape-html.js';
 import { thumbImg } from '../../utils/images.js';
 import { WHATSAPP_NUMBER, POPULAR_THRESHOLD } from '../../core/config.js';
-import { modalCtx } from './modal-state.js';
+import { productDetailsCache, modalCtx } from './modal-state.js';
+import { fetchProductDetails } from '../../api/api.js';
+import { getVariantOptionValues } from '../../services/product-variants-media.js';
 import { buildCarousel } from './modal-carousel.js';
 import {
     getProductGalleryForSelection,
@@ -486,12 +488,25 @@ async function validateAndAdd() {
 }
 
 
-function openCartItemEditor(idx, trigger = null) {
+async function openCartItemEditor(idx, trigger = null) {
     const it = state.cart[idx];
     if (!it) return;
 
-    const p = state.products.find((product) => Number(product.id) === Number(it.productId));
+    let p = state.products.find((product) => Number(product.id) === Number(it.productId));
     if (!p) return;
+
+    if (!Array.isArray(p.variants)) {
+        const cached = productDetailsCache.get(p.id);
+        if (cached) {
+            p = cached;
+        } else {
+            const hydrated = await fetchProductDetails(p.id);
+            if (hydrated) {
+                p = hydrated;
+                productDetailsCache.set(p.id, hydrated);
+            }
+        }
+    }
 
     const panel = els.panel();
     if (!panel) return;
@@ -499,11 +514,12 @@ function openCartItemEditor(idx, trigger = null) {
     setupStaticListeners();
 
     modalCtx.p = p;
-    modalCtx.tailles = String(p.tailles || '').split(',').map((value) => value.trim()).filter(Boolean);
-    modalCtx.couleurs = String(p.couleurs || '').split(',').map((value) => value.trim()).filter(Boolean);
+    const optionValues = getVariantOptionValues(p);
+    modalCtx.tailles = optionValues.sizes;
+    modalCtx.couleurs = optionValues.colors;
     modalCtx.sT = String(it.taille || '');
     modalCtx.sC = String(it.couleur || '');
-    modalCtx.variants = Array.isArray(p.variants) ? p.variants : [];
+    modalCtx.variants = Array.isArray(p.variants) ? p.variants.filter((variant) => variant?.active !== false) : [];
     modalCtx.sVariantId = it.variantId || null;
     modalCtx.moq = Math.max(Number(it.moq) || 1, Number(p.moq) || 1);
     modalCtx.uPrice = Number(p.price) || 0;
