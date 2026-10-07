@@ -16,12 +16,18 @@ function readCustomerPhone() {
 }
 
 function buildRemoteItems(selected) {
-    return selected.map(item => ({
-        productId: item.productId,
-        quantity: Number(item.quantity),
-        taille: item.taille || null,
-        couleur: item.couleur || null
-    }));
+    return selected.map(item => {
+        const payload = {
+            productId: item.productId,
+            quantity: Number(item.quantity),
+            taille: item.taille || null,
+            couleur: item.couleur || null
+        };
+        if (item.variantId != null && String(item.variantId).trim()) {
+            payload.variantId = String(item.variantId).trim();
+        }
+        return payload;
+    });
 }
 
 export function shareCart() {
@@ -131,13 +137,17 @@ export async function sendWhatsAppOrder() {
         tot += p.price * Number(i.quantity);
 
         const variant = [i.couleur, i.taille].filter(Boolean).join(', ');
-        orderItems.push({
+        const orderItem = {
             productId: p.id,
             name: p.name,
             price: p.price,
             qty: Number(i.quantity),
             variant: variant || null
-        });
+        };
+        if (i.variantId != null && String(i.variantId).trim()) {
+            orderItem.variantId = String(i.variantId).trim();
+        }
+        orderItems.push(orderItem);
     }
 
     msg += '\n💰 *Total : ' + formatPrice(tot) + '*';
