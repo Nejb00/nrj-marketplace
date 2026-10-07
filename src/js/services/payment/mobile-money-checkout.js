@@ -347,7 +347,7 @@ export async function startMobileMoneyPayment() {
                     throw error;
                 }
 
-                clearSessionKey(ORDER_IDEMPOTENCY_STORAGE_KEY);
+                clearDurableKey(scopedStorageKey(ORDER_IDEMPOTENCY_STORAGE_KEY));
 
                 remoteOrder = await createRemoteOrder({
                     items: buildRemoteItems(selected),
