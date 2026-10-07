@@ -476,12 +476,12 @@ function closeOptionsPanel() {
     }
 }
 
-function openOptionsPanel(trigger = document.getElementById('addToCartStickyBtn') || document.getElementById('stickyActionAdded')) {
+function openOptionsPanel(trigger = document.getElementById('addToCartStickyBtn') || document.getElementById('stickyActionAdded'), mode = 'add') {
     const panel = els.panel();
     if (!panel) return;
 
     setupStaticListeners();
-    modalCtx.sheetMode = 'add';
+    modalCtx.sheetMode = mode === 'buy' ? 'buy' : 'add';
     modalCtx.editCartIndex = null;
     lastTrigger = trigger;
     syncSheetFromSticky();
