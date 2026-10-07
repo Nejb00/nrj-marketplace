@@ -299,6 +299,25 @@ function initCartPanelEvents(body, footer) {
             return;
         }
 
+        const productButton = e.target.closest('[data-action="cart-open-product"]');
+        if (productButton) {
+            e.preventDefault();
+            e.stopPropagation();
+            const idx = parseInt(productButton.dataset.index, 10);
+            const item = state.cart[idx];
+            if (!item) return;
+
+            document.dispatchEvent(new CustomEvent('nrj:cart-open-product', {
+                detail: {
+                    productId: item.productId,
+                    variantId: item.variantId || null,
+                    couleur: item.couleur || '',
+                    taille: item.taille || ''
+                }
+            }));
+            return;
+        }
+
         const editButton = e.target.closest('[data-action="cart-edit"]');
         if (editButton) {
             e.preventDefault();
@@ -421,15 +440,19 @@ function renderCartItems(entries) {
                 '<input type="checkbox" data-action="cart-select" data-index="' + idx + '" ' + (isSelected ? 'checked' : '') + '>' +
             '</label>' +
             '<div class="cart-item-main">' +
-                '<button type="button" class="cart-item-edit-trigger" data-action="cart-edit" data-index="' + idx + '" aria-label="Modifier ' + escapeHtml(p.name) + '">' +
-                    '<span class="cart-item-img">' + img + '</span>' +
-                    '<span class="cart-item-info">' +
-                        '<span class="cart-item-info-name">' + escapeHtml(p.name) + '</span>' +
-                        (vars.length ? '<span class="cart-item-variants">' + escapeHtml(vars.join(', ')) + '</span>' : '') +
-                        '<span class="cart-item-price">Prix unitaire · ' + formatPrice(p.price) + '</span>' +
-                        '<strong class="cart-item-line-total">' + formatPrice(lineTotal) + '</strong>' +
-                    '</span>' +
-                '</button>' +
+                '<div class="cart-item-product-row">' +
+                    '<button type="button" class="cart-item-product-trigger" data-action="cart-open-product" data-index="' + idx + '" aria-label="Ouvrir la fiche de ' + escapeHtml(p.name) + '">' +
+                        '<span class="cart-item-img">' + img + '</span>' +
+                    '</button>' +
+                    '<button type="button" class="cart-item-edit-trigger" data-action="cart-edit" data-index="' + idx + '" aria-label="Modifier ' + escapeHtml(p.name) + '">' +
+                        '<span class="cart-item-info">' +
+                            '<span class="cart-item-info-name">' + escapeHtml(p.name) + '</span>' +
+                            (vars.length ? '<span class="cart-item-variants">' + escapeHtml(vars.join(', ')) + '</span>' : '') +
+                            '<span class="cart-item-price">Prix unitaire · ' + formatPrice(p.price) + '</span>' +
+                            '<strong class="cart-item-line-total">' + formatPrice(lineTotal) + '</strong>' +
+                        '</span>' +
+                    '</button>' +
+                '</div>' +
                 moqWarning +
             '</div>' +
             '<div class="cart-item-qty">' +
