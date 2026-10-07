@@ -24,6 +24,13 @@ test('ATTAQUE #24 requires master switch + explicit mode + positive cap', () => 
     assert.match(paymentFunction, /OPENPAY_MAX_TRANSACTION_XAF[\s\S]*?max_transaction_not_configured/);
 });
 
+test('ATTAQUE #24 readiness fails closed when the provider key is missing', () => {
+    assert.match(
+        paymentFunction,
+        /if \(!OPENPAY_API_KEY\) \{[\s\S]*?provider_key_missing/
+    );
+});
+
 test('ATTAQUE #24 supports a canary allowlist before live activation', () => {
     assert.match(
         paymentFunction,
