@@ -481,8 +481,8 @@
       "driveMd5": "d34eef657b650780a2e25b6ad7136db9"
     },
     "src/css/base/base.css": {
-      "githubSha": "23de71ad38f820ad84939cd2298ed9eb72f79f35",
-      "driveMd5": "6aeb10458dec1bce5704e0f133d602e7"
+      "githubSha": "e048ee655cd4492bd7930e86c33c525ff76ed413",
+      "driveMd5": "5de06f9928de116c392f96f13857908e"
     },
     "src/css/components/admin.css": {
       "githubSha": "c7c4130d4e2b662475004d83957908132e959632",
@@ -613,8 +613,8 @@
       "driveMd5": "e9cdb320d2adf5c6c3cfc52216a90d1b"
     },
     "src/js/features/app/click-delegation.js": {
-      "githubSha": "a95abf5fa4b36c1684b64b2e48bf188390948f2b",
-      "driveMd5": "8d3bf55f24f40fac313cab9f5d2ac255"
+      "githubSha": "d7fac9a69a24498c36edd3edc11e0930d8e8876e",
+      "driveMd5": "65fe08c2447f698c009d4ea96efb507a"
     },
     "src/js/features/app/filter-bar.js": {
       "githubSha": "e63288ce35d4d6262c2fbe4e18f3b2f10402c4b7",
@@ -1329,8 +1329,8 @@
       "driveMd5": "d8af5109a8fb2ebc65c4a4cf2964474e"
     },
     "tests/e2e/payment-flow.spec.mjs": {
-      "githubSha": "3cdd6041eedb3a4df26e3a8b4f7e4dfc44066f36",
-      "driveMd5": "ddf7246855ba89bc15b48e04a756ce6c"
+      "githubSha": "6b0b9bc2dcfccb546df4d46bf810d4761d9acfed",
+      "driveMd5": "e8aca45477ab153cd37b367fc63c3e7d"
     },
     "tests/e2e/product-variants-media.spec.mjs": {
       "githubSha": "97e5626499b41b362f984bf3c511699ff5eda09f",
@@ -1357,5 +1357,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-07T17:23:17.076Z"
+  "updatedAt": "2026-10-07T18:22:09.600Z"
 }
