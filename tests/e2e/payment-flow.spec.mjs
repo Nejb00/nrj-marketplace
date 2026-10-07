@@ -1,5 +1,7 @@
 import { test, expect } from "@playwright/test";
 
+test.use({ viewport: { width: 390, height: 844 } });
+
 const FAKE_USER_ID = "00000000-0000-4000-8000-000000000023";
 const FAKE_ORDER_ID = "00000000-0000-4000-8000-000000000123";
 const FAKE_PAYMENT_ID = "00000000-0000-4000-8000-000000000223";
