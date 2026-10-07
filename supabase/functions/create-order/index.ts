@@ -259,7 +259,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   const variantIds = [...new Set(
-    items.map((item) => item.variantId).filter(Boolean)
+    items
+      .map((item) => item.variantId)
+      .filter((id): id is string => Boolean(id))
   )];
 
   let variants = new Map<string, {
