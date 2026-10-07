@@ -3,11 +3,13 @@ import { state } from '../core/state.js';
 import { setCartQty } from './cart-actions.js';
 
 let qtyPickerIndex = null;
+let qtySheetPreviousFocus = null;
 
 export function openQtyPicker(idx) {
     const it = state.cart[idx];
     if (!it) return;
     qtyPickerIndex = idx;
+    qtySheetPreviousFocus = document.activeElement;
     const moq = Number(it.moq) || 1;
     const current = Number(it.quantity);
 
@@ -19,6 +21,9 @@ export function openQtyPicker(idx) {
     input.min = String(moq);
     input.value = String(current);
     input.placeholder = `Min. ${moq}`;
+    overlay.setAttribute('aria-hidden', 'false');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('role', 'dialog');
 
     const maxOpt = Math.max(current + 15, moq + 24);
     let html = `<button type="button" class="qty-option qty-option-remove" data-qty="0">0 (Supprimer)</button>`;
@@ -38,15 +43,21 @@ export function openQtyPicker(idx) {
 
     overlay.hidden = false;
     requestAnimationFrame(() => overlay.classList.add('open'));
-    setTimeout(() => input.focus(), 200);
+    setTimeout(() => input.focus(), 180);
 }
 
 export function closeQtyPicker() {
     const overlay = document.getElementById('qtySheetOverlay');
     if (!overlay) return;
     overlay.classList.remove('open');
+    overlay.setAttribute('aria-hidden', 'true');
     setTimeout(() => { overlay.hidden = true; }, 220);
     qtyPickerIndex = null;
+    const restore = qtySheetPreviousFocus;
+    qtySheetPreviousFocus = null;
+    if (restore && document.contains(restore) && typeof restore.focus === 'function') {
+        requestAnimationFrame(() => restore.focus({ preventScroll: true }));
+    }
 }
 
 let qtySheetInited = false;
@@ -76,5 +87,30 @@ export function initQtySheet() {
         const val = parseInt(input.value, 10);
         closeQtyPicker();
         await setCartQty(idx, val);
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (overlay.hidden) return;
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            closeQtyPicker();
+            return;
+        }
+        if (e.key !== 'Tab') return;
+
+        const focusables = [
+            ...overlay.querySelectorAll('button:not([disabled]), input:not([disabled])')
+        ];
+        if (!focusables.length) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+        }
     });
 }

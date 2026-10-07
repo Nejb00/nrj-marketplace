@@ -56,6 +56,24 @@ export function openOrderModal() {
         return;
     }
 
+    const unavailable = selected.find((item) => !state.products.some((product) => Number(product.id) === Number(item.productId)));
+    if (unavailable) {
+        showToast('⚠️ Supprimez les articles indisponibles avant de commander');
+        return;
+    }
+
+    const invalidMoq = selected.find((item) => {
+        const product = state.products.find((p) => Number(p.id) === Number(item.productId));
+        const moq = Math.max(Number(item.moq) || 1, Number(product?.moq) || 1);
+        return Number(item.quantity) < moq;
+    });
+    if (invalidMoq) {
+        const product = state.products.find((p) => Number(p.id) === Number(invalidMoq.productId));
+        const moq = Math.max(Number(invalidMoq.moq) || 1, Number(product?.moq) || 1);
+        showToast('⚠️ Minimum : ' + moq + ' pièces requises');
+        return;
+    }
+
     let tot = 0;
     const lines = selected.map(i => {
         const p = state.products.find(pr => pr.id === i.productId);

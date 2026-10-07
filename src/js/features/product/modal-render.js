@@ -9,8 +9,8 @@ import { trackPopularity, fetchProductDetails, trackView } from '../../api/api.j
 import { signalView } from '../../services/reco.js';
 import { productDetailsCache, modalCtx } from './modal-state.js';
 import { buildCarousel } from './modal-carousel.js';
-import { renderTailleOptions, renderCouleurOptions } from './modal-options.js';
 import { updateTotal } from './modal-total.js';
+import { initOptionsPanel } from './modal-options-sheet.js';
 import { bindHeaderActions, bindStickyActions } from './modal-actions.js';
 import { renderRecommendations } from './modal-recommendations.js';
 
@@ -37,12 +37,16 @@ export async function openProductModal(pid) {
     modalCtx.p = p;
     modalCtx.tailles = (p.tailles || '').split(',').map(s => s.trim()).filter(Boolean);
     modalCtx.couleurs = (p.couleurs || '').split(',').map(s => s.trim()).filter(Boolean);
-    modalCtx.sT = modalCtx.tailles.length ? modalCtx.tailles[0] : '';
-    modalCtx.sC = modalCtx.couleurs.length ? modalCtx.couleurs[0] : '';
+    // Chaque fiche repart sans ancienne sélection. La Phase 4 peut ensuite
+    // pré-sélectionner une variante uniquement si son score est explicitement disponible.
+    modalCtx.sT = '';
+    modalCtx.sC = '';
     modalCtx.moq = Number(p.moq) || 1;
     modalCtx.uPrice = Number(p.price) || 0;
     modalCtx.colorQtys = {};
-    modalCtx.currentQty = modalCtx.moq;
+    modalCtx.currentQty = 1;
+    modalCtx.stickyAddedQty = 0;
+    modalCtx.stickyAddedVariant = null;
     modalCtx.imageSlideOffset = 0;
     modalCtx.videoUrl = (p.video_url || '').trim();
     modalCtx.imgs = [p.image, p.image2, p.image3, p.image4, p.image5, p.image6].filter(u => u && u.trim());
@@ -61,16 +65,15 @@ export async function openProductModal(pid) {
 
     buildCarousel();
 
-    renderTailleOptions();
-    renderCouleurOptions();
-
     updateTotal();
 
+    initOptionsPanel();
     bindStickyActions();
 
     await renderRecommendations(p);
 
     document.getElementById('productModal').classList.add('open');
+    document.getElementById('productModal').setAttribute('aria-hidden', 'false');
     document.getElementById('stickyBottomBar').classList.add('visible');
     if (!state.modalOpen) {
         history.replaceState({ modalOpen: true }, '', `?id=${p.id}`);
