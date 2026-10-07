@@ -27,8 +27,7 @@ jobs:
     env:
       PWA_URL: https://nrj-marketplace.vercel.app/
       ANDROID_DIR: android/generated
-      STORE_PASSWORD: nrj-test-store-2026
-      KEY_PASSWORD: nrj-test-key-2026
+      # Les mots de passe de signature sont générés aléatoirement à chaque run.
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -102,14 +101,29 @@ jobs:
 
       - name: Create ephemeral CI signing key
         run: |
+          set -euo pipefail
           mkdir -p "$ANDROID_DIR"
+          STORE_PASSWORD="$(python3 - <<'PY'
+          import secrets
+          print(secrets.token_urlsafe(24))
+          PY
+          )"
+          KEY_PASSWORD="$(python3 - <<'PY'
+          import secrets
+          print(secrets.token_urlsafe(24))
+          PY
+          )"
+          {
+            echo "NRJ_ANDROID_STORE_PASSWORD=$STORE_PASSWORD"
+            echo "NRJ_ANDROID_KEY_PASSWORD=$KEY_PASSWORD"
+          } >> "$GITHUB_ENV"
           keytool -genkeypair -v \
             -keystore "$ANDROID_DIR/android-keystore.jks" \
             -alias nrj \
             -keyalg RSA \
             -keysize 2048 \
             -validity 3650 \
-            -storepass "$STORE_PASSWORD" \
+            -storepass "$NRJ_ANDROID_STORE_PASSWORD" \
             -keypass "$KEY_PASSWORD" \
             -dname "CN=NRJ Marketplace, OU=CI, O=NRJ, C=CG"
 
@@ -124,8 +138,8 @@ jobs:
 
       - name: Build signed test APK and AAB
         env:
-          BUBBLEWRAP_KEYSTORE_PASSWORD: ${{ env.STORE_PASSWORD }}
-          BUBBLEWRAP_KEY_PASSWORD: ${{ env.KEY_PASSWORD }}
+          BUBBLEWRAP_KEYSTORE_PASSWORD: ${{ env.NRJ_ANDROID_STORE_PASSWORD }}
+          BUBBLEWRAP_KEY_PASSWORD: ${{ env.NRJ_ANDROID_KEY_PASSWORD }}
         run: |
           cd "$ANDROID_DIR"
           npx --yes @bubblewrap/cli@latest build --manifest=../twa-manifest.json
