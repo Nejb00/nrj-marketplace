@@ -62,7 +62,9 @@ export function initCartMenu() {
         if (e.key !== 'Escape' || menu.hidden) return;
         e.preventDefault();
         closeCartMenu();
-        btn.focus({ preventScroll: true });
+        // Le panneau panier possède aussi un handler Escape. Différer le focus
+        // garantit que le bouton du menu reste le dernier élément focalisé.
+        requestAnimationFrame(() => btn.focus({ preventScroll: true }));
     });
 
     document.addEventListener('click', (e) => {
