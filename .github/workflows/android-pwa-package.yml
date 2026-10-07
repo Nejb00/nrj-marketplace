@@ -44,12 +44,27 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Pre-seed Bubblewrap config (kills interactive prompts in CI)
+      - name: Prepare Bubblewrap-compatible Android SDK (non-interactive)
         run: |
+          SDK_ROOT="/usr/local/lib/android/sdk"
+          BW_SDK="${HOME}/android-sdk-bw"
+          mkdir -p "${BW_SDK}/bin"
+          # Bubblewrap exige <sdk>/tools ou <sdk>/bin ET <sdk>/bin/sdkmanager :
+          ln -sfn "${SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager" "${BW_SDK}/bin/sdkmanager"
+          ln -sfn "${SDK_ROOT}/cmdline-tools/latest/bin/avdmanager" "${BW_SDK}/bin/avdmanager" 2>/dev/null || true
+          for d in build-tools platforms platform-tools licenses cmdline-tools; do
+            ln -sfn "${SDK_ROOT}/${d}" "${BW_SDK}/${d}" 2>/dev/null || true
+          done
+          # Bubblewrap 1.25 exige précisément build-tools;36.1.0 (zipalign, apksigner) :
+          if [ ! -d "${SDK_ROOT}/build-tools/36.1.0" ]; then
+            echo "build-tools;36.1.0 absent — installation via sdkmanager…"
+            yes | "${SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager" --sdk_root="${SDK_ROOT}" "build-tools;36.1.0" >/dev/null 2>&1 || true
+          fi
+          echo "build-tools disponibles : $(ls "${SDK_ROOT}/build-tools" | tr '\n' ' ')"
           mkdir -p "${HOME}/.bubblewrap"
           printf '{"jdkPath":"%s","androidSdkPath":"%s"}\n' \
             "${JAVA_HOME}" \
-            "/usr/local/lib/android/sdk" \
+            "${BW_SDK}" \
             > "${HOME}/.bubblewrap/config.json"
           echo "Bubblewrap config pre-seeded:"
           cat "${HOME}/.bubblewrap/config.json"
@@ -103,28 +118,23 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$ANDROID_DIR"
-          STORE_PASSWORD="$(python3 - <<'PY'
+          # PKCS12 : un seul mot de passe réel (store = key) — un secret aléatoire par run.
+          CI_KEYSTORE_PASSWORD="$(python3 - <<'PY'
           import secrets
           print(secrets.token_urlsafe(24))
           PY
           )"
-          KEY_PASSWORD="$(python3 - <<'PY'
-          import secrets
-          print(secrets.token_urlsafe(24))
-          PY
-          )"
-          {
-            echo "NRJ_ANDROID_STORE_PASSWORD=$STORE_PASSWORD"
-            echo "NRJ_ANDROID_KEY_PASSWORD=$KEY_PASSWORD"
-          } >> "$GITHUB_ENV"
+          echo "::add-mask::${CI_KEYSTORE_PASSWORD}"
+          echo "NRJ_ANDROID_STORE_PASSWORD=${CI_KEYSTORE_PASSWORD}" >> "$GITHUB_ENV"
+          echo "NRJ_ANDROID_KEY_PASSWORD=${CI_KEYSTORE_PASSWORD}" >> "$GITHUB_ENV"
           keytool -genkeypair -v \
             -keystore "$ANDROID_DIR/android-keystore.jks" \
             -alias nrj \
             -keyalg RSA \
             -keysize 2048 \
             -validity 3650 \
-            -storepass "$NRJ_ANDROID_STORE_PASSWORD" \
-            -keypass "$KEY_PASSWORD" \
+            -storepass "$CI_KEYSTORE_PASSWORD" \
+            -keypass "$CI_KEYSTORE_PASSWORD" \
             -dname "CN=NRJ Marketplace, OU=CI, O=NRJ, C=CG"
 
       - name: Generate Android project
