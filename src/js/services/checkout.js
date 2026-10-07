@@ -41,8 +41,9 @@ export function shareCart() {
         if (!p) continue;
         let d = p.name;
         if (i.couleur || i.taille) d += ' (' + [i.couleur, i.taille].filter(Boolean).join(', ') + ')';
-        msg += '• ' + d + ' x' + Number(i.quantity) + ' — ' + formatPrice(p.price * Number(i.quantity)) + '\n  🔗 ' + BASE_URL + '?id=' + p.id + '\n';
-        tot += p.price * Number(i.quantity);
+        const unitPrice = Number(i.unitPrice) || Number(p.price) || 0;
+        msg += '• ' + d + ' x' + Number(i.quantity) + ' — ' + formatPrice(unitPrice * Number(i.quantity)) + '\n  🔗 ' + BASE_URL + '?id=' + p.id + '\n';
+        tot += unitPrice * Number(i.quantity);
     }
     msg += '\n💰 *Total : ' + formatPrice(tot) + '*\n\n👉 ' + BASE_URL;
 
@@ -84,7 +85,8 @@ export function openOrderModal() {
     const lines = selected.map(i => {
         const p = state.products.find(pr => pr.id === i.productId);
         if (!p) return '';
-        tot += p.price * Number(i.quantity);
+        const unitPrice = Number(i.unitPrice) || Number(p.price) || 0;
+        tot += unitPrice * Number(i.quantity);
         let line = '• ' + escapeHtml(p.name) + ' [ID: ' + p.id + '] x' + Number(i.quantity);
         if (i.couleur || i.taille) {
             line += ' (' + [i.couleur, i.taille].filter(Boolean).join(', ') + ')';
@@ -140,7 +142,7 @@ export async function sendWhatsAppOrder() {
         const orderItem = {
             productId: p.id,
             name: p.name,
-            price: p.price,
+            price: unitPrice,
             qty: Number(i.quantity),
             variant: variant || null
         };
