@@ -618,3 +618,13 @@ export function resetOptionsPanel() {
 }
 
 export { openOptionsPanel, openCartItemEditor, closeOptionsPanel, setStickyAddedState };
+
+
+// Le panier peut être ouvert avant toute fiche produit : l'écouteur doit être
+// actif dès le chargement du module pour que l'édition soit disponible immédiatement.
+document.addEventListener('nrj:cart-edit', (event) => {
+    const idx = Number(event.detail?.index);
+    const trigger = event.detail?.trigger || null;
+    if (!Number.isInteger(idx) || idx < 0) return;
+    openCartItemEditor(idx, trigger);
+});
