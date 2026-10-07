@@ -338,7 +338,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
     total += unitPrice * item.quantity;
 
-    const orderItem = {
+    const orderItem: {
+      productId: number;
+      name: string;
+      price: number;
+      qty: number;
+      variant: string | null;
+      variantId?: string;
+    } = {
       productId: item.productId,
       name: product.name || "Produit",
       price: unitPrice,
