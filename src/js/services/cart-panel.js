@@ -427,7 +427,8 @@ function renderCartItems(entries) {
         const dis = Number(it.quantity) <= moq;
         const isSelected = it.selected !== false;
         const qty = Number(it.quantity);
-        const lineTotal = (Number(p.price) || 0) * qty;
+        const unitPrice = Number(it.unitPrice) || Number(p.price) || 0;
+        const lineTotal = unitPrice * qty;
         const moqWarning = qty < moq
             ? '<div class="cart-moq-warning" role="status">' +
                 '<span>⚠️ Minimum : ' + moq + ' pièces requises</span>' +
@@ -448,7 +449,7 @@ function renderCartItems(entries) {
                         '<span class="cart-item-info">' +
                             '<span class="cart-item-info-name">' + escapeHtml(p.name) + '</span>' +
                             (vars.length ? '<span class="cart-item-variants">' + escapeHtml(vars.join(', ')) + '</span>' : '') +
-                            '<span class="cart-item-price">Prix unitaire · ' + formatPrice(p.price) + '</span>' +
+                            '<span class="cart-item-price">Prix unitaire · ' + formatPrice(unitPrice) + '</span>' +
                             '<strong class="cart-item-line-total">' + formatPrice(lineTotal) + '</strong>' +
                         '</span>' +
                     '</button>' +
