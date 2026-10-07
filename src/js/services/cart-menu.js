@@ -61,7 +61,7 @@ export function initCartMenu() {
     document.addEventListener('keydown', (e) => {
         if (e.key !== 'Escape' || menu.hidden) return;
         e.preventDefault();
-        e.stopPropagation();
+        e.stopImmediatePropagation();
         closeCartMenu();
         btn.focus({ preventScroll: true });
     });
