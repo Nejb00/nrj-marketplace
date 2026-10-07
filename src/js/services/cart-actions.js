@@ -41,7 +41,8 @@ function flyToCart(sourceEl) {
 }
 
 export async function addToCart(pid, t = '', c = '', sourceEl = null, qty = null, options = {}) {
-    const { silent = false } = options || {};
+    const { silent = false, variantId = null } = options || {};
+    const normalizedVariantId = variantId == null ? null : String(variantId).trim();
     const p = state.products.find(pr => pr.id === pid);
     if (!p) return;
     if (sourceEl) flyToCart(sourceEl);
@@ -49,12 +50,26 @@ export async function addToCart(pid, t = '', c = '', sourceEl = null, qty = null
 
     const moq = Number(p.moq) || 1;
     const amount = Math.max(moq, Number(qty) || moq);
-    const exist = state.cart.find(i => i.productId === pid && i.taille === t && i.couleur === c);
+    const exist = state.cart.find(i =>
+        Number(i.productId) === Number(pid) &&
+        i.taille === t &&
+        i.couleur === c &&
+        String(i.variantId || '') === String(normalizedVariantId || '')
+    );
     if (exist) {
         exist.quantity = Number(exist.quantity) + amount;
         exist.selected = true;
     } else {
-        state.cart.push({ productId: pid, quantity: amount, taille: t, couleur: c, moq, selected: true });
+        const item = {
+            productId: pid,
+            quantity: amount,
+            taille: t,
+            couleur: c,
+            moq,
+            selected: true
+        };
+        if (normalizedVariantId) item.variantId = normalizedVariantId;
+        state.cart.push(item);
     }
     trackPopularity(pid, 5);
     await saveCart();
@@ -94,7 +109,7 @@ export async function setCartQty(idx, qty) {
  * Si la nouvelle variante existe déjà sur une autre ligne du même produit,
  * les quantités sont fusionnées afin d'éviter les doublons dans le panier.
  */
-export async function updateCartItem(idx, { taille = '', couleur = '', quantity } = {}) {
+export async function updateCartItem(idx, { taille = '', couleur = '', quantity, variantId = undefined } = {}) {
     const it = state.cart[idx];
     if (!it) return;
 
@@ -107,12 +122,16 @@ export async function updateCartItem(idx, { taille = '', couleur = '', quantity 
     const nextQty = Math.max(moq, Number.isFinite(n) ? Math.floor(n) : moq);
     const nextTaille = String(taille || '').trim();
     const nextCouleur = String(couleur || '').trim();
+    const nextVariantId = variantId === undefined
+        ? (it.variantId != null ? String(it.variantId).trim() : null)
+        : (variantId == null ? null : String(variantId).trim());
 
     const duplicateIdx = state.cart.findIndex((other, otherIdx) =>
         otherIdx !== idx &&
         Number(other.productId) === Number(it.productId) &&
         String(other.taille || '') === nextTaille &&
-        String(other.couleur || '') === nextCouleur
+        String(other.couleur || '') === nextCouleur &&
+        String(other.variantId || '') === String(nextVariantId || '')
     );
 
     if (duplicateIdx >= 0) {
@@ -126,6 +145,8 @@ export async function updateCartItem(idx, { taille = '', couleur = '', quantity 
         it.couleur = nextCouleur;
         it.quantity = nextQty;
         it.moq = moq;
+        if (nextVariantId) it.variantId = nextVariantId;
+        else delete it.variantId;
     }
 
     await saveCart();
