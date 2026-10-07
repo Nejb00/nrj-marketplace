@@ -148,7 +148,8 @@ function getCartIndex() {
     return state.cart.findIndex((item) =>
         Number(item.productId) === Number(p.id) &&
         (item.taille || '') === (modalCtx.sT || '') &&
-        (item.couleur || '') === (modalCtx.sC || '')
+        (item.couleur || '') === (modalCtx.sC || '') &&
+        String(item.variantId || '') === String(modalCtx.sVariantId || '')
     );
 }
 
@@ -455,14 +456,18 @@ async function validateAndAdd() {
             await updateCartItem(modalCtx.editCartIndex, {
                 taille: modalCtx.sT || '',
                 couleur: modalCtx.sC || '',
-                quantity: requestedQty
+                quantity: requestedQty,
+                variantId: modalCtx.sVariantId
             });
             showToast('✅ Article mis à jour');
             closeOptionsPanel();
             return;
         }
 
-        await addToCart(p.id, modalCtx.sT || '', modalCtx.sC || '', els.add(), requestedQty, { silent: true });
+        await addToCart(p.id, modalCtx.sT || '', modalCtx.sC || '', els.add(), requestedQty, {
+            silent: true,
+            variantId: modalCtx.sVariantId
+        });
         showCartAddedToast();
 
         const actualQty = getCartQty();
