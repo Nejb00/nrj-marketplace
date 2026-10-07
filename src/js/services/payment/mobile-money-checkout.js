@@ -168,12 +168,18 @@ function getPaymentInput() {
 }
 
 function buildRemoteItems(selected) {
-    return selected.map(item => ({
-        productId: item.productId,
-        quantity: Number(item.quantity),
-        taille: item.taille || null,
-        couleur: item.couleur || null
-    }));
+    return selected.map(item => {
+        const payload = {
+            productId: item.productId,
+            quantity: Number(item.quantity),
+            taille: item.taille || null,
+            couleur: item.couleur || null
+        };
+        if (item.variantId != null && String(item.variantId).trim()) {
+            payload.variantId = String(item.variantId).trim();
+        }
+        return payload;
+    });
 }
 
 function recordPaidOrder({ remoteOrder, selected, customer }) {
@@ -194,13 +200,18 @@ function recordPaidOrder({ remoteOrder, selected, customer }) {
 
             const variant = [item.couleur, item.taille].filter(Boolean).join(', ');
 
-            return {
+            const unitPrice = Number(item.unitPrice) || Number(product.price) || 0;
+            const result = {
                 productId: product.id,
                 name: product.name,
-                price: product.price,
+                price: unitPrice,
                 qty: Number(item.quantity),
                 variant: variant || null
             };
+            if (item.variantId != null && String(item.variantId).trim()) {
+                result.variantId = String(item.variantId).trim();
+            }
+            return result;
         })
         .filter(Boolean);
 
