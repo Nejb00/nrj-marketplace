@@ -113,21 +113,21 @@ BEGIN
     media.sort_order,
     '{}'::jsonb
   FROM (
-    SELECT DISTINCT ON (clean_url)
+    SELECT DISTINCT ON (dedupe_key)
       clean_url AS url,
       (row_number() OVER (ORDER BY first_ordinal) - 1)::integer AS sort_order
     FROM (
       SELECT
-        lower(trim(value)) AS dedupe_key,
-        trim(value) AS clean_url,
+        lower(trim(url_value)) AS dedupe_key,
+        trim(url_value) AS clean_url,
         ordinality AS first_ordinal
-      FROM unnest(coalesce(p_media_urls, ARRAY[]::text[])) WITH ORDINALITY
-      WHERE trim(value) <> ''
-        AND char_length(trim(value)) <= 2000
-        AND trim(value) ~* '^https?://'
-      ORDER BY lower(trim(value)), ordinality
+      FROM unnest(coalesce(p_media_urls, ARRAY[]::text[])) WITH ORDINALITY AS u(url_value, ordinality)
+      WHERE trim(url_value) <> ''
+        AND char_length(trim(url_value)) <= 2000
+        AND trim(url_value) ~* '^https?://'
+      ORDER BY lower(trim(url_value)), ordinality
     ) dedup
-    ORDER BY clean_url, first_ordinal
+    ORDER BY dedupe_key, first_ordinal
   ) media;
 
   GET DIAGNOSTICS v_media_count = ROW_COUNT;
