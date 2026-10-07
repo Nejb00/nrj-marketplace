@@ -120,7 +120,6 @@ function setupCartSheetHandle() {
         cartDrag = { pointerId: event.pointerId, startY: event.clientY, dy: 0 };
         panel.classList.add('is-dragging');
         panel.style.transition = 'none';
-        handle.setPointerCapture?.(event.pointerId);
     });
 
     handle.addEventListener('pointermove', (event) => {
