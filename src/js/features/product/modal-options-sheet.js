@@ -11,6 +11,8 @@ import { WHATSAPP_NUMBER, POPULAR_THRESHOLD } from '../../core/config.js';
 import { productDetailsCache, modalCtx } from './modal-state.js';
 import { fetchProductDetails } from '../../api/api.js';
 import { getVariantOptionValues } from '../../services/product-variants-media.js';
+import { beginDirectPurchase } from '../../services/direct-purchase.js';
+import { openOrderModal } from '../../services/checkout.js';
 import { buildCarousel } from './modal-carousel.js';
 import {
     getProductGalleryForSelection,
@@ -34,6 +36,7 @@ const els = {
     qtyMinus: () => document.getElementById('optionsQtyMinus'),
     qtyPlus: () => document.getElementById('optionsQtyPlus'),
     add: () => document.getElementById('optionsPanelAddBtn'),
+    buy: () => document.getElementById('optionsPanelBuyBtn'),
     close: () => document.getElementById('optionsPanelCloseBtn'),
     idle: () => document.getElementById('addToCartStickyBtn'),
     added: () => document.getElementById('stickyActionAdded'),
@@ -354,8 +357,9 @@ function renderHeader() {
     if (!p) return;
 
     const editing = modalCtx.sheetMode === 'edit';
-    if (els.kicker()) els.kicker().textContent = editing ? 'MODIFIER L’ARTICLE' : 'CHOISIR UNE OPTION';
-    if (els.title()) els.title().textContent = editing ? 'Modifie ton produit' : 'Personnalise ton produit';
+    const buying = modalCtx.sheetMode === 'buy';
+    if (els.kicker()) els.kicker().textContent = editing ? 'MODIFIER L’ARTICLE' : buying ? 'ACHETER MAINTENANT' : 'CHOISIR UNE OPTION';
+    if (els.title()) els.title().textContent = editing ? 'Modifie ton produit' : buying ? 'Finalise ton achat' : 'Personnalise ton produit';
     if (els.name()) els.name().textContent = p.name || 'Produit';
     if (els.price()) {
         const price = Number(modalCtx.uPrice) || 0;
@@ -372,13 +376,25 @@ function renderQuantity() {
             : 'Minimum d’achat : 1 pièce';
     }
     const add = els.add();
-    if (add) {
-        if (modalCtx.sheetMode === 'edit') {
+    const buy = els.buy();
+    if (modalCtx.sheetMode === 'edit') {
+        if (add) {
+            add.hidden = false;
             add.textContent = 'Mettre à jour';
-        } else {
+        }
+        if (buy) buy.hidden = true;
+    } else {
+        if (add) {
+            add.hidden = false;
             add.textContent = moq > 1
                 ? `Ajouter au panier · min. ${moq}`
                 : 'Ajouter au panier';
+        }
+        if (buy) {
+            buy.hidden = false;
+            buy.textContent = moq > 1
+                ? `Acheter maintenant · min. ${moq}`
+                : 'Acheter maintenant';
         }
     }
 
@@ -485,41 +501,81 @@ function openOptionsPanel(trigger = document.getElementById('addToCartStickyBtn'
     });
 }
 
-async function validateAndAdd() {
+function validateSelection() {
     const p = modalCtx.p;
-    if (!p) return;
+    if (!p) return null;
+
+    if (modalCtx.couleurs.length && !modalCtx.sC) {
+        showToast('⚠️ Choisis une couleur');
+        return null;
+    }
+    if (modalCtx.tailles.length && !modalCtx.sT) {
+        showToast('⚠️ Choisis une taille');
+        return null;
+    }
+
+    return {
+        p,
+        quantity: Math.max(Number(modalCtx.moq) || 1, Number(modalCtx.currentQty) || 1),
+        variantId: modalCtx.sVariantId || null,
+        unitPrice: Number(modalCtx.uPrice) || Number(p.price) || 0,
+        moq: Number(modalCtx.moq) || 1,
+        taille: modalCtx.sT || '',
+        couleur: modalCtx.sC || ''
+    };
+}
+
+async function validateAndBuyNow() {
+    const payload = validateSelection();
+    if (!payload) return;
 
     try {
-        if (modalCtx.couleurs.length && !modalCtx.sC) {
-            showToast('⚠️ Choisis une couleur');
-            return;
-        }
-        if (modalCtx.tailles.length && !modalCtx.sT) {
-            showToast('⚠️ Choisis une taille');
-            return;
-        }
+        beginDirectPurchase({
+            productId: payload.p.id,
+            quantity: payload.quantity,
+            taille: payload.taille,
+            couleur: payload.couleur,
+            variantId: payload.variantId,
+            unitPrice: payload.unitPrice,
+            moq: payload.moq
+        });
 
-        const requestedQty = Math.max(Number(modalCtx.moq) || 1, Number(modalCtx.currentQty) || 1);
+        closeOptionsPanel();
+        openOrderModal();
+        document.dispatchEvent(new CustomEvent('nrj:close-product-modal'));
+    } catch (error) {
+        console.error('Achat direct NRJ', error);
+        showToast('⚠️ Impossible de préparer l’achat direct');
+    }
+}
+
+async function validateAndAdd() {
+    const payload = validateSelection();
+    if (!payload) return;
+
+    const p = payload.p;
+    try {
+        const requestedQty = payload.quantity;
 
         if (modalCtx.sheetMode === 'edit' && modalCtx.editCartIndex != null) {
             await updateCartItem(modalCtx.editCartIndex, {
-                taille: modalCtx.sT || '',
-                couleur: modalCtx.sC || '',
+                taille: payload.taille,
+                couleur: payload.couleur,
                 quantity: requestedQty,
-                variantId: modalCtx.sVariantId,
-                unitPrice: modalCtx.uPrice,
-                moq: modalCtx.moq
+                variantId: payload.variantId,
+                unitPrice: payload.unitPrice,
+                moq: payload.moq
             });
             showToast('✅ Article mis à jour');
             closeOptionsPanel();
             return;
         }
 
-        await addToCart(p.id, modalCtx.sT || '', modalCtx.sC || '', els.add(), requestedQty, {
+        await addToCart(p.id, payload.taille, payload.couleur, els.add(), requestedQty, {
             silent: true,
-            variantId: modalCtx.sVariantId,
-            unitPrice: modalCtx.uPrice,
-            moq: modalCtx.moq
+            variantId: payload.variantId,
+            unitPrice: payload.unitPrice,
+            moq: payload.moq
         });
         showCartAddedToast();
 
@@ -683,6 +739,7 @@ function setupStaticListeners() {
     els.backdrop()?.addEventListener('click', closeOptionsPanel);
     els.close()?.addEventListener('click', closeOptionsPanel);
     els.add()?.addEventListener('click', validateAndAdd);
+    els.buy()?.addEventListener('click', validateAndBuyNow);
     els.qtyMinus()?.addEventListener('click', () => setSheetQty((modalCtx.currentQty || 1) - 1));
     els.qtyPlus()?.addEventListener('click', () => setSheetQty((modalCtx.currentQty || 1) + 1));
 
