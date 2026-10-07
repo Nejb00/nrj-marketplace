@@ -15,7 +15,9 @@ export const modalCtx = {
     uPrice: 0,
     colorQtys: {},
     currentQty: 1,
-    // Phase 1 — état du nouveau bottom sheet d'options et de l'action sticky.
+    // Phase 1 — état du bottom sheet d'options et de l'action sticky.
+    sheetMode: 'add',
+    editCartIndex: null,
     stickyAddedQty: 0,
     stickyAddedVariant: null,
     imageSlideOffset: 0,
