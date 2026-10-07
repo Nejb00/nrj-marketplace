@@ -51,6 +51,12 @@
             </div>
             <!-- Couche 2 : rangée des catégories parentes, collée sous la recherche -->
             <div class="filters-bar header-category-row" id="filterBar"></div>
+            <div class="quick-filters" id="quickFilters" role="group" aria-label="Filtres rapides">
+                <button type="button" class="filter-chip active" data-filter="all">Tout</button>
+                <button type="button" class="filter-chip" data-filter="new">✨ Nouveau</button>
+                <button type="button" class="filter-chip" data-filter="bestseller">🔥 Best-sellers</button>
+                <button type="button" class="filter-chip" data-filter="foryou">✨ Pour toi</button>
+            </div>
             <!-- PROMPT 3B : bulles enfants attachées au header — position:absolute;
                  top:100% (hors de la hauteur du header), même feuille liquid-glass.
                  Repli = translateY(-100%) + opacity uniquement (aucun changement de
