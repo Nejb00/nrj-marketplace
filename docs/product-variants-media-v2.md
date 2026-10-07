@@ -115,6 +115,10 @@ Le panneau Admin expose une surface dédiée pour gérer le graphe V2 :
 
 Les écritures passent par `save_product_variant_graph` et `delete_product_variant`. Ces RPC sont `SECURITY DEFINER`, vérifient `public.is_chat_admin()`, et l'exécution est retirée de `PUBLIC`. La variante et sa galerie sont donc mises à jour dans une même transaction PostgreSQL.
 
+## Buy Now
+
+Le CTA `Commander directement` utilise le même bottom sheet de sélection que le panier, mais passe en mode `buy`. La ligne temporaire n'est pas persistée avant l'ouverture du checkout. Une annulation restaure le panier précédent ; une réussite supprime uniquement la ligne d'achat direct.
+
 ## Ordre d'intégration
 
 1. Schéma + backfill legacy.
