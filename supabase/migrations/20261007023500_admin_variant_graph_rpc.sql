@@ -36,6 +36,10 @@ BEGIN
     RAISE EXCEPTION 'variant_invalid';
   END IF;
 
+  IF cardinality(coalesce(p_media_urls, ARRAY[]::text[])) > 100 THEN
+    RAISE EXCEPTION 'media_limit_exceeded';
+  END IF;
+
   IF NOT EXISTS (
     SELECT 1 FROM public.products WHERE id = p_product_id
   ) THEN
