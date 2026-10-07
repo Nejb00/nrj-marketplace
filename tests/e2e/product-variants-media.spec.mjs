@@ -209,3 +209,115 @@ test("fiche produit V2 → couleur → galerie groupée → panier conserve vari
   await expect(page.locator('[data-option-color="Blanc"]')).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator("#modalCarouselScroll .carousel-item")).toHaveCount(17);
 });
+
+test("Buy Now ouvre le checkout direct puis restaure le panier à l’annulation", async ({ page }) => {
+  await page.route("**/auth/v1/**", async (route) => {
+    const url = new URL(route.request().url());
+
+    if (url.pathname.endsWith("/auth/v1/signup")) {
+      await route.fulfill(jsonResponse({
+        access_token: "buy-now-token",
+        refresh_token: "buy-now-refresh",
+        expires_in: 3600,
+        expires_at: Math.floor(Date.now() / 1000) + 3600,
+        token_type: "bearer",
+        user: {
+          id: "00000000-0000-4000-8000-000000000425",
+          aud: "authenticated",
+          role: "authenticated",
+          email: null,
+          phone: null,
+          app_metadata: {},
+          user_metadata: {},
+        },
+      }));
+      return;
+    }
+
+    if (url.pathname.endsWith("/auth/v1/user")) {
+      await route.fulfill(jsonResponse({
+        id: "00000000-0000-4000-8000-000000000425",
+        aud: "authenticated",
+        role: "authenticated",
+        email: null,
+        phone: null,
+        app_metadata: {},
+        user_metadata: {},
+      }));
+      return;
+    }
+
+    await route.fulfill(jsonResponse({
+      external: {},
+      disable_signup: false,
+      anonymous_users_enabled: true,
+    }));
+  });
+
+  await page.route("**/rest/v1/**", async (route) => {
+    const url = new URL(route.request().url());
+
+    if (url.pathname.endsWith("/rest/v1/products")) {
+      const single = url.searchParams.get("id") === `eq.${PRODUCT_ID}`;
+      await route.fulfill(jsonResponse(single ? PRODUCT : [PRODUCT]));
+      return;
+    }
+
+    if (url.pathname.endsWith("/rest/v1/product_variants")) {
+      await route.fulfill(jsonResponse(VARIANTS));
+      return;
+    }
+
+    if (url.pathname.endsWith("/rest/v1/product_media")) {
+      await route.fulfill(jsonResponse(MEDIA));
+      return;
+    }
+
+    if (url.pathname.endsWith("/rest/v1/categories")) {
+      await route.fulfill(jsonResponse([]));
+      return;
+    }
+
+    if (url.pathname.includes("/rest/v1/rpc/")) {
+      await route.fulfill(jsonResponse([]));
+      return;
+    }
+
+    await route.fulfill(jsonResponse([]));
+  });
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await expect(page.locator("#tapToSearch")).toBeVisible({ timeout: 20_000 });
+
+  const productCard = page.locator("#productsGrid .product-card").first();
+  await expect(productCard).toBeVisible({ timeout: 20_000 });
+  await productCard.click();
+
+  await page.locator("#directOrderStickyBtn").click();
+  await expect(page.locator("#optionsPanel")).toHaveAttribute("aria-hidden", "false");
+  await expect(page.locator("#optionsPanelBuyBtn")).toBeVisible();
+
+  await page.locator('[data-option-color="Blanc"]').click();
+  await page.locator("#optionsQtyPlus").click();
+  await expect(page.locator("#optionsQtyValue")).toHaveText("2");
+
+  await page.locator("#optionsPanelBuyBtn").click();
+
+  await expect(page.locator("#orderModalOverlay")).toHaveClass(/\bopen\b/);
+  await expect(page.locator("#productModal")).not.toHaveClass(/\bopen\b/);
+
+  const persistedCartBeforeCancel = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("nrj_cart_v32") || "[]")
+  );
+  expect(persistedCartBeforeCancel).toEqual([]);
+
+  await page.locator("#cancelOrderBtn").click();
+
+  const restoredCart = await page.evaluate(async () => {
+    const stateModule = await import("/src/js/core/state.js");
+    return stateModule.state.cart;
+  });
+
+  expect(restoredCart).toEqual([]);
+});
