@@ -320,5 +320,5 @@ test("Buy Now ouvre le checkout direct puis restaure le panier à l’annulation
   await expect(page.locator("#cartPanel")).toHaveClass(/\bopen\b/);
   await expect(page.locator("#cartPanel")).toHaveAttribute("aria-hidden", "false");
   await expect(page.locator("#cartPanelTitle")).toHaveText("Panier (0)");
-  await expect(page.locator("#cartEmptyState")).toBeVisible();
+  await expect(page.locator(".cart-empty-state")).toBeVisible();
 });
