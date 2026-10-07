@@ -9,7 +9,7 @@ import { toggleFavorite } from '../../services/favorites.js';
 import { addToCart } from '../../services/cart-actions.js';
 import { openChat } from '../chat/chat-ui.js';
 import { modalCtx } from './modal-state.js';
-import { closeOptionsPanel, initOptionsPanel } from './modal-options-sheet.js';
+import { closeOptionsPanel, initOptionsPanel, openOptionsPanel } from './modal-options-sheet.js';
 import { pauseModalVideos } from './modal-carousel.js';
 
 export function bindHeaderActions(p, uPrice, moq) {
@@ -38,8 +38,13 @@ export function bindHeaderActions(p, uPrice, moq) {
 export function bindStickyActions() {
     const p = modalCtx.p;
 
-    // Phase 1 : le CTA principal ouvre le bottom sheet.
+    // Le CTA panier ouvre le sélecteur V2 ; "Commander directement" ouvre
+    // le même sélecteur en mode Buy Now.
     initOptionsPanel();
+    const directBtn = document.getElementById('directOrderStickyBtn');
+    if (directBtn) {
+        directBtn.onclick = () => openOptionsPanel(directBtn, 'buy');
+    }
 
     const chatBtn = document.getElementById('chatStickyBtn');
     if (chatBtn) {
