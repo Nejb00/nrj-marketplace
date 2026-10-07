@@ -13,6 +13,7 @@ import { updateTotal } from './modal-total.js';
 import { initOptionsPanel } from './modal-options-sheet.js';
 import { bindHeaderActions, bindStickyActions } from './modal-actions.js';
 import { renderRecommendations } from './modal-recommendations.js';
+import { getProductGalleryMedia } from '../../services/product-variants-media.js';
 
 export { closeProductModal } from './modal-actions.js';
 
@@ -49,7 +50,7 @@ export async function openProductModal(pid) {
     modalCtx.stickyAddedVariant = null;
     modalCtx.imageSlideOffset = 0;
     modalCtx.videoUrl = (p.video_url || '').trim();
-    modalCtx.imgs = [p.image, p.image2, p.image3, p.image4, p.image5, p.image6].filter(u => u && u.trim());
+    modalCtx.imgs = getProductGalleryMedia(p).map(media => media.url);
     modalCtx.sc = document.getElementById('modalCarouselScroll');
     modalCtx.dc = document.getElementById('modalCarouselDots');
 
