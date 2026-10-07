@@ -1,10 +1,10 @@
 const RISK_RULES = [
+  { pattern: /(?:payment|order|cart|product-import)/i, scope: 'business', risk: 'critical' },
   { pattern: /^(?:src\/js\/(?:api|services|features)\/.*\.(?:js|mjs)|supabase\/)/, scope: 'integration', risk: 'high' },
   { pattern: /^test\//, scope: 'unit', risk: 'low' },
   { pattern: /^\.github\/workflows\//, scope: 'workflow', risk: 'high' },
   { pattern: /^(?:package\.json|package-lock\.json)$/, scope: 'dependency', risk: 'high' },
   { pattern: /^vite\.config\./, scope: 'build', risk: 'high' },
-  { pattern: /(?:payment|order|cart|product-import)/i, scope: 'business', risk: 'critical' },
 ];
 
 export function classifyChangedFiles(files = []) {
@@ -20,7 +20,10 @@ export function selectTestScopes(files = []) {
 
   for (const file of classified) {
     scopes.add(file.scope);
-    if (file.risk === 'critical') scopes.add('e2e');
+    if (file.risk === 'critical') {
+      scopes.add('e2e');
+      scopes.add('integration');
+    }
     if (file.scope === 'dependency') scopes.add('security');
     if (file.scope === 'workflow') scopes.add('workflow');
     if (file.scope === 'build') scopes.add('build');
