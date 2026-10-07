@@ -285,6 +285,35 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
     await expect(page.locator(".cart-reco-add")).toBeVisible();
     await expect(page.locator(".cart-footer-reassurance")).toContainText("MOQ vérifié");
 
+    await page.locator(".cart-tab").nth(1).click();
+    await expect(page.locator(".cart-tab").nth(1)).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator(".cart-tab").first()).toHaveAttribute("aria-selected", "false");
+    await page.locator(".cart-tab").first().click();
+
+    await page.evaluate(async () => {
+      const stateModule = await import("/src/js/core/state.js");
+      stateModule.state.cart.push({
+        productId: 29999,
+        quantity: 3,
+        taille: "",
+        couleur: "",
+        moq: 2,
+        selected: true,
+      });
+      await stateModule.saveCart();
+      const panelModule = await import("/src/js/services/cart-panel.js");
+      panelModule.refreshCartDisplay();
+    });
+
+    await expect(page.locator(".cart-unavailable")).toBeVisible();
+    await expect(page.locator(".cart-unavailable")).toContainText("Articles indisponibles");
+    await expect(page.locator("#checkoutBtn")).toBeDisabled();
+
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.locator(".cart-unavailable-clear").click();
+    await expect(page.locator(".cart-unavailable")).toHaveCount(0);
+    await expect(page.locator("#checkoutBtn")).toBeEnabled();
+
     await page.locator(".cart-reco-add").click();
     await expect(page.locator(".cart-item")).toHaveCount(2);
     const secondRemove = page.locator(".cart-item").nth(1).locator(".remove-item-btn");
