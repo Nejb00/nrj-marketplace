@@ -574,6 +574,7 @@ async function openCartItemEditor(idx, trigger = null) {
     modalCtx.sVariantId = it.variantId || null;
     modalCtx.moq = Math.max(Number(it.moq) || 1, Number(p.moq) || 1);
     const commercial = getVariantCommercials(p, modalCtx.sC, modalCtx.sT);
+    modalCtx.sVariantId = it.variantId || commercial.variant?.id || null;
     modalCtx.uPrice = commercial.price;
     modalCtx.moq = Math.max(modalCtx.moq, commercial.moq);
     modalCtx.currentQty = Math.max(modalCtx.moq, Number(it.quantity) || modalCtx.moq);
