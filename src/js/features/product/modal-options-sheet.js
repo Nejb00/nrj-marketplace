@@ -3,7 +3,7 @@
 // La logique métier du panier reste centralisée dans services/cart-actions.js.
 
 import { state } from '../../core/state.js';
-import { addToCart, changeQty } from '../../services/cart-actions.js';
+import { addToCart, changeQty, updateCartItem } from '../../services/cart-actions.js';
 import { showToast, showCartAddedToast } from '../../utils/dom-helpers.js';
 import { escapeHtml } from '../../utils/escape-html.js';
 import { thumbImg } from '../../utils/images.js';
@@ -13,6 +13,8 @@ import { modalCtx } from './modal-state.js';
 const els = {
     panel: () => document.getElementById('optionsPanel'),
     backdrop: () => document.getElementById('optionsPanelBackdrop'),
+    kicker: () => document.getElementById('optionsPanelKicker'),
+    title: () => document.getElementById('optionsPanelTitle'),
     name: () => document.getElementById('optionsPanelProductName'),
     price: () => document.getElementById('optionsPanelPrice'),
     colors: () => document.getElementById('optionsColorOptions'),
@@ -220,7 +222,7 @@ function renderColors() {
         const selected = [...container.querySelectorAll('[data-option-color]')]
             .find((button) => button.dataset.optionColor === modalCtx.sC);
         if (selected) setColor(modalCtx.sC, selected);
-    } else {
+    } else if (modalCtx.sheetMode !== 'edit') {
         selectPopularVariant('color', colors);
     }
 }
@@ -260,7 +262,7 @@ function renderSizes() {
         const selected = [...container.querySelectorAll('[data-option-size]')]
             .find((button) => button.dataset.optionSize === modalCtx.sT);
         if (selected) setSize(modalCtx.sT, selected);
-    } else {
+    } else if (modalCtx.sheetMode !== 'edit') {
         selectPopularVariant('size', sizes);
     }
 }
@@ -268,6 +270,10 @@ function renderSizes() {
 function renderHeader() {
     const p = modalCtx.p;
     if (!p) return;
+
+    const editing = modalCtx.sheetMode === 'edit';
+    if (els.kicker()) els.kicker().textContent = editing ? 'MODIFIER L’ARTICLE' : 'CHOISIR UNE OPTION';
+    if (els.title()) els.title().textContent = editing ? 'Modifie ton produit' : 'Personnalise ton produit';
     if (els.name()) els.name().textContent = p.name || 'Produit';
     if (els.price()) {
         const price = Number(modalCtx.uPrice) || 0;
@@ -285,9 +291,13 @@ function renderQuantity() {
     }
     const add = els.add();
     if (add) {
-        add.textContent = moq > 1
-            ? `Ajouter au panier · min. ${moq}`
-            : 'Ajouter au panier';
+        if (modalCtx.sheetMode === 'edit') {
+            add.textContent = 'Mettre à jour';
+        } else {
+            add.textContent = moq > 1
+                ? `Ajouter au panier · min. ${moq}`
+                : 'Ajouter au panier';
+        }
     }
 
     const minus = els.qtyMinus();
@@ -356,6 +366,11 @@ function closeOptionsPanel() {
 
     document.getElementById('productModal')?.removeAttribute('inert');
     document.getElementById('stickyBottomBar')?.removeAttribute('inert');
+    document.getElementById('cartPanel')?.removeAttribute('inert');
+
+    const wasEditing = modalCtx.sheetMode === 'edit';
+    modalCtx.sheetMode = 'add';
+    modalCtx.editCartIndex = null;
 
     const trigger = lastTrigger;
     lastTrigger = null;
@@ -368,6 +383,9 @@ function openOptionsPanel(trigger = document.getElementById('addToCartStickyBtn'
     const panel = els.panel();
     if (!panel) return;
 
+    setupStaticListeners();
+    modalCtx.sheetMode = 'add';
+    modalCtx.editCartIndex = null;
     lastTrigger = trigger;
     syncSheetFromSticky();
     renderPanel();
@@ -401,6 +419,18 @@ async function validateAndAdd() {
         }
 
         const requestedQty = Math.max(Number(modalCtx.moq) || 1, Number(modalCtx.currentQty) || 1);
+
+        if (modalCtx.sheetMode === 'edit' && modalCtx.editCartIndex != null) {
+            await updateCartItem(modalCtx.editCartIndex, {
+                taille: modalCtx.sT || '',
+                couleur: modalCtx.sC || '',
+                quantity: requestedQty
+            });
+            showToast('✅ Article mis à jour');
+            closeOptionsPanel();
+            return;
+        }
+
         await addToCart(p.id, modalCtx.sT || '', modalCtx.sC || '', els.add(), requestedQty, { silent: true });
         showCartAddedToast();
 
@@ -414,9 +444,50 @@ async function validateAndAdd() {
         setStickyAddedState(actualQty);
         closeOptionsPanel();
     } catch (error) {
-        console.error('Ajout panier depuis la fiche produit', error);
-        showToast('⚠️ Impossible d’ajouter au panier');
+        console.error('Modification panier depuis le sélecteur d’options', error);
+        showToast('⚠️ Impossible de mettre à jour le panier');
     }
+}
+
+
+function openCartItemEditor(idx, trigger = null) {
+    const it = state.cart[idx];
+    if (!it) return;
+
+    const p = state.products.find((product) => Number(product.id) === Number(it.productId));
+    if (!p) return;
+
+    const panel = els.panel();
+    if (!panel) return;
+
+    setupStaticListeners();
+
+    modalCtx.p = p;
+    modalCtx.tailles = String(p.tailles || '').split(',').map((value) => value.trim()).filter(Boolean);
+    modalCtx.couleurs = String(p.couleurs || '').split(',').map((value) => value.trim()).filter(Boolean);
+    modalCtx.sT = String(it.taille || '');
+    modalCtx.sC = String(it.couleur || '');
+    modalCtx.moq = Math.max(Number(it.moq) || 1, Number(p.moq) || 1);
+    modalCtx.uPrice = Number(p.price) || 0;
+    modalCtx.currentQty = Math.max(modalCtx.moq, Number(it.quantity) || modalCtx.moq);
+    modalCtx.sheetMode = 'edit';
+    modalCtx.editCartIndex = idx;
+    lastTrigger = trigger || document.activeElement;
+
+    renderPanel();
+
+    // Le panier reste visible derrière le sheet, mais ne doit plus recevoir le focus.
+    document.getElementById('cartPanel')?.setAttribute('inert', '');
+
+    panel.classList.add('open');
+    panel.setAttribute('aria-hidden', 'false');
+    els.backdrop()?.classList.add('open');
+    document.body.classList.add('options-panel-open');
+
+    requestAnimationFrame(() => {
+        const first = getFocusables()[0];
+        if (first) first.focus({ preventScroll: true });
+    });
 }
 
 async function changeStickyQty(delta) {
@@ -515,6 +586,13 @@ function setupStaticListeners() {
     });
 
     els.idle()?.addEventListener('click', () => openOptionsPanel(els.idle()));
+
+    document.addEventListener('nrj:cart-edit', (event) => {
+        const idx = Number(event.detail?.index);
+        const trigger = event.detail?.trigger || null;
+        if (!Number.isInteger(idx) || idx < 0) return;
+        openCartItemEditor(idx, trigger);
+    });
     els.stickyMinus()?.addEventListener('click', (event) => {
         event.stopPropagation();
         changeStickyQty(-1);
@@ -539,9 +617,11 @@ export function resetOptionsPanel() {
     modalCtx.sT = '';
     modalCtx.sC = '';
     modalCtx.currentQty = 1;
+    modalCtx.sheetMode = 'add';
+    modalCtx.editCartIndex = null;
     modalCtx.stickyAddedQty = 0;
     modalCtx.stickyAddedVariant = null;
     setStickyAddedState(0);
 }
 
-export { openOptionsPanel, closeOptionsPanel, setStickyAddedState };
+export { openOptionsPanel, openCartItemEditor, closeOptionsPanel, setStickyAddedState };
