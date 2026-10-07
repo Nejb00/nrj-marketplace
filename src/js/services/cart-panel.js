@@ -104,6 +104,13 @@ function setupCartSheetHandle() {
     handle.setAttribute('aria-hidden', 'true');
     header.prepend(handle);
 
+    const updateDrag = (event) => {
+        if (!cartDrag || event.pointerId !== cartDrag.pointerId) return;
+        event.preventDefault();
+        cartDrag.dy = Math.max(0, event.clientY - cartDrag.startY);
+        panel.style.transform = `translateY(${cartDrag.dy}px)`;
+    };
+
     const finishDrag = (event) => {
         if (!cartDrag || (event.pointerId != null && event.pointerId !== cartDrag.pointerId)) return;
         const finalDy = Math.max(0, Number(event.clientY) - cartDrag.startY);
@@ -123,14 +130,12 @@ function setupCartSheetHandle() {
         handle.setPointerCapture?.(event.pointerId);
     });
 
-    handle.addEventListener('pointermove', (event) => {
-        if (!cartDrag || event.pointerId !== cartDrag.pointerId) return;
-        cartDrag.dy = Math.max(0, event.clientY - cartDrag.startY);
-        panel.style.transform = `translateY(${cartDrag.dy}px)`;
-    });
-
+    handle.addEventListener('pointermove', updateDrag);
     handle.addEventListener('pointerup', finishDrag);
     handle.addEventListener('pointercancel', finishDrag);
+    document.addEventListener('pointermove', updateDrag, { passive: false });
+    document.addEventListener('pointerup', finishDrag);
+    document.addEventListener('pointercancel', finishDrag);
 }
 
 function setupCartAccessibility() {
