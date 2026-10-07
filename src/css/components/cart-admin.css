@@ -988,3 +988,63 @@
  }
  .cart-panel-footer .cart-footer-reassurance { display: none; }
 }
+
+
+/* ═══ Panier — sélection circulaire + picker quantity polish ═══ */
+.cart-item-check input[type="checkbox"],
+#cartSelectAll {
+ appearance: none;
+ -webkit-appearance: none;
+ width: 20px;
+ height: 20px;
+ margin: 0;
+ flex: 0 0 20px;
+ border-radius: 50%;
+ border: 2px solid var(--border);
+ background: transparent;
+ display: grid;
+ place-items: center;
+ cursor: pointer;
+ transition: transform 0.14s ease, background 0.14s ease, border-color 0.14s ease;
+}
+.cart-item-check input[type="checkbox"]::after,
+#cartSelectAll::after {
+ content: "✓";
+ font-size: 12px;
+ line-height: 1;
+ font-weight: 900;
+ color: #fff;
+ transform: scale(0);
+ transition: transform 0.12s ease;
+}
+.cart-item-check input[type="checkbox"]:checked,
+#cartSelectAll:checked {
+ background: var(--primary);
+ border-color: var(--primary);
+}
+.cart-item-check input[type="checkbox"]:checked::after,
+#cartSelectAll:checked::after { transform: scale(1); }
+.cart-item-check input[type="checkbox"]:focus-visible,
+#cartSelectAll:focus-visible {
+ outline: 3px solid color-mix(in srgb, var(--primary) 35%, transparent);
+ outline-offset: 2px;
+}
+.cart-item-check input[type="checkbox"]:disabled {
+ opacity: 0.42;
+ cursor: not-allowed;
+ border-style: dashed;
+}
+
+.qty-option {
+ position: relative;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ gap: 0.45rem;
+}
+.qty-check {
+ color: var(--primary);
+ font-size: 0.9rem;
+ font-weight: 950;
+ line-height: 1;
+}
