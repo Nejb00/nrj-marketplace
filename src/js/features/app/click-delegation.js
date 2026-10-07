@@ -2,7 +2,7 @@
 // Éclaté de main.js (refacto-archi) — logique strictement identique.
 // Side-effects au chargement, ordre historique préservé (lignes 639→746
 // de l'ancien main.js).
-import { state, getCategoryName, trackViewedItem } from '../../core/state.js';
+import { state, saveCart, getCategoryName, trackViewedItem } from '../../core/state.js';
 import { applyFilter, clearSubcategorySelection } from '../catalogue/category-bubbles.js';
 import { switchView } from '../catalogue/categories-page.js';
 import { refreshCatalogue } from '../catalogue/catalogue-init.js';
@@ -87,7 +87,6 @@ document.getElementById('cancelOrderBtn')?.addEventListener('click', async () =>
   const restored = cancelDirectPurchase();
   if (restored) {
     try {
-      const { saveCart } = await import('../../core/state.js');
       await saveCart();
       refreshCartDisplay();
     } catch (error) {
