@@ -6,8 +6,8 @@ import { state, getCategoryName, trackViewedItem } from '../../core/state.js';
 import { applyFilter, clearSubcategorySelection } from '../catalogue/category-bubbles.js';
 import { switchView } from '../catalogue/categories-page.js';
 import { refreshCatalogue } from '../catalogue/catalogue-init.js';
-import { addToCart, changeQty, removeCartItem } from '../../services/cart-actions.js';
-import { refreshCartDisplay } from '../../services/cart-panel.js';
+import { addToCart, changeQty } from '../../services/cart-actions.js';
+import { openCartPanel, closeCartPanel, removeCartItemAnimated } from '../../services/cart-panel.js';
 import { toggleFavorite } from '../../services/favorites.js';
 import { openOrderModal, sendWhatsAppOrder } from '../../services/checkout.js';
 import { startMobileMoneyPayment, initMobileMoneyPaymentUi } from '../../services/payment/mobile-money-checkout.js';
@@ -30,7 +30,7 @@ document.addEventListener('click', e => {
   const addBtn = e.target.closest('[data-action="add-to-cart"]'); if (addBtn) { e.stopPropagation(); addToCart(parseInt(addBtn.dataset.id), '', '', addBtn); return; }
   const favBtn = e.target.closest('[data-action="toggle-favorite"]'); if (favBtn) { e.stopPropagation(); toggleFavorite(parseInt(favBtn.dataset.id)); return; }
   const editBtn = e.target.closest('[data-action="edit-product"]'); if (editBtn) { e.stopPropagation(); openEditModal(parseInt(editBtn.dataset.id)); return; }
-  const removeBtn = e.target.closest('[data-action="cart-remove"]'); if (removeBtn) { e.stopPropagation(); removeCartItem(parseInt(removeBtn.dataset.index)); return; }
+  const removeBtn = e.target.closest('[data-action="cart-remove"]'); if (removeBtn) { e.stopPropagation(); removeCartItemAnimated(parseInt(removeBtn.dataset.index), removeBtn.closest('.cart-item')); return; }
   const incBtn = e.target.closest('[data-action="cart-increase"]'); if (incBtn) { changeQty(parseInt(incBtn.dataset.index), 1); return; }
   const decBtn = e.target.closest('[data-action="cart-decrease"]'); if (decBtn) { changeQty(parseInt(decBtn.dataset.index), -1); return; }
   const recCard = e.target.closest('.rec-card'); if (recCard) { openProductModal(parseInt(recCard.dataset.productId)); return; }
@@ -58,14 +58,8 @@ window.addEventListener('popstate', (e) => {
 document.getElementById('modalSourcingBtn')?.addEventListener('click', () => window.open(`https://wa.me/242066271882?text=${encodeURIComponent('Bonjour NRJ Marketplace, je recherche un produit. Je peux vous envoyer une photo')}`));
 document.getElementById('modalDescSourcingBtn')?.addEventListener('click', () => window.open(`https://wa.me/242066271882?text=${encodeURIComponent('Bonjour NRJ Marketplace, je recherche un produit spécifique...')}`));
 
-document.getElementById('cartCloseBtn')?.addEventListener('click', () => {
-  document.getElementById('cartPanel').classList.remove('open');
-  document.getElementById('cartOverlay').classList.remove('open');
-});
-document.getElementById('cartOverlay')?.addEventListener('click', () => {
-  document.getElementById('cartPanel').classList.remove('open');
-  document.getElementById('cartOverlay').classList.remove('open');
-});
+document.getElementById('cartCloseBtn')?.addEventListener('click', () => closeCartPanel());
+document.getElementById('cartOverlay')?.addEventListener('click', () => closeCartPanel());
 document.getElementById('checkoutBtn')?.addEventListener('click', openOrderModal);
 document.getElementById('sendWhatsAppBtn')?.addEventListener('click', sendWhatsAppOrder);
 document.getElementById('startMobileMoneyBtn')?.addEventListener('click', startMobileMoneyPayment);
@@ -112,9 +106,7 @@ document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('clic
     window.scrollTo(0, 0);
   }
   if (nav === 'cart') {
-    document.getElementById('cartPanel')?.classList.add('open');
-    document.getElementById('cartOverlay')?.classList.add('open');
-    refreshCartDisplay();
+    openCartPanel(this);
   }
   if (nav === 'favorites') {
     if (isFlexOpen('searchView')) switchFromSearchView();
