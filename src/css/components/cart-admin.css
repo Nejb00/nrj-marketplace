@@ -388,6 +388,7 @@
  cursor: pointer;
 }
 .cart-reco-add:active { transform: scale(0.98); }
+.cart-reco-card .badge-container { pointer-events: none; }
 
 .cart-reco-card .fav-icon,
 .cart-reco-card .product-edit-btn {
