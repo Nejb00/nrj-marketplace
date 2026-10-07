@@ -8,6 +8,7 @@ import { getSelectedItems } from './cart-storage.js';
 import { closeCartMenu } from './cart-menu.js';
 import { refreshCartDisplay } from './cart-panel.js';
 import { createRemoteOrder } from './payment/order-service.js';
+import { finishDirectPurchase } from './direct-purchase.js';
 
 function readCustomerPhone() {
     return document.getElementById('customerPhone')?.value.trim()
@@ -191,6 +192,7 @@ export async function sendWhatsAppOrder() {
     document.getElementById('orderModalOverlay')?.classList.remove('open');
 
     state.cart = state.cart.filter(i => i.selected === false);
+    finishDirectPurchase();
     await saveCart();
     refreshCartDisplay();
 
