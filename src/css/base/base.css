@@ -594,3 +594,23 @@ footer { text-align: center; padding: 1.5rem 1rem 5rem; color: var(--text-second
     );
     z-index: 0;
 }
+
+
+/* ═══ Vue Catalogue — contenu uniquement ═══
+   La vue Accueil/Catalogue laisse toute la hauteur disponible à son contenu :
+   bannière + produits. Le header de recherche et les catégories restent
+   disponibles dans leur logique globale, mais ne consomment plus d'espace
+   dans la vue Catalogue.
+*/
+body.catalogue-content-only #headerFixed,
+body.catalogue-content-only #headerSpacer {
+    display: none;
+}
+
+body.catalogue-content-only #mainContent {
+    padding-top: 0;
+}
+
+body.catalogue-content-only .hero-section {
+    margin-top: 0;
+}
