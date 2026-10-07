@@ -260,8 +260,10 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
     await expect(page.locator(".cart-tab").nth(1)).toContainText("Sélectionné (2)");
     await expect(page.locator("#checkoutBtn")).toContainText("Commander (2)");
 
-    const cartFocusInside = await page.evaluate(() => Boolean(document.activeElement?.closest("#cartPanel")));
-    expect(cartFocusInside).toBe(true);
+    await expect.poll(
+      async () => page.evaluate(() => Boolean(document.activeElement?.closest("#cartPanel"))),
+      { timeout: 2_000 }
+    ).toBe(true);
 
     await page.keyboard.press("Escape");
     await expect(page.locator("#cartPanel")).toHaveAttribute("aria-hidden", "true");
