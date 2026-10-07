@@ -24,6 +24,7 @@ type CartItemInput = {
   quantity?: number | string;
   taille?: string | null;
   couleur?: string | null;
+  variantId?: string | null;
 };
 
 type RequestBody = {
@@ -140,6 +141,7 @@ function normalizeItems(items: CartItemInput[] | undefined) {
       quantity: number;
       taille: string | null;
       couleur: string | null;
+      variantId: string | null;
     }
   >();
 
@@ -157,7 +159,15 @@ function normalizeItems(items: CartItemInput[] | undefined) {
 
     const taille = raw.taille ? String(raw.taille).slice(0, 100) : null;
     const couleur = raw.couleur ? String(raw.couleur).slice(0, 100) : null;
-    const key = [productId, couleur || "", taille || ""].join("\u001f");
+    const variantId = raw.variantId == null || raw.variantId === ""
+      ? null
+      : String(raw.variantId).trim();
+
+    if (variantId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(variantId)) {
+      throw new TypeError("variant_id_invalid");
+    }
+
+    const key = [productId, variantId || "", couleur || "", taille || ""].join("\u001f");
     const existing = map.get(key);
 
     if (existing) {
@@ -167,7 +177,8 @@ function normalizeItems(items: CartItemInput[] | undefined) {
         productId,
         quantity,
         taille,
-        couleur
+        couleur,
+        variantId
       });
     }
   }
@@ -247,26 +258,99 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json({ ok: false, error: "product_not_found" }, 409);
   }
 
+  const variantIds = [...new Set(
+    items.map((item) => item.variantId).filter(Boolean)
+  )];
+
+  let variants = new Map<string, {
+    id: string;
+    product_id: number;
+    active: boolean;
+    color: string | null;
+    size: string | null;
+    price: number | string | null;
+  }>();
+
+  if (variantIds.length) {
+    const variantResult = await supabaseRest<Array<{
+      id: string;
+      product_id: number;
+      active: boolean;
+      color: string | null;
+      size: string | null;
+      price: number | string | null;
+    }>>(
+      "product_variants?select=id,product_id,active,color,size,price&id=in.(" +
+        variantIds.map(encodeURIComponent).join(",") +
+        ")"
+    );
+
+    if (variantResult.error) {
+      return json({ ok: false, error: "variant_lookup_failed" }, 502);
+    }
+
+    variants = new Map(
+      (variantResult.data || []).map((variant) => [String(variant.id), variant])
+    );
+
+    if (variants.size !== variantIds.length) {
+      return json({ ok: false, error: "variant_not_found" }, 409);
+    }
+  }
+
   let total = 0;
   const orderItems = [];
 
   for (const item of items) {
     const product = products.get(item.productId);
-    const unitPrice = Number(product?.price);
+    const variant = item.variantId ? variants.get(String(item.variantId)) : null;
 
-    if (!product || !Number.isFinite(unitPrice) || unitPrice <= 0) {
+    if (!product) {
+      return json({ ok: false, error: "product_not_found" }, 409);
+    }
+
+    if (item.variantId) {
+      if (!variant || Number(variant.product_id) !== Number(item.productId) || variant.active !== true) {
+        return json({ ok: false, error: "variant_not_available" }, 409);
+      }
+
+      if (item.couleur && variant.color && item.couleur !== variant.color) {
+        return json({ ok: false, error: "variant_color_mismatch" }, 409);
+      }
+
+      if (item.taille && variant.size && item.taille !== variant.size) {
+        return json({ ok: false, error: "variant_size_mismatch" }, 409);
+      }
+    }
+
+    const variantPrice = Number(variant?.price);
+    const productPrice = Number(product.price);
+    const unitPrice = Number.isFinite(variantPrice) && variantPrice > 0
+      ? variantPrice
+      : productPrice;
+
+    if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
       return json({ ok: false, error: "product_price_invalid" }, 409);
     }
 
+    const resolvedColor = item.couleur || variant?.color || null;
+    const resolvedSize = item.taille || variant?.size || null;
+
     total += unitPrice * item.quantity;
 
-    orderItems.push({
+    const orderItem = {
       productId: item.productId,
       name: product.name || "Produit",
       price: unitPrice,
       qty: item.quantity,
-      variant: [item.couleur, item.taille].filter(Boolean).join(", ") || null
-    });
+      variant: [resolvedColor, resolvedSize].filter(Boolean).join(", ") || null
+    };
+
+    if (item.variantId) {
+      orderItem.variantId = item.variantId;
+    }
+
+    orderItems.push(orderItem);
   }
 
   const orderFingerprint = stableSerialize({
