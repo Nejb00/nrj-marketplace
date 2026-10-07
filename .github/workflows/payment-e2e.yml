@@ -84,6 +84,7 @@ jobs:
         run: npx playwright test tests/e2e/payment-flow.spec.mjs --config=playwright.config.mjs --reporter=list
 
       - name: Test E2E variantes, galerie groupée et Buy Now
+        if: always()
         run: npx playwright test tests/e2e/product-variants-media.spec.mjs --config=playwright.config.mjs --reporter=list
 
       - name: Publier les rapports Playwright
