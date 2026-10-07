@@ -10,6 +10,7 @@ import { signalOrder } from '../reco.js';
 import { createRemoteOrder } from './order-service.js';
 import { OpenPayProvider } from './openpay-provider.js';
 import { PaymentService } from './payment-service.js';
+import { finishDirectPurchase } from '../direct-purchase.js';
 
 const POLL_INTERVAL_MS = 4000;
 const MAX_POLLS = 10;
@@ -456,6 +457,7 @@ export async function startMobileMoneyPayment() {
             signalOrder && signalOrder();
 
             state.cart = state.cart.filter(item => item.selected === false);
+            finishDirectPurchase();
             await saveCart();
             refreshCartDisplay();
 
@@ -509,6 +511,7 @@ export async function startMobileMoneyPayment() {
             signalOrder && signalOrder();
 
             state.cart = state.cart.filter(item => item.selected === false);
+            finishDirectPurchase();
             await saveCart();
             refreshCartDisplay();
 
