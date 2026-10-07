@@ -489,6 +489,8 @@ export function refreshCartDisplay() {
         : unavailableEntries;
 
     const tabs = renderCartTabs(allQuantity, selectedQuantity);
+    const title = document.getElementById('cartPanelTitle');
+    if (title) title.textContent = allQuantity > 0 ? `Panier (${allQuantity})` : 'Mon panier';
 
     if (state.cart.length === 0) {
         body.innerHTML =
@@ -563,8 +565,9 @@ export function refreshCartDisplay() {
                         '<span>Total' + (selectedCount < state.cart.length ? ' (sélection)' : '') + '</span>' +
                         '<strong id="cartTotal">' + formatPrice(tot) + '</strong>' +
                     '</div>' +
+                    '<p class="cart-footer-reassurance">Prix en XAF · MOQ vérifié avant commande</p>' +
                 '</div>' +
-                '<button class="checkout-btn" id="checkoutBtn" data-action="cart-checkout"' + (disabled ? ' disabled' : '') + ' title="' + (hasUnavailableSelected ? 'Supprimez les articles indisponibles avant de commander' : hasInvalidMoq ? 'Augmentez les articles sous le minimum avant de commander' : 'Finaliser la commande') + '">💬 Commander via WhatsApp</button>' +
+                '<button class="checkout-btn" id="checkoutBtn" data-action="cart-checkout"' + (disabled ? ' disabled' : '') + ' title="' + (hasUnavailableSelected ? 'Supprimez les articles indisponibles avant de commander' : hasInvalidMoq ? 'Augmentez les articles sous le minimum avant de commander' : 'Finaliser la commande') + '">💬 Commander (' + selectedQuantity + ')</button>' +
             '</div>';
     }
 
