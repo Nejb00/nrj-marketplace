@@ -197,12 +197,12 @@ test("fiche produit V2 → couleur → galerie groupée → panier conserve vari
 
   await page.locator("#modalCloseBtn").click();
   await page.locator('a[data-nav="cart"]').click();
-  await expect(page.locator("#cartPanel")).toHaveClass(/\\bopen\\b/);
+  await expect(page.locator("#cartPanel")).toHaveClass(/\bopen\b/);
 
   await page.locator(".cart-item-product-trigger").click();
 
   await expect(page.locator("#cartPanel")).toHaveAttribute("aria-hidden", "true");
-  await expect(page.locator("#productModal")).toHaveClass(/\\bopen\\b/);
+  await expect(page.locator("#productModal")).toHaveClass(/\bopen\b/);
 
   await page.locator("#addToCartStickyBtn").click();
   await expect(page.locator("#optionsPanel")).toHaveAttribute("aria-hidden", "false");
