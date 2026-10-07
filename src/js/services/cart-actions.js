@@ -126,12 +126,12 @@ export async function updateCartItem(idx, { taille = '', couleur = '', quantity,
     if (!it) return;
 
     const product = state.products.find((p) => Number(p.id) === Number(it.productId));
-    const moq = Math.max(
+    const baseMoq = Math.max(
         Number(it.moq) || 1,
         Number(product?.moq) || 1
     );
     const n = Number(quantity);
-    const nextQty = Math.max(moq, Number.isFinite(n) ? Math.floor(n) : moq);
+    const nextQty = Math.max(baseMoq, Number.isFinite(n) ? Math.floor(n) : baseMoq);
     const nextTaille = String(taille || '').trim();
     const nextCouleur = String(couleur || '').trim();
     const nextVariantId = variantId === undefined
@@ -141,10 +141,10 @@ export async function updateCartItem(idx, { taille = '', couleur = '', quantity,
     const nextUnitPrice = Number.isFinite(requestedUnitPrice) && requestedUnitPrice > 0
         ? requestedUnitPrice
         : null;
-    const requestedMoq = moq === undefined ? moq : Number(moq);
+    const requestedMoq = moq === undefined ? Number(it.moq) : Number(moq);
     const nextMoq = Number.isFinite(requestedMoq) && requestedMoq > 0
         ? Math.max(Number(product?.moq) || 1, requestedMoq)
-        : Math.max(Number(product?.moq) || 1, Number(it.moq) || 1);
+        : baseMoq;
 
     const duplicateIdx = state.cart.findIndex((other, otherIdx) =>
         otherIdx !== idx &&
