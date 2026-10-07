@@ -9,6 +9,12 @@ import { escapeHtml } from '../../utils/escape-html.js';
 import { thumbImg } from '../../utils/images.js';
 import { WHATSAPP_NUMBER, POPULAR_THRESHOLD } from '../../core/config.js';
 import { modalCtx } from './modal-state.js';
+import { buildCarousel } from './modal-carousel.js';
+import {
+    getProductGalleryForSelection,
+    getVariantThumbnail,
+    resolveProductVariant,
+} from '../../services/product-variants-media.js';
 
 const els = {
     panel: () => document.getElementById('optionsPanel'),
@@ -165,6 +171,25 @@ function setSheetQty(next) {
     if (qtyEl) qtyEl.textContent = String(qty);
 }
 
+function hasRealVariants() {
+    return Array.isArray(modalCtx.variants) && modalCtx.variants.length > 0;
+}
+
+function refreshGalleryFromSelection() {
+    const product = modalCtx.p;
+    if (!product) return;
+
+    const variant = resolveProductVariant(product, modalCtx.sC, modalCtx.sT);
+    modalCtx.sVariantId = variant?.id || null;
+
+    const gallery = getProductGalleryForSelection(product, modalCtx.sC, modalCtx.sT);
+    modalCtx.imgs = gallery.map((media) => media.url).filter(Boolean);
+
+    if (modalCtx.sc && modalCtx.dc) {
+        buildCarousel();
+    }
+}
+
 function setColor(color, button) {
     modalCtx.sC = color;
     els.colors()?.querySelectorAll('[data-option-color]').forEach((el) => {
@@ -172,6 +197,8 @@ function setColor(color, button) {
         el.classList.toggle('selected', active);
         el.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
+
+    if (hasRealVariants()) refreshGalleryFromSelection();
 }
 
 function setSize(size, button) {
@@ -181,6 +208,8 @@ function setSize(size, button) {
         el.classList.toggle('selected', active);
         el.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
+
+    if (hasRealVariants()) refreshGalleryFromSelection();
 }
 
 function renderColors() {
@@ -194,7 +223,10 @@ function renderColors() {
     }
 
     container.innerHTML = colors.map((color, index) => {
-        const dedicatedImg = modalCtx.p?.[`image${index + 2}`] || '';
+        const variantThumb = hasRealVariants()
+            ? getVariantThumbnail(modalCtx.p, color, modalCtx.sT)
+            : null;
+        const dedicatedImg = variantThumb?.url || modalCtx.p?.[`image${index + 2}`] || '';
         const imgHtml = dedicatedImg
             ? thumbImg(dedicatedImg, color, 64, 64)
             : '<span class="option-color-fallback" aria-hidden="true"></span>';
@@ -466,6 +498,8 @@ function openCartItemEditor(idx, trigger = null) {
     modalCtx.couleurs = String(p.couleurs || '').split(',').map((value) => value.trim()).filter(Boolean);
     modalCtx.sT = String(it.taille || '');
     modalCtx.sC = String(it.couleur || '');
+    modalCtx.variants = Array.isArray(p.variants) ? p.variants : [];
+    modalCtx.sVariantId = it.variantId || null;
     modalCtx.moq = Math.max(Number(it.moq) || 1, Number(p.moq) || 1);
     modalCtx.uPrice = Number(p.price) || 0;
     modalCtx.currentQty = Math.max(modalCtx.moq, Number(it.quantity) || modalCtx.moq);
@@ -609,6 +643,8 @@ export function initOptionsPanel() {
 export function resetOptionsPanel() {
     modalCtx.sT = '';
     modalCtx.sC = '';
+    modalCtx.sVariantId = null;
+    modalCtx.variants = [];
     modalCtx.currentQty = 1;
     modalCtx.sheetMode = 'add';
     modalCtx.editCartIndex = null;
