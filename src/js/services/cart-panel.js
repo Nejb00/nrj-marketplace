@@ -106,7 +106,8 @@ function setupCartSheetHandle() {
 
     const finishDrag = (event) => {
         if (!cartDrag || (event.pointerId != null && event.pointerId !== cartDrag.pointerId)) return;
-        const shouldClose = cartDrag.dy > 96;
+        const finalDy = Math.max(0, Number(event.clientY) - cartDrag.startY);
+        const shouldClose = Math.max(cartDrag.dy, finalDy) > 96;
         cartDrag = null;
         panel.classList.remove('is-dragging');
         panel.style.transform = '';
