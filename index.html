@@ -169,7 +169,7 @@
         <div class="options-panel-handle" id="optionsPanelHandle" aria-hidden="true"></div>
         <div class="options-panel-header">
             <div class="options-panel-heading">
-                <span class="options-panel-kicker">CHOISIR UNE OPTION</span>
+                <span class="options-panel-kicker" id="optionsPanelKicker">CHOISIR UNE OPTION</span>
                 <h2 id="optionsPanelTitle">Personnalise ton produit</h2>
                 <p class="options-panel-product-name" id="optionsPanelProductName"></p>
                 <p class="options-panel-price" id="optionsPanelPrice"></p>
@@ -231,6 +231,31 @@
             <button class="options-panel-add" id="optionsPanelAddBtn" type="button">Ajouter au panier</button>
         </div>
     </section>
+    <div class="qty-sheet-overlay" id="qtySheetOverlay" hidden aria-hidden="true">
+        <section class="qty-sheet" id="qtySheet" role="dialog" aria-modal="true" aria-labelledby="qtySheetTitle">
+            <div class="qty-sheet-handle" aria-hidden="true"></div>
+            <div class="qty-sheet-header">
+                <div>
+                    <span class="qty-sheet-kicker">QUANTITÉ</span>
+                    <h2 id="qtySheetTitle">Choisis une quantité</h2>
+                </div>
+                <button type="button" class="qty-sheet-close" id="qtySheetClose" aria-label="Fermer">&times;</button>
+            </div>
+            <div class="qty-sheet-body">
+                <div class="qty-sheet-list" id="qtySheetList" role="listbox" aria-label="Quantités disponibles"></div>
+                <div class="qty-sheet-custom">
+                    <label for="qtySheetInput">Quantité personnalisée</label>
+                    <div class="qty-sheet-input-row">
+                        <input type="number" id="qtySheetInput" min="1" step="1" inputmode="numeric" aria-describedby="qtySheetHint">
+                        <span id="qtySheetHint">Le minimum d’achat est respecté automatiquement.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="qty-sheet-footer">
+                <button type="button" class="qty-sheet-apply" id="qtySheetApply">Mettre à jour</button>
+            </div>
+        </section>
+    </div>
     <div class="cart-added-toast" id="cartAddedToast" role="status" aria-live="polite" aria-atomic="true" hidden>
         <div class="cart-added-toast-copy">
             <strong>✅ Ajouté au panier</strong>
