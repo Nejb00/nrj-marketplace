@@ -15,6 +15,8 @@ import { buildCarousel } from './modal-carousel.js';
 import {
     getProductGalleryForSelection,
     getVariantThumbnail,
+    getCompatibleVariantValues,
+    isValidVariantSelection,
     resolveProductVariant,
 } from '../../services/product-variants-media.js';
 
@@ -194,6 +196,10 @@ function refreshGalleryFromSelection() {
 }
 
 function setColor(color, button) {
+    if (hasRealVariants() && modalCtx.sT && !isValidVariantSelection(modalCtx.p, color, modalCtx.sT)) {
+        modalCtx.sT = '';
+    }
+
     modalCtx.sC = color;
     els.colors()?.querySelectorAll('[data-option-color]').forEach((el) => {
         const active = el === button;
@@ -201,10 +207,17 @@ function setColor(color, button) {
         el.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
 
-    if (hasRealVariants()) refreshGalleryFromSelection();
+    if (hasRealVariants()) {
+        refreshGalleryFromSelection();
+        renderSizes();
+    }
 }
 
 function setSize(size, button) {
+    if (hasRealVariants() && modalCtx.sC && !isValidVariantSelection(modalCtx.p, modalCtx.sC, size)) {
+        return;
+    }
+
     modalCtx.sT = size;
     els.sizes()?.querySelectorAll('[data-option-size]').forEach((el) => {
         const active = el === button;
@@ -225,21 +238,28 @@ function renderColors() {
         return;
     }
 
+    const compatibleColors = hasRealVariants()
+        ? getCompatibleVariantValues(modalCtx.p, 'color', { size: modalCtx.sT })
+        : null;
+
     container.innerHTML = colors.map((color, index) => {
         const variantThumb = hasRealVariants()
             ? getVariantThumbnail(modalCtx.p, color, modalCtx.sT)
             : null;
         const dedicatedImg = variantThumb?.url || modalCtx.p?.[`image${index + 2}`] || '';
+        const unavailable = !!compatibleColors && !compatibleColors.has(color);
         const imgHtml = dedicatedImg
             ? thumbImg(dedicatedImg, color, 64, 64)
             : '<span class="option-color-fallback" aria-hidden="true"></span>';
 
         return `
             <button type="button"
-                    class="option-color-card"
+                    class="option-color-card${unavailable ? ' is-unavailable' : ''}"
                     data-option-color="${escapeHtml(color)}"
                     aria-pressed="false"
-                    aria-label="Choisir la couleur ${escapeHtml(color)}">
+                    aria-disabled="${unavailable ? 'true' : 'false'}"
+                    ${unavailable ? 'disabled' : ''}
+                    aria-label="${unavailable ? 'Couleur indisponible avec la taille choisie : ' : 'Choisir la couleur '}${escapeHtml(color)}">
                 <span class="option-color-thumb" ${!dedicatedImg ? `style="--option-color: ${colorFallback(color)}"` : ''}>
                     ${imgHtml}
                 </span>
@@ -281,13 +301,22 @@ function renderSizes() {
         social.hidden = false;
     }
 
-    container.innerHTML = sizes.map((size) => `
+    const compatibleSizes = hasRealVariants()
+        ? getCompatibleVariantValues(modalCtx.p, 'size', { color: modalCtx.sC })
+        : null;
+
+    container.innerHTML = sizes.map((size) => {
+        const unavailable = !!compatibleSizes && !compatibleSizes.has(size);
+        return `
         <button type="button"
-                class="option-size-btn"
+                class="option-size-btn${unavailable ? ' is-unavailable' : ''}"
                 data-option-size="${escapeHtml(size)}"
                 aria-pressed="false"
-                aria-label="Choisir la taille ${escapeHtml(size)}">${escapeHtml(size)}${popularBadge('size', size)}</button>
-    `).join('');
+                aria-disabled="${unavailable ? 'true' : 'false'}"
+                ${unavailable ? 'disabled' : ''}
+                aria-label="${unavailable ? 'Taille indisponible avec la couleur choisie : ' : 'Choisir la taille '}${escapeHtml(size)}">${escapeHtml(size)}${popularBadge('size', size)}</button>
+    `;
+    }).join('');
 
     container.querySelectorAll('[data-option-size]').forEach((button) => {
         button.addEventListener('click', () => setSize(button.dataset.optionSize || '', button));
