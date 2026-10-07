@@ -38,6 +38,7 @@ type ProductRow = {
   id: number;
   name: string | null;
   price: number | string | null;
+  moq: number | string | null;
 };
 
 function json(data: unknown, status = 200): Response {
@@ -241,7 +242,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const ids = [...new Set(items.map(item => item.productId))];
   const productResult = await supabaseRest<ProductRow[]>(
-    "products?select=id,name,price&id=in.(" +
+    "products?select=id,name,price,moq&id=in.("
       ids.map(encodeURIComponent).join(",") +
       ")"
   );
@@ -271,6 +272,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     color: string | null;
     size: string | null;
     price: number | string | null;
+    moq: number | string | null;
   }>();
 
   if (variantIds.length) {
@@ -282,7 +284,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       size: string | null;
       price: number | string | null;
     }>>(
-      "product_variants?select=id,product_id,active,color,size,price&id=in.(" +
+      "product_variants?select=id,product_id,active,color,size,price,moq&id=in.("
         variantIds.map(encodeURIComponent).join(",") +
         ")"
     );
@@ -333,6 +335,23 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
     if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
       return json({ ok: false, error: "product_price_invalid" }, 409);
+    }
+
+    const productMoq = Number(product.moq);
+    const variantMoq = Number(variant?.moq);
+    const resolvedMoq = Math.max(
+      Number.isFinite(productMoq) && productMoq > 0 ? productMoq : 1,
+      Number.isFinite(variantMoq) && variantMoq > 0 ? variantMoq : 1
+    );
+
+    if (item.quantity < resolvedMoq) {
+      return json({
+        ok: false,
+        error: "quantity_below_moq",
+        product_id: item.productId,
+        variant_id: item.variantId,
+        moq: resolvedMoq
+      }, 409);
     }
 
     const resolvedColor = item.couleur || variant?.color || null;
