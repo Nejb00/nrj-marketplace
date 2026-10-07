@@ -506,7 +506,9 @@ async function validateAndAdd() {
                 taille: modalCtx.sT || '',
                 couleur: modalCtx.sC || '',
                 quantity: requestedQty,
-                variantId: modalCtx.sVariantId
+                variantId: modalCtx.sVariantId,
+                unitPrice: modalCtx.uPrice,
+                moq: modalCtx.moq
             });
             showToast('✅ Article mis à jour');
             closeOptionsPanel();
@@ -515,7 +517,9 @@ async function validateAndAdd() {
 
         await addToCart(p.id, modalCtx.sT || '', modalCtx.sC || '', els.add(), requestedQty, {
             silent: true,
-            variantId: modalCtx.sVariantId
+            variantId: modalCtx.sVariantId,
+            unitPrice: modalCtx.uPrice,
+            moq: modalCtx.moq
         });
         showCartAddedToast();
 
