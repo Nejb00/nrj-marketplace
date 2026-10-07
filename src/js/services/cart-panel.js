@@ -420,22 +420,24 @@ function renderCartItems(entries) {
             '<label class="cart-item-check">' +
                 '<input type="checkbox" data-action="cart-select" data-index="' + idx + '" ' + (isSelected ? 'checked' : '') + '>' +
             '</label>' +
-            '<button type="button" class="cart-item-edit-trigger" data-action="cart-edit" data-index="' + idx + '" aria-label="Modifier ' + escapeHtml(p.name) + '">' +
-                '<span class="cart-item-img">' + img + '</span>' +
-                '<span class="cart-item-info">' +
-                    '<span class="cart-item-info-name">' + escapeHtml(p.name) + '</span>' +
-                    (vars.length ? '<span class="cart-item-variants">' + escapeHtml(vars.join(', ')) + '</span>' : '') +
-                    '<span class="cart-item-price">Prix unitaire · ' + formatPrice(p.price) + '</span>' +
-                    '<strong class="cart-item-line-total">' + formatPrice(lineTotal) + '</strong>' +
-                '</span>' +
-            '</button>' +
+            '<div class="cart-item-main">' +
+                '<button type="button" class="cart-item-edit-trigger" data-action="cart-edit" data-index="' + idx + '" aria-label="Modifier ' + escapeHtml(p.name) + '">' +
+                    '<span class="cart-item-img">' + img + '</span>' +
+                    '<span class="cart-item-info">' +
+                        '<span class="cart-item-info-name">' + escapeHtml(p.name) + '</span>' +
+                        (vars.length ? '<span class="cart-item-variants">' + escapeHtml(vars.join(', ')) + '</span>' : '') +
+                        '<span class="cart-item-price">Prix unitaire · ' + formatPrice(p.price) + '</span>' +
+                        '<strong class="cart-item-line-total">' + formatPrice(lineTotal) + '</strong>' +
+                    '</span>' +
+                '</button>' +
+                moqWarning +
+            '</div>' +
             '<div class="cart-item-qty">' +
                 '<button class="qty-btn" data-action="cart-decrease" data-index="' + idx + '" ' + (dis ? 'disabled' : '') + ' aria-label="Diminuer">−</button>' +
                 '<button type="button" class="qty-value-btn" data-action="cart-qty-pick" data-index="' + idx + '" aria-label="Choisir la quantité">' + qty + ' <span class="qty-chevron">▼</span></button>' +
                 '<button class="qty-btn" data-action="cart-increase" data-index="' + idx + '" aria-label="Augmenter">+</button>' +
             '</div>' +
             '<button class="remove-item-btn" data-action="cart-remove" data-index="' + idx + '" aria-label="Retirer">🗑️</button>' +
-            moqWarning +
         '</div>';
     }).join('');
 }
