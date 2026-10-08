@@ -2,7 +2,7 @@
 // Éclaté de product-modal.js (refacto-archi). openProductModal remplit
 // modalCtx puis délègue aux modules carousel/options/actions/recommendations.
 // Les importateurs historiques importent openProductModal/closeProductModal ici.
-import { state, trackViewedItem } from '../../core/state.js';
+import { state, trackViewedItem, trackViewedProduct } from '../../core/state.js';
 import { formatPrice } from '../../utils/format.js';
 import { generateBadgesHTML } from '../../utils/badges.js';
 import { trackPopularity, fetchProductDetails, trackView } from '../../api/api.js';
@@ -30,6 +30,7 @@ export async function openProductModal(pid, initialSelection = null) {
     state.currentProductId = pid;
     trackPopularity(pid, 1);
     trackViewedItem(p.name);
+    trackViewedProduct(pid);
     signalView(p);
     trackView(pid);
 

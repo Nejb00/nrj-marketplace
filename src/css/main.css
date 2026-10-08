@@ -5,6 +5,7 @@
 @import './components/product-card.css';
 @import './components/product-modal.css';
 @import './layout/navigation.css';
+@import './components/account.css';
 @import './components/cart-admin.css';
 @import './components/search-view.css';
 @import './components/placeholder.css';
