@@ -543,3 +543,40 @@ body.categories-page-open .logo-brand-text {
         grid-template-columns: repeat(6, 1fr);
     }
 }
+
+
+/* ── FILTERS — touch / focus / material hardening ───────────────────────── */
+.filter-chip,
+.filter-btn,
+.subcat-bubble {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.filter-chip:focus-visible,
+.filter-btn:focus-visible,
+.subcat-bubble:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--nrj-accent) 38%, transparent);
+  outline-offset: 2px;
+}
+
+@media (pointer: coarse) {
+  .filter-chip,
+  .filter-btn { min-height: var(--nrj-control-min, 44px); }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .header-fixed .subcategory-bubbles {
+    background: var(--surface) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: var(--nrj-shadow-soft);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subcat-bubble-img,
+  .filter-chip,
+  .filter-btn {
+    transition: none !important;
+  }
+}
