@@ -91,3 +91,6 @@ Une attaque design n'est considérée terminée que si :
 3. les fallbacks accessibilité existent ;
 4. le build et les tests passent ;
 5. aucun invariant métier, paiement, auth ou RLS n'est touché.
+
+
+<!-- Design campaign verification checkpoint -->
