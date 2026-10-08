@@ -1,5 +1,6 @@
 /* ─── NAVIGATION « LIQUID GLASS » — pill flottante iPhone (Phase 2) ─────── */
 .main-nav {
+    z-index: var(--nrj-z-nav, 110);
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
