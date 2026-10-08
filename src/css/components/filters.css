@@ -11,7 +11,7 @@
 .quick-filters::-webkit-scrollbar { display: none; }
 
 .filter-chip {
-    min-height: 34px;
+    min-height: var(--nrj-control-min, 44px);
     background: color-mix(in srgb, var(--surface) 88%, transparent);
     border: 1px solid var(--border);
     padding: 0.42rem 0.85rem;
