@@ -33,3 +33,5 @@ export default defineConfig({
         },
       }),
 });
+
+// NRJ design campaign verification checkpoint
