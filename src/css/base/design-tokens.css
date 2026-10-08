@@ -37,3 +37,70 @@
     --nrj-glass-blur-lg: 26px;
   }
 }
+/* ── NRJ DESIGN DNA — scale complète ───────────────────────────────────── */
+:root {
+  /* Typography */
+  --nrj-font-body: 'Plus Jakarta Sans', 'Poppins', system-ui, sans-serif;
+  --nrj-font-size-xs: 0.68rem;
+  --nrj-font-size-sm: 0.78rem;
+  --nrj-font-size-md: 0.9rem;
+  --nrj-font-size-lg: 1.05rem;
+  --nrj-font-size-xl: 1.3rem;
+  --nrj-font-size-2xl: 1.6rem;
+  --nrj-leading-tight: 1.12;
+  --nrj-leading-normal: 1.4;
+  --nrj-leading-relaxed: 1.55;
+
+  /* Layout */
+  --nrj-content-max: 1240px;
+  --nrj-page-gutter: clamp(10px, 2.6vw, 28px);
+  --nrj-control-min: 44px;
+  --nrj-touch-gap: 8px;
+
+  /* Motion */
+  --nrj-motion-fast: 120ms;
+  --nrj-motion-base: 180ms;
+  --nrj-motion-slow: 280ms;
+  --nrj-ease-standard: cubic-bezier(.2,.8,.2,1);
+  --nrj-ease-emphasized: cubic-bezier(.22,1,.36,1);
+
+  /* Functional depth */
+  --nrj-focus-ring: 0 0 0 3px color-mix(in srgb, var(--nrj-accent) 24%, transparent);
+  --nrj-shadow-panel: 0 18px 48px rgba(0,0,0,.18);
+  --nrj-shadow-card: 0 8px 24px rgba(0,0,0,.08);
+
+  /* Semantic opacity */
+  --nrj-disabled-opacity: 0.48;
+  --nrj-overlay-opacity: 0.36;
+
+  /* Layering */
+  --nrj-z-content: 1;
+  --nrj-z-sticky: 20;
+  --nrj-z-header: 100;
+  --nrj-z-nav: 150;
+  --nrj-z-view: 120;
+  --nrj-z-panel: 450;
+  --nrj-z-overlay: 400;
+  --nrj-z-modal: 500;
+}
+
+:root.light-theme {
+  --nrj-shadow-panel: 0 18px 48px rgba(31,41,55,.12);
+  --nrj-shadow-card: 0 8px 24px rgba(31,41,55,.08);
+}
+
+@media (max-width: 600px) {
+  :root {
+    --nrj-page-gutter: 10px;
+    --nrj-content-max: 720px;
+    --nrj-shadow-panel: 0 14px 34px rgba(0,0,0,.16);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --nrj-glass-blur-sm: 0px;
+    --nrj-glass-blur: 0px;
+    --nrj-glass-blur-lg: 0px;
+  }
+}

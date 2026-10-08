@@ -11,7 +11,7 @@
 .quick-filters::-webkit-scrollbar { display: none; }
 
 .filter-chip {
-    min-height: 34px;
+    min-height: var(--nrj-control-min, 44px);
     background: color-mix(in srgb, var(--surface) 88%, transparent);
     border: 1px solid var(--border);
     padding: 0.42rem 0.85rem;
@@ -81,9 +81,9 @@
     right: 0;
     z-index: 0;
     isolation: isolate;
-    background: rgba(16, 16, 22, 0.72);
-    -webkit-backdrop-filter: blur(24px) saturate(160%);
-    backdrop-filter: blur(24px) saturate(160%);
+    background: var(--lg-tint-strong);
+    -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+    backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
     border: 1px solid var(--lg-border);
     border-radius: var(--header-radius);
     box-shadow:
@@ -542,4 +542,41 @@ body.categories-page-open .logo-brand-text {
     .categories-bubbles-grid {
         grid-template-columns: repeat(6, 1fr);
     }
+}
+
+
+/* ── FILTERS — touch / focus / material hardening ───────────────────────── */
+.filter-chip,
+.filter-btn,
+.subcat-bubble {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.filter-chip:focus-visible,
+.filter-btn:focus-visible,
+.subcat-bubble:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--nrj-accent) 38%, transparent);
+  outline-offset: 2px;
+}
+
+@media (pointer: coarse) {
+  .filter-chip,
+  .filter-btn { min-height: var(--nrj-control-min, 44px); }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .header-fixed .subcategory-bubbles {
+    background: var(--surface) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: var(--nrj-shadow-soft);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subcat-bubble-img,
+  .filter-chip,
+  .filter-btn {
+    transition: none !important;
+  }
 }
