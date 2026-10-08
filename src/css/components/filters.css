@@ -1,35 +1,42 @@
 .quick-filters {
     display: flex;
-    gap: 0.5rem;
-    padding: 0.8rem 1rem;
+    gap: 0.45rem;
+    padding: 0.55rem 0.75rem 0.65rem;
     overflow-x: auto;
     white-space: nowrap;
     scrollbar-width: none;
-    background: var(--bg);
+    background: transparent;
 }
 
 .quick-filters::-webkit-scrollbar { display: none; }
 
 .filter-chip {
-    background: var(--surface);
+    min-height: 34px;
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
     border: 1px solid var(--border);
-    padding: 0.5rem 1rem;
-    border-radius: 50px;
-    font-weight: 600;
-    font-size: 0.8rem;
+    padding: 0.42rem 0.85rem;
+    border-radius: var(--nrj-radius-pill);
+    font-weight: 650;
+    font-size: 0.76rem;
     cursor: pointer;
     color: var(--text-secondary);
-    transition: all 0.2s ease;
+    transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .filter-chip.active {
     background: var(--primary);
     color: white;
     border-color: var(--primary);
-    box-shadow: 0 4px 12px rgba(255, 140, 66, 0.3);
+    box-shadow: 0 4px 12px rgba(255, 140, 66, 0.20);
 }
 
 .filter-chip:hover:not(.active) { background: var(--surface-light); color: var(--text); }
+.filter-chip:active { transform: scale(0.97); }
+.filter-chip:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--primary) 35%, transparent);
+    outline-offset: 2px;
+}
 
 .filter-bar {
     display: flex;
@@ -287,15 +294,13 @@ body.categories-page-open .logo-brand-text {
     height: auto;
     max-height: none;
     z-index: 90;
-    background: rgba(14, 14, 20, 0.86);
-    -webkit-backdrop-filter: blur(24px) saturate(160%);
-    backdrop-filter: blur(24px) saturate(160%);
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--bg);
+    border-top: 1px solid var(--border);
 }
 
 :root.light-theme #categoriesView.is-open {
-    background: rgba(248, 246, 242, 0.92);
-    border-top-color: rgba(0, 0, 0, 0.06);
+    background: var(--bg);
+    border-top-color: var(--border);
 }
 
 .categories-page-header {
