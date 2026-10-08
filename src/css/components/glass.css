@@ -251,3 +251,5 @@ button:not(:disabled):active,
 @media (hover: none), (pointer: coarse) {
   .lg-spec::before { opacity: 0.7; }
 }
+
+/* NRJ design campaign marker */
