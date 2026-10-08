@@ -1371,3 +1371,11 @@
     transition: none !important;
   }
 }
+
+
+/* Full-screen mobile sheet: the overlay has no actionable outside area. */
+@media (max-width: 767px) {
+  .cart-overlay.open {
+    pointer-events: none;
+  }
+}
