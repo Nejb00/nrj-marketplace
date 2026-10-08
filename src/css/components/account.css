@@ -199,6 +199,7 @@
   text-align: left;
   border: 1px solid var(--border);
   border-radius: 20px;
+  background: var(--surface);
   background: color-mix(in srgb, var(--surface) 96%, transparent);
   color: var(--text);
   cursor: pointer;
@@ -756,7 +757,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .account-page *,
-  .settings-page * {
+  .account-settings-page * {
     scroll-behavior: auto !important;
     transition: none !important;
     animation: none !important;
@@ -779,4 +780,16 @@
   #accountView .settings-hero {
     background: var(--surface);
   }
+}
+
+
+.account-product-section,
+.account-orders-section {
+  content-visibility: auto;
+  contain-intrinsic-size: 240px;
+}
+
+@media (hover: none) {
+  .nrj-account-product:hover,
+  .account-value-card:hover { transform: none; }
 }
