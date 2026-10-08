@@ -5,6 +5,8 @@
 
 import db from '../services/db.js';
 
+const VIEWED_PRODUCTS_KEY = 'nrj_viewed_products';
+
 export const state = {
     products: [],
     /** Arbre complet des catégories (table categories) */

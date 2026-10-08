@@ -6,6 +6,9 @@ import { updateNavCartBadge } from '../../services/cart-badge.js';
 import { updateNavFavBadge } from '../../services/favorites.js';
 import { showSearchDropdown } from '../../services/search-dropdown.js';
 import { markNavActive } from './view-helpers.js';
+import { refreshCatalogue } from '../catalogue/catalogue-init.js';
+import { clearSubcategorySelection } from '../catalogue/category-bubbles.js';
+import { thumbImg } from '../../utils/images.js';
 import { applyTheme } from './theme.js';
 import { forYou } from '../../services/reco.js';
 
@@ -47,7 +50,7 @@ const icon = (name) => `<svg class="nrj-icon" viewBox="0 0 24 24" aria-hidden="t
 
 function productTile(p, kind, index) {
   const image = p?.image
-    ? `<img src="${escapeHtml(p.image)}" alt="" loading="${index < 2 ? 'eager' : 'lazy'}" decoding="async" onerror="this.classList.add('failed')">`
+    ? thumbImg(p.image, p.name || '', 300, 300, '', { loading: index < 2 ? 'eager' : 'lazy' })
     : '';
   const meta = kind === 'recent'
     ? 'Vu récemment'
@@ -320,8 +323,8 @@ export function handleAccountAction(action) {
     case 'go-favs':
       hideAccountView();
       state.currentFilter = 'favorites';
-      const favClear = clearSubcategorySelectionIfAvailable();
-      refreshCatalogueIfAvailable();
+      clearSubcategorySelection();
+      refreshCatalogue();
       document.querySelectorAll('.nav-item').forEach((b) => b.classList.remove('active'));
       document.querySelector('.nav-item[data-nav="favorites"]')?.classList.add('active');
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -434,16 +437,3 @@ export function handleAccountAction(action) {
   }
 }
 
-async function lazyNoop() {}
-
-function clearSubcategorySelectionIfAvailable() {
-  try {
-    return clearSubcategorySelection?.();
-  } catch { return undefined; }
-}
-
-function refreshCatalogueIfAvailable() {
-  try {
-    refreshCatalogue?.();
-  } catch {}
-}
