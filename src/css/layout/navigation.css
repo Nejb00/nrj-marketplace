@@ -166,3 +166,42 @@ body { padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
 .category-card-content { position: absolute; bottom: 0; left: 0; width: 100%; padding: 1rem; z-index: 3; display: flex; flex-direction: column; gap: 0.4rem; }
 .category-name { font-weight: 700; font-size: 1.1rem; color: #ffffff; line-height: 1.2; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 .category-count { font-size: 0.7rem; color: white; background: var(--primary); padding: 0.2rem 0.6rem; border-radius: 50px; font-weight: 600; display: inline-block; width: fit-content; }
+
+
+/* ── NRJ NAVIGATION — shared geometry ──────────────────────────────────── */
+.main-nav {
+  z-index: var(--nrj-z-nav, 110);
+  box-shadow: var(--nrj-shadow-floating);
+  padding-bottom: max(5px, env(safe-area-inset-bottom, 0px));
+}
+
+.main-nav .nav-item {
+  min-width: var(--nrj-control-min, 44px);
+  min-height: var(--nrj-control-min, 44px);
+  border-radius: var(--nrj-radius-sm, 14px);
+  transition: background var(--nrj-motion-fast, 120ms) var(--nrj-ease-standard, ease),
+              color var(--nrj-motion-fast, 120ms) var(--nrj-ease-standard, ease),
+              transform var(--nrj-motion-fast, 120ms) var(--nrj-ease-standard, ease);
+}
+
+.main-nav .nav-item:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--nrj-accent) 38%, transparent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .main-nav {
+    background: var(--surface) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: var(--nrj-shadow-soft);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .main-nav .nav-item { transition: none !important; }
+}
+
+@media (max-width: 420px) {
+  .main-nav { left: var(--nrj-page-gutter, 10px); right: var(--nrj-page-gutter, 10px); }
+}
