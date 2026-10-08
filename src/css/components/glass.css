@@ -41,7 +41,7 @@ body::before {
             rgba(20, 184, 166, 0.22) 0%,
             transparent 65%);
 
-    animation: aurora-drift 64s ease-in-out infinite alternate;
+    animation: none;
 }
 
 @keyframes aurora-drift {
@@ -75,10 +75,10 @@ body::before {
 
 :root {
     /* Épaisseurs optiques (iOS-like : thin / regular / thick) */
-    --lg-blur-thin: 14px;
-    --lg-blur: 26px;
-    --lg-blur-thick: 40px;
-    --lg-saturate: 180%;
+    --lg-blur-thin: var(--nrj-glass-blur-sm);
+    --lg-blur: var(--nrj-glass-blur);
+    --lg-blur-thick: var(--nrj-glass-blur-lg);
+    --lg-saturate: var(--nrj-glass-saturate);
 
     /* Teintes de verre : translucides pour laisser vivre l'aurora */
     --lg-tint: rgba(18, 18, 26, 0.42);
@@ -195,4 +195,25 @@ button:not(:disabled):active,
 .nav-item:active,
 .clickable:active {
     filter: brightness(1.18);
+}
+
+
+@media (min-width: 768px) and (hover: hover) and (prefers-reduced-motion: no-preference) {
+  body::before { animation: aurora-drift 70s ease-in-out infinite alternate; }
+}
+@media (max-width: 767px), (prefers-reduced-transparency: reduce) {
+  body::before { animation: none !important; }
+}
+@media (max-width: 600px) {
+  .lg {
+    -webkit-backdrop-filter: blur(var(--nrj-glass-blur)) saturate(160%);
+    backdrop-filter: blur(var(--nrj-glass-blur)) saturate(160%);
+    box-shadow: var(--nrj-shadow-glass);
+  }
+}
+@supports not ((backdrop-filter: blur(1px))) {
+  .lg, .lg-thin, .lg-thick {
+    background: var(--surface);
+    box-shadow: var(--nrj-shadow-soft);
+  }
 }

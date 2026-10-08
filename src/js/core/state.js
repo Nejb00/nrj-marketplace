@@ -5,6 +5,8 @@
 
 import db from '../services/db.js';
 
+const VIEWED_PRODUCTS_KEY = 'nrj_viewed_products';
+
 export const state = {
     products: [],
     /** Arbre complet des catégories (table categories) */
@@ -22,6 +24,8 @@ export const state = {
     cart: [],
     favorites: [],
     orders: [],
+    /** IDs des produits récemment consultés, du plus récent au plus ancien. */
+    viewedProductIds: [],
     /** Filtre courant : 'all' | 'favorites' | category_id (uuid) */
     currentFilter: 'all',
     currentQuickFilter: 'all',
@@ -95,10 +99,20 @@ function normalizeCart(raw) {
     }).filter(Boolean);
 }
 
+function normalizeViewedProductIds(raw) {
+    if (!Array.isArray(raw)) return [];
+    return raw
+        .map((id) => Number(id))
+        .filter((id) => Number.isFinite(id) && id > 0)
+        .filter((id, i, arr) => arr.indexOf(id) === i)
+        .slice(0, 30);
+}
+
 export async function loadPersistedState() {
     let cart = [];
     let favorites = [];
     let orders = [];
+    let viewedProductIds = [];
 
     try {
         cart = normalizeCart(await db.getCart());
@@ -111,10 +125,12 @@ export async function loadPersistedState() {
     if (!cart.length) cart = normalizeCart(readLocal('nrj_cart_v32', []));
     if (!favorites.length) favorites = normalizeFavorites(readLocal('nrj_favorites', []));
     if (!Array.isArray(orders) || !orders.length) orders = readLocal('nrj_orders', []) || [];
+    viewedProductIds = normalizeViewedProductIds(readLocal(VIEWED_PRODUCTS_KEY, []));
 
     state.cart = cart;
     state.favorites = favorites;
     state.orders = Array.isArray(orders) ? orders : [];
+    state.viewedProductIds = viewedProductIds;
 }
 
 export async function saveCart() {
@@ -130,6 +146,14 @@ export async function saveFavorites() {
 export async function saveOrders() {
     writeLocal('nrj_orders', state.orders);
     try { await db.putOrders(state.orders); } catch (err) { console.warn('IndexedDB commandes', err); }
+}
+
+export function trackViewedProduct(productId) {
+    const id = Number(productId);
+    if (!Number.isFinite(id) || id <= 0) return;
+    const next = [id, ...(state.viewedProductIds || []).filter((value) => Number(value) !== id)].slice(0, 30);
+    state.viewedProductIds = next;
+    try { localStorage.setItem(VIEWED_PRODUCTS_KEY, JSON.stringify(next)); } catch {}
 }
 
 export function trackViewedItem(name) {

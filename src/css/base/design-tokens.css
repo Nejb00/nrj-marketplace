@@ -1,0 +1,39 @@
+/* NRJ DESIGN TOKENS — spatial UI / Liquid Glass */
+:root {
+  --nrj-accent: var(--primary);
+  --nrj-accent-strong: var(--primary-dark);
+  --nrj-text: var(--text);
+  --nrj-text-muted: var(--text-secondary);
+  --nrj-surface: var(--surface);
+  --nrj-surface-soft: var(--surface-light);
+  --nrj-border: var(--border);
+  --nrj-radius-xs: 10px;
+  --nrj-radius-sm: 14px;
+  --nrj-radius-md: 18px;
+  --nrj-radius-lg: 22px;
+  --nrj-radius-xl: 26px;
+  --nrj-radius-pill: 999px;
+  --nrj-space-1: 4px;
+  --nrj-space-2: 8px;
+  --nrj-space-3: 12px;
+  --nrj-space-4: 16px;
+  --nrj-space-5: 20px;
+  --nrj-space-6: 24px;
+  --nrj-glass-blur-sm: 14px;
+  --nrj-glass-blur: 22px;
+  --nrj-glass-blur-lg: 32px;
+  --nrj-glass-saturate: 170%;
+  --nrj-shadow-soft: 0 8px 24px rgba(0,0,0,.08);
+  --nrj-shadow-floating: 0 16px 38px rgba(0,0,0,.16);
+  --nrj-shadow-glass: 0 14px 34px rgba(0,0,0,.20), inset 0 1px 0 rgba(255,255,255,.12);
+}
+:root.light-theme {
+  --nrj-shadow-floating: 0 12px 30px rgba(31,41,55,.10);
+  --nrj-shadow-glass: 0 12px 30px rgba(31,41,55,.08), inset 0 1px 0 rgba(255,255,255,.88);
+}
+@media (max-width: 600px) {
+  :root {
+    --nrj-glass-blur: 18px;
+    --nrj-glass-blur-lg: 26px;
+  }
+}
