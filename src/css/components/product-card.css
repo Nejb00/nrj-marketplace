@@ -26,25 +26,24 @@
 
 .product-card {
     position: relative;
-    border-radius: var(--radius);
+    border-radius: var(--nrj-radius-md);
     overflow: hidden;
     aspect-ratio: 3 / 4;
     cursor: pointer;
-    background: linear-gradient(90deg, var(--surface-light) 25%, var(--surface) 50%, var(--surface-light) 75%);
-    background-size: 200% 100%;
-    animation: skeleton-loading 1.5s infinite;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    background: var(--nrj-surface);
+    border: 1px solid var(--nrj-border);
+    box-shadow: var(--nrj-shadow-soft);
     opacity: 0;
     transform: translateY(20px);
-    transition: opacity 0.5s ease, transform 0.5s ease, box-shadow 0.3s ease;
+    transition: opacity 0.35s ease, transform 0.35s ease, box-shadow 0.25s ease;
     width: 100%;
+    isolation: isolate;
 }
 
-.product-card.visible { 
-    opacity: 1; 
-    transform: translateY(0); 
-    animation: none; 
-    background: var(--surface-light); 
+.product-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+    background: var(--nrj-surface);
 }
 
 @keyframes skeleton-loading { 
@@ -52,26 +51,25 @@
     100% { background-position: -200% 0; } 
 }
 
-.product-card:hover { 
-    box-shadow: 0 14px 30px rgba(0,0,0,0.5), 0 6px 22px rgba(255,140,66,0.16); 
-    transform: translateY(-3px);
+.product-card:hover {
+    box-shadow: var(--nrj-shadow-floating);
+    transform: translateY(-2px);
 }
 .product-card:active {
-    transform: scale(0.97);
-    filter: brightness(1.06);
+    transform: scale(0.985);
 }
 
-.product-card img { 
-    position: absolute; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%; 
-    object-fit: cover; 
-    display: block; 
-    opacity: 0; 
-    transition: opacity 0.3s ease; 
-    z-index: 1; 
+.product-card img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 67%;
+    object-fit: cover;
+    display: block;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1;
 }
 
 .product-card img.loaded { 
@@ -89,7 +87,7 @@
 .product-card-video-badge {
     position: absolute;
     left: 10px;
-    bottom: 72px;
+    top: 10px;
     z-index: 4;
     width: 28px;
     height: 28px;
@@ -105,40 +103,32 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
-/* ═══ PLAQUE VERRE « APP STORE » — Phase 3 ═══════════════════════════════ */
-.product-card-info { 
-    position: absolute; 
-    left: 6px; 
-    right: 6px; 
-    bottom: 6px; 
-    background: linear-gradient(180deg,
-        rgba(16, 16, 24, 0.48) 0%,
-        rgba(12, 12, 18, 0.55) 100%);
-    -webkit-backdrop-filter: blur(18px) saturate(160%);
-    backdrop-filter: blur(18px) saturate(160%);
-    display: flex; 
-    flex-direction: column; 
-    justify-content: flex-end; 
-    padding: 0.55rem 0.65rem;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-top-color: rgba(255, 255, 255, 0.26);
-    border-radius: 16px;
-    pointer-events: none; 
+/* Surface de contenu : lisible et solide — le verre reste réservé aux contrôles. */
+.product-card-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 33%;
+    background: var(--nrj-surface);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0.55rem 0.65rem 0.65rem;
+    border-top: 1px solid var(--nrj-border);
+    border-radius: 0;
+    pointer-events: none;
     z-index: 2;
-    box-shadow:
-        0 8px 22px rgba(0, 0, 0, 0.35),
-        inset 0 1px 0 rgba(255, 255, 255, 0.10);
 }
-
 .product-card-text { 
     flex: 1; 
     min-width: 0; 
 }
 
-.product-card-name { 
-    font-size: 0.8rem; 
-    font-weight: 600; 
-    color: #fff; 
+.product-card-name {
+    font-size: 0.8rem;
+    font-weight: 650;
+    color: var(--nrj-text); 
     line-height: 1.25; 
     display: -webkit-box; 
     -webkit-line-clamp: 2; 
@@ -154,22 +144,22 @@
     gap: 0.3rem; 
 }
 
-.product-card-price { 
-    font-size: 0.95rem; 
-    font-weight: 800; 
-    color: var(--primary); 
+.product-card-price {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--nrj-accent); 
     white-space: nowrap; 
 }
 
-.product-card-moq { 
-    flex-shrink: 0; 
-    background: rgba(0,0,0,0.55); 
-    border: 1px solid rgba(255,255,255,0.18); 
-    border-radius: 50px; 
-    padding: 0.14rem 0.45rem; 
-    font-size: 0.55rem; 
-    font-weight: 600; 
-    color: rgba(255,255,255,0.9); 
+.product-card-moq {
+    flex-shrink: 0;
+    background: var(--nrj-surface-soft);
+    border: 1px solid var(--nrj-border);
+    border-radius: var(--nrj-radius-pill);
+    padding: 0.16rem 0.48rem;
+    font-size: 0.55rem;
+    font-weight: 650;
+    color: var(--nrj-text-muted); 
     letter-spacing: 0.2px; 
     white-space: nowrap; 
 }
@@ -349,5 +339,27 @@
 @media (prefers-reduced-motion: reduce) {
     .fav-icon-svg.fav-pop { 
         animation: none !important; 
+    }
+}
+
+
+.product-card:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--nrj-accent) 46%, transparent);
+    outline-offset: 2px;
+}
+
+@media (hover: none), (pointer: coarse) {
+    .product-card:hover {
+        transform: none;
+        box-shadow: var(--nrj-shadow-soft);
+    }
+}
+
+@media (max-width: 600px) {
+    .products-grid {
+        gap: 0.55rem;
+    }
+    .product-card-info {
+        padding: 0.5rem 0.55rem 0.58rem;
     }
 }
