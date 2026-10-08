@@ -529,8 +529,8 @@
       "driveMd5": "a24319bb107f1c8757318f616bf5d2fa"
     },
     "src/css/components/product-modal.css": {
-      "githubSha": "96473b022d89bea811058831807949a2ec7facad",
-      "driveMd5": "eb08b8886ce6d777cb42e065c1dca709"
+      "githubSha": "f6441fa87e35ce0ba885dbae48902c248bbc3b5b",
+      "driveMd5": "59a86f249f4e6b9399d0464b5673d9c0"
     },
     "src/css/components/search-bar.css": {
       "githubSha": "62977cc3e68e539d4d02bbe569c36a759db16ca2",
@@ -557,8 +557,8 @@
       "driveMd5": "fddcaaae7ea01a68d407fbc85ffb9dc6"
     },
     "src/css/themes/light-theme-patch.css": {
-      "githubSha": "299fc04f4cf6893c82a5fa4cc81a0ad834688a0d",
-      "driveMd5": "db6babcb7c64fc3d9ddc1a73017942ec"
+      "githubSha": "8e49f151d1e82ad73182acdc8ff70eea214c5b5a",
+      "driveMd5": "0ec0a30c31cd9fb083ebce9a68c066ea"
     },
     "src/js/admin-main.js": {
       "githubSha": "2171836b81cc5f1898238528b5a40a7544287352",
@@ -1369,5 +1369,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-08T05:37:44.772Z"
+  "updatedAt": "2026-10-08T06:32:51.921Z"
 }
