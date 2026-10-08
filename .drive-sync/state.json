@@ -232,6 +232,10 @@
       "githubSha": "e42f353103e888cedb4da3ac9233ea408711d1a1",
       "driveMd5": "bfc2924d56c6135d6a3aeaaf86d85cef"
     },
+    "docs/design/nrj-spatial-ui.md": {
+      "githubSha": "c218851836e2af950f4e732f07a9d4fccdce08bd",
+      "driveMd5": "a29550fd19bf388d268e5a5bc16d9530"
+    },
     "docs/nrj-self-healing-attack-matrix.md": {
       "githubSha": "77f625603426ef6ca563e6ae157f428a88187fea",
       "driveMd5": "4fd0c7539ffb1d49b96c1d4887c0ecae"
@@ -484,6 +488,14 @@
       "githubSha": "e048ee655cd4492bd7930e86c33c525ff76ed413",
       "driveMd5": "5de06f9928de116c392f96f13857908e"
     },
+    "src/css/base/design-tokens.css": {
+      "githubSha": "a57672f51102ade2d8739c4acb3890f2b5f19263",
+      "driveMd5": "450d79d4a23b43c03727d6e1232b2869"
+    },
+    "src/css/components/account.css": {
+      "githubSha": "c235adb88d063c78b8eb0ba7958613d7de700a0e",
+      "driveMd5": "72834677f3f68432ab8eb2c55f8aace2"
+    },
     "src/css/components/admin.css": {
       "githubSha": "c7c4130d4e2b662475004d83957908132e959632",
       "driveMd5": "663cb21a0279133bf15c2b160f76d6ca"
@@ -501,8 +513,8 @@
       "driveMd5": "97f4cb60d9e9fb923069c818e7dbd774"
     },
     "src/css/components/glass.css": {
-      "githubSha": "e1fc1153559efc717dbe2152526ea71b24e12738",
-      "driveMd5": "4a460ac7294be1cf87e00bd8a0b68b3c"
+      "githubSha": "b2850c9cbec7b8fd9a335bd9b09bca6284c3d79d",
+      "driveMd5": "665673fcea8692fb4ae0fbe741eda53e"
     },
     "src/css/components/order-modal.css": {
       "githubSha": "8ec965cbf5f1de47cfe8b28a7971a054f3c813c2",
@@ -533,12 +545,12 @@
       "driveMd5": "101fe0b4a249c2fc6c214ec3e7f35514"
     },
     "src/css/layout/navigation.css": {
-      "githubSha": "0f0b115fba746bff431c3715028db3c3d111b5d2",
-      "driveMd5": "788fc3756aa159851d7e4b2252c658a5"
+      "githubSha": "cfec588fc96cf9e427b38d56b9235e2c33780c46",
+      "driveMd5": "eca77e0e5ff293376f212ab3d9a988c4"
     },
     "src/css/main.css": {
-      "githubSha": "5a2912ed1aaee1aa429e6844cef8c1c28ec71bcb",
-      "driveMd5": "411fc132d572b8ed2cdf9cfe5d7a7f24"
+      "githubSha": "021dfe4afac08d058dfaa3fb51358f5a230a90ea",
+      "driveMd5": "3ec7e9a725dd205557ad794467d69d4c"
     },
     "src/css/themes/fluo-theme.css": {
       "githubSha": "62ce0f319e741ec1644bdac8e7a60815b0f4d3b3",
@@ -565,8 +577,8 @@
       "driveMd5": "18596a1248908b58553d8380f71da77a"
     },
     "src/js/core/state.js": {
-      "githubSha": "008f5bba7fc0cf14a0ddb339f51c8a2d0e0619ea",
-      "driveMd5": "4a7be77142a08a08265b7e35d7d4b228"
+      "githubSha": "465751d9d41b7bf52082074f17d95c6245f1e0d9",
+      "driveMd5": "298a88ce14b0409959427a0a7f532a28"
     },
     "src/js/features/admin/admin-auth.js": {
       "githubSha": "c14417681be275ee61903222c11b4344ce416400",
@@ -605,8 +617,8 @@
       "driveMd5": "dc2b96eff6aa14d67f74aedadd1436da"
     },
     "src/js/features/app/account-view.js": {
-      "githubSha": "c2a912bf1b097fff79e15e36cb3e108692c66111",
-      "driveMd5": "92b63d7c977b3320ebce6fe32e3ecc50"
+      "githubSha": "b943adcaa4873624936fc060dddb9b2799250548",
+      "driveMd5": "26aed3338584676b8b11c0c3253bc971"
     },
     "src/js/features/app/app-init.js": {
       "githubSha": "eb93702f91c165c84cd510124d89c43a88d6182c",
@@ -761,8 +773,8 @@
       "driveMd5": "4c32f3a0beb91acb51298ca336ebebbf"
     },
     "src/js/features/product/modal-render.js": {
-      "githubSha": "aed9f67e63335a058e7d78cacd06bd45b515327e",
-      "driveMd5": "9a33a982c369f2214116c0f6d7a870d2"
+      "githubSha": "ad32ca988f49fc4f8f26417b19788cde9cef43b1",
+      "driveMd5": "9445fbb530b6447851e94063be796593"
     },
     "src/js/features/product/modal-state.js": {
       "githubSha": "0834706fe425393a89a91de0cdb28d8a4e491ee7",
@@ -1357,5 +1369,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-07T22:21:43.677Z"
+  "updatedAt": "2026-10-08T00:30:36.376Z"
 }
