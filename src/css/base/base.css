@@ -613,3 +613,23 @@ body.catalogue-content-only #mainContent {
 body.catalogue-content-only .hero-section {
     margin-top: 0;
 }
+
+
+/* ── NRJ HEADER — accessibility/performance fallback ───────────────────── */
+@media (prefers-reduced-transparency: reduce) {
+  .header-fixed {
+    background: var(--surface) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: var(--nrj-shadow-floating);
+  }
+  .header-fixed::before { display: none; }
+}
+
+@media (max-width: 600px) {
+  .header-fixed {
+    left: var(--nrj-page-gutter, 10px);
+    right: var(--nrj-page-gutter, 10px);
+    top: calc(6px + env(safe-area-inset-top, 0px));
+  }
+}
