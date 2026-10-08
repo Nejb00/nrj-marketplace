@@ -17,7 +17,7 @@
  background: var(--lg-tint-strong);
  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
  backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
- z-index: var(--nrj-z-view, 120);
+ z-index: var(--nrj-z-panel, 450);
  transform: translateX(100%);
  transition: transform 0.4s cubic-bezier(0.22, 1.18, 0.36, 1);
  display: flex;
