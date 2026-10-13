@@ -1349,8 +1349,8 @@
       "driveMd5": "1daf3cad92939ff4838f81ca78b83ec9"
     },
     "tests/e2e/production.spec.mjs": {
-      "githubSha": "95893bd4efcee16eab126e51b69b0a1070a2334d",
-      "driveMd5": "1acf90963ce71e8dcfdbffacfd67f068"
+      "githubSha": "31ee8e6be9be965e431659e0f3a66fad3a2b0c72",
+      "driveMd5": "d6c9cf305b9fe9495d340ca105ce250b"
     },
     "vercel.json": {
       "githubSha": "cf1143e048c440b0b10466a07aac277563668957",
@@ -1369,5 +1369,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-13T22:21:04.182Z"
+  "updatedAt": "2026-10-13T22:36:16.953Z"
 }
