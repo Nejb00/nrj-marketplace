@@ -8,7 +8,7 @@ on:
 permissions:
   contents: read
   actions: read
-  administration: read
+  checks: read
 
 concurrency:
   group: repo-health
@@ -90,36 +90,33 @@ jobs:
               return;
             }
 
-            // Lecture réelle de la protection (droit administration: read requis)
-            const protection = await github.rest.repos
-              .getBranchProtection({
+            // Modèle depuis le 07/10 : NRJ Merge Gate = unique check requis de
+            // main. Les contexts requis de la protection sont illisibles sans
+            // droit admin (refusé au GITHUB_TOKEN) — on vérifie donc que la
+            // gate vit : check run "NRJ Merge Gate" en succès sur le dernier
+            // commit de main (la gate re-s'exécute via workflow_run quand la
+            // CI de main tourne).
+            const mainSha = branch.data.commit.sha;
+
+            const checkRuns = await github.paginate(
+              github.rest.checks.listForRef,
+              {
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                branch: "main",
-              })
-              .catch(() => null);
-
-            if (!protection) {
-              core.setFailed("Impossible de lire la protection de main.");
-              return;
-            }
-
-            const rsc = protection.data?.required_status_checks;
-            const required =
-              rsc?.contexts ?? rsc?.checks?.map((check) => check.context) ?? [];
-
-            // Modèle depuis le 07/10 : NRJ Merge Gate = unique check requis de main
-            const expectedChecks = [
-              "NRJ Merge Gate",
-            ];
-
-            const missingChecks = expectedChecks.filter(
-              (check) => !required.includes(check)
+                ref: mainSha,
+                per_page: 100,
+              }
             );
 
-            if (missingChecks.length) {
+            const gateOk = checkRuns.some(
+              (run) =>
+                run.name === "NRJ Merge Gate" &&
+                run.conclusion === "success"
+            );
+
+            if (!gateOk) {
               core.setFailed(
-                `Checks obligatoires absents de main : ${missingChecks.join(", ")}`
+                "NRJ Merge Gate absente du dernier commit de main (ou non verte)."
               );
             }
 
@@ -132,9 +129,6 @@ jobs:
                 ],
                 ["Workflows attendus", missingWorkflows.length ? "Échec" : "OK"],
                 ["Protection de main", branch.data.protected ? "OK" : "Échec"],
-                [
-                  "Checks obligatoires",
-                  missingChecks.length ? "Échec" : "OK",
-                ],
+                ["NRJ Merge Gate (commit main)", gateOk ? "OK" : "Échec"],
               ])
               .write();
