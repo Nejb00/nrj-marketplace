@@ -27,10 +27,13 @@ export function renderInitialProducts() {
     for (let i = 0; i < INITIAL_PRODUCTS; i++) grid.appendChild(createSkeletonCard());
     injectLcpPreloads(state.currentFilteredProducts);
     preloadProductThumbs(state.currentFilteredProducts, { start: 0, count: PRELOAD_IMAGE_COUNT });
-    setTimeout(() => {
+    // Les produits sont déjà en mémoire à cet instant : rendre au prochain
+    // frame (au lieu d'un délai fixe de 100 ms) affiche la grille plus tôt,
+    // y compris à chaque changement de filtre.
+    requestAnimationFrame(() => {
         appendProducts(0, INITIAL_PRODUCTS);
         setupObserver();
-    }, 100);
+    });
     updateSentinelVisibility();
 }
 

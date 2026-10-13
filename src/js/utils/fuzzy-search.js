@@ -1,6 +1,7 @@
 // ═══ Utils — recherche floue (score + Levenshtein + surlignage) ═══
 // Éclaté de utils.js (refacto-archi).
 import { MAX_SEARCH_RESULTS } from '../core/config.js';
+import { getCategoryName } from '../core/state.js';
 import { escapeHtml } from './escape-html.js';
 import { isBestSeller, isFresh } from './badges.js';
 
@@ -43,7 +44,7 @@ export function calculateSearchScore(query, product) {
 
     const name = normalizeString(product.name || '');
     // Nom de catégorie via jointure client (category_name) — plus de products.category texte
-    const category = normalizeString(product.category_name || '');
+    const category = normalizeString(product.category_name || getCategoryName(product.category_id) || '');
     const description = normalizeString(product.description || '');
     const tailles = normalizeString(product.tailles || '');
     const couleurs = normalizeString(product.couleurs || '');

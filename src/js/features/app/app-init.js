@@ -33,9 +33,14 @@ async function init() {
     // Le premier rendu ne doit pas attendre Supabase : afficher immédiatement
     // une grille stable, puis remplacer les squelettes quand le catalogue arrive.
     showSkeletonLoaders('productsGrid', 12);
-    await loadPersistedState();
-    await fetchCategories();
-    await fetchProducts();
+    // État local, catégories et produits sont trois sources indépendantes :
+    // les charger en parallèle au lieu de les enchaîner raccourcit nettement
+    // le temps avant le premier rendu réel.
+    await Promise.all([
+      loadPersistedState(),
+      fetchCategories(),
+      fetchProducts()
+    ]);
     loadOrders();
 
     buildFilterBar();
