@@ -202,6 +202,19 @@ body { padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
   .main-nav .nav-item { transition: none !important; }
 }
 
+/* On mobile, use the viewport gutters instead of combining them with
+   the desktop 50% centering transform (which pushed the bar off-screen). */
+@keyframes nav-rise-mobile {
+  from { transform: translateY(90px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
 @media (max-width: 420px) {
-  .main-nav { left: var(--nrj-page-gutter, 10px); right: var(--nrj-page-gutter, 10px); }
+  .main-nav {
+    left: var(--nrj-page-gutter, 10px);
+    right: var(--nrj-page-gutter, 10px);
+    width: auto;
+    transform: none;
+    animation-name: nav-rise-mobile;
+  }
 }
