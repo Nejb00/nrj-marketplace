@@ -69,8 +69,8 @@
       "driveMd5": "9df29765a15dd4d8d990d1ccd5838358"
     },
     ".github/workflows/deploy-supabase-edge-functions.yml": {
-      "githubSha": "52286bb9b6526779cdeb9589fd16461d8cae7d25",
-      "driveMd5": "cb0f9b96be2c300980df35284a72358c"
+      "githubSha": "0341fc6f015b458b662307bf3cafd65406b877ef",
+      "driveMd5": "e53be77804bf8ae2c9629c19dcd87690"
     },
     ".github/workflows/deployment-safety-net.yml": {
       "githubSha": "3b920cb3c8412d245c0cb12a8d5beaf3613e6e40",
@@ -193,8 +193,8 @@
       "driveMd5": "7459497579c5c253912be7944de57bfb"
     },
     ".github/workflows/vercel-browser-e2e.yml": {
-      "githubSha": "94ef15919ce7e1109d847e05ac22d05538490443",
-      "driveMd5": "e01e4a21f86b40b87a09231b71ce24b7"
+      "githubSha": "e82f0e61e41e29a4e1057c665c855e746efe1c0a",
+      "driveMd5": "c614dac6b92939c63b73af064b04eee6"
     },
     ".gitignore": {
       "githubSha": "7aaedd212125842e055efc0be8f486fd67fbfe1e",
@@ -1369,5 +1369,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-13T22:08:17.357Z"
+  "updatedAt": "2026-10-13T22:21:04.182Z"
 }
