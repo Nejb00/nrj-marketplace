@@ -35,4 +35,6 @@ test('NRJ design DNA is wired and preserves the spatial UI contract', async () =
   assert.match(modal, /prefers-reduced-transparency/);
   assert.match(account, /prefers-reduced-transparency/);
   assert.match(cart, /backdrop-filter:\s*blur\(var\(--lg-blur\)\)/);
+  assert.match(cart, /#cartPanel\s*\{[^}]*z-index:\s*var\(--nrj-z-panel,\s*450\);/);
+  assert.match(cart, /#cartOverlay\s*\{\s*z-index:\s*var\(--nrj-z-overlay,\s*400\);/);
 });
