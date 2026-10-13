@@ -51,11 +51,17 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Installation des dépendances
+        run: npm install --no-save --package-lock=false --ignore-scripts
+
       - name: Installation de Playwright
         run: npm install --no-save --package-lock=false --ignore-scripts @playwright/test@1.63.0
 
       - name: Installation de Chromium
         run: npx playwright install --with-deps chromium
+
+      - name: Build E2E
+        run: npm run build
 
       - name: Test E2E critique
         run: npx playwright test tests/e2e/production.spec.mjs --reporter=list
