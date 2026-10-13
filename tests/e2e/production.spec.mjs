@@ -14,10 +14,13 @@ test.describe("NRJ Marketplace — critical browser flows", () => {
     });
 
     await page.goto(BASE_URL, { waitUntil: "domcontentloaded" });
-    await expect(page.locator("#tapToSearch")).toBeVisible({ timeout: 30_000 });
-    // Le bouton est présent avant le bootstrap asynchrone. #filterBar est rempli
-    // seulement après fetchCategories(), juste avant le binding de la recherche.
-    await expect(page.locator("#filterBar .filter-btn").first()).toBeVisible({ timeout: 30_000 });
+    // Depuis le PR #194 (07/10), l'accueil démarre en vue « contenu du
+    // catalogue uniquement » : header (recherche incluse) masqué au boot,
+    // navigation basse visible. On attend la grille chargée — les cartes
+    // réelles portent .product-card-name, les squelettes non.
+    await expect(
+      page.locator("#productsGrid .product-card-name").first()
+    ).toBeVisible({ timeout: 30_000 });
   });
 
   test.afterEach(() => {
@@ -46,6 +49,11 @@ test.describe("NRJ Marketplace — critical browser flows", () => {
   });
 
   test("ouverture et fermeture de la recherche", async ({ page }) => {
+    // La barre de recherche vit dans le header, masqué sur l'accueil depuis
+    // le PR #194 — on passe par la vue catégories pour y accéder.
+    await page.locator('a[data-nav="categories"]').click();
+    await expect(page.locator("#tapToSearch")).toBeVisible({ timeout: 10_000 });
+
     await page.locator("#tapToSearch").click();
     await expect(page.locator("#searchView")).toBeVisible({ timeout: 10_000 });
     await expect(page.locator("#searchViewInput")).toBeVisible();
