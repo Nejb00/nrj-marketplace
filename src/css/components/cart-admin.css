@@ -1317,9 +1317,15 @@
 
 
 /* ── CART — premium sheet without over-glassing content ────────────────── */
+/* Keep the cart sheet above both its backdrop and the floating nav.
+   This protects checkout controls from the fixed navigation hit area. */
 #cartPanel {
-  z-index: var(--nrj-z-view, 120);
+  z-index: var(--nrj-z-panel, 450);
   box-shadow: var(--nrj-shadow-panel);
+}
+
+#cartOverlay {
+  z-index: var(--nrj-z-overlay, 400);
 }
 
 .cart-close-btn,
