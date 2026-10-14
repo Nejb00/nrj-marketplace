@@ -7,8 +7,8 @@ import { generateBadgesHTML } from '../../utils/badges.js';
 import { thumbImg } from '../../utils/images.js';
 import { imageLoadOpts } from '../../services/lazy-loading.js';
 
-export function renderProductCardHTML(p, index = 0) {
-    const img = p.image ? thumbImg(p.image, p.name, 300, 400, '', imageLoadOpts(index)) : '';
+export function renderProductCardHTML(p, index = 0, loadOpts = imageLoadOpts(index)) {
+    const img = p.image ? thumbImg(p.image, p.name, 300, 400, '', loadOpts) : '';
     const hasVideo = !!(p.video_url && String(p.video_url).trim());
     const videoBadge = hasVideo
         ? '<span class="product-card-video-badge" aria-hidden="true" title="Vidéo disponible">▶️</span>'
