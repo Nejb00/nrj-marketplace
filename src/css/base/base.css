@@ -157,6 +157,7 @@ body {
 /* +8px pour compenser le décollement des bulles */
 #headerSpacer {
     width: 100%;
+    height: var(--header-height, 132px);
     flex-shrink: 0;
     margin-top: 8px;
 }
@@ -596,15 +597,9 @@ footer { text-align: center; padding: 1.5rem 1rem 5rem; color: var(--text-second
 }
 
 
-/* ═══ Vue Catalogue — contenu uniquement ═══
-   La vue Accueil/Catalogue laisse toute la hauteur disponible à son contenu :
-   bannière + produits. Le header fixe et son spacer sont retirés dans cette
-   vue pour réserver l'espace à l'expérience catalogue.
-*/
-body.catalogue-content-only #headerFixed,
-body.catalogue-content-only #headerSpacer {
-    display: none;
-}
+/* Vue catalogue : le header fixe (recherche + catégories) reste visible.
+   Le spacer réserve sa hauteur au-dessus du contenu ; le mode content-only
+   ne retire que les marges superflues du contenu. */
 
 body.catalogue-content-only #mainContent {
     padding-top: 0;
