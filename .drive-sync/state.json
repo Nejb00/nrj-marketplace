@@ -233,8 +233,8 @@
       "driveMd5": "bfc2924d56c6135d6a3aeaaf86d85cef"
     },
     "docs/design/nrj-spatial-ui.md": {
-      "githubSha": "c218851836e2af950f4e732f07a9d4fccdce08bd",
-      "driveMd5": "a29550fd19bf388d268e5a5bc16d9530"
+      "githubSha": "a0ce8ea5cf7523104f71af21e887111fa12e579a",
+      "driveMd5": "6be17e318f22504649051eb49ee5f84f"
     },
     "docs/nrj-self-healing-attack-matrix.md": {
       "githubSha": "77f625603426ef6ca563e6ae157f428a88187fea",
@@ -269,8 +269,8 @@
       "driveMd5": "7bac214055ad7250e0c1932220d91899"
     },
     "playwright.config.mjs": {
-      "githubSha": "65383b2e1a0062c186f49e5319dc3d19a59dd071",
-      "driveMd5": "61106a9f1da09eaebda0997028effa40"
+      "githubSha": "dfb351151661876d0bc1d2b0d2e6d19991bb6f85",
+      "driveMd5": "d20456213d5eac21af8a771cd2703e65"
     },
     "public/Hr": {
       "githubSha": "755d0629ab9b927d669f2476729886bf48958b47",
@@ -485,36 +485,36 @@
       "driveMd5": "d34eef657b650780a2e25b6ad7136db9"
     },
     "src/css/base/base.css": {
-      "githubSha": "e048ee655cd4492bd7930e86c33c525ff76ed413",
-      "driveMd5": "5de06f9928de116c392f96f13857908e"
+      "githubSha": "8d00eef549871a75c70181b95d1721ff4c0b44f2",
+      "driveMd5": "a8997ebc0124e95e3051d0fcfb2b4125"
     },
     "src/css/base/design-tokens.css": {
-      "githubSha": "a57672f51102ade2d8739c4acb3890f2b5f19263",
-      "driveMd5": "450d79d4a23b43c03727d6e1232b2869"
+      "githubSha": "f8d03bba6ea9167be13c6c98f0cbbae2b91beaaf",
+      "driveMd5": "c31e700b4eaaea5d15fe02b869b42ebd"
     },
     "src/css/components/account.css": {
-      "githubSha": "c235adb88d063c78b8eb0ba7958613d7de700a0e",
-      "driveMd5": "72834677f3f68432ab8eb2c55f8aace2"
+      "githubSha": "7d070da80bff93542af56277fa261cfd43297bdf",
+      "driveMd5": "acd721ae407180cc9f1fcf2c9ec43552"
     },
     "src/css/components/admin.css": {
       "githubSha": "c7c4130d4e2b662475004d83957908132e959632",
       "driveMd5": "663cb21a0279133bf15c2b160f76d6ca"
     },
     "src/css/components/cart-admin.css": {
-      "githubSha": "635a46ef9546c4fa117a77af03644980a3a05a9b",
-      "driveMd5": "65833f5575b6cba2c61b7474724a18f9"
+      "githubSha": "44be6f84af24cf84b1ec5692e2c09cb929c11672",
+      "driveMd5": "3486fbf451c214974bec15c808827d4e"
     },
     "src/css/components/chat.css": {
       "githubSha": "5d105c34aece7f5bca3154662e8b42dba870298d",
       "driveMd5": "e0dc00e92abf98436873170b41f2d51c"
     },
     "src/css/components/filters.css": {
-      "githubSha": "b719f07db1ec9d907c235d66850d864bcf0d9442",
-      "driveMd5": "53964718067897c823d87e7e4fe9aa8b"
+      "githubSha": "af3e72e69c2d0b8001c5ec88a7c1d37fbb17d4e9",
+      "driveMd5": "56da902acd2a7e5442f931f33e355ac3"
     },
     "src/css/components/glass.css": {
-      "githubSha": "b2850c9cbec7b8fd9a335bd9b09bca6284c3d79d",
-      "driveMd5": "665673fcea8692fb4ae0fbe741eda53e"
+      "githubSha": "6193344606b9bae10d26d035064e9a1231555b15",
+      "driveMd5": "39dd8d7ce924ab8f5c3e829ed305c8a1"
     },
     "src/css/components/order-modal.css": {
       "githubSha": "8ec965cbf5f1de47cfe8b28a7971a054f3c813c2",
@@ -525,16 +525,16 @@
       "driveMd5": "fc509d7d9d638f30651cfd4a17c07f7f"
     },
     "src/css/components/product-card.css": {
-      "githubSha": "e1a670192243c67ad636260aef47d7e07589e8fd",
-      "driveMd5": "a24319bb107f1c8757318f616bf5d2fa"
+      "githubSha": "6e0d6d4fe286ff001fc614442260cf5591bd4a26",
+      "driveMd5": "a7bd349118dfc14c6ce61215caf1caeb"
     },
     "src/css/components/product-modal.css": {
       "githubSha": "f6441fa87e35ce0ba885dbae48902c248bbc3b5b",
       "driveMd5": "59a86f249f4e6b9399d0464b5673d9c0"
     },
     "src/css/components/search-bar.css": {
-      "githubSha": "62977cc3e68e539d4d02bbe569c36a759db16ca2",
-      "driveMd5": "e8dad22b685e7044fbb1a04d6d9eba76"
+      "githubSha": "dda2f75c74f5044b7fd0d83a17932345fd567153",
+      "driveMd5": "56dcce686b9dcb9078877f6d47cf735b"
     },
     "src/css/components/search-view.css": {
       "githubSha": "373cc0c61d1bb0d1516bd3d0557cd1543ce2275f",
@@ -545,8 +545,8 @@
       "driveMd5": "101fe0b4a249c2fc6c214ec3e7f35514"
     },
     "src/css/layout/navigation.css": {
-      "githubSha": "cfec588fc96cf9e427b38d56b9235e2c33780c46",
-      "driveMd5": "eca77e0e5ff293376f212ab3d9a988c4"
+      "githubSha": "ad430e6e31d21dee5182214bb72e77b1ba8cefe4",
+      "driveMd5": "bf77ae47d469972db2d631acefb55b6d"
     },
     "src/css/main.css": {
       "githubSha": "021dfe4afac08d058dfaa3fb51358f5a230a90ea",
@@ -573,8 +573,8 @@
       "driveMd5": "2274d6e8d706207821910ef99f468a4a"
     },
     "src/js/core/config.js": {
-      "githubSha": "46412e8df51630ad9c838287f1e6836e6f45785d",
-      "driveMd5": "18596a1248908b58553d8380f71da77a"
+      "githubSha": "d5816571df940b5c98c0a0797a33f922a93b4894",
+      "driveMd5": "a70c0ed2858af3f82d15f15a656883eb"
     },
     "src/js/core/state.js": {
       "githubSha": "465751d9d41b7bf52082074f17d95c6245f1e0d9",
@@ -705,8 +705,8 @@
       "driveMd5": "869d3848ab984f7bd40384d3fe0a85e7"
     },
     "src/js/features/catalogue/render-product-card.js": {
-      "githubSha": "247221406854fd87324e74054938175f507b6abe",
-      "driveMd5": "f716ec6f8c0273ffb40142b13d5ca964"
+      "githubSha": "037251261db919348b21832142464a621289240b",
+      "driveMd5": "734f89825c7eb13a22dbe997505e662d"
     },
     "src/js/features/chat/admin-chat.js": {
       "githubSha": "4073b7f071cc6a40a1305b99c981b1201bc3ec5a",
@@ -817,8 +817,8 @@
       "driveMd5": "eefc73468e7c6d69ae562d191bbe42b7"
     },
     "src/js/services/cart-panel.js": {
-      "githubSha": "7c82b2a94d6568afb1f86b5501b87dd53ac39998",
-      "driveMd5": "78cb010416655d76404c9df0b272c302"
+      "githubSha": "a4bbfe07b8f88c0b3bb04c2b424a7f9dea33f180",
+      "driveMd5": "6311153deb3238aa0429e2cca8a3c1ea"
     },
     "src/js/services/cart-qty-picker.js": {
       "githubSha": "ea0dac341f624af3adfa11a4784e5a743139be57",
@@ -1116,6 +1116,14 @@
       "githubSha": "a950f2bbbc9af5135cb6b88968c5f237855f0439",
       "driveMd5": "2c9367817325c5b4f05f49b01e8df006"
     },
+    "test/catalogue-header-contract.test.js": {
+      "githubSha": "013981024dafd73909ebab12dc73802d72e2b87f",
+      "driveMd5": "c9812c3b7eec954092b634036f53418d"
+    },
+    "test/catalogue-performance-budget.test.js": {
+      "githubSha": "1f486d514877f5bbc97f59e44bf2aebfe086dd52",
+      "driveMd5": "629f17b1bccd9ee90edead383ebb258d"
+    },
     "test/correlation-contract.test.js": {
       "githubSha": "41ba11483593139f5bdb5f58121f15dcde8c3ce5",
       "driveMd5": "8aca4387417fd0ac7961845ec60de72c"
@@ -1167,6 +1175,10 @@
     "test/notion-sync-resilience.test.js": {
       "githubSha": "02812637bdc153b22d48128fd68ae3bc80de7274",
       "driveMd5": "2fead946d70c715b2805930dc06334b6"
+    },
+    "test/nrj-design-contract.test.js": {
+      "githubSha": "5ba0854b05e04361bb6e8b35b205b52e5b7dea70",
+      "driveMd5": "187cc1458179ecff576c53351c83c92b"
     },
     "test/observability-model.test.js": {
       "githubSha": "ae0e0e890e5f1e94cc229ac756c874ec976e09f5",
@@ -1231,6 +1243,10 @@
     "test/payment-webhook-security.test.js": {
       "githubSha": "29cd591716d927ab6076a3619c05cc67fc63c34a",
       "driveMd5": "f49d199e9e87eb419a44fdabbafed496"
+    },
+    "test/playwright-remote-config.test.js": {
+      "githubSha": "e49fc18a4f9e98a33b70f0e39bc0df8f2477bda9",
+      "driveMd5": "730e5df4f0e5637baa6a30f77e97864c"
     },
     "test/product-import-auto-recovery.test.js": {
       "githubSha": "9b094beedaf3c0e9f7dc142bcb790a974ccf3a06",
@@ -1345,8 +1361,8 @@
       "driveMd5": "d8af5109a8fb2ebc65c4a4cf2964474e"
     },
     "tests/e2e/payment-flow.spec.mjs": {
-      "githubSha": "6b0b9bc2dcfccb546df4d46bf810d4761d9acfed",
-      "driveMd5": "e8aca45477ab153cd37b367fc63c3e7d"
+      "githubSha": "1da967408e643f4cde4f9e0ed409193d3acfee64",
+      "driveMd5": "165ef4e15f1e0901fe3a09488a166201"
     },
     "tests/e2e/product-variants-media.spec.mjs": {
       "githubSha": "97e5626499b41b362f984bf3c511699ff5eda09f",
@@ -1373,5 +1389,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-17T07:24:55.007Z"
+  "updatedAt": "2026-10-17T08:10:43.334Z"
 }
