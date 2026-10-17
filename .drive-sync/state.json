@@ -217,8 +217,8 @@
       "driveMd5": "3e42b46cde97bf75e34a27c3a316a7a7"
     },
     "android/twa-manifest.json": {
-      "githubSha": "c8778a8760f94970f9ee3a91deaba02bc9e9b41d",
-      "driveMd5": "2b6906dc2cf02e4259f931e12a2f0861"
+      "githubSha": "9f98fb4b4797fd5ac83d2e7d9916276c520f5776",
+      "driveMd5": "6149ea721cc386de0b3adb56cc6a2e38"
     },
     "api/og-product.js": {
       "githubSha": "30ead57d3aa214884c0f14d491e01bd7cd1f8216",
@@ -1389,5 +1389,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-17T09:05:58.937Z"
+  "updatedAt": "2026-10-17T09:14:01.427Z"
 }
