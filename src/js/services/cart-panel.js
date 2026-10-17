@@ -252,7 +252,7 @@ function renderRecommendations(products) {
 
     const cards = products.map((p, i) =>
         '<div class="rec-card cart-reco-card" data-product-id="' + p.id + '" role="listitem">' +
-            renderProductCardHTML(p, i) +
+            renderProductCardHTML(p, i, { loading: 'lazy' }) +
             '<button type="button" class="cart-reco-add" data-action="cart-reco-add" data-id="' + p.id + '" aria-label="Ajouter ' + escapeHtml(p.name) + '">+ Ajouter</button>' +
         '</div>'
     ).join('');

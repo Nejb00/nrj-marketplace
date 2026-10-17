@@ -581,8 +581,8 @@
   top: 0;
   z-index: 20;
   background: color-mix(in srgb, var(--bg) 90%, transparent);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(var(--nrj-glass-blur)) saturate(var(--nrj-glass-saturate));
+  backdrop-filter: blur(var(--nrj-glass-blur)) saturate(var(--nrj-glass-saturate));
   border-bottom: 1px solid var(--border);
   margin-bottom: 2px;
 }

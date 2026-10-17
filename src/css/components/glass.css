@@ -217,3 +217,39 @@ button:not(:disabled):active,
     box-shadow: var(--nrj-shadow-soft);
   }
 }
+
+
+/* ── NRJ MATERIAL CONTRACT — hardening ─────────────────────────────────── */
+.lg,
+.lg-thin,
+.lg-thick {
+  border-radius: var(--nrj-radius-md);
+  box-shadow: var(--nrj-shadow-glass);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .lg,
+  .lg-thin,
+  .lg-thick {
+    background: var(--nrj-surface) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: var(--nrj-shadow-soft);
+  }
+  body::before { display: none; }
+}
+
+@media (max-width: 600px) {
+  body::before { opacity: 0.7; }
+  .lg,
+  .lg-thin,
+  .lg-thick {
+    box-shadow: var(--nrj-shadow-soft);
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .lg-spec::before { opacity: 0.7; }
+}
+
+/* NRJ design campaign marker */

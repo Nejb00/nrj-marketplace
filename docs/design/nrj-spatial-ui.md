@@ -51,3 +51,46 @@ Les paramètres restent dans une vue distincte afin de préserver la lisibilité
 ## Sécurité
 
 Aucun changement visuel ne doit contourner l'authentification, les RLS, les contrôles de permissions ou les invariants de paiement.
+
+## NRJ Design DNA — v1.0
+
+### Hiérarchie
+Le contenu marchand reste la couche primaire : produit, prix, disponibilité, variantes et action principale. Les surfaces fonctionnelles flottent au-dessus sans concurrencer ces informations.
+
+### Couleur
+- Orange NRJ : action, sélection et états importants.
+- Neutres : structure, surfaces et texte.
+- Couleurs sémantiques : uniquement pour communiquer un état (succès, erreur, attention).
+- Pas de dégradé coloré généralisé sur les zones de contenu.
+
+### Typographie
+La typographie doit privilégier la lecture rapide sur mobile : titres courts et denses, libellés secondaires atténués, prix fortement hiérarchisés. Aucun effet de texte ne doit réduire le contraste.
+
+### Espacement
+L'interface suit une échelle de 4px et des incréments de 8px pour les regroupements. Les zones tactiles visent au minimum 44px.
+
+### Matières
+- Content surface : opaque et stable pour les produits et informations importantes.
+- Regular glass : navigation, contrôles persistants et overlays fonctionnels.
+- Clear glass : uniquement au-dessus de fonds visuellement riches.
+- Overlay : confirmation, sheet, menu temporaire.
+
+### Motion
+Les animations expriment une relation spatiale ou un changement d'état. Aucun mouvement décoratif permanent sur petit écran. Les animations sont coupées avec prefers-reduced-motion.
+
+### Accessibilité
+Toutes les surfaces transparentes doivent conserver un fallback opaque avec prefers-reduced-transparency: reduce ou lorsque backdrop-filter n'est pas disponible. Les contrôles clavier gardent un anneau de focus visible.
+
+### Responsive
+Mobile-first : aucune information essentielle ne dépend d'un hover. Les interactions tactiles restent utilisables avec clavier, lecteur d'écran et affichage à contraste élevé.
+
+### Évaluation
+Une attaque design n'est considérée terminée que si :
+1. la hiérarchie reste lisible en clair et sombre ;
+2. la surface principale reste content-first ;
+3. les fallbacks accessibilité existent ;
+4. le build et les tests passent ;
+5. aucun invariant métier, paiement, auth ou RLS n'est touché.
+
+
+<!-- Design campaign verification checkpoint -->
