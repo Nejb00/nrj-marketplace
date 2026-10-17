@@ -21,8 +21,8 @@
       "driveMd5": "a266343992b97e5978acb2b0ba89ff55"
     },
     ".github/workflows/android-pwa-package.yml": {
-      "githubSha": "09978b457800cfb6e4c4c4ae2c554dc232d1fc76",
-      "driveMd5": "6a8849299e982661507ac373e021d527"
+      "githubSha": "0588d985bc6764e5d7b2d867d5c784526750b1cf",
+      "driveMd5": "aa82c6d8adf75a1db48191d93796c36a"
     },
     ".github/workflows/automation-cost-benchmark.yml": {
       "githubSha": "d3fbd3820e327daa4ed9eac0196c4c48bc1082dd",
@@ -1080,6 +1080,10 @@
       "githubSha": "e1de3565e9f33bb36e756970ce006c10b82d2e2c",
       "driveMd5": "f98ebaf04b4556656706b13d23f3ea00"
     },
+    "test/android-pwa-workflow.test.js": {
+      "githubSha": "fb2323a56357f6091b3b74f285e2cfb6dc1008be",
+      "driveMd5": "259345445c7631520b11f9660999beb0"
+    },
     "test/automation-benchmark.test.js": {
       "githubSha": "bbea12001bc50780253eb562835cc9b4f2d28f5e",
       "driveMd5": "5844f32bec5aff131a40750ed12dcfe8"
@@ -1369,5 +1373,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-13T23:23:24.137Z"
+  "updatedAt": "2026-10-17T07:24:55.007Z"
 }
