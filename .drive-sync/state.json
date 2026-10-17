@@ -933,8 +933,8 @@
       "driveMd5": "4f71ae1f24dc820278d83ad5e3d8c3cf"
     },
     "src/js/utils/images.js": {
-      "githubSha": "73f2d33eb42227e0c855931b6c6755c966f1dc35",
-      "driveMd5": "f68354709766f7930f55f85aaca1d01c"
+      "githubSha": "ea7dab87a349422bf307e16188584fcd8fe42ad4",
+      "driveMd5": "d7aa013b8d58da0d8f8c29bcbe7dc940"
     },
     "supabase/config.toml": {
       "githubSha": "ac3341a359f3e0658ebb912f1ffba37692ee9b7a",
@@ -1389,5 +1389,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-17T08:37:19.024Z"
+  "updatedAt": "2026-10-17T09:05:58.937Z"
 }
