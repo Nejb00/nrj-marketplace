@@ -493,8 +493,8 @@
       "driveMd5": "c31e700b4eaaea5d15fe02b869b42ebd"
     },
     "src/css/components/account.css": {
-      "githubSha": "7d070da80bff93542af56277fa261cfd43297bdf",
-      "driveMd5": "acd721ae407180cc9f1fcf2c9ec43552"
+      "githubSha": "b26d982f06c9efafc8c71cf872da6e1fd8fd4c42",
+      "driveMd5": "561657aacac67bf19cab3573a931a69b"
     },
     "src/css/components/admin.css": {
       "githubSha": "c7c4130d4e2b662475004d83957908132e959632",
@@ -529,8 +529,8 @@
       "driveMd5": "a7bd349118dfc14c6ce61215caf1caeb"
     },
     "src/css/components/product-modal.css": {
-      "githubSha": "f6441fa87e35ce0ba885dbae48902c248bbc3b5b",
-      "driveMd5": "59a86f249f4e6b9399d0464b5673d9c0"
+      "githubSha": "4b1bd30edffa16a036e3d7fcdf673d489f3287d5",
+      "driveMd5": "ab7794db5f6a63fc6c395d1f63d5c69c"
     },
     "src/css/components/search-bar.css": {
       "githubSha": "dda2f75c74f5044b7fd0d83a17932345fd567153",
@@ -1356,6 +1356,10 @@
       "githubSha": "23b9ff64b83ee1b8a7aed06632e0976f97b4f230",
       "driveMd5": "7c15e1386706010136534e52eb80bb78"
     },
+    "test/ui-regressions.test.js": {
+      "githubSha": "eb9c03ddc49a7b3d5912d660dc5d0918c1d0fd9b",
+      "driveMd5": "cc46bc4fd17baee8c0572d591a711c34"
+    },
     "test/vercel-browser-e2e-routing.test.js": {
       "githubSha": "c01e4524748114cc42a298fc27b06a86d2605d7b",
       "driveMd5": "d8af5109a8fb2ebc65c4a4cf2964474e"
@@ -1389,5 +1393,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-17T09:14:01.427Z"
+  "updatedAt": "2026-10-18T04:41:00.383Z"
 }
