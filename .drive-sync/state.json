@@ -188,6 +188,10 @@
       "githubSha": "46a37a20a5ee11dfdd5bd2ca0d3a672653980b2d",
       "driveMd5": "26a814b6a6014d6b69838cd8c3fde57d"
     },
+    ".github/workflows/telegram-notify.yml": {
+      "githubSha": "cbc6a6e5931df6fea2ab1a545c03cc26e166233f",
+      "driveMd5": "868d03939b8b3a9d67c685e6be6a39cd"
+    },
     ".github/workflows/test-impact.yml": {
       "githubSha": "da8641b6b3f8b61cc9e4d0894b2b5533f5e66e4b",
       "driveMd5": "7459497579c5c253912be7944de57bfb"
@@ -1393,5 +1397,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-18T04:41:00.383Z"
+  "updatedAt": "2026-10-18T05:56:22.230Z"
 }
