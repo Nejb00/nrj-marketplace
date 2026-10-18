@@ -44,5 +44,6 @@ test('NRJ design DNA is wired and preserves the spatial UI contract', async () =
   assert.match(theme, /:root\.light-theme \.main-nav \.nav-item\s*\{[^}]*color:\s*var\(--text-secondary\)/s);
   assert.match(theme, /:root\.light-theme \.main-nav \.nav-item\.active\s*\{[^}]*color:\s*#9a3f00/s);
   assert.match(chat, /@supports not \(backdrop-filter: blur\(1px\)\) and not \(-webkit-backdrop-filter: blur\(1px\)\)[\s\S]*?\.chat-panel\s*\{[^}]*background:\s*var\(--surface\)/);
+  assert.match(chat, /@supports not \(backdrop-filter: blur\(1px\)\) and not \(-webkit-backdrop-filter: blur\(1px\)\)[\s\S]*?:root\.light-theme \.chat-panel\s*\{[^}]*background:\s*var\(--surface\)/);
   assert.match(chat, /@media \(prefers-reduced-transparency: reduce\)[\s\S]*?\.chat-panel\s*\{[^}]*background:\s*var\(--surface\) !important;[^}]*backdrop-filter:\s*none !important;/s);
 });
