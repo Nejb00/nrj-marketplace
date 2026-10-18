@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 const read = (path) => readFile(path, 'utf8');
 
 test('NRJ design DNA is wired and preserves the spatial UI contract', async () => {
-  const [main, tokens, glass, cards, nav, modal, account, cart] = await Promise.all([
+  const [main, tokens, glass, cards, nav, modal, account, cart, theme, chat] = await Promise.all([
     read('src/css/main.css'),
     read('src/css/base/design-tokens.css'),
     read('src/css/components/glass.css'),
@@ -13,7 +13,9 @@ test('NRJ design DNA is wired and preserves the spatial UI contract', async () =
     read('src/css/layout/navigation.css'),
     read('src/css/components/product-modal.css'),
     read('src/css/components/account.css'),
-    read('src/css/components/cart-admin.css')
+    read('src/css/components/cart-admin.css'),
+    read('src/css/themes/light-theme-patch.css'),
+    read('src/css/components/chat.css')
   ]);
 
   assert.match(main, /design-tokens\.css/);
@@ -37,4 +39,10 @@ test('NRJ design DNA is wired and preserves the spatial UI contract', async () =
   assert.match(cart, /backdrop-filter:\s*blur\(var\(--lg-blur\)\)/);
   assert.match(cart, /#cartPanel\s*\{[^}]*z-index:\s*var\(--nrj-z-panel,\s*450\);/);
   assert.match(cart, /#cartOverlay\s*\{\s*z-index:\s*var\(--nrj-z-overlay,\s*400\);/);
+  assert.match(cart, /\.cart-close-btn\s*\{[^}]*width:\s*44px;[^}]*height:\s*44px;/s);
+
+  assert.match(theme, /:root\.light-theme \.main-nav \.nav-item\s*\{[^}]*color:\s*var\(--text-secondary\)/s);
+  assert.match(theme, /:root\.light-theme \.main-nav \.nav-item\.active\s*\{[^}]*color:\s*#9a3f00/s);
+  assert.match(chat, /@supports not \(backdrop-filter: blur\(1px\)\) and not \(-webkit-backdrop-filter: blur\(1px\)\)[\s\S]*?\.chat-panel\s*\{[^}]*background:\s*var\(--surface\)/);
+  assert.match(chat, /@media \(prefers-reduced-transparency: reduce\)[\s\S]*?\.chat-panel\s*\{[^}]*background:\s*var\(--surface\) !important;[^}]*backdrop-filter:\s*none !important;/s);
 });
