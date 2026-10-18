@@ -1,4 +1,5 @@
 name: TG Relay Probe
+# version: v3 — re-trigger (vérif /start)
 
 on:
   pull_request:
