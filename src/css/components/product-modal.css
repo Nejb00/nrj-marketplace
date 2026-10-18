@@ -288,6 +288,48 @@
     transform: translateY(0);
 }
 
+/* Secondary Buy Now action: keep it deliberately styled and tappable
+   beside the circular chat control and the primary cart CTA. */
+.btn-direct-sticky {
+    flex: 0 1 40%;
+    min-width: 76px;
+    max-width: 190px;
+    min-height: 48px;
+    padding: 0.35rem 0.65rem;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text);
+    font: inherit;
+    font-size: 0.76rem;
+    font-weight: 800;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.btn-direct-sticky:hover {
+    background: rgba(255, 255, 255, 0.13);
+    border-color: rgba(255, 255, 255, 0.24);
+}
+.btn-direct-sticky:active { transform: scale(0.98); }
+.btn-direct-sticky:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+:root.light-theme .btn-direct-sticky {
+    background: rgba(255, 255, 255, 0.72);
+    border-color: rgba(0, 0, 0, 0.12);
+    color: var(--text);
+}
+
 .btn-chat-sticky {
     flex: 0 0 48px;
     width: 48px;
@@ -788,6 +830,7 @@ body.options-panel-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
     .sticky-bottom-bar,
     .sticky-primary-action,
+    .btn-direct-sticky,
     .options-panel,
     .options-panel-backdrop,
     .option-color-card,
