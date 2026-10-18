@@ -1,0 +1,56 @@
+name: TG Relay Probe
+
+on:
+  workflow_dispatch:
+    inputs:
+      method:
+        description: "Méthode Bot API à appeler via le relais Cloudflare"
+        required: false
+        default: "getMe"
+        type: string
+      message:
+        description: "Texte à envoyer (si method=sendMessage)"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Sonde relais Telegram
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      - name: Appel du relais
+        env:
+          TG_METHOD: ${{ github.event.inputs.method || 'getMe' }}
+          TG_MESSAGE: ${{ github.event.inputs.message }}
+          TG_RELAY_KEY: ${{ secrets.TG_RELAY_KEY }}
+        run: |
+          set -euo pipefail
+          echo "→ Relais: ${TG_METHOD}"
+          if [ "$TG_METHOD" = "sendMessage" ]; then
+            curl --fail --silent --show-error --max-time 20 \
+              -X POST \
+              -H "X-Auth: ${TG_RELAY_KEY}" \
+              -H "Content-Type: application/json" \
+              -d "{\"chat_id\": ${{ secrets.TG_CHAT_ID }}, \"text\": \"${TG_MESSAGE}\"}" \
+              "https://nrj-tg-relay.nejb00.workers.dev/${TG_METHOD}" \
+              -o response.json
+          else
+            curl --fail --silent --show-error --max-time 20 \
+              -H "X-Auth: ${TG_RELAY_KEY}" \
+              "https://nrj-tg-relay.nejb00.workers.dev/${TG_METHOD}" \
+              -o response.json
+          fi
+
+      - name: Résultat
+        if: always()
+        run: |
+          echo "=== Réponse du relais ==="
+          cat response.json 2>/dev/null || echo "(pas de réponse)"
+          echo ""
+          echo "=== fin ==="
