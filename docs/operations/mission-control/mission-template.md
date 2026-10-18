@@ -1,5 +1,7 @@
 # NRJ-<TRACK>-<NUMBER> — <Mission title>
 
+- **Mission Alias:** <same value as Notion Mission Alias>
+- **Notion generated ID:** <NRJ-# value from the Mission ID property>
 - **Notion record:** <URL>
 - **Status:** Planned / In Progress / Blocked / Tests Passed / User Validated / Merged / Deployed / Archived
 - **Priority:** P0 / P1 / P2 / P3
