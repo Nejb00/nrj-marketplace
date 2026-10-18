@@ -104,6 +104,26 @@
     box-shadow: -20px 0 60px rgba(0, 0, 0, 0.18);
 }
 
+/* Keep chat readable when backdrop-filter is unavailable. */
+@supports not (backdrop-filter: blur(1px)) and not (-webkit-backdrop-filter: blur(1px)) {
+    .chat-panel {
+        background: var(--surface);
+        border-left-color: var(--border);
+        box-shadow: var(--nrj-shadow-floating);
+    }
+}
+
+/* Honor the OS accessibility setting instead of forcing translucent glass. */
+@media (prefers-reduced-transparency: reduce) {
+    .chat-panel {
+        background: var(--surface) !important;
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+        border-left-color: var(--border);
+        box-shadow: var(--nrj-shadow-floating);
+    }
+}
+
 .chat-panel.open { transform: translateX(0); }
 
 /* ── Header (façon WhatsApp) ───────────────────────────────────────────── */
