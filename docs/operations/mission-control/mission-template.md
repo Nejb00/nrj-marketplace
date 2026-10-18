@@ -55,10 +55,10 @@
 
 ## Session handoff
 
-**Last confirmed state:**  
-**Next action:**  
-**Do not forget:**  
-**Open questions:**  
+**Last confirmed state:**
+**Next action:**
+**Do not forget:**
+**Open questions:**
 
 ## Status-change history
 
