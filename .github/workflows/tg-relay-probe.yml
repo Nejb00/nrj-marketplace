@@ -34,8 +34,15 @@ jobs:
           TG_RELAY_KEY: ${{ secrets.TG_RELAY_KEY }}
         run: |
           set -euo pipefail
-          echo "→ Relais: ${TG_METHOD}"
-          if [ "$TG_METHOD" = "sendMessage" ]; then
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            for M in getMe getUpdates; do
+              echo "→ Relais: ${M}"
+              curl --fail --silent --show-error --max-time 20 \
+                -H "X-Auth: ${TG_RELAY_KEY}" \
+                "https://nrj-tg-relay.nejb00.workers.dev/${M}" \
+                -o "response-${M}.json"
+            done
+          elif [ "$TG_METHOD" = "sendMessage" ]; then
             curl --fail --silent --show-error --max-time 20 \
               -X POST \
               -H "X-Auth: ${TG_RELAY_KEY}" \
@@ -54,6 +61,11 @@ jobs:
         if: always()
         run: |
           echo "=== Réponse du relais ==="
-          cat response.json 2>/dev/null || echo "(pas de réponse)"
-          echo ""
+          for F in response.json response-getMe.json response-getUpdates.json; do
+            if [ -f "$F" ]; then
+              echo "--- $F ---"
+              cat "$F"
+              echo ""
+            fi
+          done
           echo "=== fin ==="
