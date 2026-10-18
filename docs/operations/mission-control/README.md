@@ -38,6 +38,7 @@ Recommended note location:
 - Completed milestone records: `history/PR-<number>-short-name.md`
 - Repeatable structure: [mission-template.md](mission-template.md)
 - Session handoff format: [session-resume.md](session-resume.md)
+- Repository-wide start/end instructions: [AGENTS.md](../../../AGENTS.md)
 
 ## 3. Status rules
 
