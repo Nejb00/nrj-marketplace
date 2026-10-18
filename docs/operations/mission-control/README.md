@@ -31,7 +31,7 @@ Use stable IDs in the Notion register and durable notes.
 - `NRJ-OPS-###` — project operations, automation and memory
 - `NRJ-DATA-###` — data integrity and migrations
 
-The Notion database currently generates a generic `NRJ-` unique ID. The semantic IDs above are human-readable mission aliases in the note title until a dedicated typed-ID property is introduced. Do not confuse the alias with the generated Notion ID.
+Notion provides a generated unique row ID (for example, `NRJ-2`) and a separate **Mission Alias** property for the semantic ID (for example, `NRJ-DES-001`). Use the semantic alias in conversation, file names and handoffs; retain the generated ID as Notion’s unique row reference. Keep both identifiers distinct.
 
 Recommended note location:
 - Active missions: `active/NRJ-<ID>-short-name.md`
