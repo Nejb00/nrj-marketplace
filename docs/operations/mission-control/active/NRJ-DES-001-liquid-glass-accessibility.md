@@ -6,7 +6,7 @@
 - **Owner / session:** ChatGPT + Remote Desktop Commander
 - **Last verified:** 2026-10-18
 - **Working branch:** [fix/liquid-glass-a11y-polish-2026-10-18](https://github.com/Nejb00/nrj-marketplace/tree/fix/liquid-glass-a11y-polish-2026-10-18)
-- **Last recorded commit:** `57c2bfaf0e1a7f0d935c50cb2f2d9f4fa8b7caef` (verify branch HEAD before using this as current; this SHA must be confirmed from GitHub before any subsequent operation)
+- **Last recorded commit:** `57c2bfa4b9ba020248218a6cc6914ab4e2bdd003` (verified from GitHub commit metadata)
 - **Main baseline at start of this pass:** `41fac71621cc1238d07819e8e061a7d0d137667e`
 - **PR:** none
 - **Systems:** GitHub, local Vite build, Remote Desktop Commander, Chromium
@@ -49,10 +49,9 @@ The local browser audit detected 12 product cards but **zero image elements load
 
 ## Next action
 
-1. Verify the current remote branch HEAD before relying on the recorded abbreviated/full SHA.
-2. Re-run visual QA with an environment where real product images are actually loaded.
-3. Inspect catalogue, product detail/options sheet, cart and Mon NRJ at mobile and desktop widths.
-4. Present the evidence and proposed diff for user review. Wait for explicit validation before opening/merging as needed.
+1. Re-run visual QA with an environment where real product images are actually loaded.
+2. Inspect catalogue, product detail/options sheet, cart and Mon NRJ at mobile and desktop widths.
+3. Present the evidence and proposed diff for user review. Wait for explicit validation before opening/merging as needed.
 
 ## Evidence links
 
