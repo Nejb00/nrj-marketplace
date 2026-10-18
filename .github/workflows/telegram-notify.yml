@@ -1,0 +1,67 @@
+name: Telegram Notify
+
+on:
+  pull_request:
+    types:
+      - closed
+  workflow_dispatch:
+    inputs:
+      message:
+        description: "Message de test à pousser sur l'iPhone de Nejb00"
+        required: false
+        default: "🔔 Test de notification NRJ → Telegram"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: telegram-notify
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    name: Push Telegram (relais Cloudflare)
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.action == 'closed' && github.event.pull_request.merged == true)
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      - name: Construire le message
+        id: msg
+        env:
+          PR_NUM: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          TEST_MSG: ${{ github.event.inputs.message }}
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            MSG="$TEST_MSG"
+          else
+            MSG="✅ PR #${PR_NUM} mergée — ${PR_TITLE} (par @${PR_AUTHOR})"
+          fi
+          echo "message<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$MSG" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Envoyer via le relais
+        env:
+          TG_RELAY_KEY: ${{ secrets.TG_RELAY_KEY }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          MSG: ${{ steps.msg.outputs.message }}
+        run: |
+          set -euo pipefail
+          jq -n --arg chat "$TG_CHAT_ID" --arg text "$MSG" \
+            '{chat_id: $chat, text: $text}' > payload.json
+          curl --fail --silent --show-error --max-time 20 \
+            -X POST \
+            -H "X-Auth: ${TG_RELAY_KEY}" \
+            -H "Content-Type: application/json" \
+            --data-binary @payload.json \
+            "https://nrj-tg-relay.nejb00.workers.dev/sendMessage" \
+            -o response.json
+          echo "Réponse du relais :"
+          cat response.json
