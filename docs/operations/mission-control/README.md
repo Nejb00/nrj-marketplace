@@ -115,3 +115,14 @@ A mission is considered fully completed only when its requested acceptance crite
 - [Payment OS #18–#24 baseline](history/payment-os-18-24-baseline.md) — archived snapshot of documented coverage, not blanket proof of production execution.
 
 This is a verified bootstrap, not a claim that every historical NRJ attack or design mission has been imported yet.
+
+
+## 9. Historical records added in the 2026-10-18 audit
+
+- [PR #82 and #83 — Incident Guard and controlled branch maintenance](history/PR-82-83-incident-guard-branch-maintenance.md).
+- [PR #97 and #100 — Self-Healing V2 and Dry Run](history/PR-97-100-self-healing-v2-dry-run.md).
+- [PR #172 — NRJ Merge Gate trust-boundary hardening](history/PR-172-merge-gate-hardening.md).
+- [PR #140 — Product Import OS integration](history/PR-140-product-import-os.md).
+- [Payment OS #18–#24 — documented coverage plus historical branch pointers](history/payment-os-18-24-baseline.md).
+
+These are historical notes based on PR descriptions, current source-file reads and local remote-tracking references. They deliberately distinguish closed PRs from verified merges, declared coverage from executed tests, and a current workflow file from the live branch-protection configuration. Continue importing other historical missions only when concrete evidence can be linked.
