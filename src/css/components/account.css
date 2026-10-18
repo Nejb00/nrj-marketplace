@@ -44,6 +44,12 @@
   min-height: 100%;
 }
 
+/* The .account-page flex rule must not override the native hidden state.
+   Profile and settings are alternate views, never stacked together. */
+.account-page[hidden] {
+  display: none !important;
+}
+
 .account-hero,
 .settings-hero {
   display: grid;
