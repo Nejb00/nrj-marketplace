@@ -1,6 +1,9 @@
 name: TG Relay Probe
 
 on:
+  pull_request:
+    paths:
+      - ".github/workflows/tg-relay-probe.yml"
   workflow_dispatch:
     inputs:
       method:
