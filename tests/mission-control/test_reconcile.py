@@ -92,6 +92,40 @@ class MissionControlReconcilerTests(unittest.TestCase):
         self.assertEqual(observed["result"], "DRIFT_FOUND")
         self.assertIn("MERGED_STATUS_WITHOUT_MERGE_EVIDENCE", {item["code"] for item in observed["findings"]})
 
+    def test_deleted_branch_after_confirmed_merge_is_informational(self) -> None:
+        head_sha = "a" * 40
+        merge_sha = "b" * 40
+        row = {
+            "alias": "NRJ-OPS-002", "title": "Merged historical PR", "status": "Merged",
+            "branch_url": "https://github.com/Nejb00/nrj-marketplace/tree/tools/retired-branch",
+            "stored_ref": merge_sha,
+            "pr_url": "https://github.com/Nejb00/nrj-marketplace/pull/216",
+            "evidence_url": "", "notion_url": "https://www.notion.so/page",
+        }
+
+        def fake_get(url: str, token: str):
+            if url.endswith("/branches/tools%2Fretired-branch"):
+                return 404, {"message": "Not Found"}
+            if url.endswith(f"/commits/{merge_sha}"):
+                return 200, {"sha": merge_sha, "commit": {"message": "Merge commit"}, "html_url": "https://github.com/Nejb00/nrj-marketplace/commit/" + merge_sha}
+            if url.endswith("/pulls/216"):
+                return 200, {
+                    "state": "closed", "merged_at": "2026-10-20T00:00:00Z",
+                    "head": {"sha": head_sha, "ref": "tools/retired-branch"},
+                    "base": {"ref": "main"}, "merge_commit_sha": merge_sha,
+                    "html_url": row["pr_url"],
+                }
+            if url.endswith(f"/commits/{head_sha}/check-runs?per_page=100"):
+                return 200, {"check_runs": []}
+            raise AssertionError(f"Unexpected URL: {url}")
+
+        with patch.object(reconcile, "get_github", side_effect=fake_get):
+            observed = reconcile.inspect_mission(row, "Nejb00/nrj-marketplace", "dummy")
+        self.assertEqual(observed["result"], "NO_CHANGE")
+        matching = [item for item in observed["findings"] if item["code"] == "BRANCH_DELETED_AFTER_MERGE"]
+        self.assertEqual(len(matching), 1)
+        self.assertEqual(matching[0]["severity"], "info")
+
     def test_client_rejects_mutating_http_methods(self) -> None:
         with self.assertRaises(ValueError):
             reconcile.request_json("https://api.github.com", service="github", token="dummy", method="PATCH")
