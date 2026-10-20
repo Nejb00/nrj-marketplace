@@ -24,3 +24,18 @@ This is a snapshot of what the current source document states. It must not be re
 ## Safety constraint
 
 The source matrix states that evidence of integrity, security, payment or correlation alone does not authorize database changes, migrations, provider activation or PR merges. Keep that boundary.
+
+
+## Historical branch references found during audit (2026-10-18)
+
+The local checkout's remote-tracking branch list contained the following named references at audit time:
+
+- [#18 — provider-reference recovery](https://github.com/Nejb00/nrj-marketplace/tree/feat/payment-recovery-attack-18)
+- [#19 — webhook reconciliation](https://github.com/Nejb00/nrj-marketplace/tree/feat/payment-webhook-reconciliation-attack-19)
+- [#20 — Payment → Order state machine](https://github.com/Nejb00/nrj-marketplace/tree/feat/payment-order-state-machine-attack-20)
+- [#21 — financial audit observability](https://github.com/Nejb00/nrj-marketplace/tree/feat/payment-audit-observability-attack-21)
+- [#22 — anti-double-submit](https://github.com/Nejb00/nrj-marketplace/tree/feat/payment-anti-abuse-attack-22)
+- [#23 — payment E2E gate](https://github.com/Nejb00/nrj-marketplace/tree/feat/payment-e2e-attack-23)
+- [#24 — controlled OpenPay activation](https://github.com/Nejb00/nrj-marketplace/tree/feat/payment-openpay-controlled-activation-attack-24)
+
+These are reference pointers for further investigation, not evidence that each branch is still current, each PR merged, or each scenario ran in production. In particular, do not activate OpenPay or perform a live payment as part of this archive.
