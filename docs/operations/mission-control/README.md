@@ -131,4 +131,6 @@ These are historical notes based on PR descriptions, current source-file reads a
 ## 10. Controlled Notion ↔ GitHub sync proposal
 
 - [Sync proposal — design only](sync-proposal.md) — asymmetric evidence-first architecture, read-only dry-run first, field ownership, idempotency, permission boundaries, conflict rules, acceptance tests and staged rollout.
-- No integration secret, workflow, schema change or sync execution is included. Implementation and activation require explicit user approval.
+- [Read-only reconciler usage](reconciler-usage.md) — manual workflow setup, local tests and report interpretation.
+- [Reconciler implementation](../../../scripts/mission-control/reconcile.py) and [manual workflow](../../../.github/workflows/mission-control-reconcile.yml) — prototype on the dedicated feature branch only.
+- The prototype has not yet been run against live APIs. No automatic sync or write path is active; any such step requires separate explicit approval.
