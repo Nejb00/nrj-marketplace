@@ -264,7 +264,8 @@ def inspect_mission(row: dict, repository: str, github_token: str) -> dict:
                 result["github"]["pull_request"] = {
                     "number": pr_number, "exists": True, "state": pr.get("state"),
                     "merged": merged, "merged_at": pr.get("merged_at"),
-                    "head_sha": head_sha, "base_branch": (pr.get("base") or {}).get("ref"),
+                    "head_sha": head_sha, "head_branch": (pr.get("head") or {}).get("ref"),
+                    "base_branch": (pr.get("base") or {}).get("ref"),
                     "merge_commit_sha": pr.get("merge_commit_sha"),
                     "url": pr.get("html_url", row.get("pr_url", "")),
                 }
@@ -289,6 +290,23 @@ def inspect_mission(row: dict, repository: str, github_token: str) -> dict:
             result["findings"].append(finding("error", "PR_API_ERROR", str(exc), row.get("pr_url", "")))
     elif status == "Merged":
         result["findings"].append(finding("warning", "MERGED_WITHOUT_PR_LINK", "Notion status is Merged but there is no PR URL to verify.", row.get("notion_url", "")))
+
+    # A branch deleted after its linked PR was merged is normal housekeeping,
+    # not reconciliation drift. Downgrade only when the PR head branch exactly
+    # matches the missing branch URL; never infer deletion is harmless otherwise.
+    live_branch = result["github"].get("branch") or {}
+    live_pr = result["github"].get("pull_request") or {}
+    if (
+        live_branch.get("exists") is False
+        and live_pr.get("exists")
+        and live_pr.get("merged")
+        and live_branch.get("name") == live_pr.get("head_branch")
+    ):
+        for item in result["findings"]:
+            if item["code"] == "BRANCH_NOT_FOUND":
+                item["severity"] = "info"
+                item["code"] = "BRANCH_DELETED_AFTER_MERGE"
+                item["message"] = "GitHub confirms the linked PR was merged and its matching source branch no longer exists; this is normal post-merge cleanup, not drift."
 
     if status == "Deployed":
         result["findings"].append(finding("info", "DEPLOYMENT_NOT_VERIFIED", "This first version does not query the deployment platform; Deployed cannot be independently confirmed here.", row.get("evidence_url", "")))
