@@ -1,0 +1,66 @@
+name: NRJ Mission Control Reconciler Tests
+
+on:
+  push:
+    branches:
+      - feat/mission-control-readonly-reconciler-2026-10-20
+    paths:
+      - scripts/mission-control/**
+      - tests/mission-control/**
+      - .github/workflows/mission-control-reconcile.yml
+      - .github/workflows/mission-control-reconcile-tests.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - scripts/mission-control/**
+      - tests/mission-control/**
+      - .github/workflows/mission-control-reconcile.yml
+      - .github/workflows/mission-control-reconcile-tests.yml
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Python tests and workflow safety checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile Python files
+        run: |
+          python -m py_compile scripts/mission-control/reconcile.py tests/mission-control/test_reconcile.py
+
+      - name: Run deterministic tests (no network, no secrets)
+        run: python -m unittest discover -s tests/mission-control -v
+
+      - name: Install YAML parser for workflow guard
+        run: python -m pip install --disable-pip-version-check pyyaml
+
+      - name: Validate manual workflow stays read-only
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+
+          path = Path(".github/workflows/mission-control-reconcile.yml")
+          workflow = yaml.load(path.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+          triggers = workflow.get("on", {})
+          assert set(triggers) == {"workflow_dispatch"}, f"Unexpected triggers: {sorted(triggers)}"
+          permissions = workflow.get("permissions", {})
+          assert permissions.get("contents") == "read", "contents must remain read-only"
+          assert permissions.get("checks") == "read", "checks must remain read-only"
+          assert permissions.get("pull-requests") == "read", "pull requests must remain read-only"
+          assert "schedule" not in triggers, "Scheduled execution is not approved"
+          print("Workflow syntax and read-only trigger/permissions checks passed.")
+          PY

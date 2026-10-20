@@ -1,0 +1,65 @@
+name: NRJ Mission Control Reconciliation (Read Only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      alias:
+        description: Exact Mission Alias, or all
+        required: false
+        default: all
+        type: string
+
+permissions:
+  contents: read
+  checks: read
+  pull-requests: read
+
+jobs:
+  reconcile:
+    name: Compare Notion and GitHub evidence
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: read
+      checks: read
+      pull-requests: read
+    env:
+      NRJ_NOTION_READ_TOKEN: ${{ secrets.NRJ_NOTION_READ_TOKEN }}
+      NOTION_DATA_SOURCE_ID: de2fc4d0-3150-4811-acc0-80ce02e2c619
+      GITHUB_TOKEN: ${{ github.token }}
+      MISSION_ALIAS: ${{ inputs.alias || 'all' }}
+    steps:
+      - name: Checkout selected workflow revision
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Require a narrowly scoped read-only Notion token
+        shell: bash
+        run: |
+          if [[ -z "$NRJ_NOTION_READ_TOKEN" ]]; then
+            echo "::error::Repository secret NRJ_NOTION_READ_TOKEN is missing. No reconciliation API request was made."
+            exit 1
+          fi
+
+      - name: Run read-only reconciliation
+        id: reconcile
+        shell: bash
+        run: |
+          python scripts/mission-control/reconcile.py \
+            --alias "$MISSION_ALIAS" \
+            --output-dir mission-control-report
+
+      - name: Publish report as workflow artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nrj-mission-control-reconciliation-${{ github.run_id }}
+          path: mission-control-report/
+          if-no-files-found: ignore
+          retention-days: 14
