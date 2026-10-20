@@ -1,26 +1,42 @@
-name: Sync Repository Structure to Notion
+name: Manual Notion Repository Snapshot Sync (Destructive)
+
+# SAFETY: scripts/sync_to_notion.py deletes every existing child block on the
+# configured NOTION_PAGE_ID before rebuilding a repository snapshot.
+# This workflow is deliberately manual-only and requires an explicit
+# confirmation input. Do not add a push, pull_request, or schedule trigger.
 
 on:
-  push:
-    branches:
-      - main
-      - main-merged
-      - master
   workflow_dispatch:
+    inputs:
+      confirmation:
+        description: "This replaces the configured Notion page contents. Select yes only when you intend to delete and rebuild its child blocks."
+        required: true
+        type: choice
+        options:
+          - no
+          - yes-replace-entire-page
+        default: no
+
+permissions:
+  contents: read
 
 jobs:
   sync-to-notion:
+    if: ${{ inputs.confirmation == 'yes-replace-entire-page' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - name: Checkout du code
+      - name: Checkout source without persisted Git credentials
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
-      - name: Configuration de Python
+      - name: Configure Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: "3.x"
 
-      - name: Exécution de la synchronisation
+      - name: Execute the explicitly confirmed Notion replacement
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_PAGE_ID: ${{ secrets.NOTION_PAGE_ID }}
