@@ -126,3 +126,9 @@ This is a verified bootstrap, not a claim that every historical NRJ attack or de
 - [Payment OS #18–#24 — documented coverage plus historical branch pointers](history/payment-os-18-24-baseline.md).
 
 These are historical notes based on PR descriptions, current source-file reads and local remote-tracking references. They deliberately distinguish closed PRs from verified merges, declared coverage from executed tests, and a current workflow file from the live branch-protection configuration. Continue importing other historical missions only when concrete evidence can be linked.
+
+
+## 10. Controlled Notion ↔ GitHub sync proposal
+
+- [Sync proposal — design only](sync-proposal.md) — asymmetric evidence-first architecture, read-only dry-run first, field ownership, idempotency, permission boundaries, conflict rules, acceptance tests and staged rollout.
+- No integration secret, workflow, schema change or sync execution is included. Implementation and activation require explicit user approval.
