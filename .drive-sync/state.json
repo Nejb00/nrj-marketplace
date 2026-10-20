@@ -96,6 +96,14 @@
       "githubSha": "84bdd68cd03bee30b6c446cb6b4d8bdf7c8ae667",
       "driveMd5": "695fdb5f83a7734b0f9a00abe5a3ddc3"
     },
+    ".github/workflows/mission-control-reconcile-tests.yml": {
+      "githubSha": "d8907e57631359f36b9afbc127c4c1df965a7028",
+      "driveMd5": "fea537580499181da059862aca096c25"
+    },
+    ".github/workflows/mission-control-reconcile.yml": {
+      "githubSha": "91f3a7668f178d641608ebe3afd818045d182b92",
+      "driveMd5": "d870af4a75ef7b2dbfae2e3411953fd9"
+    },
     ".github/workflows/notion-sync.yml": {
       "githubSha": "91bb8862947e7593b27a8acd495f1eca7ba1da44",
       "driveMd5": "5b9b7113789e82d56d8a98d7584f483e"
@@ -204,6 +212,10 @@
       "githubSha": "7aaedd212125842e055efc0be8f486fd67fbfe1e",
       "driveMd5": "aba8421d6411abd7574ab7bf06a69638"
     },
+    "AGENTS.md": {
+      "githubSha": "3dc8db46e700f210066c00f055683608a3b5fd41",
+      "driveMd5": "88a82fb3be5ffafda7e165b4ddb50e24"
+    },
     "README.fr.md": {
       "githubSha": "25eb13ef41b1a0188c1115cd50f13bbff282542f",
       "driveMd5": "71f03ff96b9e45ebf6639aca631c2d66"
@@ -243,6 +255,66 @@
     "docs/nrj-self-healing-attack-matrix.md": {
       "githubSha": "77f625603426ef6ca563e6ae157f428a88187fea",
       "driveMd5": "4fd0c7539ffb1d49b96c1d4887c0ecae"
+    },
+    "docs/operations/mission-control/README.md": {
+      "githubSha": "653dd855292d76d87a73f8625ce52420b6c7a762",
+      "driveMd5": "bad43efecd07dbd8c79ee4352eff3051"
+    },
+    "docs/operations/mission-control/active/NRJ-DES-001-liquid-glass-accessibility.md": {
+      "githubSha": "2ebbf05c7f0a9fb85be28dc0e2a73e196d1d1fa7",
+      "driveMd5": "4bbee59f89fa69e67fdcddb4878f9c28"
+    },
+    "docs/operations/mission-control/history/PR-140-product-import-os.md": {
+      "githubSha": "09bf8b9e4181742e9cb751f347428284892ef181",
+      "driveMd5": "05f4fc064ec534a8f6c7a64a0ce14737"
+    },
+    "docs/operations/mission-control/history/PR-172-merge-gate-hardening.md": {
+      "githubSha": "599c379044ba7d244950243bb0401e49fd7a1d60",
+      "driveMd5": "07bc9a3cbbaf2baf3f97f36550e9bd4a"
+    },
+    "docs/operations/mission-control/history/PR-200-design-dna-spatial-ui.md": {
+      "githubSha": "b907ae7448246310976872f2ff2fb0856eb5745b",
+      "driveMd5": "9577667ef6a5b4e8479da8a1eaf1badc"
+    },
+    "docs/operations/mission-control/history/PR-212-photon-webp-images.md": {
+      "githubSha": "121f0d1173f8795a5a0a8e763434784fd9ece0f3",
+      "driveMd5": "81447c82743c1a07cbf239868c95d411"
+    },
+    "docs/operations/mission-control/history/PR-215-mon-nrj-settings-and-cta.md": {
+      "githubSha": "4c71349400933dded73c2b6eb9dbd411534784d0",
+      "driveMd5": "e59cd181c2fd13a7c3d198d0fc2f1656"
+    },
+    "docs/operations/mission-control/history/PR-216-telegram-merge-notifications.md": {
+      "githubSha": "ba56e3e9b8e6f95c63b9f75cfc0a7efe0784c7e9",
+      "driveMd5": "9468af62b6574163371c41a0663dcba7"
+    },
+    "docs/operations/mission-control/history/PR-82-83-incident-guard-branch-maintenance.md": {
+      "githubSha": "cdb10deeca18ac590c223f0fd2e4e374c1602d70",
+      "driveMd5": "4f1dcb990451a7c17a21c3764d4c6e97"
+    },
+    "docs/operations/mission-control/history/PR-97-100-self-healing-v2-dry-run.md": {
+      "githubSha": "40da4f537fde0cc75d2343f2f09c394ad5f50001",
+      "driveMd5": "fe1357b466cd3f02ebd8abd0db1c8034"
+    },
+    "docs/operations/mission-control/history/payment-os-18-24-baseline.md": {
+      "githubSha": "8dfcd752e123b563d705d990e0f9c01b8b85d38d",
+      "driveMd5": "036850bcf880805ac09060eaeed9e9b5"
+    },
+    "docs/operations/mission-control/mission-template.md": {
+      "githubSha": "12f5910b9aa6d99ebe6501ea950a389c4e22fc04",
+      "driveMd5": "03fbcff2f951bef061f382b56d14d916"
+    },
+    "docs/operations/mission-control/reconciler-usage.md": {
+      "githubSha": "85b394ce5838ea512f029bc589c20d9dfb9eb075",
+      "driveMd5": "bfa30635a98a1d7cb1fcf49431ab4817"
+    },
+    "docs/operations/mission-control/session-resume.md": {
+      "githubSha": "7677868bcba8b2b749fc8d59ae902824189fca64",
+      "driveMd5": "20092f4977bea5a5203cd3f6986bb969"
+    },
+    "docs/operations/mission-control/sync-proposal.md": {
+      "githubSha": "788a622322aa8b64a63b1ca2e329e64ca9cba1c2",
+      "driveMd5": "0ec64f0cc9546f4729a3634558997e90"
     },
     "docs/payment-architecture.md": {
       "githubSha": "55cfba982e5c6cfb2fe1ac63b00215fa556e660d",
@@ -395,6 +467,10 @@
     "scripts/migration-drift.mjs": {
       "githubSha": "0cdb9ae0052e09a7e7ad15192d3b2801464c58ac",
       "driveMd5": "45d832a83e03751af61c38f150060669"
+    },
+    "scripts/mission-control/reconcile.py": {
+      "githubSha": "1f65683718a074b7ab043be05b6aa58ce1ddf086",
+      "driveMd5": "a12bb5d4de7c34854a8a4930520de40f"
     },
     "scripts/observability-model.mjs": {
       "githubSha": "88e20c63d20c8933e4bf18743837d0903ef28041",
@@ -1380,6 +1456,10 @@
       "githubSha": "31ee8e6be9be965e431659e0f3a66fad3a2b0c72",
       "driveMd5": "d6c9cf305b9fe9495d340ca105ce250b"
     },
+    "tests/mission-control/test_reconcile.py": {
+      "githubSha": "79d56f0d5998f98fc4615c3504a3b0b3141addbc",
+      "driveMd5": "8bff9323b17dd43a8d7789aea97cf66d"
+    },
     "vercel.json": {
       "githubSha": "cf1143e048c440b0b10466a07aac277563668957",
       "driveMd5": "09029b8193a15af4f5f8fd6a339402ae"
@@ -1397,5 +1477,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-20T17:07:39.741Z"
+  "updatedAt": "2026-10-20T17:21:45.880Z"
 }
