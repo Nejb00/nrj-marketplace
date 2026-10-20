@@ -97,8 +97,8 @@
       "driveMd5": "695fdb5f83a7734b0f9a00abe5a3ddc3"
     },
     ".github/workflows/notion-sync.yml": {
-      "githubSha": "7a13aada8e437d76f01f9a56f73aea4a4b139e53",
-      "driveMd5": "8c9bd72d39c67c3052c826eea0f363be"
+      "githubSha": "91bb8862947e7593b27a8acd495f1eca7ba1da44",
+      "driveMd5": "5b9b7113789e82d56d8a98d7584f483e"
     },
     ".github/workflows/nrj-final-audit.yml": {
       "githubSha": "061b096b35afc44c138c45975f5541ac9b4adf4c",
@@ -1397,5 +1397,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-18T05:56:22.230Z"
+  "updatedAt": "2026-10-20T17:07:39.741Z"
 }
