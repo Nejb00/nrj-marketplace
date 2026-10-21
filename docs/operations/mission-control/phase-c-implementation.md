@@ -4,6 +4,7 @@
 - **State:** C-Design user validated; C-Implementation in progress; C-Tests passed on the pre-sync revision
 - **Branch:** `feat/mission-control-evidence-writer-2026-10-21`
 - **Synced main baseline:** `56b9b2d4c6f85cee3d0c786fbe0c9d636890c97d` (PR #224 merged)
+- **Branch synchronization commit:** `8596a894e7808205467377ae61f5abb9abcfdb65` (two parents: the preview-only branch tip and the merged `main` tip)
 - **Pre-sync CI:** [run #39680146635](https://github.com/Nejb00/nrj-marketplace/actions/runs/39680146635) passed on `541434563fa92b2547c3108f8216a4dac680af38`; the post-sync branch revision must pass again before PR review.
 - **Design reference:** [Phase C GitHub → Notion evidence writer](phase-c-github-to-notion.md)
 - **Approval boundary:** preview-only implementation on an isolated branch; no live Notion property write, write token, writer PR/merge, or deployment is authorized by this checkpoint.
