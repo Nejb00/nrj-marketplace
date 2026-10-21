@@ -85,8 +85,8 @@
       "driveMd5": "1ea4bbe130861324591c519b24df05ee"
     },
     ".github/workflows/global-observability.yml": {
-      "githubSha": "6172068a0003629a13e012552b17790a53045a52",
-      "driveMd5": "8092740b36bd5144dcf0f19276f8811e"
+      "githubSha": "227de8ea3cb82825f10eacb948f428eec2dd373c",
+      "driveMd5": "c7753f9c17a44767d29a71ec60ea7cf1"
     },
     ".github/workflows/incident-guard.yml": {
       "githubSha": "eb23d8d51ed92642eca4b195a188722f7bb73f64",
@@ -1261,8 +1261,8 @@
       "driveMd5": "187cc1458179ecff576c53351c83c92b"
     },
     "test/observability-model.test.js": {
-      "githubSha": "ae0e0e890e5f1e94cc229ac756c874ec976e09f5",
-      "driveMd5": "3e13a66f11d8a7f161028bb4a45bc7c0"
+      "githubSha": "c04df1ac27cd49d3848678c227daeb8a5b0f12c9",
+      "driveMd5": "ec3af908847b5a033250cbdc05c132d7"
     },
     "test/openpay-provider.test.js": {
       "githubSha": "9301bcc769dcae3fab4a73bd257de7068ced6ccf",
@@ -1477,5 +1477,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-21T07:41:52.545Z"
+  "updatedAt": "2026-10-21T07:47:20.892Z"
 }
