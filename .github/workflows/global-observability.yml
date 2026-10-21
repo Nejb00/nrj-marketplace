@@ -51,7 +51,12 @@ jobs:
             );
 
             const runs = [];
-            for (const workflow of workflows.filter(item => item.state === 'active')) {
+            // Do not count this workflow's own in-progress run as an unhealthy pending run.
+            // Otherwise every manual/scheduled collection reports at least one pending run.
+            const selfWorkflowPath = '.github/workflows/global-observability.yml';
+            for (const workflow of workflows.filter(item =>
+              item.state === 'active' && item.path !== selfWorkflowPath
+            )) {
               const response = await github.rest.actions.listWorkflowRuns({
                 owner,
                 repo,
