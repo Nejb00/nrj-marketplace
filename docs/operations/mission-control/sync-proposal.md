@@ -3,9 +3,9 @@
 - **Mission alias:** NRJ-OPS-004
 - **Status:** Proposed / design only
 - **Date:** 2026-10-20
-- **Implementation status:** NOT IMPLEMENTED; no integration token provisioned, no workflow enabled, no automated write executed.
+- **Implementation status:** PREVIEW-ONLY IMPLEMENTATION EXISTS ON AN ISOLATED BRANCH; no write token, page-write endpoint, or automated write is active.
 - **Branch:** `docs/nrj-mission-control-os-2026-10-18`
-- **Authority:** user approval required before implementation or activation.
+- **Authority:** C-Design and preview-only C-Implementation are approved on an isolated branch; any live write or activation requires separate explicit approval.
 - **Related records:** [Notion Mission Control](https://app.notion.com/p/3fd0f09830e181e6880de065b7853780?pvs=204), [Mission Register](https://app.notion.com/p/ccdef631312c4398aad6a059351ab02f), [repository agent instructions](../../../AGENTS.md).
 
 ## 1. Decision summary
@@ -203,7 +203,7 @@ The report must distinguish observed facts from proposals. A dry run must be pro
 - Phase B now has a manual read-only reconciler in `main` (`.github/workflows/mission-control-reconcile.yml` and `scripts/mission-control/reconcile.py`). It reads Notion/GitHub and publishes an artifact; it has no write endpoint or GitHub write permission.
 - Three live dry-runs after the status-semantics correction — runs [39563775278](https://github.com/Nejb00/nrj-marketplace/actions/runs/39563775278), [39567369170](https://github.com/Nejb00/nrj-marketplace/actions/runs/39567369170), and [39567511552](https://github.com/Nejb00/nrj-marketplace/actions/runs/39567511552) — each read 12 rows with 12 unique aliases and returned `NO_CHANGE` for all rows. Their artifacts state that no Notion/GitHub writes, branch/PR creation, merges or deployments occurred.
 - The local unit suite contained 11 tests and passed in a clean worktree on `02fe7c333260d828756034a1cc8ab15d73114551`.
-- Phase C's proposed evidence writer is documented in [phase-c-github-to-notion.md](phase-c-github-to-notion.md). It is **not implemented**: no write token, new Notion capability, schema change, writer workflow or live PATCH was created as part of that design.
+- Phase C's evidence writer has a **preview-only implementation** on [the isolated implementation branch](https://github.com/Nejb00/nrj-marketplace/tree/feat/mission-control-evidence-writer-2026-10-21), documented in [phase-c-github-to-notion.md](phase-c-github-to-notion.md) and [phase-c-implementation.md](phase-c-implementation.md). It validates a single mission/PR pairing and computes proposed values for the `PR URL` and `Evidence URL` properties, but has no Notion page-write endpoint. CI run [#39680146635](https://github.com/Nejb00/nrj-marketplace/actions/runs/39680146635) passed 40 tests and workflow safety checks on the pre-sync commit; the synchronized revision must pass CI before PR review. No write token, new Notion capability, schema change, live PATCH or automatic sync has been activated.
 - Mission Control remains manually coordinated. Automatic synchronization is inactive. The two Merge Gate controller failures noted in the latest audit remain a separate diagnostic item.
 
-**Decision requested:** review the Phase C design before authorizing implementation. Implementation, the first live write, and any later expansion each require distinct approval. Until then, keep all write paths inactive.
+**Current gate:** C-Design and preview-only C-Implementation are approved. The branch must be synchronized with current `main`, its tests rerun, and its exact diff reviewed before a PR is created. The first live write, any broader scope, and any future automation each require separate explicit approval. Keep all write paths inactive.

@@ -1,10 +1,12 @@
 # NRJ Mission Control — Phase C Implementation (preview only)
 
 - **Mission alias:** NRJ-OPS-004
-- **State:** C-Design user validated; C-Implementation in progress
+- **State:** C-Design user validated; C-Implementation in progress; C-Tests passed on the pre-sync revision
 - **Branch:** `feat/mission-control-evidence-writer-2026-10-21`
+- **Synced main baseline:** `56b9b2d4c6f85cee3d0c786fbe0c9d636890c97d` (PR #224 merged)
+- **Pre-sync CI:** [run #39680146635](https://github.com/Nejb00/nrj-marketplace/actions/runs/39680146635) passed on `541434563fa92b2547c3108f8216a4dac680af38`; the post-sync branch revision must pass again before PR review.
 - **Design reference:** [Phase C GitHub → Notion evidence writer](phase-c-github-to-notion.md)
-- **Approval boundary:** implementation only; no live Notion property write, write token, PR, merge, or deployment is authorized by this checkpoint.
+- **Approval boundary:** preview-only implementation on an isolated branch; no live Notion property write, write token, writer PR/merge, or deployment is authorized by this checkpoint.
 
 ## Implemented in this branch
 
@@ -35,9 +37,9 @@ The tests cover blank fields, one-field idempotency, both conflict types, duplic
 - No remote page write, Notion schema change, write token creation/use or environment secret configuration.
 - No status or human-maintained field update.
 - No batch operation, schedule, webhook, automatic retry, PR creation, merge, production deployment or automatic sync.
-- No changes to `main` or the preserved historical RDC clone.
+- This branch sync does not write to `main`; the historical RDC worktree remains untouched and must be considered preserved even though RDC is currently not responding.
 - No live canary. C-Canary requires another explicit approval for one exact alias/page/PR/head SHA/merge SHA/timestamp.
 
 ## Next gate
 
-Complete C-Tests review on this isolated branch. Report all failures and limits before asking for any further approval. If tests pass, present the exact preview-only diff and evidence. The first live Notion write remains disabled and outside this implementation gate.
+The branch has now been synchronized with the post-PR-#224 `main` baseline. Re-run CI on this exact revision, verify the merged README evidence and all four documentation updates, then present the final diff for review before creating a PR. The first live Notion write remains disabled and outside this implementation gate.
