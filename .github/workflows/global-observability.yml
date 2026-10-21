@@ -54,8 +54,16 @@ jobs:
             // Do not count this workflow's own in-progress run as an unhealthy pending run.
             // Otherwise every manual/scheduled collection reports at least one pending run.
             const selfWorkflowPath = '.github/workflows/global-observability.yml';
+            // These controllers run from main while evaluating a PR's head SHA.
+            // Their own run branch is not the same thing as main-branch health.
+            const pullRequestGatePaths = new Set([
+              '.github/workflows/nrj-merge-gate-v2.yml',
+              '.github/workflows/nrj-secure-merge-gate-controller.yml',
+            ]);
             for (const workflow of workflows.filter(item =>
-              item.state === 'active' && item.path !== selfWorkflowPath
+              item.state === 'active' &&
+              item.path !== selfWorkflowPath &&
+              !pullRequestGatePaths.has(item.path)
             )) {
               const response = await github.rest.actions.listWorkflowRuns({
                 owner,

@@ -36,4 +36,7 @@ test('global observability excludes its own in-progress run from the snapshot', 
     /item\.state === 'active'\s*&&\s*item\.path !== selfWorkflowPath/,
   );
   assert.match(workflow, /const selfWorkflowPath = '\.github\/workflows\/global-observability\.yml';/);
+  assert.match(workflow, /!pullRequestGatePaths\.has\(item\.path\)/);
+  assert.match(workflow, /'\.github\/workflows\/nrj-merge-gate-v2\.yml'/);
+  assert.match(workflow, /'\.github\/workflows\/nrj-secure-merge-gate-controller\.yml'/);
 });
