@@ -126,6 +126,60 @@ class MissionControlReconcilerTests(unittest.TestCase):
         self.assertEqual(len(matching), 1)
         self.assertEqual(matching[0]["severity"], "info")
 
+    def test_merged_linked_pr_does_not_infer_mission_completion(self) -> None:
+        sha = "d" * 40
+        row = {
+            "alias": "NRJ-OPS-004", "title": "Mission Control", "status": "In Progress",
+            "branch_url": "https://github.com/Nejb00/nrj-marketplace/tree/feat/mission-control-readonly-reconciler-2026-10-20",
+            "stored_ref": sha,
+            "pr_url": "https://github.com/Nejb00/nrj-marketplace/pull/219",
+            "evidence_url": "", "notion_url": "https://www.notion.so/page",
+        }
+
+        def fake_get(url: str, token: str):
+            if url.endswith("/branches/feat%2Fmission-control-readonly-reconciler-2026-10-20"):
+                return 200, {
+                    "commit": {"sha": sha},
+                    "html_url": row["branch_url"],
+                }
+            if url.endswith(f"/commits/{sha}"):
+                return 200, {
+                    "sha": sha,
+                    "commit": {"message": "Feature branch head"},
+                    "html_url": f"https://github.com/Nejb00/nrj-marketplace/commit/{sha}",
+                }
+            if url.endswith("/pulls/219"):
+                return 200, {
+                    "state": "closed",
+                    "merged_at": "2026-10-20T17:20:44Z",
+                    "head": {"sha": sha, "ref": "feat/mission-control-readonly-reconciler-2026-10-20"},
+                    "base": {"ref": "main"},
+                    "merge_commit_sha": "4" * 40,
+                    "html_url": row["pr_url"],
+                }
+            if url.endswith(f"/commits/{sha}/check-runs?per_page=100"):
+                return 200, {
+                    "check_runs": [{
+                        "name": "CI", "status": "completed", "conclusion": "success",
+                    }]
+                }
+            raise AssertionError(f"Unexpected URL: {url}")
+
+        with patch.object(reconcile, "get_github", side_effect=fake_get):
+            observed = reconcile.inspect_mission(row, "Nejb00/nrj-marketplace", "dummy")
+
+        self.assertEqual(observed["result"], "NO_CHANGE")
+        self.assertIn(
+            "LINKED_PR_MERGED_MISSION_STILL_OPEN",
+            {item["code"] for item in observed["findings"]},
+        )
+        self.assertNotIn(
+            "MERGE_NOT_REFLECTED_IN_STATUS",
+            {item["code"] for item in observed["findings"]},
+        )
+        finding = next(item for item in observed["findings"] if item["code"] == "LINKED_PR_MERGED_MISSION_STILL_OPEN")
+        self.assertEqual(finding["severity"], "info")
+
     def test_client_rejects_mutating_http_methods(self) -> None:
         with self.assertRaises(ValueError):
             reconcile.request_json("https://api.github.com", service="github", token="dummy", method="PATCH")
