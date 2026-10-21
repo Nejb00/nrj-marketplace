@@ -1,12 +1,13 @@
 # NRJ Mission Control — Phase C: GitHub → Notion evidence writer
 
 - **Mission alias:** NRJ-OPS-004
-- **Document status:** Design proposal only — not implementation approval
+- **Document status:** C-Design explicitly user-validated on 2026-10-21; C-Implementation is underway on an isolated branch.
 - **Prepared:** 2026-10-21
 - **Design branch:** `docs/phase-c-github-notion-writer-2026-10-21`
+- **Implementation branch:** `feat/mission-control-evidence-writer-2026-10-21`
 - **Base commit:** `02fe7c333260d828756034a1cc8ab15d73114551`
-- **Current writer status:** NOT IMPLEMENTED; no write token, writer workflow, schema change, or Notion property write is part of this proposal.
-- **Approval rule:** design review now; implementation and first live write require separate explicit approval.
+- **Current implementation status:** preview-only preflight and report code exists on the implementation branch; there is no page-write endpoint, write token, or live Notion property write.
+- **Approval rule:** C-Design approved; implementation only is authorized. Any live write and broader expansion still require separate explicit approval.
 
 ## 1. Executive decision
 
@@ -159,15 +160,15 @@ If the canary is wrong, do not run an automatic restore. Re-read the target page
 
 ## 11. Current status and next action
 
-- Phase B read-only proof: three successful live `NO_CHANGE` reports with 12 unique mission aliases each; 11 local unit tests passed.
-- This document defines a proposed Phase C; it is not a writer implementation.
-- No write token or new Notion capability has been created or tested in this task.
-- No Notion schema or mission property was changed as part of this design work.
-- No writer workflow was added or activated, and no live PATCH was sent.
-- The historical RDC clone remains preserved. Work for this design uses a separate clean worktree and a dedicated documentation branch.
-- The two Merge Gate controller failures identified during the latest audit remain a separate diagnostic item and must not be hidden by the healthy aggregate report.
+- Phase B read-only proof: three successful live `NO_CHANGE` reports with 12 unique mission aliases each; the original 11 reconciler unit tests passed.
+- **C-Design approved by the user on 2026-10-21.** C-Implementation is authorized on an isolated branch only.
+- The current implementation adds `scripts/mission-control/evidence_writer_preview.py`, a manual preview workflow, deterministic mocked tests, and the branch-specific Vercel deployment guard. It validates one exact mission/PR pairing and computes a two-property preview; it does not contain a page-write endpoint.
+- The read-only Notion token remains the only Notion credential referenced. No write token or new Notion capability has been created or used; no live Notion API mutation has been performed.
+- No mission property or Notion schema has been changed by the writer code. Mission Control bookkeeping is maintained separately in the relevant Notion row.
+- The historical RDC clone remains preserved. All implementation changes are isolated from `main`.
+- The two Merge Gate controller failures found in the earlier audit remain a separate diagnostic item and must not be hidden by the healthy aggregate report.
 
-**Next action:** user review of this design. If approved, request separate approval for implementation only. A live write and any future expansion require distinct approvals; automatic sync remains disabled.
+**Next action:** finish C-Tests on the implementation branch, inspect the full diff and remote CI result, then report the preview-only implementation for review. C-Canary must be separately approved before adding or enabling any live page-write path; automatic sync remains disabled.
 
 ## 12. Official references checked during design
 

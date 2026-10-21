@@ -131,7 +131,8 @@ These are historical notes based on PR descriptions, current source-file reads a
 ## 10. Controlled Notion ↔ GitHub sync proposal
 
 - [Sync proposal — design only](sync-proposal.md) — asymmetric evidence-first architecture, read-only dry-run first, field ownership, idempotency, permission boundaries, conflict rules, acceptance tests and staged rollout.
-- [Phase C — GitHub → Notion evidence writer](phase-c-github-to-notion.md) — design only; one mission, two blank URL fields, explicit approval gates, stale-write caveats, tests and rollback. No writer or write token is active.
-- [Read-only reconciler usage](reconciler-usage.md) — manual workflow setup, local tests and report interpretation.
-- [Reconciler implementation](../../../scripts/mission-control/reconcile.py) and [manual workflow](../../../.github/workflows/mission-control-reconcile.yml) — prototype on the dedicated feature branch only.
-- The prototype has not yet been run against live APIs. No automatic sync or write path is active; any such step requires separate explicit approval.
+- [Phase C — GitHub → Notion evidence writer](phase-c-github-to-notion.md) — C-Design user-validated; implementation and first live write remain separate gates.
+- [Phase C implementation handoff](phase-c-implementation.md) — current preview-only scope, file list, checks and next action.
+- [Read-only reconciler usage](reconciler-usage.md) — manual workflow setup, tests and report interpretation.
+- [Reconciler implementation](../../../scripts/mission-control/reconcile.py) and [manual workflow](../../../.github/workflows/mission-control-reconcile.yml) — read-only; three successful live reports are linked from the Phase C spec.
+- The Phase C implementation branch currently computes a dry-run preview only. It cannot mutate a Notion page, has no write token, and does not enable automatic synchronization.
