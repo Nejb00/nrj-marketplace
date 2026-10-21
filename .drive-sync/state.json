@@ -469,8 +469,8 @@
       "driveMd5": "45d832a83e03751af61c38f150060669"
     },
     "scripts/mission-control/reconcile.py": {
-      "githubSha": "1f65683718a074b7ab043be05b6aa58ce1ddf086",
-      "driveMd5": "a12bb5d4de7c34854a8a4930520de40f"
+      "githubSha": "c61e04cbee88e19f84b2959bae6b7cb6ab3eb0bf",
+      "driveMd5": "4a55827633a6ed2c5d874813e212b37d"
     },
     "scripts/observability-model.mjs": {
       "githubSha": "88e20c63d20c8933e4bf18743837d0903ef28041",
@@ -1457,8 +1457,8 @@
       "driveMd5": "d6c9cf305b9fe9495d340ca105ce250b"
     },
     "tests/mission-control/test_reconcile.py": {
-      "githubSha": "79d56f0d5998f98fc4615c3504a3b0b3141addbc",
-      "driveMd5": "8bff9323b17dd43a8d7789aea97cf66d"
+      "githubSha": "407e10810b77a35052abe838691cb5e23995f73c",
+      "driveMd5": "c44290a6a12359324bd552930964c322"
     },
     "vercel.json": {
       "githubSha": "cf1143e048c440b0b10466a07aac277563668957",
@@ -1477,5 +1477,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-20T17:21:45.880Z"
+  "updatedAt": "2026-10-21T07:41:52.545Z"
 }
