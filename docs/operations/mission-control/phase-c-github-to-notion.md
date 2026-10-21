@@ -175,5 +175,3 @@ If the canary is wrong, do not run an automatic restore. Re-read the target page
 - [Notion — Connection capabilities and integrations](https://www.notion.com/help/create-integrations-with-the-notion-api)
 - [Notion — Sharing and permissions](https://www.notion.com/help/sharing-and-permissions)
 - [GitHub — Manually running a workflow](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow)
-
-[executed on device: bj-qingyan-claw-v7 (6faf0637-f98c-40b3-94d6-54f80db087bf)]
