@@ -132,5 +132,6 @@ These are historical notes based on PR descriptions, current source-file reads a
 
 - [Sync proposal — design only](sync-proposal.md) — asymmetric evidence-first architecture, read-only dry-run first, field ownership, idempotency, permission boundaries, conflict rules, acceptance tests and staged rollout.
 - [Read-only reconciler usage](reconciler-usage.md) — manual workflow setup, local tests and report interpretation.
-- [Reconciler implementation](../../../scripts/mission-control/reconcile.py) and [manual workflow](../../../.github/workflows/mission-control-reconcile.yml) — prototype on the dedicated feature branch only.
-- The prototype has not yet been run against live APIs. No automatic sync or write path is active; any such step requires separate explicit approval.
+- [Read-only reconciler implementation](../../../scripts/mission-control/reconcile.py) and [manual workflow](../../../.github/workflows/mission-control-reconcile.yml) — available on `main`; the workflow is started manually with `workflow_dispatch` and declares read-only GitHub permissions.
+- Live manual reconciliation: [run #39676703252](https://github.com/Nejb00/nrj-marketplace/actions/runs/39676703252) on `main` at `02fe7c333260d828756034a1cc8ab15d73114551`, exact alias `NRJ-OPS-004`, result `NO_CHANGE`. The run produced `reconciliation.md` and `reconciliation.json` (12 Notion rows loaded); the report says no external mutations were performed.
+- The workflow reports drift instead of correcting it. No automatic sync or Notion writer path is active. A GitHub-to-Notion writer remains a separate proposal requiring explicit approval and independent validation.
