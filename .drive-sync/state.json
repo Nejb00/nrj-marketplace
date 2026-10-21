@@ -257,8 +257,8 @@
       "driveMd5": "4fd0c7539ffb1d49b96c1d4887c0ecae"
     },
     "docs/operations/mission-control/README.md": {
-      "githubSha": "653dd855292d76d87a73f8625ce52420b6c7a762",
-      "driveMd5": "bad43efecd07dbd8c79ee4352eff3051"
+      "githubSha": "2697d6a9cef798f83270b5fe8f0a6014fd5099dd",
+      "driveMd5": "5557840a7b5d009ff4419cd8121b1cf9"
     },
     "docs/operations/mission-control/active/NRJ-DES-001-liquid-glass-accessibility.md": {
       "githubSha": "2ebbf05c7f0a9fb85be28dc0e2a73e196d1d1fa7",
@@ -1477,5 +1477,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-21T07:56:33.919Z"
+  "updatedAt": "2026-10-21T21:35:52.799Z"
 }
