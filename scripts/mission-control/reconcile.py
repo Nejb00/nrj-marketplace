@@ -272,7 +272,16 @@ def inspect_mission(row: dict, repository: str, github_token: str) -> dict:
                 if status == "Merged" and not merged:
                     result["findings"].append(finding("warning", "MERGED_STATUS_WITHOUT_MERGE_EVIDENCE", "Notion says Merged, but GitHub does not confirm a merge for the linked PR.", row.get("pr_url", "")))
                 elif status not in {"Merged", "Deployed", "User Validated", "Archived"} and merged:
-                    result["findings"].append(finding("warning", "MERGE_NOT_REFLECTED_IN_STATUS", f"GitHub confirms PR #{pr_number} is merged, while Notion status is '{status or 'empty'}'. No status was changed.", row.get("pr_url", "")))
+                    # A PR can implement only one part of a mission. Keep the
+                    # mission's broader lifecycle human-controlled: a merged
+                    # linked PR is informational unless Notion explicitly says
+                    # Merged without matching GitHub evidence (checked above).
+                    result["findings"].append(finding(
+                        "info",
+                        "LINKED_PR_MERGED_MISSION_STILL_OPEN",
+                        f"GitHub confirms PR #{pr_number} is merged, while the broader mission remains '{status or 'empty'}'. Mission status is not inferred from PR state and was not changed.",
+                        row.get("pr_url", ""),
+                    ))
                 if head_sha:
                     try:
                         c_code, check_data = get_github(github_url(repository, f"commits/{quote(head_sha, safe='')}/check-runs?per_page=100"), github_token)
