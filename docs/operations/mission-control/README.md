@@ -131,8 +131,9 @@ These are historical notes based on PR descriptions, current source-file reads a
 ## 10. Controlled Notion ↔ GitHub sync proposal
 
 - [Sync proposal — design only](sync-proposal.md) — asymmetric evidence-first architecture, read-only dry-run first, field ownership, idempotency, permission boundaries, conflict rules, acceptance tests and staged rollout.
-- [Phase C — GitHub → Notion evidence writer](phase-c-github-to-notion.md) — C-Design user-validated; implementation and first live write remain separate gates.
-- [Phase C implementation handoff](phase-c-implementation.md) — current preview-only scope, file list, checks and next action.
-- [Read-only reconciler usage](reconciler-usage.md) — manual workflow setup, tests and report interpretation.
-- [Reconciler implementation](../../../scripts/mission-control/reconcile.py) and [manual workflow](../../../.github/workflows/mission-control-reconcile.yml) — read-only; three successful live reports are linked from the Phase C spec.
-- The Phase C implementation branch currently computes a dry-run preview only. It cannot mutate a Notion page, has no write token, and does not enable automatic synchronization.
+- [Phase C — GitHub → Notion evidence writer](phase-c-github-to-notion.md) — C-Design user-validated; implementation remains preview-only, with the first live write behind a separate canary gate.
+- [Phase C implementation handoff](phase-c-implementation.md) — preview-only scope, file list, checks and next action.
+- [Read-only reconciler usage](reconciler-usage.md) — manual workflow setup, local tests and report interpretation.
+- [Read-only reconciler implementation](../../../scripts/mission-control/reconcile.py) and [manual workflow](../../../.github/workflows/mission-control-reconcile.yml) — available on `main`; started manually with `workflow_dispatch` and read-only GitHub permissions.
+- Live manual reconciliation: [run #39676703252](https://github.com/Nejb00/nrj-marketplace/actions/runs/39676703252) on `main` at `02fe7c333260d828756034a1cc8ab15d73114551`, exact alias `NRJ-OPS-004`, result `NO_CHANGE`. The run produced `reconciliation.md` and `reconciliation.json` (12 Notion rows loaded); no external mutations were performed.
+- The reconciler reports drift instead of correcting it. The Phase C implementation branch computes a dry-run preview only; it has no page-write endpoint or write token. No automatic sync or Notion writer is active until a separately reviewed canary gate is complete.
