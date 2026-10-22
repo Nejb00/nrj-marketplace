@@ -326,6 +326,33 @@ class EvidenceWriterPreviewTests(unittest.TestCase):
         ):
             self.assertIn(sha, text)
 
+    def test_secret_tokens_are_scoped_to_the_python_step_only(self) -> None:
+        lines = WORKFLOW.read_text(encoding="utf-8").splitlines()
+        for variable in ("NRJ_NOTION_READ_TOKEN:", "GITHUB_TOKEN:"):
+            matches = [
+                (index, line)
+                for index, line in enumerate(lines)
+                if line.strip().startswith(variable)
+            ]
+            self.assertEqual(
+                len(matches), 1,
+                f"{variable} must be defined once, not inherited across the job",
+            )
+            index, line = matches[0]
+            self.assertTrue(
+                line.startswith("          "),
+                f"{variable} must be step-scoped, never workflow/job-scoped",
+            )
+            step_start = max(
+                i for i in range(index + 1)
+                if lines[i].startswith("      - name: ")
+            )
+            self.assertIn(
+                "Validate evidence and write local preview files only",
+                lines[step_start],
+                f"{variable} must only be exposed to the Python API-call step",
+            )
+
     def test_automation_only_branches_are_disabled_without_changing_rewrites(self) -> None:
         import json
         config = json.loads(VERCEL_CONFIG.read_text(encoding="utf-8"))
