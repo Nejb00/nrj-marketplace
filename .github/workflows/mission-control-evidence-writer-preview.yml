@@ -37,9 +37,7 @@ jobs:
       contents: read
       pull-requests: read
     env:
-      NRJ_NOTION_READ_TOKEN: ${{ secrets.NRJ_NOTION_READ_TOKEN }}
       NOTION_DATA_SOURCE_ID: de2fc4d0-3150-4811-acc0-80ce02e2c619
-      GITHUB_TOKEN: ${{ github.token }}
       GITHUB_REPOSITORY: ${{ github.repository }}
     steps:
       - name: Reject non-main workflow revisions
@@ -60,17 +58,11 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Require the existing read-only Notion credential
-        shell: bash
-        run: |
-          if [[ -z "$NRJ_NOTION_READ_TOKEN" ]]; then
-            echo "::error::NRJ_NOTION_READ_TOKEN is missing. No API request was made."
-            exit 1
-          fi
-
       - name: Validate evidence and write local preview files only
         shell: bash
         env:
+          NRJ_NOTION_READ_TOKEN: ${{ secrets.NRJ_NOTION_READ_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
           MISSION_ALIAS: ${{ inputs.alias }}
           PR_NUMBER: ${{ inputs.pr_number }}
           EXPECTED_HEAD_SHA: ${{ inputs.expected_head_sha }}
