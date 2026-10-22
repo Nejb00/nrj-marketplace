@@ -97,9 +97,10 @@ jobs:
           canary_steps = canary_job.get("steps", [])
           write_step = next(step for step in canary_steps if step.get("name") == "Run the identity-locked canary once")
           guard_step = next(step for step in canary_steps if step.get("name") == "Require explicit confirmation and dedicated credential")
-          assert write_step.get("env", {}).get("NRJ_NOTION_EVIDENCE_WRITE_TOKEN") == "${{ secrets.NRJ_NOTION_EVIDENCE_WRITE_TOKEN }}", "canary must use a separate write token"
+          expected_secret_ref = "$" + "{{ secrets.NRJ_NOTION_EVIDENCE_WRITE_TOKEN }}"
+          assert write_step.get("env", {}).get("NRJ_NOTION_EVIDENCE_WRITE_TOKEN") == expected_secret_ref, "canary must use a separate write token"
           assert "NRJ_NOTION_EVIDENCE_WRITE_TOKEN" not in canary_job.get("env", {}), "write token must not be exposed at whole-job scope"
-          assert guard_step.get("env", {}).get("NOTION_WRITE_TOKEN") == "${{ secrets.NRJ_NOTION_EVIDENCE_WRITE_TOKEN }}", "guard may only check credential presence"
+          assert guard_step.get("env", {}).get("NOTION_WRITE_TOKEN") == expected_secret_ref, "guard may only check credential presence"
           assert "persist-credentials: false" in canary_text, "canary checkout credentials must not persist"
           assert "confirm_write" in canary_text and "default: NO" in canary_text, "canary must be opt-in by default"
           assert "contents: write" not in canary_text and "pull-requests: write" not in canary_text, "canary GitHub permissions must remain read-only"
