@@ -17,7 +17,7 @@ import sys
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, unquote, urlsplit
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 DEFAULT_REPOSITORY = "Nejb00/nrj-marketplace"
 DEFAULT_DATA_SOURCE_ID = "de2fc4d0-3150-4811-acc0-80ce02e2c619"
@@ -28,6 +28,13 @@ ALIAS = re.compile(r"^NRJ-[A-Z]{3,4}-[0-9]{3}$")
 
 class ApiError(RuntimeError):
     """Sanitized API error without credentials or request headers."""
+
+
+class RejectRedirectHandler(HTTPRedirectHandler):
+    """Reject redirects so bearer tokens never follow an unvalidated URL."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise ApiError("API redirect rejected")
 
 
 def utc_now() -> str:
@@ -134,7 +141,7 @@ def api_request(
         headers["Content-Type"] = "application/json"
     request = Request(url, data=data, headers=headers, method=method)
     try:
-        with urlopen(request, timeout=20) as response:
+        with build_opener(RejectRedirectHandler()).open(request, timeout=20) as response:
             payload = json.loads(response.read().decode("utf-8") or "{}")
             if not isinstance(payload, dict):
                 raise ApiError(f"{service} API returned a non-object response")
