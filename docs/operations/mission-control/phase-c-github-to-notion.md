@@ -164,6 +164,7 @@ If the canary is wrong, do not run an automatic restore. Re-read the target page
 - **C-Design approved by the user on 2026-10-21.** C-Implementation is authorized on an isolated branch only.
 - The current implementation adds `scripts/mission-control/evidence_writer_preview.py`, a manual preview workflow, deterministic mocked tests, and the branch-specific Vercel deployment guard. It validates one exact mission/PR pairing and computes a two-property preview; it does not contain a page-write endpoint.
 - The read-only Notion token remains the only Notion credential referenced. No write token or new Notion capability has been created or used; no live Notion API mutation has been performed.
+- A separate canary implementation draft is now on `feat/mission-control-evidence-writer-canary-2026-10-22`; see [C-Canary handoff](phase-c-canary-2026-10-22.md). It is not merged or activated. It remains blocked on authenticated Notion integration administration and a protected GitHub environment with a dedicated secret.
 - No mission property or Notion schema has been changed by the writer code. Mission Control bookkeeping is maintained separately in the relevant Notion row.
 - The historical RDC clone remains preserved. All implementation changes are isolated from `main`.
 - The two Merge Gate controller failures found in the earlier audit remain a separate diagnostic item and must not be hidden by the healthy aggregate report.

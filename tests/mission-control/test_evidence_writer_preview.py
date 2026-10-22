@@ -337,6 +337,7 @@ class EvidenceWriterPreviewTests(unittest.TestCase):
         self.assertEqual(set(deployment_enabled), {
             "docs/phase-c-github-notion-writer-2026-10-21",
             "feat/mission-control-evidence-writer-2026-10-21",
+            "feat/mission-control-evidence-writer-canary-2026-10-22",
         })
         self.assertTrue(all(value is False for value in deployment_enabled.values()))
         self.assertNotIn("main", deployment_enabled)

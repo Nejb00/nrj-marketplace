@@ -8,7 +8,8 @@
   "git": {
     "deploymentEnabled": {
       "docs/phase-c-github-notion-writer-2026-10-21": false,
-      "feat/mission-control-evidence-writer-2026-10-21": false
+      "feat/mission-control-evidence-writer-2026-10-21": false,
+      "feat/mission-control-evidence-writer-canary-2026-10-22": false
     }
   }
 }

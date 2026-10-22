@@ -5,11 +5,13 @@ on:
     branches:
       - feat/mission-control-readonly-reconciler-2026-10-20
       - feat/mission-control-evidence-writer-2026-10-21
+      - feat/mission-control-evidence-writer-canary-2026-10-22
     paths:
       - scripts/mission-control/**
       - tests/mission-control/**
       - .github/workflows/mission-control-reconcile.yml
       - .github/workflows/mission-control-evidence-writer-preview.yml
+      - .github/workflows/mission-control-evidence-writer-canary.yml
       - .github/workflows/mission-control-reconcile-tests.yml
   pull_request:
     branches:
@@ -19,6 +21,7 @@ on:
       - tests/mission-control/**
       - .github/workflows/mission-control-reconcile.yml
       - .github/workflows/mission-control-evidence-writer-preview.yml
+      - .github/workflows/mission-control-evidence-writer-canary.yml
       - .github/workflows/mission-control-reconcile-tests.yml
 
 permissions:
@@ -42,7 +45,7 @@ jobs:
 
       - name: Compile Python files
         run: |
-          python -m py_compile scripts/mission-control/reconcile.py scripts/mission-control/evidence_writer_preview.py tests/mission-control/test_reconcile.py tests/mission-control/test_evidence_writer_preview.py
+          python -m py_compile scripts/mission-control/reconcile.py scripts/mission-control/evidence_writer_preview.py scripts/mission-control/evidence_writer_canary.py tests/mission-control/test_reconcile.py tests/mission-control/test_evidence_writer_preview.py tests/mission-control/test_evidence_writer_canary.py
 
       - name: Run deterministic tests (no network, no secrets)
         run: python -m unittest discover -s tests/mission-control -v
@@ -79,4 +82,26 @@ jobs:
           assert "persist-credentials: false" in writer_text, "checkout credentials must not persist"
           assert "github.ref != 'refs/heads/main'" in writer_text, "workflow must reject non-main execution"
           print("Evidence preview workflow parsed and confirmed manual/main/read-only/no-write-token.")
+
+          canary_path = Path(".github/workflows/mission-control-evidence-writer-canary.yml")
+          canary_text = canary_path.read_text(encoding="utf-8")
+          canary_workflow = yaml.load(canary_text, Loader=yaml.BaseLoader)
+          canary_triggers = canary_workflow.get("on", {})
+          assert set(canary_triggers) == {"workflow_dispatch"}, f"Unexpected canary triggers: {sorted(canary_triggers)}"
+          canary_permissions = canary_workflow.get("permissions", {})
+          assert canary_permissions.get("contents") == "read", "canary contents must remain read-only"
+          assert canary_permissions.get("pull-requests") == "read", "canary pull requests must remain read-only"
+          canary_job = canary_workflow["jobs"]["canary"]
+          assert canary_job.get("if") == "github.ref == 'refs/heads/main'", "canary must only run from main"
+          assert canary_job.get("environment", {}).get("name") == "mission-control-notion-evidence-write", "canary must use its dedicated protected environment"
+          canary_steps = canary_job.get("steps", [])
+          write_step = next(step for step in canary_steps if step.get("name") == "Run the identity-locked canary once")
+          guard_step = next(step for step in canary_steps if step.get("name") == "Require explicit confirmation and dedicated credential")
+          assert write_step.get("env", {}).get("NRJ_NOTION_EVIDENCE_WRITE_TOKEN") == "${{ secrets.NRJ_NOTION_EVIDENCE_WRITE_TOKEN }}", "canary must use a separate write token"
+          assert "NRJ_NOTION_EVIDENCE_WRITE_TOKEN" not in canary_job.get("env", {}), "write token must not be exposed at whole-job scope"
+          assert guard_step.get("env", {}).get("NOTION_WRITE_TOKEN") == "${{ secrets.NRJ_NOTION_EVIDENCE_WRITE_TOKEN }}", "guard may only check credential presence"
+          assert "persist-credentials: false" in canary_text, "canary checkout credentials must not persist"
+          assert "confirm_write" in canary_text and "default: NO" in canary_text, "canary must be opt-in by default"
+          assert "contents: write" not in canary_text and "pull-requests: write" not in canary_text, "canary GitHub permissions must remain read-only"
+          print("Canary workflow parsed: manual, main-only, locked environment, separate token, read-only GitHub permissions.")
           PY
