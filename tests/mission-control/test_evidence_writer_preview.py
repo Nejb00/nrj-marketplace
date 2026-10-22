@@ -288,25 +288,47 @@ class EvidenceWriterPreviewTests(unittest.TestCase):
             def read(self):
                 return b'{"results":[],"has_more":false}'
 
-        with patch.object(writer, "urlopen", return_value=FakeResponse()) as open_mock:
+        class FakeOpener:
+            def open(self, request, timeout):
+                self.request = request
+                self.timeout = timeout
+                return FakeResponse()
+
+        fake_opener = FakeOpener()
+        with patch.object(writer, "build_opener", return_value=fake_opener) as opener_mock:
             code, data = writer.api_request(
                 f"https://api.notion.com/v1/data_sources/{DATA_SOURCE}/query",
                 service="notion", token="dummy", method="POST", body={"page_size": 100},
             )
         self.assertEqual(code, 200)
         self.assertEqual(data["results"], [])
-        self.assertEqual(open_mock.call_args.args[0].get_method(), "POST")
+        self.assertEqual(fake_opener.request.get_method(), "POST")
+        self.assertEqual(fake_opener.timeout, 20)
+        self.assertIsInstance(opener_mock.call_args.args[0], writer.RejectRedirectHandler)
 
     def test_api_errors_never_echo_tokens(self) -> None:
         from urllib.error import HTTPError
         self.assertEqual(writer.normalise_id(PAGE_ID), PAGE_ID.replace("-", ""))
         self.assertIsNone(writer.parse_branch_url("https://evil.example/repo/tree/main", REPO))
         self.assertIsNotNone(writer.parse_branch_url(f"https://github.com/{REPO}/tree/feature/a", REPO))
-        with patch.object(writer, "urlopen", side_effect=HTTPError("https://api.github.com/test", 403, "Forbidden", {}, None)):
+        class FakeOpener:
+            def open(self, request, timeout):
+                raise HTTPError("https://api.github.com/test", 403, "Forbidden", {}, None)
+
+        with patch.object(writer, "build_opener", return_value=FakeOpener()):
             with self.assertRaises(writer.ApiError) as caught:
                 writer.api_request("https://api.github.com/test", service="github", token="test-secret-token")
         self.assertNotIn("test-secret-token", str(caught.exception))
         self.assertNotIn("Authorization", str(caught.exception))
+
+    def test_redirects_are_rejected_for_authenticated_api_requests(self) -> None:
+        handler = writer.RejectRedirectHandler()
+        request = writer.Request("https://api.github.com/repos/" + REPO + "/pulls/1")
+        with self.assertRaisesRegex(writer.ApiError, "redirect rejected"):
+            handler.redirect_request(
+                request, None, 302, "Found", {},
+                "https://attacker.example/collect",
+            )
 
     def test_workflow_is_manual_main_only_and_read_only(self) -> None:
         text = WORKFLOW.read_text(encoding="utf-8")
