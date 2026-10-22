@@ -163,13 +163,13 @@ If the canary is wrong, do not run an automatic restore. Re-read the target page
 
 - Phase B read-only proof: three successful live `NO_CHANGE` reports with 12 unique mission aliases each; the original 11 reconciler unit tests passed.
 - **C-Design approved by the user on 2026-10-21.** C-Implementation is authorized on an isolated branch only.
-- The current implementation adds `scripts/mission-control/evidence_writer_preview.py`, a manual preview workflow, deterministic mocked tests, and the branch-specific Vercel deployment guard. It validates one exact mission/PR pairing and computes a two-property preview; it does not contain a page-write endpoint. Pre-sync CI [run #39680146635](https://github.com/Nejb00/nrj-marketplace/actions/runs/39680146635) passed 40 tests and workflow safety checks on commit `541434563fa92b2547c3108f8216a4dac680af38`; CI must be rerun on the synchronized branch head before PR review.
+- The implementation adds `scripts/mission-control/evidence_writer_preview.py`, a manual preview workflow, deterministic mocked tests, and the branch-specific Vercel deployment guard. It validates one exact mission/PR pairing and computes a two-property preview; it does not contain a page-write endpoint. After the credential-scoping correction and regression test, Mission Control run [#39716618873](https://github.com/Nejb00/nrj-marketplace/actions/runs/39716618873) passed all 41 tests on head `3ed131a91c65e0ad718ae1d8a725045ff16dea71`. Full CI on that head completed with 26 check-runs: 22 success, 3 neutral (Netlify checks), 1 skipped, 0 failures, and 0 pending. This documentation refresh creates a newer head; its full CI must complete before any merge decision.
 - The read-only Notion token remains the only Notion credential referenced. No write token or new Notion capability has been created or used; no live Notion API mutation has been performed.
 - No mission property or Notion schema has been changed by the writer code. Mission Control bookkeeping is maintained separately in the relevant Notion row.
 - The historical RDC clone remains preserved. All implementation changes are isolated from `main`.
 - The two Merge Gate controller failures found in the earlier audit remain a separate diagnostic item and must not be hidden by the healthy aggregate report.
 
-**Next action:** confirm post-sync CI on the implementation branch, review the full preview-only diff, then present it before creating a PR. C-Canary must be separately approved before adding or enabling any live page-write path; automatic sync remains disabled.
+**Next action:** PR [#225](https://github.com/Nejb00/nrj-marketplace/pull/225) already exists and remains open for review. After this handoff refresh, verify the full CI on the newest PR head and recheck the final diff, then make a separate merge decision. Do not merge automatically. C-Canary still requires separate explicit approval before any live page-write path is added or enabled; automatic sync remains disabled.
 
 ## 12. Official references checked during design
 
