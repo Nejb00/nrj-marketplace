@@ -5,7 +5,8 @@
 - **Prepared:** 2026-10-21
 - **Design branch:** `docs/phase-c-github-notion-writer-2026-10-21`
 - **Implementation branch:** `feat/mission-control-evidence-writer-2026-10-21`
-- **Base commit:** `02fe7c333260d828756034a1cc8ab15d73114551`
+- **Original design base commit:** `02fe7c333260d828756034a1cc8ab15d73114551`
+- **Current implementation sync baseline:** `56b9b2d4c6f85cee3d0c786fbe0c9d636890c97d` (current `main` after PR #224)
 - **Current implementation status:** preview-only preflight and report code exists on the implementation branch; there is no page-write endpoint, write token, or live Notion property write.
 - **Approval rule:** C-Design approved; implementation only is authorized. Any live write and broader expansion still require separate explicit approval.
 
@@ -162,14 +163,14 @@ If the canary is wrong, do not run an automatic restore. Re-read the target page
 
 - Phase B read-only proof: three successful live `NO_CHANGE` reports with 12 unique mission aliases each; the original 11 reconciler unit tests passed.
 - **C-Design approved by the user on 2026-10-21.** C-Implementation is authorized on an isolated branch only.
-- The current implementation adds `scripts/mission-control/evidence_writer_preview.py`, a manual preview workflow, deterministic mocked tests, and the branch-specific Vercel deployment guard. It validates one exact mission/PR pairing and computes a two-property preview; it does not contain a page-write endpoint.
+- The current implementation adds `scripts/mission-control/evidence_writer_preview.py`, a manual preview workflow, deterministic mocked tests, and the branch-specific Vercel deployment guard. It validates one exact mission/PR pairing and computes a two-property preview; it does not contain a page-write endpoint. Pre-sync CI [run #39680146635](https://github.com/Nejb00/nrj-marketplace/actions/runs/39680146635) passed 40 tests and workflow safety checks on commit `541434563fa92b2547c3108f8216a4dac680af38`; CI must be rerun on the synchronized branch head before PR review.
 - The read-only Notion token remains the only Notion credential referenced. No write token or new Notion capability has been created or used; no live Notion API mutation has been performed.
-- A separate canary implementation draft is now on `feat/mission-control-evidence-writer-canary-2026-10-22`; see [C-Canary handoff](phase-c-canary-2026-10-22.md). It is not merged or activated. It remains blocked on authenticated Notion integration administration and a protected GitHub environment with a dedicated secret.
+- A separate canary implementation draft is staged in [PR #226](https://github.com/Nejb00/nrj-marketplace/pull/226), on `feat/mission-control-evidence-writer-canary-2026-10-22`; see [C-Canary handoff](phase-c-canary-2026-10-22.md). It is stacked on this preview-only work and is not merged or activated. It remains blocked on authenticated Notion integration administration and a protected GitHub environment with a dedicated secret.
 - No mission property or Notion schema has been changed by the writer code. Mission Control bookkeeping is maintained separately in the relevant Notion row.
 - The historical RDC clone remains preserved. All implementation changes are isolated from `main`.
 - The two Merge Gate controller failures found in the earlier audit remain a separate diagnostic item and must not be hidden by the healthy aggregate report.
 
-**Next action:** finish C-Tests on the implementation branch, inspect the full diff and remote CI result, then report the preview-only implementation for review. C-Canary must be separately approved before adding or enabling any live page-write path; automatic sync remains disabled.
+**Next action:** confirm post-sync CI on the implementation branch, review the full preview-only diff, then present it before creating a PR. C-Canary must be separately approved before adding or enabling any live page-write path; automatic sync remains disabled.
 
 ## 12. Official references checked during design
 
