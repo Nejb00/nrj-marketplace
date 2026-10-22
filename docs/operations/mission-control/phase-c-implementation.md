@@ -47,6 +47,8 @@ The review found that API credentials had been declared for the whole workflow j
 
 The review also identified this stale handoff. It now records the existing PR and the previous CI result separately from the new corrective commits.
 
+A subsequent security pass found that Python's default HTTP redirect handler can copy request headers when following redirects. The preview client now installs `RejectRedirectHandler` and refuses redirects on credential-bearing Notion/GitHub API requests; the regression suite tests that refusal. The prior 41-test CI result applies to head `3ed131a91c65e0ad718ae1d8a725045ff16dea71` only and does not validate this additional fix. Verify the newest head's full CI before any merge decision.
+
 ## Next gate
 
 After this handoff refresh, verify the completed CI on the newest PR head and recheck the final diff. Only then make a separate merge decision; do not merge automatically. The first live Notion write remains disabled, and C-Canary still needs separate explicit approval for one exact alias, page, PR, head SHA, merge SHA and timestamp.
