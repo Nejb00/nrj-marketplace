@@ -52,7 +52,9 @@ Do not enable a scheduled trigger in the first release. Add scheduling only afte
 
 ### Component B — GitHub evidence → Notion (later, allowlisted writes)
 
-Only after the read-only report has been validated, consider narrow event-driven property updates for an exact, existing Mission Alias. Examples:
+The detailed first-release design is tracked separately in [Phase C — GitHub → Notion evidence writer](phase-c-github-to-notion.md). It remains design-only; the proposed first write scope is limited to filling blank `PR URL` and `Evidence URL` properties for one explicitly approved, verified merged PR.
+
+Only after the read-only report has been validated, consider narrow, manually dispatched property updates for one exact, existing Mission Alias. The first Phase C design has no event-driven or scheduled writer trigger. Examples:
 - store an exact PR URL and merge commit only when GitHub confirms the PR is merged;
 - record test status only for named required checks and their exact head SHA;
 - record a deployment only when the target environment reports a deployment tied to the expected source SHA.
@@ -89,7 +91,7 @@ The workflow re-reads the row, validates all identifiers and produces a branch w
 | Payment/security approval or live activation | Explicit authorized operator + live evidence | Out of scope for sync |
 | Last reconciled / sync fingerprint | Integration metadata | Managed by the synchronizer; not hand-edited |
 
-Before implementation, verify the current Notion data-source schema and add only the minimum metadata properties needed for idempotency, e.g. `Last Sync Source SHA`, `Last Sync Event ID`, `Last Sync Result`, and `Last Sync At`. These schema changes are **not** part of this proposal's implementation.
+The current [Phase C proposal](phase-c-github-to-notion.md) intentionally avoids a Notion schema change for its first narrow writer: fill-only URL updates plus equality checks make repeated runs a no-op, and the workflow artifact records the source evidence. If a later stage needs durable sync metadata properties (for example source SHA or last-sync result), define a separate schema-change proposal and obtain explicit approval before applying it.
 
 ## 5. Identity, idempotency, and conflict handling
 
@@ -197,9 +199,11 @@ The report must distinguish observed facts from proposals. A dry run must be pro
 
 ## 11. Current state and next decision
 
-- The cold-start documentation test succeeded in reconstructing the project and mission state from persistent Notion/GitHub references.
-- This does not prove that sessions will automatically load or synchronize those sources.
-- Mission Control remains manually coordinated today.
-- This document is a **proposal only**. No integration secret has been created, no workflow has been added or enabled, no Notion schema change has been made, and no sync execution has occurred.
+- The cold-start documentation test succeeded in reconstructing the project and mission state from persistent Notion/GitHub references. This does not prove that sessions automatically load or synchronize those sources.
+- Phase B now has a manual read-only reconciler in `main` (`.github/workflows/mission-control-reconcile.yml` and `scripts/mission-control/reconcile.py`). It reads Notion/GitHub and publishes an artifact; it has no write endpoint or GitHub write permission.
+- Three live dry-runs after the status-semantics correction — runs [39563775278](https://github.com/Nejb00/nrj-marketplace/actions/runs/39563775278), [39567369170](https://github.com/Nejb00/nrj-marketplace/actions/runs/39567369170), and [39567511552](https://github.com/Nejb00/nrj-marketplace/actions/runs/39567511552) — each read 12 rows with 12 unique aliases and returned `NO_CHANGE` for all rows. Their artifacts state that no Notion/GitHub writes, branch/PR creation, merges or deployments occurred.
+- The local unit suite contained 11 tests and passed in a clean worktree on `02fe7c333260d828756034a1cc8ab15d73114551`.
+- Phase C's proposed evidence writer is documented in [phase-c-github-to-notion.md](phase-c-github-to-notion.md). It is **not implemented**: no write token, new Notion capability, schema change, writer workflow or live PATCH was created as part of that design.
+- Mission Control remains manually coordinated. Automatic synchronization is inactive. The two Merge Gate controller failures noted in the latest audit remain a separate diagnostic item.
 
-**Decision requested before implementation:** review this proposal and authorize any desired changes. Until explicit approval, keep all automation inactive.
+**Decision requested:** review the Phase C design before authorizing implementation. Implementation, the first live write, and any later expansion each require distinct approval. Until then, keep all write paths inactive.
