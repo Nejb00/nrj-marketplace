@@ -1,11 +1,11 @@
 # NRJ Mission Control — Phase C Implementation (preview only)
 
 - **Mission alias:** NRJ-OPS-004
-- **State:** C-Design user validated; implementation remains preview-only; PR #225 is open and Ready for review; follow-up review fixes are being validated
+- **State:** C-Design user validated; implementation remains preview-only; PR #225 is open and Ready for review; the corrective fixes passed the 41-test Mission Control suite and full CI on head `3ed131a91c65e0ad718ae1d8a725045ff16dea71`. This handoff refresh creates a newer head, which must pass its own CI before any merge decision.
 - **Branch:** `feat/mission-control-evidence-writer-2026-10-21`
 - **Synced main baseline:** `56b9b2d4c6f85cee3d0c786fbe0c9d636890c97d` (PR #224 merged)
 - **Branch synchronization commit:** `8596a894e7808205467377ae61f5abb9abcfdb65` (two parents: the preview-only branch tip and the merged `main` tip)
-- **Earlier CI evidence:** [run #39680146635](https://github.com/Nejb00/nrj-marketplace/actions/runs/39680146635) passed on `541434563fa92b2547c3108f8216a4dac680af38`. Before the current review fixes, [PR #225 checks](https://github.com/Nejb00/nrj-marketplace/pull/225/checks) completed on `f4a16a80d4ae23730a012d8a73f48eebce2553ca` with 26 success, 3 neutral, 1 skipped, and 0 failures. Those results do not validate the new corrective commits; fresh CI must pass on the updated head.
+- **CI evidence:** Pre-sync run [#39680146635](https://github.com/Nejb00/nrj-marketplace/actions/runs/39680146635) and pre-fix checks are historical only. After the credential-scoping fix and regression test, Mission Control run [#39716618873](https://github.com/Nejb00/nrj-marketplace/actions/runs/39716618873) passed all 41 tests on head `3ed131a91c65e0ad718ae1d8a725045ff16dea71`. The full CI for that same head completed 26 check-runs: 22 success, 3 neutral (Netlify checks), 1 skipped, 0 failures, and 0 pending. This handoff edit produces a newer head; verify its own completed CI before deciding whether to merge.
 - **Design reference:** [Phase C GitHub → Notion evidence writer](phase-c-github-to-notion.md)
 - **Approval boundary:** preview-only implementation on an isolated branch; no live Notion page write, write credential, or automatic sync is authorized. PR #225 may be reviewed, but merge and live-writer activation remain separate explicit decisions.
 
@@ -49,4 +49,4 @@ The review also identified this stale handoff. It now records the existing PR an
 
 ## Next gate
 
-Run and inspect the full CI on the updated PR head, review the new diff and this handoff, then decide separately whether the PR can be merged. Do not merge automatically. The first live Notion write remains disabled; C-Canary still needs a separate explicit approval for one exact alias, page, PR, head SHA, merge SHA and timestamp.
+After this handoff refresh, verify the completed CI on the newest PR head and recheck the final diff. Only then make a separate merge decision; do not merge automatically. The first live Notion write remains disabled, and C-Canary still needs separate explicit approval for one exact alias, page, PR, head SHA, merge SHA and timestamp.
