@@ -7,7 +7,29 @@
 import { supabaseClient } from '../core/config.js';
 import db from './db.js';
 
+const SYNC_PENDING_KEY = 'nrj_sync_pending_v1';
+const SYNC_PENDING_EVENT = 'nrj:local-state-changed';
+
 let isSyncing = false;
+let autoSyncSetup = false;
+let pendingSyncInMemory = false;
+let pendingRevision = 0;
+
+function hasPendingSync() {
+    if (pendingSyncInMemory) return true;
+    try { return localStorage.getItem(SYNC_PENDING_KEY) === '1'; } catch { return false; }
+}
+
+function markPendingSync() {
+    pendingSyncInMemory = true;
+    pendingRevision += 1;
+    try { localStorage.setItem(SYNC_PENDING_KEY, '1'); } catch {}
+}
+
+function clearPendingSync() {
+    pendingSyncInMemory = false;
+    try { localStorage.removeItem(SYNC_PENDING_KEY); } catch {}
+}
 
 async function getSyncUserId() {
     const { data: { session } } = await supabaseClient.auth.getSession();
@@ -21,8 +43,6 @@ async function getSyncUserId() {
 export async function syncCartToSupabase() {
     try {
         const cart = await db.getCart();
-        // Synchroniser aussi un tableau vide : une suppression locale doit
-        // pouvoir vider l'état distant au lieu de laisser un ancien panier.
         const { error } = await supabaseClient
             .from('carts')
             .upsert({
@@ -34,46 +54,73 @@ export async function syncCartToSupabase() {
                     couleur: item.couleur || ''
                 }))
             });
-        if (error) console.warn('Sync panier:', error.message);
+        if (error) {
+            console.warn('Sync panier:', error.message);
+            return false;
+        }
+        return true;
     } catch (err) {
         console.warn('Sync panier impossible:', err);
+        return false;
     }
 }
 
 export async function syncFavoritesToSupabase() {
     try {
         const favorites = await db.getFavorites();
-        // Même principe pour les favoris : [] doit écraser l'ancien état distant.
         const { error } = await supabaseClient
             .from('favorites')
             .upsert({
                 user_id: await getSyncUserId(),
                 product_ids: favorites
             });
-        if (error) console.warn('Sync favoris:', error.message);
+        if (error) {
+            console.warn('Sync favoris:', error.message);
+            return false;
+        }
+        return true;
     } catch (err) {
         console.warn('Sync favoris impossible:', err);
+        return false;
     }
 }
 
 export async function syncAllOfflineData() {
-    if (isSyncing || !navigator.onLine) return;
+    if (isSyncing || !navigator.onLine || !hasPendingSync()) return;
+
     isSyncing = true;
+    const revisionAtStart = pendingRevision;
     try {
-        await syncCartToSupabase();
-        await syncFavoritesToSupabase();
+        const cartSynced = await syncCartToSupabase();
+        const favoritesSynced = await syncFavoritesToSupabase();
+
+        // Ne pas effacer une modification arrivée pendant les requêtes en cours.
+        if (cartSynced && favoritesSynced && pendingRevision === revisionAtStart) {
+            clearPendingSync();
+        }
     } finally {
         isSyncing = false;
+        if (navigator.onLine && hasPendingSync() && pendingRevision !== revisionAtStart) {
+            Promise.resolve().then(() => syncAllOfflineData());
+        }
     }
 }
 
 export function setupAutoSync() {
-    window.addEventListener('online', () => {
-        syncAllOfflineData();
+    if (autoSyncSetup) return;
+    autoSyncSetup = true;
+
+    window.addEventListener(SYNC_PENDING_EVENT, () => {
+        markPendingSync();
+        void syncAllOfflineData();
     });
-    if (navigator.onLine) {
-        setTimeout(() => syncAllOfflineData(), 2500);
-    }
+    window.addEventListener('online', () => {
+        if (hasPendingSync()) void syncAllOfflineData();
+    });
+
+    // À l'ouverture, ne synchroniser que si une vraie modification locale
+    // reste en attente depuis une session précédente (ex. modification hors ligne).
+    if (hasPendingSync()) void syncAllOfflineData();
 }
 
 export function isOnline() {
