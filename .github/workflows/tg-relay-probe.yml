@@ -1,0 +1,102 @@
+name: TG Relay Probe
+# version: v4 — pull_request : getMe + getUpdates + setMyCommands + premier push
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/tg-relay-probe.yml"
+  workflow_dispatch:
+    inputs:
+      method:
+        description: "Méthode Bot API à appeler via le relais Cloudflare"
+        required: false
+        default: "getMe"
+        type: string
+      message:
+        description: "Texte à envoyer (si method=sendMessage)"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Sonde relais Telegram
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      - name: Appel du relais
+        env:
+          TG_METHOD: ${{ github.event.inputs.method || 'getMe' }}
+          TG_MESSAGE: ${{ github.event.inputs.message }}
+          TG_RELAY_KEY: ${{ secrets.TG_RELAY_KEY }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            for M in getMe getUpdates; do
+              echo "→ Relais: ${M}"
+              curl --fail --silent --show-error --max-time 20 \
+                -H "X-Auth: ${TG_RELAY_KEY}" \
+                "https://nrj-tg-relay.nejb00.workers.dev/${M}" \
+                -o "response-${M}.json"
+            done
+            if [ -n "${TG_CHAT_ID}" ]; then
+              echo "→ Relais: setMyCommands"
+              cat > cmds.json <<'EOF'
+          {"commands":[
+            {"command":"start","description":"Réveiller la passerelle NRJ"},
+            {"command":"help","description":"Ce que sait faire Xflow"},
+            {"command":"status","description":"État de la flotte NRJ"},
+            {"command":"ping","description":"Test de vie du canal"}
+          ]}
+          EOF
+              curl --fail --silent --show-error --max-time 20 \
+                -X POST \
+                -H "X-Auth: ${TG_RELAY_KEY}" \
+                -H "Content-Type: application/json" \
+                -d @cmds.json \
+                "https://nrj-tg-relay.nejb00.workers.dev/setMyCommands" \
+                -o response-setMyCommands.json
+              echo "→ Relais: sendMessage (premier contact)"
+              curl --fail --silent --show-error --max-time 20 \
+                -X POST \
+                -H "X-Auth: ${TG_RELAY_KEY}" \
+                -H "Content-Type: application/json" \
+                -d "{\"chat_id\": ${TG_CHAT_ID}, \"text\": \"⚡ Premier message officiel, frangin ! La chaîne est complète : GitHub Actions → relais Cloudflare → Xflow → ton iPhone. Les commandes sont configurées aussi. — Bit\"}" \
+                "https://nrj-tg-relay.nejb00.workers.dev/sendMessage" \
+                -o response-sendMessage.json
+            else
+              echo "(TG_CHAT_ID absent — pas de push)"
+            fi
+          elif [ "$TG_METHOD" = "sendMessage" ]; then
+            curl --fail --silent --show-error --max-time 20 \
+              -X POST \
+              -H "X-Auth: ${TG_RELAY_KEY}" \
+              -H "Content-Type: application/json" \
+              -d "{\"chat_id\": ${{ secrets.TG_CHAT_ID }}, \"text\": \"${TG_MESSAGE}\"}" \
+              "https://nrj-tg-relay.nejb00.workers.dev/${TG_METHOD}" \
+              -o response.json
+          else
+            echo "→ Relais: ${TG_METHOD}"
+            curl --fail --silent --show-error --max-time 20 \
+              -H "X-Auth: ${TG_RELAY_KEY}" \
+              "https://nrj-tg-relay.nejb00.workers.dev/${TG_METHOD}" \
+              -o response.json
+          fi
+
+      - name: Résultat
+        if: always()
+        run: |
+          echo "=== Réponse du relais ==="
+          for F in response.json response-getMe.json response-getUpdates.json response-setMyCommands.json response-sendMessage.json; do
+            if [ -f "$F" ]; then
+              echo "--- $F ---"
+              cat "$F"
+              echo ""
+            fi
+          done
+          echo "=== fin ==="
