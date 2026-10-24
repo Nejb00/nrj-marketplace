@@ -653,8 +653,8 @@
       "driveMd5": "2274d6e8d706207821910ef99f468a4a"
     },
     "src/js/core/config.js": {
-      "githubSha": "d5816571df940b5c98c0a0797a33f922a93b4894",
-      "driveMd5": "a70c0ed2858af3f82d15f15a656883eb"
+      "githubSha": "398d451e0de8ab17897afae48155a62aa4b5b98e",
+      "driveMd5": "f550599db342c97be8de83b9b95bdd6d"
     },
     "src/js/core/state.js": {
       "githubSha": "465751d9d41b7bf52082074f17d95c6245f1e0d9",
@@ -665,8 +665,8 @@
       "driveMd5": "8c2ee25753de5507b01f6a4900263293"
     },
     "src/js/features/admin/admin-list.js": {
-      "githubSha": "da4a6d390a385f33dd4968b1fc7a1e96abdcee9f",
-      "driveMd5": "c1e92940cf95674d3e8de616c468b6e4"
+      "githubSha": "895ae5a3540bee508eac4f824163fd837a368273",
+      "driveMd5": "a3ce6f441c75adfbe0e954dca2ec65b6"
     },
     "src/js/features/admin/category-dropdowns.js": {
       "githubSha": "d0a4f2d9813bd20f65d19f94e240056f25d6a4b0",
@@ -1328,6 +1328,10 @@
       "githubSha": "e49fc18a4f9e98a33b70f0e39bc0df8f2477bda9",
       "driveMd5": "730e5df4f0e5637baa6a30f77e97864c"
     },
+    "test/product-freshness.test.js": {
+      "githubSha": "070c22a0887040a86bb4c1678836a94fc164b4b2",
+      "driveMd5": "03a09e47f37ce4fe196dc9518ffc7bd8"
+    },
     "test/product-import-auto-recovery.test.js": {
       "githubSha": "9b094beedaf3c0e9f7dc142bcb790a974ccf3a06",
       "driveMd5": "0759b1ac1a92fdd6a4ed08dc4b4ffeac"
@@ -1485,5 +1489,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-24T20:59:21.165Z"
+  "updatedAt": "2026-10-24T21:16:55.636Z"
 }
