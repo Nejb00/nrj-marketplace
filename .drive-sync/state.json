@@ -1148,11 +1148,11 @@
       "githubSha": "6dce756ba54eba159fdb2b42d84908f97333bcc4",
       "driveMd5": "324f44d6d03ea9070ede1996d9a15978"
     },
-    "supabase/migrations/20261007011227_create_product_variants_media.sql": {
+    "supabase/migrations/20261024204139_create_product_variants_media.sql": {
       "githubSha": "f1a4e0df7f641f6e79e46f8e82005df855eb5863",
       "driveMd5": "d4b95916801d04ed3b5c1cdc06595818"
     },
-    "supabase/migrations/20261007023500_admin_variant_graph_rpc.sql": {
+    "supabase/migrations/20261024204154_admin_variant_graph_rpc.sql": {
       "githubSha": "578794c21172487ad16ed3217dcc8aa855de750a",
       "driveMd5": "584f1adbc2128557402efcd1df822a90"
     },
@@ -1468,6 +1468,14 @@
       "githubSha": "42b0ede613f06d5e0bc4283f079c4fb4794b4b60",
       "driveMd5": "a0018480fe3228e3c20d7a620cc6ba1f"
     },
+    "supabase/migrations/20261007023500_admin_variant_graph_rpc.sql": {
+      "githubSha": "578794c21172487ad16ed3217dcc8aa855de750a",
+      "driveMd5": "584f1adbc2128557402efcd1df822a90"
+    },
+    "supabase/migrations/20261007011227_create_product_variants_media.sql": {
+      "githubSha": "f1a4e0df7f641f6e79e46f8e82005df855eb5863",
+      "driveMd5": "d4b95916801d04ed3b5c1cdc06595818"
+    },
     "scripts/sync_to_gdrive.py": {
       "githubSha": "9d43e41e7a90148c44dad49486cab825e475bfe6",
       "driveMd5": "8b085f087095fe2df782e3f84b5959b4"
@@ -1477,5 +1485,5 @@
       "driveMd5": "80d2a92f245667fbf5a8de53ceba0af1"
     }
   },
-  "updatedAt": "2026-10-21T21:35:52.799Z"
+  "updatedAt": "2026-10-24T20:59:21.165Z"
 }
