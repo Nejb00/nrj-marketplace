@@ -6,9 +6,12 @@ import { formatPrice } from '../utils/format.js';
 import { fuzzySearch, highlightMatch } from '../utils/fuzzy-search.js';
 import { getCategoryIcon } from '../utils/category-icon.js';
 import { searchThumbImg } from '../utils/images.js';
-import { openProductModal } from '../features/product/modal-render.js';
 import { switchToSearchView } from '../features/search/search-view.js';
 import { getSearchHistory, saveSearchToHistory, clearSearchHistory } from './search-history.js';
+
+const openProductModal = (...args) => import('../features/product/modal-render.js')
+  .then((module) => module.openProductModal(...args))
+  .catch((error) => console.error('Ouverture fiche produit depuis la recherche impossible:', error));
 
 const TRENDING_COUNT = 10;
 

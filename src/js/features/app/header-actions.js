@@ -2,11 +2,14 @@
 // Éclaté de main.js (refacto-archi) — logique strictement identique.
 import { state } from '../../core/state.js';
 import { switchView } from '../catalogue/categories-page.js';
-import { closeProductModal } from '../product/modal-render.js';
 import { openCartPanel as openCartPanelService } from '../../services/cart-panel.js';
 import { showAccountView } from './account-view.js';
 import { isFlexOpen, closeSearchAndAccount, closeCartPanel, markNavActive } from './view-helpers.js';
 import { switchFromSearchView } from '../search/search-view.js';
+
+const closeProductModal = () => import('../product/modal-render.js')
+  .then((module) => module.closeProductModal())
+  .catch((error) => console.error('Fermeture fiche produit impossible:', error));
 
 export function openHeaderCategories() {
   closeSearchAndAccount();
