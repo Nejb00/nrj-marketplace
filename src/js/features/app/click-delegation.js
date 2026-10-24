@@ -12,6 +12,13 @@ import { toggleFavorite } from '../../services/favorites.js';
 import { openOrderModal, sendWhatsAppOrder } from '../../services/checkout.js';
 import { cancelDirectPurchase } from '../../services/direct-purchase.js';
 import { startMobileMoneyPayment, initMobileMoneyPaymentUi } from '../../services/payment/mobile-money-checkout.js';
+import { openEditModal } from '../product/product-edit-form.js';
+import { updateProduct } from '../product/product-edit-save.js';
+import { hideSearchDropdown } from '../../services/search-dropdown.js';
+import { showAccountView, hideAccountView, handleAccountAction } from './account-view.js';
+import { isFlexOpen } from './view-helpers.js';
+import { switchToSearchView, switchFromSearchView } from '../search/search-view.js';
+
 const loadProductModal = () => import('../product/modal-render.js');
 const openProductModal = (...args) => loadProductModal()
   .then((module) => module.openProductModal(...args))
@@ -19,12 +26,6 @@ const openProductModal = (...args) => loadProductModal()
 const closeProductModal = (...args) => loadProductModal()
   .then((module) => module.closeProductModal(...args))
   .catch((error) => console.error('Fermeture fiche produit impossible:', error));
-import { openEditModal } from '../product/product-edit-form.js';
-import { updateProduct } from '../product/product-edit-save.js';
-import { hideSearchDropdown } from '../../services/search-dropdown.js';
-import { showAccountView, hideAccountView, handleAccountAction } from './account-view.js';
-import { isFlexOpen } from './view-helpers.js';
-import { switchToSearchView, switchFromSearchView } from '../search/search-view.js';
 
 document.addEventListener('nrj:cart-open-product', (event) => {
   const pid = Number(event.detail?.productId);
