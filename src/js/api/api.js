@@ -10,11 +10,30 @@ let productCache = { data: null, timestamp: 0 };
 
 const REQUEST_TIMEOUT = 10000;
 
+/**
+ * Le navigateur peut annoncer navigator.onLine=false alors que l'API répond.
+ * Une réponse Supabase est la preuve la plus utile de connectivité applicative.
+ */
+function reportNetworkStatus(status) {
+    state.networkStatus = status;
+    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof CustomEvent !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('nrj:network-status', { detail: { status } }));
+    }
+}
+
 async function fetchWithTimeout(promise, timeout = REQUEST_TIMEOUT) {
   const timeoutPromise = new Promise((_, reject) => {
     setTimeout(() => reject(new Error('Timeout: La requête a pris trop de temps')), timeout);
   });
-  return Promise.race([promise, timeoutPromise]);
+  try {
+    // Une réponse HTTP/Supabase (même avec une erreur SQL) confirme l'accès au serveur.
+    const result = await Promise.race([promise, timeoutPromise]);
+    reportNetworkStatus('online');
+    return result;
+  } catch (err) {
+    reportNetworkStatus('offline');
+    throw err;
+  }
 }
 
 const USER_HASH = (() => {
