@@ -15,7 +15,6 @@ import { initPlaceholderRotation } from '../../services/search-rotation.js';
 import { initVoiceSearch } from '../../services/search-voice.js';
 import { initChat } from '../chat/chat-ui.js';
 import { setupAutoSync } from '../../services/sync.js';
-// La fiche produit est chargée uniquement pour un lien profond ou une interaction.
 import { switchToSearchView } from '../search/search-view.js';
 import { initThemeToggle } from './theme.js';
 import { initSmartHeader, initHeaderSearchCompact } from './smart-header.js';
