@@ -18,7 +18,8 @@ export const PRELOAD_IMAGE_COUNT = 4;
 export const PRELOAD_CONCURRENCY = 2;
 /** <link rel="preload"> pour le LCP (premières cartes). */
 export const LCP_PRELOAD_COUNT = 2;
-export const NEW_PRODUCT_DAYS = 7;
+/** Fenêtre commune de fraîcheur des nouveautés du catalogue (en jours). */
+export const NEW_PRODUCT_DAYS = 30;
 export const POPULAR_THRESHOLD = 20;
 export const MAX_SEARCH_RESULTS = 7;
 export const SEARCH_HISTORY_KEY = 'nrj_search_history';
