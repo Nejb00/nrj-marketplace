@@ -3,6 +3,7 @@
 import { state } from '../../core/state.js';
 import { escapeHtml } from '../../utils/escape-html.js';
 import { categoryLabel } from './category-dropdowns.js';
+import { isNewProduct } from '../../utils/badges.js';
 
 export function renderAdminList() {
   const list = document.getElementById('adminProductsList');
@@ -16,15 +17,11 @@ export function renderAdminStats() {
   const stats = document.getElementById('adminStats');
   if (!stats || !state.products.length) return;
 
-  const now = Date.now();
-  const sevenDays = 7 * 24 * 60 * 60 * 1000;
-  const isNew = (p) => p.created_at && (now - new Date(p.created_at).getTime()) <= sevenDays;
-
   // Compteurs
   const totalProducts = state.products.length;
   const totalPopularity = state.products.reduce((sum, p) => sum + (p.popularity_score || 0), 0);
   const bestSellers = state.products.filter((p) => (p.popularity_score || 0) >= 20).length;
-  const newProducts = state.products.filter(isNew).length;
+  const newProducts = state.products.filter(isNewProduct).length;
 
   // Top 5 produits
   const top5 = [...state.products]
