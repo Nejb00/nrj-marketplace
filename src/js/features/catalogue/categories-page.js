@@ -53,7 +53,7 @@ function setCategoriesHeaderHidden(hidden) {
 }
 
 function bindCategoriesScrollAutoHide() {
-    const container = document.querySelector('#categoriesView .categories-main');
+    const container = document.querySelector('#categoriesView .categories-main-scroll');
     if (!container) return;
     if (categoriesScrollContainer === container && categoriesScrollHandler) return;
 

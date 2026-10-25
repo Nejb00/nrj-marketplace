@@ -17,9 +17,10 @@ test('catalogue mode keeps the fixed search/category header visible', async () =
 
 
 test('categories page uses a compact auto-hiding header without a persistent scroll listener', async () => {
-  const [categoriesPage, filtersCss] = await Promise.all([
+  const [categoriesPage, filtersCss, indexHtml] = await Promise.all([
     readFile('src/js/features/catalogue/categories-page.js', 'utf8'),
-    readFile('src/css/components/filters.css', 'utf8')
+    readFile('src/css/components/filters.css', 'utf8'),
+    readFile('index.html', 'utf8')
   ]);
 
   assert.match(categoriesPage, /CATEGORIES_SCROLL_THRESHOLD = 8/);
@@ -29,5 +30,8 @@ test('categories page uses a compact auto-hiding header without a persistent scr
   assert.match(filtersCss, /body\.categories-page-open #filterBar,\s*body\.categories-page-open #quickFilters,\s*body\.categories-page-open #subcategoryBubbles/);
   assert.match(filtersCss, /transform:\s*translateY\(-100%\)/);
   assert.match(filtersCss, /height:\s*44px/);
-  assert.match(filtersCss, /\.categories-popular-toolbar\s*\{[^}]*position:\s*sticky/s);
+  assert.match(categoriesPage, /document\.querySelector\('#categoriesView \.categories-main-scroll'\)/);
+  assert.match(filtersCss, /\.categories-sort-sticky\s*\{[^}]*border-bottom/s);
+  assert.match(filtersCss, /\.categories-main-scroll\s*\{[^}]*overflow-y:\s*auto/s);
+  assert.match(indexHtml, /categories-sort-sticky[\s\S]*?categories-main-scroll[\s\S]*?id="categoriesPanel"/);
 });
