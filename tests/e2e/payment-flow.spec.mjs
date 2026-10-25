@@ -402,7 +402,7 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
     await page.locator('a[data-nav="cart"]').click();
     await expect(page.locator("#cartPanel")).toHaveClass(/\bopen\b/);
     await expect(page.locator("#cartEmptyTitle")).toHaveText("Votre panier est vide");
-    await expect(page.locator(".cart-discover-btn")).toContainText("Voir les populaires");
+    await expect(page.locator(".cart-discover-btn")).toContainText("Voir les meilleures ventes");
 
     await page.locator(".cart-discover-btn").click();
     await expect(page.locator("#categoriesView")).toHaveClass(/\bis-open\b/);
