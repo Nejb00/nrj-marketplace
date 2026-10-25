@@ -89,7 +89,7 @@ Marketplace e-commerce moderne construite avec **Vite** + **Supabase**.
 │       │   ├── search/         → search-view.js (page résultats)
 │       │   └── app/            → ×13 : thème, smart-header, header-actions,
 │       │                         offline, logo-press, account-view,
-│       │                         swipe-nav, quick-filters, search-bar,
+│       │                         swipe-nav, search-bar,
 │       │                         click-delegation, filter-bar, app-init
 │       │
 │       ├── main.js             → entry public (25 lignes, orchestration)

@@ -58,12 +58,3 @@ export function affinityScore(p) {
 export function forYou(list) {
     return [...list].sort((a, b) => affinityScore(b) - affinityScore(a));
 }
-
-const qf = document.querySelector('.quick-filters');
-if (qf && !qf.querySelector('[data-filter="foryou"]')) {
-    const b = document.createElement('button');
-    b.className = 'filter-chip';
-    b.dataset.filter = 'foryou';
-    b.textContent = '✨ Pour toi';
-    qf.appendChild(b);
-}

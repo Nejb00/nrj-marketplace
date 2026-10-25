@@ -6,7 +6,6 @@
 import '../css/main.css';
 
 // Modules à side-effects (dans l'ordre historique de l'ancien main.js) :
-import './features/app/quick-filters.js';        // chips filtres rapides
 import './features/app/search-bar-bindings.js';  // barre de recherche + clic extérieur
 import './features/app/click-delegation.js';     // délégation clics + nav + boutons
 import './features/app/app-init.js';             // init() + boot panier

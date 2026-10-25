@@ -123,7 +123,6 @@ document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('clic
     if (isFlexOpen('accountView')) hideAccountView();
     switchView('home');
     state.currentFilter = 'all';
-    state.currentQuickFilter = 'all';
     state.searchQuery = '';
     clearSubcategorySelection();
     const inp = document.getElementById('searchInput');
@@ -131,8 +130,6 @@ document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('clic
       inp.value = ''; 
       inp.placeholder = (state.rotationList && state.rotationList[0]) ? state.rotationList[0] : 'Rechercher...'; 
     }
-    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-    document.querySelector('.filter-chip[data-filter="all"]')?.classList.add('active');
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     document.querySelector('.filter-btn[data-category="all"]')?.classList.add('active');
     refreshCatalogue();

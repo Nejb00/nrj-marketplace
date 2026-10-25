@@ -289,11 +289,6 @@
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
 }
 
-/* ── 18. FILTER CHIPS : plus de pep's en clair ─────────────────────────── */
-:root.light-theme .filter-chip.active {
-  box-shadow: 0 4px 12px rgba(255, 140, 66, 0.2);
-}
-
 /* ── 19. SCROLL TO TOP : visible en clair ──────────────────────────────── */
 :root.light-theme .scroll-to-top {
   box-shadow: 0 4px 16px rgba(255, 140, 66, 0.25);

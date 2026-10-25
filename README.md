@@ -90,7 +90,7 @@ Modern e-commerce marketplace built with **Vite** + **Supabase**.
 │       │   ├── search/         → search-view.js (results page)
 │       │   └── app/            → ×13: theme, smart-header, header-actions,
 │       │                         offline, logo-press, account-view,
-│       │                         swipe-nav, quick-filters, search-bar,
+│       │                         swipe-nav, search-bar,
 │       │                         click-delegation, filter-bar, app-init
 │       │
 │       ├── main.js             → public entry (25 lines, orchestration)
