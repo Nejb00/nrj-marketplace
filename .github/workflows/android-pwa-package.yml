@@ -129,9 +129,10 @@ jobs:
           report = selected['report']
           Path('/tmp/lighthouse.json').write_text(json.dumps(report))
           categories = report.get('categories', {})
-          performance = selected['performance']
+          perf = selected['performance']
+          pwa = categories['pwa'].get('score')
           audits = report.get('audits', {})
-          print(f"median performance = {performance*100:.1f}/100 (requis >= 80)")
+          print(f"median performance = {perf*100:.1f}/100 (requis >= 80)")
           print("pwa         = 1 on all 3 runs (requis = 1)")
 
           for metric_id in ('first-contentful-paint', 'largest-contentful-paint',
@@ -140,7 +141,7 @@ jobs:
               if metric.get('displayValue'):
                   print(f"median-run metric {metric_id}: {metric['displayValue']}")
 
-          if performance < 0.8:
+          if perf < 0.8:
               print("Audits performance à examiner (rapport médian) :")
               refs = categories['performance'].get('auditRefs', [])
               failed = []
@@ -153,7 +154,8 @@ jobs:
               for _, audit_id, title in sorted(failed, reverse=True)[:12]:
                   print(f"  - {audit_id}: {title}")
 
-          assert performance >= 0.8, "median Lighthouse score performance < 80"
+          assert perf is not None and perf >= 0.8, "median Lighthouse score performance < 80"
+          assert pwa == 1, "score PWA < 1"
           print("Critères TWA (bubblewrap) satisfaits — médiane Lighthouse locale ✓")
           PY
 
