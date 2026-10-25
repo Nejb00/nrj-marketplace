@@ -18,6 +18,95 @@ let categoriesPageState = {
 
 export function getCategoriesPageState() { return categoriesPageState; }
 
+let categoriesScrollContainer = null;
+let categoriesScrollHandler = null;
+let previousCategoriesScrollTop = 0;
+let accumulatedCategoriesScroll = 0;
+let lastCategoriesScrollDirection = 0;
+const CATEGORIES_SCROLL_THRESHOLD = 8;
+
+function setCategoriesHeaderHidden(hidden) {
+    const fixed = document.getElementById('headerFixed');
+    const cv = document.getElementById('categoriesView');
+    if (!fixed || !cv) return;
+
+    const wasHidden = fixed.classList.contains('categories-header-hidden');
+    if (wasHidden === hidden) return;
+
+    fixed.classList.toggle('categories-header-hidden', hidden);
+
+    // The compact header is the only header layer on this page. When hidden,
+    // move the view itself to the top so no empty strip remains.
+    const headerH = Math.ceil(fixed.offsetHeight || 44);
+    const offset = hidden ? 0 : headerH;
+    const spacer = document.getElementById('headerSpacer');
+    if (spacer) spacer.style.height = headerH + 'px';
+    cv.style.setProperty('--categories-header-h', offset + 'px');
+    cv.style.height = `calc(100dvh - ${offset}px)`;
+    cv.style.maxHeight = `calc(100dvh - ${offset}px)`;
+
+    if (categoriesScrollContainer) {
+        previousCategoriesScrollTop = categoriesScrollContainer.scrollTop;
+        accumulatedCategoriesScroll = 0;
+        lastCategoriesScrollDirection = 0;
+    }
+}
+
+function bindCategoriesScrollAutoHide() {
+    const container = document.querySelector('#categoriesView .categories-main-scroll');
+    if (!container) return;
+    if (categoriesScrollContainer === container && categoriesScrollHandler) return;
+
+    unbindCategoriesScrollAutoHide();
+    categoriesScrollContainer = container;
+    previousCategoriesScrollTop = container.scrollTop;
+    accumulatedCategoriesScroll = 0;
+    lastCategoriesScrollDirection = 0;
+
+    categoriesScrollHandler = () => {
+        const currentTop = container.scrollTop;
+        const delta = currentTop - previousCategoriesScrollTop;
+        previousCategoriesScrollTop = currentTop;
+
+        // Returning to the very top always restores the header immediately.
+        if (currentTop <= 0) {
+            accumulatedCategoriesScroll = 0;
+            lastCategoriesScrollDirection = 0;
+            setCategoriesHeaderHidden(false);
+            return;
+        }
+        if (!delta) return;
+
+        const direction = Math.sign(delta);
+        if (direction === lastCategoriesScrollDirection) {
+            accumulatedCategoriesScroll += Math.abs(delta);
+        } else {
+            lastCategoriesScrollDirection = direction;
+            accumulatedCategoriesScroll = Math.abs(delta);
+        }
+
+        if (accumulatedCategoriesScroll >= CATEGORIES_SCROLL_THRESHOLD) {
+            setCategoriesHeaderHidden(direction > 0);
+            accumulatedCategoriesScroll = 0;
+            lastCategoriesScrollDirection = 0;
+        }
+    };
+
+    // Listen to the element that actually scrolls, not to window.
+    container.addEventListener('scroll', categoriesScrollHandler, { passive: true });
+}
+
+function unbindCategoriesScrollAutoHide() {
+    if (categoriesScrollContainer && categoriesScrollHandler) {
+        categoriesScrollContainer.removeEventListener('scroll', categoriesScrollHandler);
+    }
+    categoriesScrollContainer = null;
+    categoriesScrollHandler = null;
+    previousCategoriesScrollTop = 0;
+    accumulatedCategoriesScroll = 0;
+    lastCategoriesScrollDirection = 0;
+}
+
 export function syncCategoriesHeaderOffset() {
     const fixed = document.getElementById('headerFixed');
     const spacer = document.getElementById('headerSpacer');
@@ -28,19 +117,15 @@ export function syncCategoriesHeaderOffset() {
         document.getElementById('searchCompact')?.classList.remove('active');
     }
     const apply = () => {
-        // Header Temu : hauteur RÉELLE du header (bulles exclues — elles sont
-        // absolues sous top:100%) + rangée bulles quand elle est affichée
-        // (PROMPT 3B : même formule que le #headerSpacer dans smart-header.js).
-        let headerH = Math.ceil(8 + (fixed ? fixed.getBoundingClientRect().height : 132));
-        const row = document.getElementById('subcategoryBubbles');
-        if (row && !row.hidden) {
-            const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bubbles-gap')) || 6;
-            headerH += Math.ceil(row.offsetHeight + gap);
-        }
+        // La hauteur est mesurée après réduction du header aux seuls contrôles
+        // de recherche. Le transform ne modifie pas offsetHeight.
+        const headerH = Math.ceil(fixed ? fixed.offsetHeight : 0);
+        const hidden = !!(fixed && fixed.classList.contains('categories-header-hidden'));
+        const offset = hidden ? 0 : headerH;
         if (spacer) spacer.style.height = headerH + 'px';
-        cv.style.setProperty('--categories-header-h', headerH + 'px');
-        cv.style.height = `calc(100dvh - ${headerH}px)`;
-        cv.style.maxHeight = `calc(100dvh - ${headerH}px)`;
+        cv.style.setProperty('--categories-header-h', offset + 'px');
+        cv.style.height = `calc(100dvh - ${offset}px)`;
+        cv.style.maxHeight = `calc(100dvh - ${offset}px)`;
     };
     apply();
     requestAnimationFrame(apply);
@@ -49,15 +134,26 @@ export function syncCategoriesHeaderOffset() {
 export function enterCategoriesPageMode() {
     document.documentElement.classList.add('categories-page-open');
     document.body.classList.add('categories-page-open');
+    document.getElementById('headerFixed')?.classList.remove('categories-header-hidden');
     window.scrollTo(0, 0);
     syncCategoriesHeaderOffset();
+    bindCategoriesScrollAutoHide();
 }
 
 export function exitCategoriesPageMode() {
+    unbindCategoriesScrollAutoHide();
     document.documentElement.classList.remove('categories-page-open');
     document.body.classList.remove('categories-page-open');
+    document.getElementById('headerFixed')?.classList.remove('categories-header-hidden');
+    const spacer = document.getElementById('headerSpacer');
+    if (spacer) spacer.style.height = '';
     const cv = document.getElementById('categoriesView');
-    if (cv) { cv.classList.remove('is-open'); cv.style.height = ''; cv.style.maxHeight = ''; }
+    if (cv) {
+        cv.classList.remove('is-open');
+        cv.style.height = '';
+        cv.style.maxHeight = '';
+        cv.style.removeProperty('--categories-header-h');
+    }
 }
 
 export function switchView(v) {

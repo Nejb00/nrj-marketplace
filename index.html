@@ -82,24 +82,28 @@
                 <div class="categories-layout">
                     <aside class="categories-sidebar" id="categoriesSidebar" aria-label="Catégories parentes"></aside>
                     <div class="categories-main">
-                        <div class="categories-panel" id="categoriesPanel" aria-label="Sous-catégories"></div>
-                        <section class="categories-popular" aria-label="Articles populaires">
-                            <div class="categories-popular-toolbar">
-                                <h3 class="categories-popular-title">Articles populaires</h3>
-                                <label class="categories-sort-label">
-                                    <span class="categories-sort-text">Trier par</span>
-                                    <select id="categoriesSortSelect" class="categories-sort-select" aria-label="Trier par">
-                                        <option value="relevance" selected>Pertinence</option>
-                                        <option value="bestsellers">Meilleures ventes</option>
-                                        <option value="newest">Plus récents</option>
-                                        <option value="price-asc">Prix croissant</option>
-                                        <option value="price-desc">Prix décroissant</option>
-                                        <option value="foryou">✨ Pour toi</option>
-                                    </select>
-                                </label>
-                            </div>
-                            <div class="products-grid categories-popular-grid" id="categoriesPopularGrid" role="list"></div>
-                        </section>
+                        <div class="categories-sort-sticky" aria-label="Tri des articles populaires">
+                            <label class="categories-sort-label">
+                                <span class="categories-sort-text">Trier par</span>
+                                <select id="categoriesSortSelect" class="categories-sort-select" aria-label="Trier par">
+                                    <option value="relevance" selected>Pertinence</option>
+                                    <option value="bestsellers">Meilleures ventes</option>
+                                    <option value="newest">Plus récents</option>
+                                    <option value="price-asc">Prix croissant</option>
+                                    <option value="price-desc">Prix décroissant</option>
+                                    <option value="foryou">✨ Pour toi</option>
+                                </select>
+                            </label>
+                        </div>
+                        <div class="categories-main-scroll">
+                            <div class="categories-panel" id="categoriesPanel" aria-label="Sous-catégories"></div>
+                            <section class="categories-popular" aria-label="Articles populaires">
+                                <div class="categories-popular-toolbar">
+                                    <h3 class="categories-popular-title">Articles populaires</h3>
+                                </div>
+                                <div class="products-grid categories-popular-grid" id="categoriesPopularGrid" role="list"></div>
+                            </section>
+                        </div>
                     </div>
                 </div>
             </div>
