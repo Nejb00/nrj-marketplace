@@ -252,6 +252,60 @@ body.categories-page-open .search-bubble-full {
     opacity: 1 !important;
 }
 
+/* Page Catégories uniquement : header réduit à une seule rangée de recherche. */
+body.categories-page-open .header-fixed {
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    border-radius: 0 0 18px 18px;
+    transition: transform 200ms ease;
+    will-change: transform;
+}
+
+body.categories-page-open #headerFixed.categories-header-hidden {
+    transform: translateY(-100%);
+}
+
+body.categories-page-open #filterBar,
+body.categories-page-open #quickFilters,
+body.categories-page-open #subcategoryBubbles {
+    display: none !important;
+}
+
+body.categories-page-open .search-bubble-full .search-bar-container {
+    height: 44px;
+    min-height: 44px;
+    padding: 0 0.65rem;
+    box-sizing: border-box;
+    gap: 0.25rem;
+}
+
+body.categories-page-open .search-bubble-full #tapToSearch {
+    min-height: 44px;
+    padding: 0;
+}
+
+body.categories-page-open .search-bubble-full #searchGo {
+    display: none !important;
+}
+
+body.categories-page-open .search-bubble-full .search-camera {
+    width: 36px;
+    height: 36px;
+    padding: 0.25rem;
+    margin-left: 0.15rem;
+}
+
+/* Le tri reste au sommet du panneau droit pendant son défilement. */
+.categories-popular-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+}
+
+
 body.categories-page-open .search-bubble-compact {
     width: 0 !important;
     opacity: 0 !important;
