@@ -1,8 +1,6 @@
 // ═══ Catalogue — filtrage & tri (favoris, nouveautés, best-sellers, pour toi) ═══
 // Éclaté de catalogue.js (refacto-archi) — logique strictement identique.
 import { state, getCategoryFilterIds, getCategoryName } from '../../core/state.js';
-import { isFresh } from '../../utils/badges.js';
-import { forYou } from '../../services/reco.js';
 
 export function getFilteredProducts() {
     let filtered;
@@ -20,9 +18,6 @@ export function getFilteredProducts() {
         }
     }
 
-    if (state.currentQuickFilter === 'new') filtered = filtered.filter(p => isFresh(p));
-    else if (state.currentQuickFilter === 'bestseller') filtered = filtered.filter(p => (p.popularity_score || 0) > 0).sort((a, b) => (b.popularity_score || 0) - (a.popularity_score || 0));
-    else if (state.currentQuickFilter === 'foryou') filtered = forYou(filtered);
 
     if (state.searchQuery && !(/^\d+$/.test(state.searchQuery) && state.products.some(p => p.id === parseInt(state.searchQuery)))) {
         const q = state.searchQuery.toLowerCase();

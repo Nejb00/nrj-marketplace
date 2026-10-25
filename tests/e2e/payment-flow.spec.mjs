@@ -405,7 +405,9 @@ test.describe("NRJ Marketplace — paiement E2E sécurisé", () => {
     await expect(page.locator(".cart-discover-btn")).toContainText("Voir les populaires");
 
     await page.locator(".cart-discover-btn").click();
-    await expect(page.locator('.filter-chip[data-filter="bestseller"]')).toHaveClass(/\bactive\b/);
+    await expect(page.locator("#categoriesView")).toHaveClass(/\bis-open\b/);
+    await expect(page.locator("#categoriesSortSelect")).toHaveValue("bestsellers");
+    await expect(page.locator(".filter-chip, #quickFilters")).toHaveCount(0);
 
     expect(pageErrors).toEqual([]);
   });

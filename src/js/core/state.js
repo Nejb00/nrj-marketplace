@@ -28,7 +28,6 @@ export const state = {
     viewedProductIds: [],
     /** Filtre courant : 'all' | 'favorites' | category_id (uuid) */
     currentFilter: 'all',
-    currentQuickFilter: 'all',
     searchQuery: '',
     currentProductId: null,
     modalOpen: false,

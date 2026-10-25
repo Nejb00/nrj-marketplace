@@ -7,7 +7,6 @@ export function initSwipeCategories() {
     const minSwipeDistance = 60;
     const blockedSelector = [
         '.filter-bar',
-        '.quick-filters',
         '.subcategory-bubbles',
         '.carousel-scroll',
         '.rec-carousel',

@@ -269,8 +269,12 @@ function renderRecommendations(products) {
 
 function backToCatalogue() {
     closeCartPanel({ restoreFocus: false });
-    document.querySelector('.nav-item[data-nav="home"]')?.click();
-    document.querySelector('.filter-chip[data-filter="bestseller"]')?.click();
+    document.querySelector('.nav-item[data-nav="categories"]')?.click();
+    const sortSelect = document.getElementById('categoriesSortSelect');
+    if (sortSelect) {
+        sortSelect.value = 'bestsellers';
+        sortSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
 }
 
 function initCartPanelEvents(body, footer) {
@@ -563,7 +567,7 @@ export function refreshCartDisplay() {
                 '</div>' +
                 '<h3 id="cartEmptyTitle">Votre panier est vide</h3>' +
                 '<p>Ajoute quelques trouvailles pour les retrouver ici.</p>' +
-                '<button type="button" class="cart-discover-btn" data-action="cart-discover">🔥 Voir les populaires</button>' +
+                '<button type="button" class="cart-discover-btn" data-action="cart-discover">🔥 Voir les meilleures ventes</button>' +
             '</section>' +
             recommendations;
 
