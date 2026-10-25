@@ -31,3 +31,21 @@ test('sticky direct-order action has deliberate styling and keeps its Buy Now wi
   assert.ok(reducedMotionBlock.includes('.btn-direct-sticky'));
   assert.match(actions, /openOptionsPanel\(directBtn,\s*'buy'\)/);
 });
+
+
+test('home load-more button has visible styling, space above fixed navigation, and working pagination wiring', async () => {
+  const [css, html, pagination] = await Promise.all([
+    read('../src/css/components/product-card.css'),
+    read('../index.html'),
+    read('../src/js/features/catalogue/pagination.js')
+  ]);
+
+  assert.match(html, /class="load-more-wrap" id="loadMoreWrap"/);
+  assert.match(html, /class="load-more-btn" id="loadMoreBtn">Charger plus<\/button>/);
+  assert.match(css, /\.load-more-wrap\s*\{[^}]*justify-content:\s*center;[^}]*padding:\s*1rem 0\.8rem calc\(var\(--nav-height,\s*64px\)\s*\+\s*1rem\);/s);
+  assert.match(css, /\.load-more-btn\s*\{[^}]*min-height:\s*48px;[^}]*background:\s*var\(--nrj-accent,\s*#ff8c42\);[^}]*color:\s*#fff;/s);
+  assert.match(css, /\.load-more-btn:focus-visible\s*\{/);
+  assert.match(pagination, /const hasMore = state\.displayedCount < state\.currentFilteredProducts\.length/);
+  assert.match(pagination, /wrap\.style\.display = hasMore \? 'flex' : 'none'/);
+  assert.match(pagination, /btn\.addEventListener\('click', \(\) => loadMoreProducts\(\)\)/);
+});
