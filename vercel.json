@@ -4,5 +4,11 @@
       "source": "/p/:id",
       "destination": "/api/og-product?id=:id"
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "docs/phase-c-github-notion-writer-2026-10-21": false,
+      "feat/mission-control-evidence-writer-2026-10-21": false
+    }
+  }
 }
