@@ -13,8 +13,12 @@ on:
 permissions:
   contents: read
 
+# Un run est créé à chaque deployment_status, y compris pour les previews, et
+# toutes ces exécutions partageaient le même groupe de concurrence : le E2E de
+# Production en cours était donc annulé par le premier déploiement de preview
+# venu. On scope le groupe par environnement pour les isoler.
 concurrency:
-  group: vercel-browser-e2e
+  group: vercel-browser-e2e-${{ github.event.deployment.environment || github.ref }}
   cancel-in-progress: true
 
 jobs:
