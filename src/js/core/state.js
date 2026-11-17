@@ -7,6 +7,18 @@ import db from '../services/db.js';
 
 const VIEWED_PRODUCTS_KEY = 'nrj_viewed_products';
 
+const SYNC_PENDING_KEY = 'nrj_sync_pending_v1';
+const SYNC_PENDING_EVENT = 'nrj:local-state-changed';
+
+function markSyncPending() {
+    try { localStorage.setItem(SYNC_PENDING_KEY, '1'); } catch {}
+}
+
+function notifyLocalStateChanged() {
+    if (typeof window === 'undefined' || typeof window.dispatchEvent !== 'function' || typeof Event === 'undefined') return;
+    window.dispatchEvent(new Event(SYNC_PENDING_EVENT));
+}
+
 export const state = {
     products: [],
     /** Arbre complet des catégories (table categories) */
@@ -135,12 +147,16 @@ export async function loadPersistedState() {
 
 export async function saveCart() {
     writeLocal('nrj_cart_v32', state.cart);
+    markSyncPending();
     try { await db.putCart(state.cart); } catch (err) { console.warn('IndexedDB panier', err); }
+    notifyLocalStateChanged();
 }
 
 export async function saveFavorites() {
     writeLocal('nrj_favorites', state.favorites);
+    markSyncPending();
     try { await db.putFavorites(state.favorites); } catch (err) { console.warn('IndexedDB favoris', err); }
+    notifyLocalStateChanged();
 }
 
 export async function saveOrders() {
