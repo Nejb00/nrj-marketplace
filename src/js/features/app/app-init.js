@@ -15,7 +15,6 @@ import { initPlaceholderRotation } from '../../services/search-rotation.js';
 import { initVoiceSearch } from '../../services/search-voice.js';
 import { initChat } from '../chat/chat-ui.js';
 import { setupAutoSync } from '../../services/sync.js';
-import { openProductModal } from '../product/modal-render.js';
 import { switchToSearchView } from '../search/search-view.js';
 import { initThemeToggle } from './theme.js';
 import { initSmartHeader, initHeaderSearchCompact } from './smart-header.js';
@@ -78,7 +77,14 @@ async function init() {
       switchToSearchView(searchParam);
     } else if (idParam) {
       const p = state.products.find(pr => pr.id === parseInt(idParam));
-      if (p) openProductModal(parseInt(idParam));
+      if (p) {
+        import('../product/modal-render.js')
+          .then((module) => module.openProductModal(parseInt(idParam)))
+          .catch((error) => {
+            console.error('Ouverture produit depuis le lien direct impossible:', error);
+            showToast('Impossible d’ouvrir ce produit.');
+          });
+      }
     }
   } catch (err) {
     console.error('Erreur initiale:', err);
