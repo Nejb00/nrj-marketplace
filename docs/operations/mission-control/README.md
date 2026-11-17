@@ -130,8 +130,11 @@ These are historical notes based on PR descriptions, current source-file reads a
 
 ## 10. Controlled Notion ↔ GitHub sync proposal
 
-- [Sync proposal — design only](sync-proposal.md) — asymmetric evidence-first architecture, read-only dry-run first, field ownership, idempotency, permission boundaries, conflict rules, acceptance tests and staged rollout.
-- [Read-only reconciler usage](reconciler-usage.md) — manual workflow setup, local tests and report interpretation.
-- [Read-only reconciler implementation](../../../scripts/mission-control/reconcile.py) and [manual workflow](../../../.github/workflows/mission-control-reconcile.yml) — available on `main`; the workflow is started manually with `workflow_dispatch` and declares read-only GitHub permissions.
-- Live manual reconciliation: [run #39676703252](https://github.com/Nejb00/nrj-marketplace/actions/runs/39676703252) on `main` at `02fe7c333260d828756034a1cc8ab15d73114551`, exact alias `NRJ-OPS-004`, result `NO_CHANGE`. The run produced `reconciliation.md` and `reconciliation.json` (12 Notion rows loaded); the report says no external mutations were performed.
-- The workflow reports drift instead of correcting it. No automatic sync or Notion writer path is active. A GitHub-to-Notion writer remains a separate proposal requiring explicit approval and independent validation.
+- [Sync proposal — design](sync-proposal.md) — asymmetric evidence-first architecture, field ownership, idempotency, permission boundaries, conflict rules and staged rollout.
+- [Phase C — GitHub → Notion evidence writer](phase-c-github-to-notion.md) — C-Design approved; C-Implementation is limited to a preview-only preflight/report tool.
+- [Phase C implementation handoff](phase-c-implementation.md) — current branch baseline, tests and remaining gates.
+- [Read-only reconciler usage](reconciler-usage.md) — manual workflow setup, tests and report interpretation.
+- [Read-only reconciler implementation](../../../scripts/mission-control/reconcile.py) and [manual workflow](../../../.github/workflows/mission-control-reconcile.yml) — available on `main`; manually triggered with `workflow_dispatch` and read-only GitHub permissions.
+- Phase 4A live read-only reconciliation: [run #39676703252](https://github.com/Nejb00/nrj-marketplace/actions/runs/39676703252), exact alias `NRJ-OPS-004`, result `NO_CHANGE`, 12 Notion rows loaded; the recorded base revision was `02fe7c333260d828756034a1cc8ab15d73114551`.
+- [PR #224](https://github.com/Nejb00/nrj-marketplace/pull/224) subsequently merged the documentation correction to `main` as `56b9b2d4c6f85cee3d0c786fbe0c9d636890c97d`; its change was limited to this README.
+- The Phase C implementation branch contains a **preview-only** proposal. It has no Notion page-write endpoint, no write token and no automatic synchronization. C-Canary remains a separate, blocked gate until a valid exact mission/PR pairing and independent approval exist.

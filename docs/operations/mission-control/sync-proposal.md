@@ -3,9 +3,9 @@
 - **Mission alias:** NRJ-OPS-004
 - **Status:** Proposed / design only
 - **Date:** 2026-10-20
-- **Implementation status:** NOT IMPLEMENTED; no integration token provisioned, no workflow enabled, no automated write executed.
+- **Implementation status:** PREVIEW-ONLY IMPLEMENTATION EXISTS ON AN ISOLATED BRANCH; no write token, page-write endpoint, or automated write is active.
 - **Branch:** `docs/nrj-mission-control-os-2026-10-18`
-- **Authority:** user approval required before implementation or activation.
+- **Authority:** C-Design and preview-only C-Implementation are approved on an isolated branch; any live write or activation requires separate explicit approval.
 - **Related records:** [Notion Mission Control](https://app.notion.com/p/3fd0f09830e181e6880de065b7853780?pvs=204), [Mission Register](https://app.notion.com/p/ccdef631312c4398aad6a059351ab02f), [repository agent instructions](../../../AGENTS.md).
 
 ## 1. Decision summary
@@ -52,7 +52,9 @@ Do not enable a scheduled trigger in the first release. Add scheduling only afte
 
 ### Component B — GitHub evidence → Notion (later, allowlisted writes)
 
-Only after the read-only report has been validated, consider narrow event-driven property updates for an exact, existing Mission Alias. Examples:
+The detailed first-release design is tracked separately in [Phase C — GitHub → Notion evidence writer](phase-c-github-to-notion.md). It remains design-only; the proposed first write scope is limited to filling blank `PR URL` and `Evidence URL` properties for one explicitly approved, verified merged PR.
+
+Only after the read-only report has been validated, consider narrow, manually dispatched property updates for one exact, existing Mission Alias. The first Phase C design has no event-driven or scheduled writer trigger. Examples:
 - store an exact PR URL and merge commit only when GitHub confirms the PR is merged;
 - record test status only for named required checks and their exact head SHA;
 - record a deployment only when the target environment reports a deployment tied to the expected source SHA.
@@ -89,7 +91,7 @@ The workflow re-reads the row, validates all identifiers and produces a branch w
 | Payment/security approval or live activation | Explicit authorized operator + live evidence | Out of scope for sync |
 | Last reconciled / sync fingerprint | Integration metadata | Managed by the synchronizer; not hand-edited |
 
-Before implementation, verify the current Notion data-source schema and add only the minimum metadata properties needed for idempotency, e.g. `Last Sync Source SHA`, `Last Sync Event ID`, `Last Sync Result`, and `Last Sync At`. These schema changes are **not** part of this proposal's implementation.
+The current [Phase C proposal](phase-c-github-to-notion.md) intentionally avoids a Notion schema change for its first narrow writer: fill-only URL updates plus equality checks make repeated runs a no-op, and the workflow artifact records the source evidence. If a later stage needs durable sync metadata properties (for example source SHA or last-sync result), define a separate schema-change proposal and obtain explicit approval before applying it.
 
 ## 5. Identity, idempotency, and conflict handling
 
@@ -197,9 +199,11 @@ The report must distinguish observed facts from proposals. A dry run must be pro
 
 ## 11. Current state and next decision
 
-- The cold-start documentation test succeeded in reconstructing the project and mission state from persistent Notion/GitHub references.
-- This does not prove that sessions will automatically load or synchronize those sources.
-- Mission Control remains manually coordinated today.
-- This document is a **proposal only**. No integration secret has been created, no workflow has been added or enabled, no Notion schema change has been made, and no sync execution has occurred.
+- The cold-start documentation test succeeded in reconstructing the project and mission state from persistent Notion/GitHub references. This does not prove that sessions automatically load or synchronize those sources.
+- Phase B now has a manual read-only reconciler in `main` (`.github/workflows/mission-control-reconcile.yml` and `scripts/mission-control/reconcile.py`). It reads Notion/GitHub and publishes an artifact; it has no write endpoint or GitHub write permission.
+- Three live dry-runs after the status-semantics correction — runs [39563775278](https://github.com/Nejb00/nrj-marketplace/actions/runs/39563775278), [39567369170](https://github.com/Nejb00/nrj-marketplace/actions/runs/39567369170), and [39567511552](https://github.com/Nejb00/nrj-marketplace/actions/runs/39567511552) — each read 12 rows with 12 unique aliases and returned `NO_CHANGE` for all rows. Their artifacts state that no Notion/GitHub writes, branch/PR creation, merges or deployments occurred.
+- The local unit suite contained 11 tests and passed in a clean worktree on `02fe7c333260d828756034a1cc8ab15d73114551`.
+- Phase C's evidence writer has a **preview-only implementation** on [the isolated implementation branch](https://github.com/Nejb00/nrj-marketplace/tree/feat/mission-control-evidence-writer-2026-10-21), documented in [phase-c-github-to-notion.md](phase-c-github-to-notion.md) and [phase-c-implementation.md](phase-c-implementation.md). It validates a single mission/PR pairing and computes proposed values for the `PR URL` and `Evidence URL` properties, but has no Notion page-write endpoint. CI run [#39680146635](https://github.com/Nejb00/nrj-marketplace/actions/runs/39680146635) passed 40 tests and workflow safety checks on the pre-sync commit; the synchronized revision must pass CI before PR review. No write token, new Notion capability, schema change, live PATCH or automatic sync has been activated.
+- Mission Control remains manually coordinated. Automatic synchronization is inactive. The two Merge Gate controller failures noted in the latest audit remain a separate diagnostic item.
 
-**Decision requested before implementation:** review this proposal and authorize any desired changes. Until explicit approval, keep all automation inactive.
+**Current gate:** C-Design and preview-only C-Implementation are approved. The implementation branch is now synchronized with `main` at `56b9b2d4c6f85cee3d0c786fbe0c9d636890c97d`; post-sync CI still needs to be triggered and verified, then the exact diff reviewed before a PR is created. The first live write, any broader scope, and any future automation each require separate explicit approval. Keep all write paths inactive.
