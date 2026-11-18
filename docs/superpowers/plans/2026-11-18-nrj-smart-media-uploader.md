@@ -151,7 +151,7 @@
 - On successful insertion, reset file selections/previews and clear the existing URL fields.
 - A failed catalogue refresh after a successful insert must not trigger deletion of media already referenced by the saved product.
 
-- [ ] **Step 1: Write failing product-form integration tests**
+- [x] **Step 1: Write failing product-form integration tests**
   - Assert uploads happen before `insertProduct`.
   - Assert URL-only product creation continues to work without requesting a signature.
   - Assert uploaded URLs are assigned in selection order to `image` through `image6`.
@@ -159,22 +159,22 @@
   - Assert an insert failure invokes cleanup with the uploaded public IDs.
   - Assert a post-insert refresh/render failure does not delete assets belonging to the inserted product.
 
-- [ ] **Step 2: Run the integration tests and verify they fail**
+- [x] **Step 2: Run the integration tests and verify they fail**
   - Run: `node --test test/product-form-media.test.js`
   - Expected: FAIL because product creation does not yet call the uploader.
 
-- [ ] **Step 3: Integrate uploads into `addProduct()`**
+- [x] **Step 3: Integrate uploads into `addProduct()`**
   - Validate the existing required product fields first.
   - Upload selected files before building and inserting the product.
   - Preserve the existing URL-only path and its existing six image fields.
   - Keep insert failure handling separate from post-insert catalogue refresh/render handling.
 
-- [ ] **Step 4: Add rollback and retry-safe UI behavior**
+- [x] **Step 4: Add rollback and retry-safe UI behavior**
   - If insert fails, attempt cleanup and keep the selected local files available for retry.
   - If cleanup fails, retain the original product-insert error and display a separate warning that orphaned Cloudinary assets may need cleanup.
   - Only clear the uploader after successful product insertion and UI refresh attempt.
 
-- [ ] **Step 5: Run the integration tests**
+- [x] **Step 5: Run the integration tests**
   - Run: `node --test test/product-form-media.test.js`
   - Expected: PASS.
 
