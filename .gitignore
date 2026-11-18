@@ -5,3 +5,6 @@ dist/
 # Python
 __pycache__/
 *.pyc
+
+# Isolated Git worktrees
+.worktrees/
