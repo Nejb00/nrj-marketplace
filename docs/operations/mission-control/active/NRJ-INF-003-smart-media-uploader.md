@@ -56,7 +56,7 @@ Allow an NRJ admin to select up to six local product photos, preview/remove/reor
 
 ## Current blocker — do not activate yet
 
-The actual Cloudinary upload preset has **not** been verified or configured. Before enabling real uploads it must be confirmed as a signed preset with `allowed_formats` restricted to JPEG/PNG/WEBP and `max_file_size` set to 9,500,000 bytes. The signing Edge Function fails closed if `CLOUDINARY_PRODUCT_UPLOAD_PRESET` is absent. Configure that secret server-side only after the preset is verified.
+The actual Cloudinary upload preset has **not** been verified or configured. Before enabling real uploads it must be confirmed as signed (`unsigned=false`) with `allowed_formats` restricted to JPEG/PNG/WEBP. Cloudinary does not support a per-preset file-size limit: the admin interface enforces 9,500,000 bytes client-side, while the connected account currently reports a 10 MiB (10,485,760-byte) account-level image ceiling. The four required Cloudinary secrets (`CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `CLOUDINARY_PRODUCT_UPLOAD_PRESET`) are not present in the NRJ Supabase project. The signing Edge Function fails closed if its required secrets are absent. Configure server-only secrets only after the preset is verified.
 
 ## Safety and approval boundaries
 
@@ -72,7 +72,7 @@ The actual Cloudinary upload preset has **not** been verified or configured. Bef
 
 Implementation tasks 1–3 are complete. Local code verification is complete. Mission status remains **Blocked for live activation** until the existing/created Cloudinary preset is inspected and verified against the required restrictions. Full repository tests retain the three baseline CRLF failures listed above; those are outside this branch's scope.
 
-**Next action:** verify/create the signed Cloudinary product preset with the required formats and size limit. Then add `CLOUDINARY_PRODUCT_UPLOAD_PRESET` to Supabase Edge Function secrets and separately review/approve deployment of the two new functions before enabling the browser uploader.
+**Next action:** inspect/create a signed Cloudinary product preset (`unsigned=false`, JPEG/PNG/WEBP only) using the Cloudinary Console or Admin API; do not set a per-preset size limit because Cloudinary does not support one. Then configure the four Cloudinary secrets in Supabase Edge Functions and separately approve deployment of the two new functions before enabling the browser uploader.
 
 ## Status history
 

@@ -23,7 +23,7 @@
 - Do not modify the existing `upload-product-import-media` function or Product Import OS.
 - No new npm dependency is required.
 - Use unique Cloudinary public IDs below `nrj-marketplace/products/<batch-id>/` and set `overwrite=false`.
-- A signed Cloudinary preset named by the server-only `CLOUDINARY_PRODUCT_UPLOAD_PRESET` must restrict formats to JPEG/PNG/WEBP and `max_file_size` to 9,500,000 bytes. Verify its actual settings before enabling uploads.
+- The signed Cloudinary preset named by the server-only `CLOUDINARY_PRODUCT_UPLOAD_PRESET` must use signed mode (`unsigned=false`) and restrict `allowed_formats` to JPEG/PNG/WEBP. Cloudinary upload presets do not support a per-preset file-size limit. The admin UI enforces 9,500,000 bytes client-side; the connected account currently reports an account-level image upload ceiling of 10 MiB (10,485,760 bytes), which is the provider-side hard backstop.
 
 ## Review Focus
 
@@ -200,7 +200,7 @@
   - Confirmed: both new Edge Functions set `verify_jwt = true` and require a non-anonymous authenticated JWT whose server-controlled `app_metadata.role` is `admin`.
   - Confirmed: generated public IDs are constrained to `nrj-marketplace/products/<uuid>/<slot>`; cleanup accepts only 1–6 matching IDs and only calls Cloudinary `image/destroy`.
   - Confirmed: no Product Import OS implementation, variant gallery code, database migrations/schema, product rows, production functions, secrets, or Cloudinary account settings were changed.
-  - **Still unverified:** the actual Cloudinary upload preset must be checked to confirm signed uploads, JPEG/PNG/WEBP restrictions, and `max_file_size = 9500000`. The signing function fails closed while `CLOUDINARY_PRODUCT_UPLOAD_PRESET` is absent. Do not enable live uploads until the preset is verified and the server-only secret is configured.
+  - **Still unverified:** the actual Cloudinary upload preset must be checked to confirm signed mode (`unsigned=false`) and JPEG/PNG/WEBP restrictions. Cloudinary does not support a per-preset size cap: 9,500,000 bytes is enforced in the admin UI, while the connected account currently reports a 10 MiB (10,485,760-byte) account-level image limit. The signing function fails closed while `CLOUDINARY_PRODUCT_UPLOAD_PRESET` is absent. Do not enable live uploads until the preset is verified and the server-only secret is configured.
 
 - [x] **Step 5: Prepare a preview handoff**
   - Feature branch is ready for review. No preview deployment, PR, merge, Edge Function deployment, production secret change, or Cloudinary preset change was initiated because those actions were outside the approved boundary.
