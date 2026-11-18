@@ -43,7 +43,7 @@ Remove the manual image-hosting and URL-copying step from the classic product-cr
 - New file uploads take precedence in the corresponding leading slots.
 - Uploads start only when the administrator clicks **Ajouter au catalogue**.
 - Use generated, unique public IDs under `nrj-marketplace/products/<batch-id>/` and disable overwrite.
-- Use a signed Cloudinary upload preset (or an equivalently enforced server-approved upload policy) that restricts formats to JPEG/PNG/WEBP and maximum file size to 9.5 MB. Confirm the preset's current settings before enabling uploads.
+- Use a signed Cloudinary upload preset configured with allowed formats JPEG/PNG/WEBP and maximum file size 9.5 MB. Its name is stored as the server-only `CLOUDINARY_PRODUCT_UPLOAD_PRESET` secret, included in the signed upload parameters, and never accepted from the browser. Confirm the preset's current settings before enabling uploads.
 - Use a dedicated signing Edge Function and a dedicated cleanup Edge Function; do not alter the existing Product Import media function.
 - Do not create the database product until all selected uploads have succeeded.
 - If product insertion fails, attempt to remove the just-uploaded assets. If cleanup fails, report that explicitly without hiding the original insertion error.
