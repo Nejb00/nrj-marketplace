@@ -80,3 +80,11 @@ Implementation tasks 1–3 are complete. Local code verification is complete. Mi
 |---|---|---|
 | 2026-11-18 | Planned → In Progress | User approved Native execution on a dedicated feature branch. |
 | 2026-11-18 | In Progress → Blocked | Code and local verification complete; actual Cloudinary preset restrictions and production activation remain unverified/unapproved. |
+
+## Additional finding — shared Cloudinary credentials (read-only, 18 November 2026)
+
+- The production Supabase project `peojyqliwrtghomyukwn` has an active `upload-product-import-media` Edge Function, version 2, with `verify_jwt = true`.
+- Its deployed source reads `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET`; when any is missing, its configuration guard returns HTTP 500 with `cloudinary_config_missing`.
+- A read-only `supabase secrets list` for that same project showed none of those three names. Therefore, a new request reaching this guard will fail before it can upload media. This points to a shared Cloudinary configuration issue affecting the existing Product Import media endpoint as well as the prerequisites for the new uploader.
+- The new uploader additionally requires `CLOUDINARY_PRODUCT_UPLOAD_PRESET`, also absent.
+- No Product Import OS code or deployed function was changed. Do not add/rotate secrets or deploy functions without separate approval and trusted Cloudinary credentials.
