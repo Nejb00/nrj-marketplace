@@ -12,7 +12,7 @@ Remove the manual image-hosting and URL-copying step from the classic product-cr
 
 - Let an administrator select up to six local images in one action.
 - Preview, remove, and inspect the selected images before submission.
-- Validate JPEG, PNG, or WEBP files and cap each file at 9.5 MB.
+- Validate JPEG, PNG, or WEBP files and reject files above 9,500,000 bytes in the admin picker (client-side only). The connected Cloudinary account currently reports a 10 MiB account-level image upload ceiling.
 - Upload directly from the browser to Cloudinary using short-lived server-generated signatures.
 - Keep the Cloudinary API secret exclusively in Supabase Edge Function secrets.
 - Preserve the existing six URL fields as an advanced compatibility fallback.

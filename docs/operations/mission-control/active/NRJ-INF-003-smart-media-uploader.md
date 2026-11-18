@@ -18,7 +18,7 @@
 
 Allow an NRJ admin to select up to six local product photos, preview/remove/reorder them by selection order, and upload them directly to Cloudinary when creating a catalogue product. Signed URLs fill the existing `image` through `image6` fields; manual URL inputs remain supported.
 
-- JPEG, PNG and WEBP only; 9,500,000 bytes maximum per file.
+- JPEG, PNG and WEBP only; the admin picker rejects files above 9,500,000 bytes client-side. Cloudinary currently reports a 10 MiB account-level image upload ceiling.
 - Server-issued signatures; no Cloudinary API secret or service-role key in browser code.
 - Uploads start only after clicking the product-create button.
 - Partial upload failure or failed product insertion triggers cleanup of the signed batch.

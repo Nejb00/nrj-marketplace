@@ -17,7 +17,7 @@
 - Keep `CLOUDINARY_API_SECRET` only in Supabase Edge Function secrets; never return it to the browser.
 - Keep `verify_jwt = true` for both new Edge Functions and require the existing admin role claim.
 - Maximum six images per product; accepted MIME types are `image/jpeg`, `image/png`, and `image/webp`.
-- Maximum file size is 9,500,000 bytes per image.
+- The admin picker rejects files larger than 9,500,000 bytes client-side; the connected Cloudinary account reports a 10 MiB (10,485,760-byte) account-level image upload ceiling.
 - Uploads start on product submit, not on file selection.
 - New files map in selection order to `image`, `image2`, … `image6`; existing URL inputs remain available as a fallback.
 - Do not modify the existing `upload-product-import-media` function or Product Import OS.
