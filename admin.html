@@ -243,12 +243,31 @@ https://.../blanc-contexte.jpg"></textarea>
             </div>
 
             <div class="form-group"><label>Prix (FCFA)</label><input type="number" id="adminPrice" placeholder="8500"></div>
-            <div class="form-group"><label>Image 1 (URL)</label><input type="url" id="adminImage" placeholder="Lien de l'image 1"></div>
-            <div class="form-group"><label>Image 2 (URL)</label><input type="url" id="adminImage2" placeholder="Lien de l'image 2"></div>
-            <div class="form-group"><label>Image 3 (URL)</label><input type="url" id="adminImage3" placeholder="Lien de l'image 3"></div>
-            <div class="form-group"><label>Image 4 (URL)</label><input type="url" id="adminImage4" placeholder="Lien de l'image 4"></div>
-            <div class="form-group"><label>Image 5 (URL)</label><input type="url" id="adminImage5" placeholder="Lien de l'image 5"></div>
-            <div class="form-group"><label>Image 6 (URL)</label><input type="url" id="adminImage6" placeholder="Lien de l'image 6"></div>
+            <section class="admin-product-media" aria-labelledby="productMediaTitle">
+                <div class="admin-product-media__heading">
+                    <h3 id="productMediaTitle">Images du produit</h3>
+                    <p id="productMediaHelp">Sélectionne jusqu’à 6 photos depuis ton téléphone ou ton ordinateur. Elles seront envoyées à Cloudinary quand tu ajouteras le produit.</p>
+                </div>
+                <input type="file" id="productMediaFiles" class="admin-product-media__input" accept="image/jpeg,image/png,image/webp" multiple aria-describedby="productMediaHelp productMediaStatus">
+                <label for="productMediaFiles" class="admin-product-media__picker">
+                    <span class="admin-product-media__picker-icon" aria-hidden="true">＋</span>
+                    <span><strong>Choisir des images</strong><small>JPEG, PNG ou WEBP · 9,5 Mo maximum par image</small></span>
+                </label>
+                <div class="admin-product-media__preview" id="productMediaPreview" hidden></div>
+                <p class="admin-product-media-status" id="productMediaStatus" role="status" aria-live="polite"></p>
+            </section>
+
+            <details class="admin-product-media-urls">
+                <summary>Ajouter des liens d’images manuellement (avancé)</summary>
+                <div class="admin-product-media-urls__grid">
+                    <div class="form-group"><label for="adminImage">Image 1 (URL)</label><input type="url" id="adminImage" placeholder="Lien de l’image 1"></div>
+                    <div class="form-group"><label for="adminImage2">Image 2 (URL)</label><input type="url" id="adminImage2" placeholder="Lien de l’image 2"></div>
+                    <div class="form-group"><label for="adminImage3">Image 3 (URL)</label><input type="url" id="adminImage3" placeholder="Lien de l’image 3"></div>
+                    <div class="form-group"><label for="adminImage4">Image 4 (URL)</label><input type="url" id="adminImage4" placeholder="Lien de l’image 4"></div>
+                    <div class="form-group"><label for="adminImage5">Image 5 (URL)</label><input type="url" id="adminImage5" placeholder="Lien de l’image 5"></div>
+                    <div class="form-group"><label for="adminImage6">Image 6 (URL)</label><input type="url" id="adminImage6" placeholder="Lien de l’image 6"></div>
+                </div>
+            </details>
             <div class="form-group"><label>Tailles</label><div id="adminTailles"></div></div>
             <div class="form-group"><label>Couleurs</label><div id="adminCouleurs"></div></div>
             <div class="form-group"><label>Quantité minimale (MOQ)</label><input type="number" id="adminMoq" placeholder="1" min="1" value="1"></div>

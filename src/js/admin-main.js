@@ -1,11 +1,13 @@
 import '../css/components/admin.css';
 import '../css/components/chat.css';
+import { supabaseClient } from './core/config.js';
 import { fetchProducts } from './api/api.js';
 import { handleAdminLogin, handleLogout, checkAdminSession } from './features/admin/admin-auth.js';
 import { addProduct } from './features/admin/product-form.js';
 import { deleteProduct } from './features/admin/product-delete.js';
 import { initAdminChat } from './features/chat/admin-chat.js';
 import { initProductImportUI } from './features/admin/product-import.js';
+import { initProductMediaUploader, resetProductMediaUploader } from './features/admin/product-media-upload.js';
 import { initProductVariantsAdminUI, openProductVariantsEditor } from './features/admin/product-variants-admin-ui.js';
 
 document.getElementById('adminLoginBtn').addEventListener('click', handleAdminLogin);
@@ -25,11 +27,21 @@ document.addEventListener('click', e => {
     }
 });
 
+// The file picker is only activated for a verified admin session.
+supabaseClient.auth.onAuthStateChange((_event, session) => {
+    if (session?.user?.app_metadata?.role === 'admin') {
+        initProductMediaUploader();
+    } else {
+        resetProductMediaUploader();
+    }
+});
+
 async function init() {
     await fetchProducts();
     const isAdmin = await checkAdminSession();
     if (isAdmin) {
         initProductImportUI();
+        initProductMediaUploader();
         initProductVariantsAdminUI();
     }
     await initAdminChat();

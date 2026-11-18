@@ -102,22 +102,22 @@
 - Export `resetProductMediaUploader(): void`.
 - UI contract: one accessible multi-file input accepting JPEG/PNG/WEBP, maximum six files; one preview container with per-image remove controls; a live status element. Existing `adminImage` through `adminImage6` URL inputs remain available as the compatibility fallback.
 
-- [ ] **Step 1: Write failing uploader contract tests**
+- [x] **Step 1: Write failing uploader contract tests**
   - Assert the admin page includes the file input, preview container, and live status element.
   - Assert the file input restricts accepted types and supports multiple selection.
   - Assert the uploader calls `sign-product-media-uploads`, posts files directly to the Cloudinary Upload API, and calls `cleanup-product-media-uploads` when a partial batch fails.
   - Assert `admin-main.js` initializes the uploader only after the admin session is confirmed.
 
-- [ ] **Step 2: Run the uploader tests and verify they fail**
+- [x] **Step 2: Run the uploader tests and verify they fail**
   - Run: `node --test test/product-media-uploader.test.js`
   - Expected: FAIL because the new uploader contract does not exist yet.
 
-- [ ] **Step 3: Implement file validation and preview state**
+- [x] **Step 3: Implement file validation and preview state**
   - Reject more than six files, unsupported MIME types, and files larger than 9,500,000 bytes before requesting signatures.
   - Create local object URLs for previews, revoke them on removal and reset, and preserve selection order.
   - Show a live upload state without blocking the rest of the page; disable duplicate submissions while uploading.
 
-- [ ] **Step 4: Implement signed direct uploads**
+- [x] **Step 4: Implement signed direct uploads**
   - Request a fresh batch of signatures when upload begins.
   - For each file, create `FormData` with `file`, `api_key`, `timestamp`, `public_id`, `overwrite=false`, `upload_preset`, and `signature`.
   - POST directly to `https://api.cloudinary.com/v1_1/<cloud_name>/image/upload`.
@@ -125,15 +125,15 @@
   - Return URLs and public IDs in the same order as the selected files.
   - If any upload fails, clean up the known batch public IDs (including possible timeout outcomes), then surface the upload error.
 
-- [ ] **Step 5: Add the admin uploader UI and responsive styling**
+- [x] **Step 5: Add the admin uploader UI and responsive styling**
   - Keep the existing URL fields as an advanced fallback to avoid breaking current workflows.
   - Show selected images in order with previews and remove controls.
   - Add clear French status messages for selection errors, upload progress, success, and failures.
 
-- [ ] **Step 6: Initialize the uploader after admin authentication**
+- [x] **Step 6: Initialize the uploader after admin authentication**
   - Call `initProductMediaUploader()` from the authenticated admin initialization path in `src/js/admin-main.js`.
 
-- [ ] **Step 7: Run the uploader contract tests**
+- [x] **Step 7: Run the uploader contract tests**
   - Run: `node --test test/product-media-uploader.test.js`
   - Expected: PASS.
 
