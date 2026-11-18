@@ -23,7 +23,7 @@
 - Do not modify the existing `upload-product-import-media` function or Product Import OS.
 - No new npm dependency is required.
 - Use unique Cloudinary public IDs below `nrj-marketplace/products/<batch-id>/` and set `overwrite=false`.
-- The Cloudinary upload preset (or server-enforced equivalent) must restrict formats and maximum file size before the uploader is enabled.
+- A signed Cloudinary preset named by the server-only `CLOUDINARY_PRODUCT_UPLOAD_PRESET` must restrict formats to JPEG/PNG/WEBP and `max_file_size` to 9,500,000 bytes. Verify its actual settings before enabling uploads.
 
 ## Review Focus
 
@@ -46,18 +46,18 @@
 
 **Interfaces:**
 - Sign request: `POST { count: number }`, where `count` is an integer from 1 to 6.
-- Sign response: `{ ok: true, cloud_name: string, api_key: string, batch_id: string, uploads: Array<{ slot: number, timestamp: number, public_id: string, overwrite: "false", signature: string }> }`.
+- Sign response: `{ ok: true, cloud_name: string, api_key: string, batch_id: string, upload_preset: string, uploads: Array<{ slot: number, timestamp: number, public_id: string, overwrite: "false", signature: string }> }`.
 - Cleanup request: `POST { public_ids: string[] }`, with 1–6 unique IDs whose prefix is exactly `nrj-marketplace/products/`.
 - Both functions require a valid Supabase user JWT and an admin role in verified user metadata. They read Cloudinary credentials from function environment variables.
-- Signature parameters are exactly `overwrite`, `public_id`, and `timestamp`; serialize names alphabetically and append the API secret before SHA-1 hashing, following Cloudinary's signature rules.
+- Signature parameters are exactly `overwrite`, `public_id`, `timestamp`, and `upload_preset`; serialize names alphabetically and append the API secret before SHA-1 hashing, following Cloudinary's signature rules.
 - Cleanup signs Cloudinary `image/destroy` requests on the server and returns per-public-ID cleanup outcomes without returning credentials.
 
 - [ ] **Step 1: Write failing signing contract tests**
   - Assert the endpoint requires POST and rejects absent/malformed/non-admin authorization.
   - Assert `count` values 0, 7, non-integers, and missing values are rejected.
   - Assert public IDs are server-generated under the fixed product prefix and cannot be supplied by the caller.
-  - Assert the response contains the public API key and signatures but never the API secret.
-  - Assert signed parameters are sorted and include the exact timestamp, public ID, and `overwrite=false`.
+  - Assert the response contains the public API key, configured upload-preset name, and signatures but never the API secret.
+  - Assert signed parameters are sorted and include the exact timestamp, public ID, `overwrite=false`, and the configured upload-preset name.
 
 - [ ] **Step 2: Run the signing tests and verify they fail**
   - Run: `node --test test/product-media-signature.test.js`
@@ -65,8 +65,9 @@
 
 - [ ] **Step 3: Implement `sign-product-media-uploads`**
   - Reuse the verified-JWT/admin-claim guard pattern established by the existing `upload-product-import-media` function.
+  - Read `CLOUDINARY_PRODUCT_UPLOAD_PRESET` from Edge Function secrets and fail closed if it is absent.
   - Generate a UUID batch ID and one unique public ID plus fresh timestamp/signature per slot.
-  - Return only the Cloudinary cloud name, API key, batch ID, and signed upload parameters.
+  - Include the configured `upload_preset` in the signed parameter set and response; return only the cloud name, public API key, preset name, batch ID, and signed upload parameters.
 
 - [ ] **Step 4: Write failing cleanup contract tests**
   - Assert admin-only POST behavior.
@@ -118,7 +119,7 @@
 
 - [ ] **Step 4: Implement signed direct uploads**
   - Request a fresh batch of signatures when upload begins.
-  - For each file, create `FormData` with `file`, `api_key`, `timestamp`, `public_id`, `overwrite=false`, and `signature`.
+  - For each file, create `FormData` with `file`, `api_key`, `timestamp`, `public_id`, `overwrite=false`, `upload_preset`, and `signature`.
   - POST directly to `https://api.cloudinary.com/v1_1/<cloud_name>/image/upload`.
   - Accept only a successful Cloudinary response containing a valid `secure_url` and matching expected `public_id`.
   - Return URLs and public IDs in the same order as the selected files.
@@ -198,7 +199,7 @@
 
 - [ ] **Step 4: Review the diff and security boundaries**
   - Confirm no API secret or service-role key is exposed in browser code.
-  - Confirm both new functions require JWT verification and admin authorization.
+  - Confirm both new functions require JWT verification and admin authorization, and that the signed preset is restricted to JPEG/PNG/WEBP and 9,500,000 bytes.
   - Confirm no Product Import OS behavior, variant gallery behavior, database schema, existing products, or production service was changed.
 
 - [ ] **Step 5: Prepare a preview handoff**
