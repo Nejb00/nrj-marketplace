@@ -6,3 +6,9 @@ verify_jwt = true
 
 [functions.openpay-callback]
 verify_jwt = false
+
+[functions.sign-product-media-uploads]
+verify_jwt = true
+
+[functions.cleanup-product-media-uploads]
+verify_jwt = true

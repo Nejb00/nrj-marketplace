@@ -52,36 +52,36 @@
 - Signature parameters are exactly `overwrite`, `public_id`, `timestamp`, and `upload_preset`; serialize names alphabetically and append the API secret before SHA-1 hashing, following Cloudinary's signature rules.
 - Cleanup signs Cloudinary `image/destroy` requests on the server and returns per-public-ID cleanup outcomes without returning credentials.
 
-- [ ] **Step 1: Write failing signing contract tests**
+- [x] **Step 1: Write failing signing contract tests**
   - Assert the endpoint requires POST and rejects absent/malformed/non-admin authorization.
   - Assert `count` values 0, 7, non-integers, and missing values are rejected.
   - Assert public IDs are server-generated under the fixed product prefix and cannot be supplied by the caller.
   - Assert the response contains the public API key, configured upload-preset name, and signatures but never the API secret.
   - Assert signed parameters are sorted and include the exact timestamp, public ID, `overwrite=false`, and the configured upload-preset name.
 
-- [ ] **Step 2: Run the signing tests and verify they fail**
+- [x] **Step 2: Run the signing tests and verify they fail**
   - Run: `node --test test/product-media-signature.test.js`
   - Expected: FAIL because the function and tests' expected contract do not exist yet.
 
-- [ ] **Step 3: Implement `sign-product-media-uploads`**
+- [x] **Step 3: Implement `sign-product-media-uploads`**
   - Reuse the verified-JWT/admin-claim guard pattern established by the existing `upload-product-import-media` function.
   - Read `CLOUDINARY_PRODUCT_UPLOAD_PRESET` from Edge Function secrets and fail closed if it is absent.
   - Generate a UUID batch ID and one unique public ID plus fresh timestamp/signature per slot.
   - Include the configured `upload_preset` in the signed parameter set and response; return only the cloud name, public API key, preset name, batch ID, and signed upload parameters.
 
-- [ ] **Step 4: Write failing cleanup contract tests**
+- [x] **Step 4: Write failing cleanup contract tests**
   - Assert admin-only POST behavior.
   - Assert empty, oversized, duplicate, malformed, or out-of-prefix public ID lists are rejected.
   - Assert Cloudinary destroy signatures are generated server-side and the API secret is never returned.
 
-- [ ] **Step 5: Implement `cleanup-product-media-uploads`**
+- [x] **Step 5: Implement `cleanup-product-media-uploads`**
   - Validate every public ID against the fixed NRJ product media prefix before calling Cloudinary.
   - Destroy only the submitted IDs, return per-item results, and never accept a Cloudinary URL or arbitrary resource identifier.
 
-- [ ] **Step 6: Configure both functions with JWT verification**
+- [x] **Step 6: Configure both functions with JWT verification**
   - Add `[functions.sign-product-media-uploads]` and `[functions.cleanup-product-media-uploads]` blocks to `supabase/config.toml`, each with `verify_jwt = true`.
 
-- [ ] **Step 7: Run both endpoint contract tests**
+- [x] **Step 7: Run both endpoint contract tests**
   - Run: `node --test test/product-media-signature.test.js test/product-media-cleanup.test.js`
   - Expected: PASS.
 
