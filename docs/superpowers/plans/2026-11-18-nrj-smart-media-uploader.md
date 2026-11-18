@@ -178,30 +178,34 @@
   - Run: `node --test test/product-form-media.test.js`
   - Expected: PASS.
 
-### Task 4: Full verification and handoff
+### Task 4: Final verification and handoff
 
 **Files:**
 - No additional production files expected.
-- Update tests only if verification exposes a regression.
+- Final verification results recorded below.
 
-- [ ] **Step 1: Run focused media tests**
-  - Run: `node --test test/product-media-signature.test.js test/product-media-cleanup.test.js test/product-media-uploader.test.js test/product-form-media.test.js test/product-import-media.test.js`
-  - Expected: PASS.
+- [x] **Step 1: Run focused media tests**
+  - Result: PASS — 31/31 across signing, cleanup, uploader UI, product-form integration, and the existing Product Import OS media contract.
 
-- [ ] **Step 2: Run the full repository test suite**
-  - Run: `npm test`
-  - Expected: all tests pass.
+- [x] **Step 2: Run the full repository test suite**
+  - Result: 293/296 passed. Three unrelated tests still fail on Windows `CRLF` line endings: two `automation-dashboard-routing` assertions and one `drive-sync-optimization` assertion. The same three failures were reproduced on the clean baseline before this feature branch; no new media or Product Import OS tests failed.
 
-- [ ] **Step 3: Run syntax and production build checks**
-  - Run: `npm run check:syntax`
-  - Run: `npm run build`
-  - Expected: both commands exit successfully.
+- [x] **Step 3: Run syntax and production build checks**
+  - `npm run check:syntax`: PASS — 215 JavaScript files.
+  - `npm run build`: PASS — Vite transformed 143 modules and built the admin/catalogue assets.
+  - Existing Vite warning: `modal-render.js` is both dynamically and statically imported; build still succeeds.
 
 - [ ] **Step 4: Review the diff and security boundaries**
-  - Confirm no API secret or service-role key is exposed in browser code.
-  - Confirm both new functions require JWT verification and admin authorization, and that the signed preset is restricted to JPEG/PNG/WEBP and 9,500,000 bytes.
-  - Confirm no Product Import OS behavior, variant gallery behavior, database schema, existing products, or production service was changed.
+  - Confirmed: no Cloudinary API secret or Supabase service-role key is present in browser code; the frontend grep returned no matches.
+  - Confirmed: both new Edge Functions set `verify_jwt = true` and require a non-anonymous authenticated JWT whose server-controlled `app_metadata.role` is `admin`.
+  - Confirmed: generated public IDs are constrained to `nrj-marketplace/products/<uuid>/<slot>`; cleanup accepts only 1–6 matching IDs and only calls Cloudinary `image/destroy`.
+  - Confirmed: no Product Import OS implementation, variant gallery code, database migrations/schema, product rows, production functions, secrets, or Cloudinary account settings were changed.
+  - **Still unverified:** the actual Cloudinary upload preset must be checked to confirm signed uploads, JPEG/PNG/WEBP restrictions, and `max_file_size = 9500000`. The signing function fails closed while `CLOUDINARY_PRODUCT_UPLOAD_PRESET` is absent. Do not enable live uploads until the preset is verified and the server-only secret is configured.
 
-- [ ] **Step 5: Prepare a preview handoff**
-  - Summarize modified files, focused/full test results, Cloudinary preset prerequisites, cleanup limitations, and preview URL if a preview deployment is separately approved.
-  - Do not merge to `main` or deploy Supabase functions to production without explicit approval.
+- [x] **Step 5: Prepare a preview handoff**
+  - Feature branch is ready for review. No preview deployment, PR, merge, Edge Function deployment, production secret change, or Cloudinary preset change was initiated because those actions were outside the approved boundary.
+  - No preview URL exists. A preview can be created only after separate approval.
+
+### Execution status
+
+Implementation tasks 1–3 are complete on `feat/nrj-smart-media-uploader`. Local code verification is complete, but the mission remains **Blocked for live activation** until the production Cloudinary preset is verified/configured. The full repository suite also retains the three baseline CRLF-sensitive failures listed above.

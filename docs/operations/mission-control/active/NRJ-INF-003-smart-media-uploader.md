@@ -3,73 +3,80 @@
 - **Mission Alias:** NRJ-INF-003
 - **Notion generated ID:** NRJ-29
 - **Notion record:** https://app.notion.com/p/41c0f09830e181d8b12bc086a2b78ed5
-- **Status:** In Progress
+- **Status:** Blocked — code branch ready; live activation awaits verified Cloudinary preset
 - **Priority:** P1
 - **Track:** Infrastructure
 - **Owner / session:** ChatGPT + Desktop Commander — exécution Native
 - **Last verified:** 2026-11-18
 - **Branch:** https://github.com/Nejb00/nrj-marketplace/tree/feat/nrj-smart-media-uploader
 - **Base ref / base SHA:** main / c35e887cb878e5e55c0d46a250b4d4b801ab482b
-- **Latest commit:** 3680ee829f62b804c92b709f446fa110c60a9c39
-- **PR:** none — création non autorisée
-- **External systems:** GitHub, Supabase (code only), Notion, ChatGPT
+- **Latest implementation commit:** 24091efcbc37de1e716cc26676c1bda7b69e4c9c
+- **PR:** none — not created
+- **External systems:** GitHub, Supabase (local function code only), Cloudinary (read-only audit), Notion
 
 ## Objective and acceptance criteria
 
-- **Objective:** permettre à l’administrateur de choisir jusqu’à six fichiers image, de les prévisualiser et de les envoyer à Cloudinary au moment de la création du produit.
-- **Acceptance criteria:** types JPEG/PNG/WEBP, limite 9 500 000 octets par fichier ; previews et retrait individuel ; ordre de sélection préservé ; upload uniquement au submit ; signature serveur ; clés secrètes jamais exposées côté navigateur ; cleanup sur upload partiel ou échec d’insertion ; compatibilité URL-only conservée ; aucune modification du Product Import OS ni du schéma DB.
+Allow an NRJ admin to select up to six local product photos, preview/remove/reorder them by selection order, and upload them directly to Cloudinary when creating a catalogue product. Signed URLs fill the existing `image` through `image6` fields; manual URL inputs remain supported.
 
-## Context / source of truth
+- JPEG, PNG and WEBP only; 9,500,000 bytes maximum per file.
+- Server-issued signatures; no Cloudinary API secret or service-role key in browser code.
+- Uploads start only after clicking the product-create button.
+- Partial upload failure or failed product insertion triggers cleanup of the signed batch.
+- A post-insert refresh/render failure must never delete files already referenced by a saved product.
+- Existing URL-only creation remains supported.
+- Product Import OS, variant gallery and database schema remain untouched.
 
-- **Source docs:** [Design](https://github.com/Nejb00/nrj-marketplace/blob/feat/nrj-smart-media-uploader/docs/superpowers/specs/2026-11-18-nrj-smart-media-uploader-design.md) · [Implementation plan](https://github.com/Nejb00/nrj-marketplace/blob/feat/nrj-smart-media-uploader/docs/superpowers/plans/2026-11-18-nrj-smart-media-uploader.md)
-- **Related Notion records:** LAB-CLOUDINARY-001 (Cloudinary infrastructure), NRJ Marketplace project.
-- **Base observed:** origin/main c35e887; isolated feature branch starts at 3680ee8 after adding only the local-worktree ignore rule.
-- **Parallel work:** original clone had pre-existing uncommitted changes on fix/image-lazy-fallback-2026-11-09; preserved untouched in the original worktree. The feature work happens in a separate Git worktree.
+## Source of truth
 
-## Completed steps and evidence
+- **Design:** https://github.com/Nejb00/nrj-marketplace/blob/feat/nrj-smart-media-uploader/docs/superpowers/specs/2026-11-18-nrj-smart-media-uploader-design.md
+- **Implementation plan:** https://github.com/Nejb00/nrj-marketplace/blob/feat/nrj-smart-media-uploader/docs/superpowers/plans/2026-11-18-nrj-smart-media-uploader.md
+- **Cloudinary infrastructure companion:** LAB-CLOUDINARY-001 — https://app.notion.com/p/4130f09830e181a7a024faf7df473658
+- **Project:** NRJ Marketplace International — https://app.notion.com/p/4100f09830e181c78cfec18e40583728
 
-| Step | Result | Evidence | Commit / version | Verified at |
-|---|---|---|---|---|
-| Mission setup | Notion record created; feature branch and isolated worktree created | Notion record and GitHub branch above | 3680ee829f62b804c92b709f446fa110c60a9c39 | 2026-11-18 |
-| Plan/spec attached | Pending commit to feature branch | docs/superpowers/ | working tree | 2026-11-18 |
+## Implementation completed
 
-## Not completed
+| Area | Implementation |
+|---|---|
+| Signing | `sign-product-media-uploads` issues one signed manifest for 1–6 server-generated product public IDs. Requires a non-anonymous authenticated admin JWT and the server-only `CLOUDINARY_PRODUCT_UPLOAD_PRESET`. |
+| Cleanup | `cleanup-product-media-uploads` validates 1–6 unique UUID/slot IDs under `nrj-marketplace/products/` and signs server-side `image/destroy` requests. |
+| Admin picker | Multi-file input, previews, individual removal, order labels, validation, progress/status messages and object URL cleanup. |
+| Direct upload | Browser posts file bytes to Cloudinary Upload API using short-lived server signatures; it never proxies image bytes through Supabase. |
+| Product form | First N URL slots replaced in selection order; remaining manual URLs are preserved. URL-only flow remains intact. Insert failures attempt cleanup; post-insert refresh errors do not remove linked media. |
 
-- [ ] Task 1 — signed endpoints and cleanup tests
-- [ ] Task 2 — admin picker and direct Cloudinary uploader
-- [ ] Task 3 — product-form integration and rollback
-- [ ] Task 4 — complete tests, build, security review and handoff
+## Verification results
 
-## Decisions to preserve
+| Check | Result |
+|---|---|
+| Focused media tests | **PASS — 31/31** across sign, cleanup, uploader UI, product-form and existing Product Import OS media contract. |
+| Full repository suite | **293/296 passed.** Three known baseline failures persist: 2 `automation-dashboard-routing` assertions and 1 `drive-sync-optimization` assertion, all due to Windows CRLF-sensitive regex tests. The same 3 failures were reproduced on clean `main` before feature implementation. |
+| `npm run check:syntax` | **PASS — 215 JavaScript files.** |
+| `npm run build` | **PASS — Vite transformed 143 modules.** Existing warning: `modal-render.js` is both dynamically and statically imported. |
+| `git diff --check` | PASS after final documentation whitespace cleanup. |
+| Frontend secret scan | No `CLOUDINARY_API_SECRET` or `SUPABASE_SERVICE_ROLE_KEY` matches in `src/js` or `admin.html`. |
 
-- No direct change to main, PR, merge, production deploy or production secret/config changes without separate approval.
-- Cloudinary API secret remains exclusively in Supabase Edge Function secrets.
-- The signed upload preset name is server-only (CLOUDINARY_PRODUCT_UPLOAD_PRESET) and must be confirmed to restrict formats and file size before enabling live uploads.
-- Existing Product Import OS function and pipeline remain unchanged. No database migration or bulk catalogue migration.
-- Uploaded files map in selection order to image through image6; existing URL inputs remain a fallback.
+## Current blocker — do not activate yet
 
-## Tests and verification
+The actual Cloudinary upload preset has **not** been verified or configured. Before enabling real uploads it must be confirmed as a signed preset with `allowed_formats` restricted to JPEG/PNG/WEBP and `max_file_size` set to 9,500,000 bytes. The signing Edge Function fails closed if `CLOUDINARY_PRODUCT_UPLOAD_PRESET` is absent. Configure that secret server-side only after the preset is verified.
 
-| Command / action | Result | Environment | Exact commit / version |
-|---|---|---|---|
-| Git isolation check | Pass; dedicated worktree clean | DESKTOP-02S75FV | 3680ee829f62b804c92b709f446fa110c60a9c39 |
-| npm ci / baseline tests | Pending | Isolated feature worktree | pending |
+## Safety and approval boundaries
 
-## Risks, blockers and safety boundaries
+- Work is isolated on `feat/nrj-smart-media-uploader`; `main` remains unchanged.
+- The original clone's pre-existing uncommitted changes were preserved in the original worktree.
+- No database migration/schema or product data changes.
+- No Product Import OS implementation, variant gallery, or existing `upload-product-import-media` function changes.
+- No Cloudinary account/preset changes; no Supabase production secret changes; no Edge Function deployment.
+- No preview deployment, pull request, merge or production deployment was initiated.
+- No preview URL exists. A preview is a separate action requiring approval.
 
-- Live Cloudinary preset inspection/configuration and Supabase secret setup are prerequisites for enabling uploads, not for local code tests.
-- Production functions, production secrets, Cloudinary settings, database data/schema and catalogue images are out of scope.
-- No PR, preview deployment, merge or production deployment will be initiated in this mission.
+## Final handoff
 
-## Session handoff
+Implementation tasks 1–3 are complete. Local code verification is complete. Mission status remains **Blocked for live activation** until the existing/created Cloudinary preset is inspected and verified against the required restrictions. Full repository tests retain the three baseline CRLF failures listed above; those are outside this branch's scope.
 
-**Last confirmed state:** feature branch and isolated Git worktree exist, based on main c35e887. Plan/spec files are present in the worktree.
-**Next action:** install locked dependencies in the isolated worktree, run the baseline checks, then begin Task 1 tests-first.
-**Do not forget:** preserve the original clone’s dirty branch and do not touch main or production.
-**Open questions:** actual upload preset name/settings must be verified before activating the live integration.
+**Next action:** verify/create the signed Cloudinary product preset with the required formats and size limit. Then add `CLOUDINARY_PRODUCT_UPLOAD_PRESET` to Supabase Edge Function secrets and separately review/approve deployment of the two new functions before enabling the browser uploader.
 
-## Status-change history
+## Status history
 
-| Timestamp | Previous status | New status | Evidence / decision |
-|---|---|---|---|
-| 2026-11-18 | Planned | In Progress | User approved Native execution and implementation on a dedicated branch. |
+| Date | Status | Evidence |
+|---|---|---|
+| 2026-11-18 | Planned → In Progress | User approved Native execution on a dedicated feature branch. |
+| 2026-11-18 | In Progress → Blocked | Code and local verification complete; actual Cloudinary preset restrictions and production activation remain unverified/unapproved. |

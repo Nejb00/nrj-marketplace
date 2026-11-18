@@ -1,7 +1,7 @@
 # NRJ Smart Media Uploader — Design
 
-**Date:** 2026-11-18  
-**Status:** Design and implementation plan approved by the user; Native execution in progress (2026-11-18)  
+**Date:** 2026-11-18
+**Status:** Design and implementation plan approved by the user; Native execution in progress (2026-11-18)
 **Project:** NRJ Marketplace
 
 ## Intent
