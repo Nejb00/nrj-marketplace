@@ -133,13 +133,21 @@ Regression tests cover allowed anonymous SELECT, allowed authenticated CRUD, and
 
 Because the SQL is transactional, a failed preflight or postflight rolls back all changes in the transaction. If a later approved migration causes a verified application regression, restore only the exact required privilege(s) for the affected role and object through a separately reviewed rollback. Do not restore broad ALL privileges by default.
 
+**Verification update — 19 November 2026**
+
+- The branch's updated snapshot SQL was executed as a SELECT-only query against the hosted project. It returned 16 public application tables, 35 public functions and 32 effective privilege records (two application roles × 16 relations).
+- The live snapshot independently confirms 14 relations with anon non-SELECT access and 15 relations with authenticated structural privileges.
+- `node --test test/rls-security-audit.test.js` was run locally against the feature-branch versions of the audit and test files: **5 tests passed, 0 failed**.
+- GitHub's commit status reports Vercel success for the review branch; the Vercel deployment is a Preview (`READY`, not Production).
+- No GitHub Actions run was triggered for the feature branch: the repository's Security Audit and NRJ Governance Audit workflows are configured for pull requests targeting `main`, pushes to `main`, schedules, or manual dispatch. No pull request was opened to trigger them.
+
 ## Current status
 
 - Live audit: completed with SELECT-only queries.
 - SQL proposal: added on this feature branch, not executed.
 - Security audit snapshot: extended to expose effective PostgreSQL 17 table privileges.
 - Audit rules: extended for anon and authenticated structural grants.
-- Regression tests: added; CI result pending.
+- Regression tests: **5/5 passed locally**. GitHub Actions CI has not run for this branch; only the Vercel Preview status is green.
 - Supabase hosted database: unchanged.
 - NRJ Marketplace main: unchanged.
 - No PR, merge, role, secret, or deployment.
