@@ -8,6 +8,8 @@ import db from '../services/db.js';
 const VIEWED_PRODUCTS_KEY = 'nrj_viewed_products';
 
 export const state = {
+    /** État de connectivité confirmé par les réponses API (online/offline/unknown). */
+    networkStatus: 'unknown',
     products: [],
     /** Arbre complet des catégories (table categories) */
     categories: [],

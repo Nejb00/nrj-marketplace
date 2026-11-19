@@ -4,6 +4,7 @@ import { state } from '../../core/state.js';
 import { PRELOAD_IMAGE_COUNT } from '../../core/config.js';
 import { showToast } from '../../utils/dom-helpers.js';
 import { thumb } from '../../utils/images.js';
+import { isNetworkReachable } from '../../utils/connectivity.js';
 
 export function initServiceWorkerUpdates() {
   if (!('serviceWorker' in navigator)) return;
@@ -31,11 +32,22 @@ export function initOfflineIndicator() {
     document.body.prepend(banner);
   }
   const update = () => {
-    banner.style.transform = navigator.onLine ? 'translateY(-100%)' : 'translateY(0)';
+    const online = isNetworkReachable(state.networkStatus, navigator.onLine);
+    banner.style.transform = online ? 'translateY(-100%)' : 'translateY(0)';
   };
   update();
-  addEventListener('online', update);
-  addEventListener('offline', update);
+
+  // Une perte/reprise réelle du réseau reste utile, mais l'état confirmé par
+  // une réponse API remplace le signal navigateur potentiellement trompeur.
+  addEventListener('online', () => {
+    if (state.networkStatus === 'offline') state.networkStatus = 'unknown';
+    update();
+  });
+  addEventListener('offline', () => {
+    state.networkStatus = 'offline';
+    update();
+  });
+  window.addEventListener('nrj:network-status', update);
 }
 
 export async function precacheCatalogueImages() {
