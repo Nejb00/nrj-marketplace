@@ -159,3 +159,16 @@ Because the SQL is transactional, a failed preflight or postflight rolls back al
 - Supabase hosted database: unchanged.
 - NRJ Marketplace main: unchanged.
 - No PR, merge, role, secret, or deployment.
+
+
+## Migration preparation update — 19 November 2026
+
+- A dedicated migration branch, `security/migration-public-role-privileges`, was created from the reviewed security branch. It is separate from `main` and contains no production deployment.
+- Supabase CLI v3.0.0 generated the timestamped migration path `supabase/migrations/20261119181340_revoke_public_role_structural_privileges.sql`. The migration content carries forward the reviewed preflight, ACL changes, and postflight checks.
+- Explicit `BEGIN` / `COMMIT` statements were omitted from the migration file because Supabase Branching executes each migration file in a single transaction. This avoids introducing nested transaction boundaries in the branch deployment runner.
+- Static checks on the generated file confirmed both preflight and postflight blocks are present, the global-default ACL guard is present, and explicit transaction statements are absent.
+- The connected Windows PC does not have Docker or `psql` available, so the migration has not been replayed locally against PostgreSQL. No local SQL-engine validation is claimed.
+- The Supabase project currently lists only its production `main` branch. A separate Supabase staging branch has not been created. The quoted branch compute price is **$0.01344/hour**; creation is pending explicit cost approval.
+- The migration has not been applied to production or any staging database. No PR has been opened, and no merge or deployment has been initiated.
+
+**Current gate:** waiting for approval of the hourly Supabase staging-branch cost before creating the isolated database and running the migration there.
