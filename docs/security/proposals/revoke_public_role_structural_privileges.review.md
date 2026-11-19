@@ -36,6 +36,14 @@ The two relations without any effective anon table privilege beyond the inventor
 
 The role has SELECT privileges on `products`, `categories`, `product_variants`, `product_media`, and also on `chat_messages` and `chat_sessions`. The latter two do not have an anon SELECT RLS policy, so that SQL privilege does not presently make their rows visible to unauthenticated visitors. The proposal removes those unnecessary grants.
 
+A second live query of the effective privileges confirmed:
+- anon has at least one non-SELECT privilege on **14 of the 16** application relations;
+- anon's SELECT table grants currently cover six relations: the four public catalogue relations plus chat messages and sessions (the latter two are not visible to anon because their RLS policies target authenticated);
+- authenticated has TRUNCATE, REFERENCES, TRIGGER and MAINTAIN on **15 of the 16** application relations;
+- no column-level ACL entries exist on public table columns at audit time.
+
+All 16 public application relations are owned by postgres, so the proposed ownership preflight matches the current database. The proposal intentionally removes only table-level privileges; its postflight additionally detects any effective column-level write/reference privileges that would otherwise survive a table-level REVOKE.
+
 ### Effective authenticated structural privileges
 
 The role `authenticated` currently has TRUNCATE, REFERENCES, TRIGGER and MAINTAIN on 15 public relations. These privileges are not normal row CRUD and are not restricted by the row-level policies in the same way as INSERT, UPDATE and DELETE. In particular, TRUNCATE is not governed by row-level policy predicates.
