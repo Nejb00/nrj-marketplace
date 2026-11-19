@@ -36,5 +36,26 @@ select json_build_object(
     from information_schema.role_table_grants
     where table_schema = 'public'
       and grantee in ('anon', 'authenticated')
+  ), '[]'::json),
+  'effective_table_privileges',
+  coalesce((
+    select json_agg(json_build_object(
+      'schema_name', n.nspname,
+      'table_name', c.relname,
+      'role_name', roles.role_name,
+      'select', has_table_privilege(roles.role_name, c.oid, 'SELECT'),
+      'insert', has_table_privilege(roles.role_name, c.oid, 'INSERT'),
+      'update', has_table_privilege(roles.role_name, c.oid, 'UPDATE'),
+      'delete', has_table_privilege(roles.role_name, c.oid, 'DELETE'),
+      'truncate', has_table_privilege(roles.role_name, c.oid, 'TRUNCATE'),
+      'references', has_table_privilege(roles.role_name, c.oid, 'REFERENCES'),
+      'trigger', has_table_privilege(roles.role_name, c.oid, 'TRIGGER'),
+      'maintain', has_table_privilege(roles.role_name, c.oid, 'MAINTAIN')
+    ) order by roles.role_name, c.relname)
+    from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+    cross join (values ('anon'), ('authenticated')) as roles(role_name)
+    where n.nspname = 'public'
+      and c.relkind in ('r', 'p', 'v', 'm', 'f')
   ), '[]'::json)
 ) as snapshot;
