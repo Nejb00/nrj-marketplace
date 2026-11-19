@@ -86,6 +86,14 @@ It preserves any default privileges for `service_role`.
 
 A separate platform-managed default ACL exists for owner `supabase_admin` in schema `public`. The audit found that `postgres` cannot `SET ROLE supabase_admin` in this project. This proposal does not attempt to alter that platform-managed ACL. A Supabase operator must review it separately if user/application tables are ever created under `supabase_admin`; the intended application migration path should continue to create application tables as `postgres`.
 
+### PostgreSQL default-ACL semantics and fail-closed checks
+
+PostgreSQL adds per-schema default privileges to the global defaults; a per-schema `REVOKE` cannot cancel a privilege granted globally. See the [PostgreSQL 17 ALTER DEFAULT PRIVILEGES documentation](https://www.postgresql.org/docs/17/sql-alterdefaultprivileges.html).
+
+A fresh read-only inspection of `pg_default_acl` confirmed that the current custom `postgres` table defaults are scoped to `public`; no global table-default ACL entries were present. The proposal now checks this assumption explicitly before changing anything. It aborts if global defaults grant any table privilege to `PUBLIC` or a role inherited by `anon`, or structural privileges to `PUBLIC` or a role inherited by `authenticated`.
+
+Its postflight checks both global and `public` scopes and includes `PUBLIC` and inherited-role grants. This ensures that a schema-scoped revoke cannot silently leave broader future-table access in effect. The existing `supabase_admin` defaults remain a separate platform-operator review item.
+
 ## Proposed changes
 
 The SQL proposal runs in one transaction and fails closed unless:
