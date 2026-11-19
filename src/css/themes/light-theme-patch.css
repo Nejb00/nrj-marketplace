@@ -44,11 +44,13 @@
 }
 
 :root.light-theme .main-nav .nav-item {
-  color: rgba(0, 0, 0, 0.35);
+  /* Keep inactive labels/icons legible on the near-white glass surface. */
+  color: var(--text-secondary);
 }
 
 :root.light-theme .main-nav .nav-item.active {
-  color: var(--primary);
+  /* A deeper NRJ orange maintains text/icon contrast; the glass pill stays orange. */
+  color: #9a3f00;
 }
 
 :root.light-theme .main-nav .nav-item.active::before {
