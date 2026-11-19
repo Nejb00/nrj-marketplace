@@ -48,11 +48,16 @@ BEGIN
       AND d.defaclnamespace = 0
       AND d.defaclobjtype = 'r'
       AND (
-        acl.grantee = 0
-        OR pg_catalog.pg_has_role('anon'::regrole::oid, acl.grantee, 'USAGE')
+        CASE
+          WHEN acl.grantee = 0 THEN true
+          ELSE pg_catalog.pg_has_role('anon'::regrole::oid, acl.grantee, 'USAGE')
+        END
         OR (
           acl.privilege_type IN ('TRUNCATE', 'REFERENCES', 'TRIGGER', 'MAINTAIN')
-          AND pg_catalog.pg_has_role('authenticated'::regrole::oid, acl.grantee, 'USAGE')
+          AND CASE
+            WHEN acl.grantee = 0 THEN true
+            ELSE pg_catalog.pg_has_role('authenticated'::regrole::oid, acl.grantee, 'USAGE')
+          END
         )
       )
   ) THEN
@@ -195,11 +200,16 @@ BEGIN
       AND d.defaclobjtype = 'r'
       AND d.defaclnamespace IN (0, 'public'::regnamespace::oid)
       AND (
-        acl.grantee = 0
-        OR pg_catalog.pg_has_role('anon'::regrole::oid, acl.grantee, 'USAGE')
+        CASE
+          WHEN acl.grantee = 0 THEN true
+          ELSE pg_catalog.pg_has_role('anon'::regrole::oid, acl.grantee, 'USAGE')
+        END
         OR (
           acl.privilege_type IN ('TRUNCATE', 'REFERENCES', 'TRIGGER', 'MAINTAIN')
-          AND pg_catalog.pg_has_role('authenticated'::regrole::oid, acl.grantee, 'USAGE')
+          AND CASE
+            WHEN acl.grantee = 0 THEN true
+            ELSE pg_catalog.pg_has_role('authenticated'::regrole::oid, acl.grantee, 'USAGE')
+          END
         )
       )
   ) THEN
