@@ -172,3 +172,14 @@ Because the SQL is transactional, a failed preflight or postflight rolls back al
 - The migration has not been applied to production or any staging database. No PR has been opened, and no merge or deployment has been initiated.
 
 **Current gate:** waiting for approval of the hourly Supabase staging-branch cost before creating the isolated database and running the migration there.
+
+
+## Staging attempt update — 19 November 2026
+
+- Supabase organization `NRJ Marketplace international` is on the **Free** plan.
+- The current cost quote for a development branch is `$0.01344/hour` (about `$0.32/day` while active). The quote was confirmed through Supabase's cost-confirmation flow, but branch creation was rejected before provisioning with: `Branching is supported only on the Pro plan or above`.
+- A fresh `list_branches` check confirms the project still has only its production `main` branch. No staging branch was created, so no branch compute has been started.
+- The PC has no Docker, Podman, WSL executable, or PostgreSQL service/client. The CLI-generated migration is prepared in an isolated temporary copy, but no PostgreSQL engine was available to replay it locally.
+- An existing inactive project and the other active NRJ project were not repurposed; no existing project's data or configuration was changed.
+
+**Current blocker:** staging execution requires either (a) the organization to move to a Supabase plan that supports branches, with the hourly branch cost separately monitored and the branch paused after the test, or (b) an isolated local PostgreSQL/Supabase runtime to be installed and run. The reviewed migration is still unapplied everywhere.
