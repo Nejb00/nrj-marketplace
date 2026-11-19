@@ -382,6 +382,7 @@ BEGIN
      OR has_table_privilege(v_role_oid, 'public.products', 'TRUNCATE')
      OR has_table_privilege(v_role_oid, 'public.products', 'REFERENCES')
      OR has_table_privilege(v_role_oid, 'public.products', 'TRIGGER')
+     OR has_table_privilege(v_role_oid, 'public.products', 'MAINTAIN')
      OR has_any_column_privilege(v_role_oid, 'public.products', 'INSERT')
      OR has_any_column_privilege(v_role_oid, 'public.products', 'UPDATE')
      OR has_any_column_privilege(v_role_oid, 'public.products', 'REFERENCES')
@@ -391,6 +392,7 @@ BEGIN
      OR has_table_privilege(v_role_oid, 'public.categories', 'TRUNCATE')
      OR has_table_privilege(v_role_oid, 'public.categories', 'REFERENCES')
      OR has_table_privilege(v_role_oid, 'public.categories', 'TRIGGER')
+     OR has_table_privilege(v_role_oid, 'public.categories', 'MAINTAIN')
      OR has_any_column_privilege(v_role_oid, 'public.categories', 'INSERT')
      OR has_any_column_privilege(v_role_oid, 'public.categories', 'UPDATE')
      OR has_any_column_privilege(v_role_oid, 'public.categories', 'REFERENCES') THEN
@@ -413,6 +415,7 @@ BEGIN
         OR has_table_privilege(v_role_oid, c.oid, 'TRUNCATE')
         OR has_table_privilege(v_role_oid, c.oid, 'REFERENCES')
         OR has_table_privilege(v_role_oid, c.oid, 'TRIGGER')
+        OR has_table_privilege(v_role_oid, c.oid, 'MAINTAIN')
         OR has_any_column_privilege(v_role_oid, c.oid, 'SELECT')
         OR has_any_column_privilege(v_role_oid, c.oid, 'INSERT')
         OR has_any_column_privilege(v_role_oid, c.oid, 'UPDATE')
