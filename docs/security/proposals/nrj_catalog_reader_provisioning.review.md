@@ -107,7 +107,7 @@ The SQL proposal is wrapped in one transaction and contains:
 1. **Preflight:** reject an existing role, missing tables/columns, incompatible types, disabled RLS, invalid existing catalogue rows, policy-name collisions, PUBLIC EXECUTE on SECURITY DEFINER functions, or PUBLIC CREATE on `public`.
 2. **Role creation:** least-privilege attributes, `NOINHERIT`, no memberships, connection limit 3, read-only defaults and short timeouts.
 3. **Minimal grants:** CONNECT to the current database, USAGE on `public`, column-level SELECT on the two allowlists, and explicit SELECT-only policies.
-4. **Postflight:** re-check role attributes, memberships, schema rights, RLS policies, exact column rights, no write rights, no unrelated public relation/sequence access, and no executable SECURITY DEFINER routine.
+4. **Postflight:** re-check role attributes, memberships, schema rights, RLS policies, exact column rights, no write or PostgreSQL 17 MAINTAIN rights, no unrelated public relation/sequence access, and no executable SECURITY DEFINER routine.
 5. **Fail closed:** any failed predicate raises an exception before COMMIT, rolling back role, policy and grant changes from the transaction.
 
 Note: PostgreSQL role creation and policy/ACL behavior still require validation against the actual Supabase PostgreSQL version using the intended migration execution path. This draft has not been run against a database and must not be described as runtime-tested.
