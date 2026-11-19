@@ -34,14 +34,61 @@ export function auditRlsSecuritySnapshot(snapshot = {}) {
     }
   }
 
-  for (const grant of snapshot.grants || []) {
-    if (grant.role_name === 'anon' &&
-        ['INSERT', 'UPDATE', 'DELETE'].includes(String(grant.privilege_type).toUpperCase())) {
-      findings.push({
-        rule_id: 'SEC-RLS-004',
-        target: grant.table_name,
-        detail: 'Anonymous role has a write grant that requires explicit review.',
-      });
+  const effectivePrivileges = snapshot.effective_table_privileges;
+  if (Array.isArray(effectivePrivileges)) {
+    const privilegeNames = [
+      'select', 'insert', 'update', 'delete',
+      'truncate', 'references', 'trigger', 'maintain',
+    ];
+
+    for (const access of effectivePrivileges) {
+      const roleName = String(access.role_name || '').toLowerCase();
+      const granted = privilegeNames.filter((privilege) => access[privilege] === true);
+      let reviewedPrivileges = [];
+      let ruleId = null;
+      let detail = '';
+
+      if (roleName === 'anon') {
+        reviewedPrivileges = granted.filter((privilege) => privilege !== 'select');
+        ruleId = 'SEC-RLS-004';
+        detail = 'Anonymous role has a non-read table privilege; public visitors should receive only explicitly required SELECT access.';
+      } else if (roleName === 'authenticated') {
+        reviewedPrivileges = granted.filter((privilege) =>
+          ['truncate', 'references', 'trigger', 'maintain'].includes(privilege)
+        );
+        ruleId = 'SEC-RLS-005';
+        detail = 'Authenticated role has a structural or maintenance privilege that bypasses row-level write policies or exceeds normal application CRUD needs.';
+      }
+
+      if (ruleId && reviewedPrivileges.length) {
+        findings.push({
+          rule_id: ruleId,
+          target: access.table_name,
+          detail: detail + ' Privileges: ' + reviewedPrivileges.join(', ').toUpperCase() + '.',
+        });
+      }
+    }
+  } else {
+    // Backward compatibility for snapshots created before effective privileges
+    // were included. The new SQL snapshot also records PostgreSQL 17 MAINTAIN.
+    for (const grant of snapshot.grants || []) {
+      const roleName = String(grant.role_name || '').toLowerCase();
+      const privilege = String(grant.privilege_type || '').toUpperCase();
+
+      if (roleName === 'anon' && privilege !== 'SELECT') {
+        findings.push({
+          rule_id: 'SEC-RLS-004',
+          target: grant.table_name,
+          detail: 'Anonymous role has a non-read table privilege that requires explicit review: ' + privilege + '.',
+        });
+      } else if (roleName === 'authenticated' &&
+          ['TRUNCATE', 'REFERENCES', 'TRIGGER'].includes(privilege)) {
+        findings.push({
+          rule_id: 'SEC-RLS-005',
+          target: grant.table_name,
+          detail: 'Authenticated role has a structural table privilege that requires explicit review: ' + privilege + '.',
+        });
+      }
     }
   }
 
