@@ -29,11 +29,38 @@ The login will be `nrj_catalog_reader`, with no superuser, createdb, createrole,
 
 ## Why not reuse Supabase API roles?
 
-The reviewed migration `20261002192115_harden_rls_and_fk_indexes.sql` grants `anon` and `authenticated` policies on the catalogue, but also gives `anon` a constrained pending-order INSERT policy. An API role is therefore not a read-only database identity. `service_role` bypasses RLS and is explicitly excluded.
+The reviewed migration `20261002192115_harden_rls_and_fk_indexes.sql` grants `anon` and `authenticated` SELECT policies on the catalogue. The live ACL audit shows that `anon` also has broad table-level privileges on `products` (SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER and MAINTAIN) and non-SELECT table privileges on `categories` (TRUNCATE, REFERENCES, TRIGGER and MAINTAIN). The current RLS policies restrict `anon` row writes on the catalogue, but RLS does not protect TRUNCATE/REFERENCES/TRIGGER/MAINTAIN. These grants deserve a separate Marketplace security review; they are not changed by this proposal. `service_role` bypasses RLS and is explicitly excluded.
 
 The proposal creates a dedicated role and separate SELECT policies for only two tables. It does not change existing `anon`/`authenticated` policies or their application API.
 
 ## Review findings and blockers
+
+## Live audit snapshot — 19 November 2026
+
+A read-only audit was completed against the connected Supabase project named `nrj-marketplace` in `eu-west-3`. The project reported `ACTIVE_HEALTHY`, PostgreSQL 17.11. The audit statements were SELECT-only and returned metadata, ACLs, policies and aggregate data-quality counts. The Supabase SQL session ran as `postgres` with `default_transaction_read_only=off`; no write statement was issued. This was an administrative audit query, not a connection using the future `nrj_catalog_reader` login.
+
+### Catalog schema and data
+
+- `public.products` and `public.categories` both exist, are owned by `postgres`, and have RLS enabled (`FORCE ROW LEVEL SECURITY` is false).
+- All 15 SEC-004.8 projection columns exist with compatible types: products `id bigint`, `category_id uuid`, `price numeric`, `created_at timestamptz`; categories `id uuid`, `parent_id uuid`, `display_order integer`; remaining projection fields are text.
+- Live counts: **359 products** and **190 categories**.
+- Current validator-oriented aggregate checks: zero null/blank product names, zero null/blank category names, zero invalid price text values, zero non-positive product IDs, and zero null product category IDs.
+- `products.name` is nullable at the schema level even though all current rows have valid values. The SQL proposal now fails closed if any existing row violates the reader's name/price/ID output contract.
+
+### Roles, grants, policies and functions
+
+- `nrj_catalog_reader` does **not** exist.
+- The RLS policies on `products` and `categories` match the repository migrations: public SELECT for `anon, authenticated`, and authenticated admin-only row-write policies.
+- The live `orders public insert pending` RLS policy exists for `anon, authenticated`, but the effective table ACL currently reports `anon` has **no INSERT privilege** on `orders`. Therefore that policy alone does not make anonymous INSERT executable in the live database. This corrects the earlier repository-only assumption.
+- Both catalogue tables are owned by `postgres`; `anon` has broad table-level privileges on `products` (including INSERT/UPDATE/DELETE and TRUNCATE) but the current RLS policies provide no `anon` row-write policy. On `categories`, `anon` has SELECT plus TRUNCATE/REFERENCES/TRIGGER/MAINTAIN privileges. RLS does not protect TRUNCATE, REFERENCES, TRIGGER or MAINTAIN. These are separate existing Marketplace ACL findings and are not changed in this connector proposal.
+- There are **14** `SECURITY DEFINER` functions in `public`. The live ACL inventory found **no PUBLIC EXECUTE** grant on any of them. In particular, `mark_admin_read(uuid)` and `mark_customer_read()` are executable by `authenticated`, not PUBLIC; this resolves the specific uncertainty raised by source-only review. Other privileged routines are restricted to `postgres`, `authenticated`, or `service_role` as shown by their explicit ACLs.
+- Default function ACLs for owner `postgres` in `public` grant EXECUTE only to `postgres`. The observed `supabase_admin` default for `public` grants EXECUTE to `postgres`, `anon`, `authenticated` and `service_role`, not PUBLIC and not the future reader. The reader has no memberships and will receive no inherited access through those roles.
+- The `public` schema grants PUBLIC USAGE but not PUBLIC CREATE. The live inventory found no relation or sequence ACL grants to PUBLIC.
+- The only non-template database in this project is `postgres`; PUBLIC CONNECT is enabled there. The proposal also grants CONNECT explicitly to make the new role's required access clear.
+
+### Implication for SEC-004.9
+
+The current live schema and the specific SECURITY DEFINER ACL blocker are compatible with the dedicated reader proposal. The SQL file now also checks existing product/category data shape before role creation. This does **not** authorize execution: the SQL remains in `docs/security/proposals/`, has not been run, and the role/password/secret/binding remain absent. The separate, broader `anon` privilege findings should be handled on their own track after impact review; this proposal intentionally does not revoke or rewrite them.
 
 ### 1. Live schema must match reader validators
 
@@ -77,7 +104,7 @@ Do not put credentials in GitHub, SQL, shell arguments, logs or chat.
 
 The SQL proposal is wrapped in one transaction and contains:
 
-1. **Preflight:** reject an existing role, missing tables/columns, incompatible types, disabled RLS, policy-name collisions, PUBLIC EXECUTE on SECURITY DEFINER functions, or PUBLIC CREATE on `public`.
+1. **Preflight:** reject an existing role, missing tables/columns, incompatible types, disabled RLS, invalid existing catalogue rows, policy-name collisions, PUBLIC EXECUTE on SECURITY DEFINER functions, or PUBLIC CREATE on `public`.
 2. **Role creation:** least-privilege attributes, `NOINHERIT`, no memberships, connection limit 3, read-only defaults and short timeouts.
 3. **Minimal grants:** CONNECT to the current database, USAGE on `public`, column-level SELECT on the two allowlists, and explicit SELECT-only policies.
 4. **Postflight:** re-check role attributes, memberships, schema rights, RLS policies, exact column rights, no write rights, no unrelated public relation/sequence access, and no executable SECURITY DEFINER routine.
@@ -88,10 +115,10 @@ Note: PostgreSQL role creation and policy/ACL behavior still require validation 
 ## Review checklist before promotion
 
 - [ ] Confirm the branch is based on the intended current Marketplace `main`.
-- [ ] Review the actual live catalog schema, column types and RLS settings.
-- [ ] Run the live read-only role/function ACL inventory.
-- [ ] Resolve the effective PUBLIC ACL of every SECURITY DEFINER function.
-- [ ] Confirm no unrelated public relation or sequence is effectively exposed.
+- [x] Review the actual live catalog schema, column types and RLS settings (19 November 2026).
+- [x] Run the live read-only role/function ACL inventory (19 November 2026).
+- [x] Resolve the effective PUBLIC ACL of every SECURITY DEFINER function (none executable by PUBLIC at audit time).
+- [x] Confirm no unrelated public relation or sequence is granted to PUBLIC at audit time.
 - [ ] Review the SQL with a PostgreSQL/Supabase operator.
 - [ ] Decide whether any application ACL change is separately required.
 - [ ] Approve a follow-up commit that promotes the SQL into `supabase/migrations/`.
@@ -116,5 +143,5 @@ Then disable the broker secret/binding and investigate. Do not drop the role unt
 - SQL execution: not performed.
 - Hosted DB role/password: not created.
 - Broker secret: not created.
-- Live database connection: not attempted.
+- Administrative Supabase SQL audit: SELECT-only queries completed; no broker connection using `nrj_catalog_reader` has been attempted.
 - Pull request/merge/deployment: not created.
