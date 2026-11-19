@@ -37,6 +37,29 @@ BEGIN
     RAISE EXCEPTION 'Expected Supabase roles anon and authenticated are missing';
   END IF;
 
+  -- Per-schema defaults are additive to global defaults. A schema-scoped
+  -- REVOKE cannot cancel a global grant inherited by anon or authenticated.
+  -- Fail closed if postgres has such global table defaults before proceeding.
+  IF EXISTS (
+    SELECT 1
+    FROM pg_catalog.pg_default_acl d
+    CROSS JOIN LATERAL pg_catalog.aclexplode(d.defaclacl) acl
+    WHERE d.defaclrole = 'postgres'::regrole
+      AND d.defaclnamespace = 0
+      AND d.defaclobjtype = 'r'
+      AND (
+        acl.grantee = 0
+        OR pg_catalog.pg_has_role('anon'::regrole::oid, acl.grantee, 'USAGE')
+        OR (
+          acl.privilege_type IN ('TRUNCATE', 'REFERENCES', 'TRIGGER', 'MAINTAIN')
+          AND pg_catalog.pg_has_role('authenticated'::regrole::oid, acl.grantee, 'USAGE')
+        )
+      )
+  ) THEN
+    RAISE EXCEPTION
+      'Global postgres table defaults grant privileges to PUBLIC/anon or structural rights to authenticated; an IN SCHEMA REVOKE cannot cancel them, so operator review is required';
+  END IF;
+
   SELECT oid INTO v_postgres_oid
   FROM pg_catalog.pg_roles
   WHERE rolname = 'postgres';
@@ -162,24 +185,26 @@ BEGIN
     END IF;
   END LOOP;
 
-  -- Verify postgres-owned future public tables no longer inherit these grants.
+  -- Verify effective future-table defaults at both global and public scope.
+  -- This also catches PUBLIC grants and grants inherited through role membership.
   IF EXISTS (
     SELECT 1
     FROM pg_catalog.pg_default_acl d
-    JOIN pg_catalog.pg_namespace n ON n.oid = d.defaclnamespace
     CROSS JOIN LATERAL pg_catalog.aclexplode(d.defaclacl) acl
     WHERE d.defaclrole = 'postgres'::regrole
-      AND n.nspname = 'public'
       AND d.defaclobjtype = 'r'
+      AND d.defaclnamespace IN (0, 'public'::regnamespace::oid)
       AND (
-        acl.grantee = 'anon'::regrole
+        acl.grantee = 0
+        OR pg_catalog.pg_has_role('anon'::regrole::oid, acl.grantee, 'USAGE')
         OR (
-          acl.grantee = 'authenticated'::regrole
-          AND acl.privilege_type IN ('TRUNCATE', 'REFERENCES', 'TRIGGER', 'MAINTAIN')
+          acl.privilege_type IN ('TRUNCATE', 'REFERENCES', 'TRIGGER', 'MAINTAIN')
+          AND pg_catalog.pg_has_role('authenticated'::regrole::oid, acl.grantee, 'USAGE')
         )
       )
   ) THEN
-    RAISE EXCEPTION 'postgres default privileges still contain a prohibited public table grant';
+    RAISE EXCEPTION
+      'postgres global/public table defaults still grant privileges to PUBLIC/anon or structural rights to authenticated';
   END IF;
 END
 $postflight$;
