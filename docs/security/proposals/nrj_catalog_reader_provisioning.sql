@@ -89,6 +89,34 @@ BEGIN
     RAISE EXCEPTION 'public.categories.parent_id must be uuid';
   END IF;
 
+  -- Validate driver/reader types, not only column names. The reader returns
+  -- text-like fields as JSON strings and display_order as a JS integer.
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('products','name', ARRAY['text','varchar','bpchar']::text[]),
+        ('products','price', ARRAY['numeric','int2','int4','int8','float4','float8','text','varchar','bpchar']::text[]),
+        ('products','image', ARRAY['text','varchar','bpchar']::text[]),
+        ('products','created_at', ARRAY['timestamptz','timestamp','date']::text[]),
+        ('products','moq', ARRAY['text','varchar','bpchar','numeric','int2','int4','int8']::text[]),
+        ('products','tailles', ARRAY['text','varchar','bpchar']::text[]),
+        ('products','couleurs', ARRAY['text','varchar','bpchar']::text[]),
+        ('categories','name', ARRAY['text','varchar','bpchar']::text[]),
+        ('categories','slug', ARRAY['text','varchar','bpchar']::text[]),
+        ('categories','icon', ARRAY['text','varchar','bpchar']::text[]),
+        ('categories','display_order', ARRAY['int2','int4']::text[])
+    ) AS expected(table_name, column_name, allowed_udt_names)
+    JOIN information_schema.columns c
+      ON c.table_schema = 'public'
+     AND c.table_name = expected.table_name
+     AND c.column_name = expected.column_name
+    WHERE NOT (c.udt_name = ANY(expected.allowed_udt_names))
+  ) THEN
+    RAISE EXCEPTION
+      'One or more catalog columns have types incompatible with the SEC-004.8 output validators';
+  END IF;
+
   -- Every field selected by SEC-004.8 must exist before any role is created.
   IF EXISTS (
     SELECT 1
